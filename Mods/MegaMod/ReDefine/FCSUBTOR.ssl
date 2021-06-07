@@ -1,0 +1,154 @@
+variable restock_amt;
+variable restock_obj;
+variable restock_trash;
+variable removed_qty;
+
+import variable subTech3_ptr;
+
+procedure start;
+procedure use_p_proc;
+procedure look_at_p_proc;
+procedure description_p_proc;
+procedure timed_event_p_proc;
+procedure use_skill_on_p_proc;
+procedure use_obj_on_p_proc;
+procedure damage_p_proc;
+
+
+procedure start
+begin
+end
+
+procedure use_p_proc
+begin
+    if (map_var(1) == 0) then begin
+        script_overrides;
+        add_timer_event(subTech3_ptr, 5, 2);
+    end
+    else begin
+        if (global_var(GVAR_SAN_FRAN_SUB) < 5) then begin
+            script_overrides;
+            display_mstr(200);
+        end
+    end
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    display_mstr(100);
+end
+
+procedure description_p_proc
+begin
+    script_overrides;
+    display_mstr(101);
+end
+
+procedure timed_event_p_proc
+begin
+    if (fixed_param == 1) then begin
+        explosion(29301, elevation(self_obj), 1000);
+        explosion(27500, elevation(self_obj), 1000);
+        explosion(29494, elevation(self_obj), 1000);
+        explosion(28694, elevation(self_obj), 1000);
+        critter_dmg(dude_obj, 99999, 6);
+    end
+end
+
+procedure use_skill_on_p_proc
+begin
+    if (map_var(1) == 0) then begin
+        script_overrides;
+        add_timer_event(subTech3_ptr, 5, 2);
+    end
+    else begin
+        if (global_var(GVAR_SAN_FRAN_SUB) < 5) then begin
+            if (action_being_used == 13) then begin
+                if (is_success(roll_vs_skill(source_obj, 13, -50))) then begin
+                    script_overrides;
+                    display_mstr(210);
+                    set_global_var(GVAR_SAN_FRAN_SUB, 5);
+                end
+                else begin
+                    script_overrides;
+                    display_mstr(211);
+                end
+            end
+        end
+    end
+end
+
+procedure use_obj_on_p_proc
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    LVar0 := obj_pid(obj_being_used_with);
+    if (map_var(1) == 0) then begin
+        script_overrides;
+        add_timer_event(subTech3_ptr, 5, 2);
+    end
+    else begin
+        if (global_var(GVAR_SAN_FRAN_SUB) < 5) then begin
+            if ((LVar0 == 75) or (LVar0 == 308)) then begin
+                if (is_success(roll_vs_skill(source_obj, 13, -50 + 20))) then begin
+                    script_overrides;
+                    display_mstr(210);
+                    set_global_var(GVAR_SAN_FRAN_SUB, 5);
+                end
+                else begin
+                    script_overrides;
+                    display_mstr(211);
+                end
+            end
+            else begin
+                if ((LVar0 == 51) or (LVar0 == 85)) then begin
+                    script_overrides;
+                    LVar1 := roll_vs_skill(dude_obj, 11, -10 + (10 * using_skill(dude_obj, 8)));
+                    if (is_success(LVar1)) then begin
+                        removed_qty := obj_is_carrying_obj_pid(dude_obj, LVar0);
+                        if (1 < removed_qty) then begin
+                            removed_qty := 1;
+                        end
+                        if (removed_qty > 0) then begin
+                            restock_obj := obj_carrying_pid_obj(dude_obj, LVar0);
+                            if (obj_type(self_obj) == 1) then begin
+                                restock_obj := obj_carrying_pid_obj(dude_obj, LVar0);
+                                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+                                    if (obj_item_subtype(critter_inven_obj(dude_obj, 0)) == 0) then begin
+                                        restock_obj := critter_inven_obj(dude_obj, 0);
+                                        debug_msg("armour pid == " + obj_pid(restock_obj));
+                                        rm_obj_from_inven(dude_obj, restock_obj);
+                                        add_obj_to_inven(dude_obj, restock_obj);
+                                    end
+                                end
+                                else begin
+                                    if ((critter_inven_obj(dude_obj, 2) == restock_obj) or (critter_inven_obj(dude_obj, 1) == restock_obj)) then begin
+                                        inven_unwield(dude_obj);
+                                    end
+                                end
+                            end
+                            restock_amt := rm_mult_objs_from_inven(dude_obj, restock_obj, removed_qty);
+                            destroy_object(restock_obj);
+                        end
+                        restock_obj := 0;
+                        restock_amt := 0;
+                        set_map_var(2, 1);
+                        display_mstr(220);
+                        add_timer_event(self_obj, game_ticks(120), 1);
+                    end
+                    else begin
+                        add_timer_event(subTech3_ptr, 5, 3);
+                    end
+                end
+            end
+        end
+    end
+    return 0;
+    LVar0 := 0;
+    LVar1 := 0;
+end
+
+procedure damage_p_proc
+begin
+end

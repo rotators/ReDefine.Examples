@@ -1,0 +1,206 @@
+procedure start;
+procedure use_p_proc;
+procedure pickup_p_proc;
+procedure map_enter_p_proc;
+procedure look_at_p_proc;
+procedure description_p_proc;
+procedure lock_safe;
+procedure unlock_safe;
+procedure use_skill_on_p_proc;
+procedure use_obj_on_p_proc;
+procedure Tamper_Proc;
+procedure Tamper_Proc2;
+
+variable global_temp;
+variable Locks_Roll;
+
+import variable object_tamper;
+import variable guard2_obj;
+
+
+procedure start
+begin
+    if (not(obj_is_open(self_obj))) then begin
+        set_local_var(2, 0);
+    end
+end
+
+procedure use_p_proc
+begin
+    if (obj_is_visible_flag(guard2_obj)) then begin
+        call Tamper_Proc2();
+    end
+    else begin
+        if (local_var(2) == 0) then begin
+            script_overrides;
+            display_mstr(200);
+            play_sfx("snd_locked");
+        end
+    end
+end
+
+procedure pickup_p_proc
+begin
+    if (obj_is_visible_flag(guard2_obj)) then begin
+        call Tamper_Proc2();
+    end
+    else begin
+        if (local_var(2) == 0) then begin
+            script_overrides;
+            display_mstr(200);
+        end
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    variable LVar0 := 0;
+    if (map_first_run) then begin
+        LVar0 := create_object(41, 0, 0);
+        add_mult_objs_to_inven(self_obj, LVar0, random(3000, 5000));
+        LVar0 := create_object(119, 0, 0);
+        add_mult_objs_to_inven(self_obj, LVar0, random(1, 3));
+        LVar0 := create_object(666, 0, 0);
+        add_mult_objs_to_inven(self_obj, LVar0, random(1, 2));
+        LVar0 := create_object(667, 0, 0);
+        add_mult_objs_to_inven(self_obj, LVar0, random(0, 2));
+    end
+    return 0;
+    LVar0 := 0;
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    display_mstr(100);
+end
+
+procedure description_p_proc
+begin
+    script_overrides;
+    if (local_var(2) == 0) then begin
+        display_mstr(101);
+    end
+    else begin
+        display_mstr(102);
+    end
+end
+
+procedure lock_safe
+begin
+    script_overrides;
+    game_time_advance(60 * 10);
+    set_local_var(2, 0);
+    if (source_obj == dude_obj) then begin
+        display_mstr(189);
+    end
+end
+
+procedure unlock_safe
+begin
+    script_overrides;
+    game_time_advance(60 * 10);
+    if (is_success(Locks_Roll)) then begin
+        set_local_var(2, 1);
+        if (source_obj == dude_obj) then begin
+            display_mstr(170);
+        end
+        if (local_var(0) == 0) then begin
+            set_local_var(0, 1);
+            give_exp_points(100);
+            display_msg(g_mstr(100) + 100 + g_mstr(101));
+        end
+    end
+    else begin
+        if (is_critical(Locks_Roll)) then begin
+            jam_lock(self_obj);
+            if (source_obj == dude_obj) then begin
+                display_mstr(171);
+            end
+        end
+        else begin
+            if (source_obj == dude_obj) then begin
+                display_mstr(172);
+            end
+        end
+    end
+end
+
+procedure use_skill_on_p_proc
+begin
+    variable LVar0 := 0;
+    script_overrides;
+    Locks_Roll := roll_vs_skill(source_obj, 9, -100);
+    if (obj_is_visible_flag(guard2_obj)) then begin
+        object_tamper := 1;
+        call Tamper_Proc();
+    end
+    else begin
+        LVar0 := action_being_used;
+        if (LVar0 == 9) then begin
+            if (local_var(2) == 0) then begin
+                call unlock_safe();
+            end
+            else begin
+                call lock_safe();
+            end
+        end
+    end
+    return 0;
+    LVar0 := 0;
+end
+
+procedure use_obj_on_p_proc
+begin
+    variable LVar0 := 0;
+    script_overrides;
+    if (obj_is_visible_flag(guard2_obj)) then begin
+        object_tamper := 1;
+        call Tamper_Proc();
+    end
+    else begin
+        LVar0 := obj_pid(obj_being_used_with);
+        if (LVar0 == 77) then begin
+            script_overrides;
+            if (local_var(2) == 0) then begin
+                Locks_Roll := roll_vs_skill(source_obj, 9, -80);
+                call unlock_safe();
+            end
+            else begin
+                call lock_safe();
+            end
+        end
+        else begin
+            if (LVar0 == 411) then begin
+                script_overrides;
+                if (local_var(2) == 0) then begin
+                    Locks_Roll := roll_vs_skill(source_obj, 9, -60);
+                    call unlock_safe();
+                end
+                else begin
+                    call lock_safe();
+                end
+            end
+            else begin
+                if ((LVar0 == 84) or (LVar0 == 410)) then begin
+                    display_mstr(250);
+                end
+            end
+        end
+    end
+    return 0;
+    LVar0 := 0;
+end
+
+procedure Tamper_Proc
+begin
+    script_overrides;
+    add_timer_event(guard2_obj, 5, 5);
+end
+
+procedure Tamper_Proc2
+begin
+    script_overrides;
+    object_tamper := 2;
+    add_timer_event(guard2_obj, 5, 5);
+end

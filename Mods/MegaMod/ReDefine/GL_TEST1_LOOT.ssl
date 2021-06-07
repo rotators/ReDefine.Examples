@@ -1,0 +1,244 @@
+procedure start;
+
+variable oLooter;
+variable oCorpse;
+variable oGItem;
+variable looter_tile;
+variable L_list;
+variable tWaiting_time;
+variable tLooting_time;
+variable looting_stage;
+
+procedure get_looter;
+procedure get_corpse;
+procedure get_item;
+procedure cancel_looting;
+
+
+procedure start
+begin
+    if (game_loaded) then begin
+        set_global_script_repeat(3);
+        tWaiting_time := game_time;
+        oLooter := 0;
+        oCorpse := 0;
+        oGItem := 0;
+        looter_tile := 0;
+        tLooting_time := game_time;
+        looting_stage := 0;
+        set_sfall_global("n_lootr1", 0);
+        set_sfall_global("n_corps1", 0);
+        set_sfall_global("n_gitem1", 0);
+    end
+    if (not(combat_is_initialized) and (cur_map_index != MAP_SLVCAMP) and (cur_map_index != MAP_NCRENT) and (cur_map_index != MAP_DENRES1) and (cur_map_index != MAP_TRIBE02)) then begin
+        if (oLooter) then begin
+            if ((looting_stage == 0) and (tLooting_time <= game_time)) then begin
+                if (looter_tile) then begin
+                    reg_anim_func(2, oLooter);
+                    reg_anim_func(1, 1);
+                    reg_anim_obj_move_to_tile(oLooter, looter_tile, -1);
+                    reg_anim_func(3, 0);
+                    looter_tile := 0;
+                end
+                oLooter := 0;
+                oCorpse := 0;
+                oGItem := 0;
+                set_sfall_global("n_lootr1", 0);
+            end
+            else begin
+                if ((looting_stage == 1) and (tLooting_time <= game_time)) then begin
+                    looting_stage := looting_stage + 1;
+                    tLooting_time := game_time;
+                end
+                else begin
+                    if ((looting_stage == 2) and (tLooting_time <= game_time)) then begin
+                        tLooting_time := game_time + (1 * 10);
+                        if (not(looter_tile)) then begin
+                            looter_tile := tile_num_in_direction(tile_num(oLooter), random(0, 5), 1);
+                        end
+                        reg_anim_func(1, 1);
+                        reg_anim_obj_move_to_obj(oLooter, oCorpse, -1);
+                        reg_anim_func(3, 0);
+                        if (tile_distance_objs(oLooter, oCorpse) <= 1) then begin
+                            looting_stage := looting_stage + 1;
+                            tLooting_time := game_time;
+                        end
+                    end
+                    else begin
+                        if ((looting_stage == 3) and (tLooting_time <= game_time)) then begin
+                            if (critter_inven_obj(oCorpse, -2) > 0) then begin
+                                reg_anim_func(2, oLooter);
+                                reg_anim_func(1, 1);
+                                reg_anim_animate(oLooter, 10, -1);
+                                reg_anim_func(3, 0);
+                                move_obj_inven_to_obj(oCorpse, oLooter);
+                            end
+                            call get_item();
+                            tLooting_time := game_time;
+                            looting_stage := looting_stage + 1;
+                        end
+                        else begin
+                            if ((looting_stage == 4) and (tLooting_time <= game_time)) then begin
+                                if (oGItem) then begin
+                                    set_self(oLooter);
+                                    pickup_obj(oGItem);
+                                    looting_stage := looting_stage - 1;
+                                    tLooting_time := game_time + (1 * 10);
+                                end
+                                else begin
+                                    looting_stage := 0;
+                                    tLooting_time := game_time + (1 * 10);
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        else begin
+            if (not(oCorpse)) then begin
+                call get_corpse();
+            end
+        end
+    end
+    else begin
+        if (oCorpse) then begin
+            call cancel_looting();
+        end
+    end
+end
+
+procedure get_looter
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    LVar1 := 0;
+    LVar2 := 10;
+    LVar0 := list_begin(0);
+    while (LVar0 != 0) do begin
+        oLooter := list_next(LVar0);
+        if (oLooter) then begin
+            if (not(critter_state(oLooter) bwand 1)) then begin
+                if (not(combat_is_initialized)) then begin
+                    if (not(party_member_obj(obj_pid(oLooter))) and not(get_proto_data(obj_pid(oLooter), 32) bwand 64)) then begin
+                        if (obj_can_see_obj(oCorpse, oLooter) and (((get_critter_stat(oLooter, STAT_carry_amt) - has_trait(TRAIT_OBJECT, oLooter, OBJECT_CUR_WEIGHT)) >= has_trait(TRAIT_OBJECT, oCorpse, OBJECT_CUR_WEIGHT)) and (get_sfall_global_int("p_looter") != oLooter))) then begin
+                            if (tile_distance_objs(oLooter, oCorpse) < LVar2) then begin
+                                LVar2 := tile_distance_objs(oLooter, oCorpse);
+                                LVar1 := oLooter;
+                            end
+                        end
+                    end
+                end
+                else begin
+                    oLooter := 0;
+                    looting_stage := 0;
+                    list_end(LVar0);
+                    LVar0 := 0;
+                end
+            end
+        end
+        else begin
+            list_end(LVar0);
+            LVar0 := 0;
+        end
+    end
+    set_sfall_global("n_lootr1", LVar1);
+    if (LVar1) then begin
+        oLooter := LVar1;
+        looting_stage := 1;
+    end
+    return 0;
+    LVar0 := 0;
+    LVar1 := 0;
+    LVar2 := 0;
+end
+
+procedure get_corpse
+begin
+    variable LVar0 := 0;
+    LVar0 := list_begin(0);
+    while (LVar0 != 0) do begin
+        oCorpse := list_next(LVar0);
+        if (oCorpse) then begin
+            if (critter_state(oCorpse) bwand 1) then begin
+                if (not(get_proto_data(obj_pid(oCorpse), 32) bwand 64)) then begin
+                    if (not(combat_is_initialized)) then begin
+                        call get_item();
+                        if ((critter_inven_obj(oCorpse, -2) != 0) or oGItem) then begin
+                            call get_looter();
+                            if (oLooter) then begin
+                                list_end(LVar0);
+                                LVar0 := 0;
+                            end
+                        end
+                    end
+                    else begin
+                        oGItem := 0;
+                        oCorpse := 0;
+                        list_end(LVar0);
+                        LVar0 := 0;
+                    end
+                end
+            end
+        end
+        else begin
+            oGItem := 0;
+            list_end(LVar0);
+            LVar0 := 0;
+        end
+    end
+    set_sfall_global("n_corps1", oCorpse);
+    return 0;
+    LVar0 := 0;
+end
+
+procedure get_item
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    variable LVar3 := 0;
+    variable LVar4 := 0;
+    variable LVar5 := 0;
+    LVar0 := list_begin(1);
+    while (LVar0 != 0) do begin
+        oGItem := list_next(LVar0);
+        if (oGItem) then begin
+            if ((obj_item_subtype(oGItem) != 1) and not((obj_pid(oGItem) >= 205) and (obj_pid(oGItem) <= 210)) and (get_sfall_global_int("p_gitem") != oGItem) and (tile_distance_objs(oCorpse, oGItem) <= 3)) then begin
+                list_end(LVar0);
+                LVar0 := 0;
+            end
+        end
+        else begin
+            list_end(LVar0);
+            LVar0 := 0;
+        end
+    end
+    set_sfall_global("n_gitem1", oGItem);
+    return 0;
+    LVar0 := 0;
+    LVar1 := 0;
+    LVar2 := 0;
+    LVar3 := 0;
+    LVar4 := 0;
+    LVar5 := 0;
+end
+
+procedure cancel_looting
+begin
+    if (oLooter) then begin
+        reg_anim_func(2, oLooter);
+        looting_stage := 0;
+        set_sfall_global("n_lootr1", 0);
+        set_sfall_global("n_corps1", 0);
+        set_sfall_global("n_gitem1", 0);
+        oLooter := 0;
+        oCorpse := 0;
+        oGItem := 0;
+    end
+    if (L_list) then begin
+        list_end(L_list);
+        L_list := 0;
+    end
+end

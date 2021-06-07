@@ -1,0 +1,465 @@
+variable ProtoOfItemGiven;
+variable ValueOfRollCheck := 1;
+variable Scenery_Creation;
+variable Scenery_Creation_Hex;
+variable Scenery_Creation_Count;
+variable Temp_Scenery_Creation_Hex;
+variable Scenery_Creation_Ptr;
+variable How_Many_Party_Members_Are_Injured;
+variable How_Many_Party_Members_Armed;
+variable PartyHealingItem;
+variable last_timed_obj;
+variable last_timed_param;
+variable check_still_kill;
+variable stored_msg;
+variable stored_node;
+variable top_msg;
+variable var_num;
+variable global_temp;
+variable dest_tile;
+variable step_tile;
+variable in_dialog;
+variable forced_node;
+variable restock_amt;
+variable restock_obj;
+variable restock_trash;
+variable removed_qty;
+variable floater_patch_msg;
+variable hs_temp;
+variable caught_thief;
+variable the_follow_obj;
+
+procedure start;
+procedure description_p_proc;
+procedure look_at_p_proc;
+procedure map_update_p_proc;
+procedure use_p_proc;
+procedure use_obj_on_p_proc;
+procedure map_exit_p_proc;
+procedure map_enter_p_proc;
+
+import variable chop_shop_boy_obj;
+import variable smitty_obj;
+
+export variable car_object;
+
+variable stop_car_use;
+variable car_was_used_to_exit;
+
+procedure use_skill_on_p_proc;
+procedure Remove_Delete_Item(variable arg0);
+
+
+procedure start
+begin
+    car_object := self_obj;
+end
+
+procedure description_p_proc
+begin
+    script_overrides;
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+end
+
+procedure map_update_p_proc
+begin
+    car_object := self_obj;
+end
+
+procedure use_p_proc
+begin
+    variable LVar0 := 0;
+    if (not(metarule3(110, 0, 0, 0))) then begin
+        stop_car_use := 0;
+        if (global_var(GVAR_PLAYER_GOT_CAR) != 0) then begin
+            if ((global_var(GVAR_NEW_RENO_STOLEN_CAR) == 1) or ((CUR_MAP_NEWRCS) and (map_var(0) != 0)) or (global_var(GVAR_BREAKDOWN_VALUE) > 0)) then begin
+                if (global_var(GVAR_BREAKDOWN_VALUE) > 0) then begin
+                    stop_car_use := 1;
+                    if (local_var(0) == 0) then begin
+                        if ((global_var(GVAR_BREAKDOWN_VALUE) == 1) and (local_var(0) == 0)) then begin
+                            display_mstr(502);
+                            LVar0 := 851;
+                            set_local_var(0, 1);
+                        end
+                        else begin
+                            if ((global_var(GVAR_BREAKDOWN_VALUE) == 2) and (local_var(0) == 0)) then begin
+                                display_mstr(503);
+                                LVar0 := 852;
+                                set_local_var(0, 1);
+                            end
+                            else begin
+                                if ((global_var(GVAR_BREAKDOWN_VALUE) == 3) and (local_var(0) == 0)) then begin
+                                    display_mstr(504);
+                                    LVar0 := 853;
+                                    set_local_var(0, 1);
+                                end
+                                else begin
+                                    if ((global_var(GVAR_BREAKDOWN_VALUE) == 4) and (local_var(0) == 0)) then begin
+                                        display_mstr(505);
+                                        LVar0 := 854;
+                                        set_local_var(0, 1);
+                                    end
+                                    else begin
+                                        if ((global_var(GVAR_BREAKDOWN_VALUE) == 5) and (local_var(0) == 0)) then begin
+                                            display_mstr(506);
+                                            LVar0 := 855;
+                                            set_local_var(0, 1);
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                        add_obj_to_inven(dude_obj, create_object(LVar0, 0, 0));
+                    end
+                    else begin
+                        display_mstr(507);
+                    end
+                end
+                else begin
+                    if (chop_shop_boy_obj != 0) then begin
+                        if (critter_state(chop_shop_boy_obj) != 1) then begin
+                            if (obj_can_see_obj(chop_shop_boy_obj, dude_obj)) then begin
+                                stop_car_use := 1;
+                                if (not((CUR_MAP_NEWRCS) and (map_var(0) != 0))) then begin
+                                    last_timed_obj := chop_shop_boy_obj;
+                                    last_timed_param := last_timed_param;
+                                    metarule3(100, chop_shop_boy_obj, 8, 0);
+                                    add_timer_event(chop_shop_boy_obj, game_ticks(0), 8);
+                                end
+                                else begin
+                                    display_mstr(500);
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        else begin
+            stop_car_use := 1;
+            display_mstr(100 + ((global_var(GVAR_DEN_SMITTY_PART) == 0) == 0));
+        end
+        if (stop_car_use == 0) then begin
+            if (global_var(GVAR_DEN_CAR_PART_PIP) < 2) then begin
+                set_global_var(GVAR_DEN_CAR_PART_PIP, 2);
+            end
+            set_global_var(GVAR_DEN_FLAG_3, global_var(GVAR_DEN_FLAG_3) bwor 32768);
+            if (global_var(GVAR_NEW_RENO_STOLEN_CAR) == 1) then begin
+                if (global_var(GVAR_NEW_RENO_STOLEN_CAR) < 3) then begin
+                    set_global_var(GVAR_NEW_RENO_STOLEN_CAR, 3);
+                end
+                debug_msg("stolen_car state == " + global_var(GVAR_NEW_RENO_STOLEN_CAR));
+            end
+            if ((party_member_obj(831) == 0) and tile_contains_pid_obj(tile_num_in_direction(tile_num_in_direction(global_var(GVAR_CAR_PLACED_TILE), 5, 2), 4, 1), elevation(self_obj), 831)) then begin
+                party_add(tile_contains_pid_obj(tile_num_in_direction(tile_num_in_direction(global_var(GVAR_CAR_PLACED_TILE), 5, 2), 4, 1), elevation(self_obj), 831));
+            end
+            if ((party_member_obj(455) == 0) and tile_contains_pid_obj(tile_num_in_direction(tile_num_in_direction(global_var(GVAR_CAR_PLACED_TILE), 5, 2), 4, 1), elevation(self_obj), 455)) then begin
+                party_add(tile_contains_pid_obj(tile_num_in_direction(tile_num_in_direction(global_var(GVAR_CAR_PLACED_TILE), 5, 2), 4, 1), elevation(self_obj), 455));
+            end
+            if ((party_member_obj(832) == 0) and tile_contains_pid_obj(tile_num_in_direction(tile_num_in_direction(global_var(GVAR_CAR_PLACED_TILE), 5, 2), 4, 1), elevation(self_obj), 832)) then begin
+                party_add(tile_contains_pid_obj(tile_num_in_direction(tile_num_in_direction(global_var(GVAR_CAR_PLACED_TILE), 5, 2), 4, 1), elevation(self_obj), 832));
+            end
+            if ((party_member_obj(833) == 0) and tile_contains_pid_obj(tile_num_in_direction(tile_num_in_direction(global_var(GVAR_CAR_PLACED_TILE), 5, 2), 4, 1), elevation(self_obj), 833)) then begin
+                party_add(tile_contains_pid_obj(tile_num_in_direction(tile_num_in_direction(global_var(GVAR_CAR_PLACED_TILE), 5, 2), 4, 1), elevation(self_obj), 833));
+            end
+            if ((party_member_obj(834) == 0) and tile_contains_pid_obj(tile_num_in_direction(tile_num_in_direction(global_var(GVAR_CAR_PLACED_TILE), 5, 2), 4, 1), elevation(self_obj), 834)) then begin
+                party_add(tile_contains_pid_obj(tile_num_in_direction(tile_num_in_direction(global_var(GVAR_CAR_PLACED_TILE), 5, 2), 4, 1), elevation(self_obj), 834));
+            end
+            if ((party_member_obj(835) == 0) and tile_contains_pid_obj(tile_num_in_direction(tile_num_in_direction(global_var(GVAR_CAR_PLACED_TILE), 5, 2), 4, 1), elevation(self_obj), 835)) then begin
+                party_add(tile_contains_pid_obj(tile_num_in_direction(tile_num_in_direction(global_var(GVAR_CAR_PLACED_TILE), 5, 2), 4, 1), elevation(self_obj), 835));
+            end
+            if ((party_member_obj(836) == 0) and tile_contains_pid_obj(tile_num_in_direction(tile_num_in_direction(global_var(GVAR_CAR_PLACED_TILE), 5, 2), 4, 1), elevation(self_obj), 836)) then begin
+                party_add(tile_contains_pid_obj(tile_num_in_direction(tile_num_in_direction(global_var(GVAR_CAR_PLACED_TILE), 5, 2), 4, 1), elevation(self_obj), 836));
+            end
+            car_was_used_to_exit := 1;
+            play_sfx("carstart");
+            if (CUR_MAP_RAIDERS1) then begin
+                set_global_var(GVAR_LEFT_CAR_AT_RAIDERS, 0);
+            end
+            while (global_var(GVAR_CAR_PLACED_TILE) != -1) do begin
+                set_global_var(GVAR_CAR_PLACED_TILE, -1);
+            end
+            while (global_var(GVAR_CAR_CURRENT_TOWN) != -1) do begin
+                set_global_var(GVAR_CAR_CURRENT_TOWN, -1);
+            end
+            while (global_var(GVAR_CAR_HAS_BEEN_DRIVEN) != -1) do begin
+                set_global_var(GVAR_CAR_HAS_BEEN_DRIVEN, -1);
+            end
+            while (global_var(GVAR_ABANDONED_MAP_252_CLEARED) != -1) do begin
+                set_global_var(GVAR_ABANDONED_MAP_252_CLEARED, -1);
+            end
+            while (global_var(GVAR_ABANDONED_MAP_251_CLEARED) != 1) do begin
+                set_global_var(GVAR_ABANDONED_MAP_251_CLEARED, 1);
+            end
+            car_give_to_party;
+        end
+        else begin
+            script_overrides;
+            debug_msg("car use stopped by script");
+        end
+    end
+    return 0;
+    LVar0 := 0;
+end
+
+procedure use_obj_on_p_proc
+begin
+    set_sfall_global("source01", source_obj);
+    set_sfall_global("source02", obj_being_used_with);
+    if (global_var(GVAR_PLAYER_GOT_CAR) == 0) then begin
+        if (smitty_obj != 0) then begin
+            script_overrides;
+            display_mstr(400);
+            last_timed_obj := smitty_obj;
+            last_timed_param := last_timed_param;
+            metarule3(100, smitty_obj, 11, 0);
+            add_timer_event(smitty_obj, game_ticks(0), 11);
+        end
+        else begin
+            if (obj_pid(get_sfall_global_int("source02")) == 253) then begin
+                script_overrides;
+                gfade_out(10);
+                game_time_advance(60 * (60 * 10));
+                gfade_in(10);
+                if (is_success(roll_vs_skill(get_sfall_global_int("source01"), 13, -100))) then begin
+                    debug_msg("CAR WAS JUST STOLEN!!!");
+                    play_sfx("carrepar");
+                    set_global_var(GVAR_PLAYER_GOT_CAR, 1);
+                    display_mstr(200);
+                end
+                else begin
+                    display_mstr(210);
+                end
+            end
+        end
+    end
+    else begin
+        if (global_var(GVAR_PLAYER_GOT_CAR) != 0) then begin
+            if ((get_sfall_global_int("source01") == dude_obj) or (get_sfall_global_int("source01") == party_member_obj(16777278))) then begin
+                if (obj_pid(get_sfall_global_int("source02")) == 254) then begin
+                    script_overrides;
+                    gfade_out(10);
+                    game_time_advance(60 * (60 * 10));
+                    gfade_in(10);
+                    if (random(1, 100) > (200 - has_skill(dude_obj, SKILL_REPAIR))) then begin
+                        debug_msg("Upgrade was a success");
+                        play_sfx("carrepar");
+                        set_global_var(GVAR_CAR_UPGRADE_FUEL_CELL_REGULATOR, 1);
+                        call Remove_Delete_Item(254);
+                        display_mstr(220);
+                    end
+                    else begin
+                        display_mstr(230);
+                    end
+                end
+                else begin
+                    if (obj_pid(get_sfall_global_int("source02")) == 857) then begin
+                        script_overrides;
+                        gfade_out(10);
+                        game_time_advance(60 * (60 * 10));
+                        gfade_in(10);
+                        if (party_member_obj(16777278) != 0) then begin
+                            debug_msg("Alternator install was a success");
+                            play_sfx("carrepar");
+                            set_local_var(0, 0);
+                            set_global_var(GVAR_MAKE_GREATER_STIMS, 0);
+                            set_global_var(GVAR_CYBERDOG_UPGRADE, game_time);
+                            set_global_var(GVAR_BREAKDOWN_VALUE, 0);
+                            call Remove_Delete_Item(857);
+                            display_mstr(518);
+                        end
+                        else begin
+                            if (is_success(roll_vs_skill(dude_obj, 13, -70))) then begin
+                                debug_msg("Alternator install was a success");
+                                play_sfx("carrepar");
+                                set_local_var(0, 0);
+                                set_global_var(GVAR_MAKE_GREATER_STIMS, 0);
+                                set_global_var(GVAR_CYBERDOG_UPGRADE, game_time);
+                                set_global_var(GVAR_BREAKDOWN_VALUE, 0);
+                                call Remove_Delete_Item(857);
+                                display_mstr(508);
+                            end
+                            else begin
+                                display_mstr(513);
+                            end
+                        end
+                    end
+                    else begin
+                        if (obj_pid(get_sfall_global_int("source02")) == 858) then begin
+                            script_overrides;
+                            gfade_out(10);
+                            game_time_advance(60 * (60 * 10));
+                            gfade_in(10);
+                            if (party_member_obj(16777278) != 0) then begin
+                                debug_msg("Fuel Cell Controller install was a success");
+                                play_sfx("carrepar");
+                                set_local_var(0, 0);
+                                set_global_var(GVAR_MAKE_GREATER_STIMS, 0);
+                                set_global_var(GVAR_CYBERDOG_UPGRADE, game_time);
+                                set_global_var(GVAR_BREAKDOWN_VALUE, 0);
+                                call Remove_Delete_Item(858);
+                                display_mstr(519);
+                            end
+                            else begin
+                                if (is_success(roll_vs_skill(dude_obj, 13, -70))) then begin
+                                    debug_msg("Fuel Cell Controller install was a success");
+                                    play_sfx("carrepar");
+                                    set_local_var(0, 0);
+                                    set_global_var(GVAR_MAKE_GREATER_STIMS, 0);
+                                    set_global_var(GVAR_CYBERDOG_UPGRADE, game_time);
+                                    set_global_var(GVAR_BREAKDOWN_VALUE, 0);
+                                    call Remove_Delete_Item(858);
+                                    display_mstr(509);
+                                end
+                                else begin
+                                    display_mstr(514);
+                                end
+                            end
+                        end
+                        else begin
+                            if (obj_pid(get_sfall_global_int("source02")) == 856) then begin
+                                script_overrides;
+                                gfade_out(10);
+                                game_time_advance(60 * (60 * 10));
+                                gfade_in(10);
+                                if (party_member_obj(16777278) != 0) then begin
+                                    debug_msg("Fixing the flat tire was a success");
+                                    play_sfx("carrepar");
+                                    set_local_var(0, 0);
+                                    set_global_var(GVAR_MAKE_GREATER_STIMS, 0);
+                                    set_global_var(GVAR_CYBERDOG_UPGRADE, game_time);
+                                    set_global_var(GVAR_BREAKDOWN_VALUE, 0);
+                                    call Remove_Delete_Item(856);
+                                    display_mstr(520);
+                                end
+                                else begin
+                                    if (is_success(roll_vs_skill(dude_obj, 13, -30))) then begin
+                                        debug_msg("Fixing the flat tire was a success");
+                                        play_sfx("carrepar");
+                                        set_local_var(0, 0);
+                                        set_global_var(GVAR_MAKE_GREATER_STIMS, 0);
+                                        set_global_var(GVAR_CYBERDOG_UPGRADE, game_time);
+                                        set_global_var(GVAR_BREAKDOWN_VALUE, 0);
+                                        call Remove_Delete_Item(856);
+                                        display_mstr(510);
+                                    end
+                                    else begin
+                                        display_mstr(515);
+                                    end
+                                end
+                            end
+                            else begin
+                                if (obj_pid(get_sfall_global_int("source02")) == 859) then begin
+                                    script_overrides;
+                                    gfade_out(10);
+                                    game_time_advance(60 * (60 * 10));
+                                    gfade_in(10);
+                                    if (party_member_obj(16777278) != 0) then begin
+                                        debug_msg("Regulator install was a success");
+                                        play_sfx("carrepar");
+                                        set_local_var(0, 0);
+                                        set_global_var(GVAR_MAKE_GREATER_STIMS, 0);
+                                        set_global_var(GVAR_CYBERDOG_UPGRADE, game_time);
+                                        set_global_var(GVAR_BREAKDOWN_VALUE, 0);
+                                        call Remove_Delete_Item(859);
+                                        display_mstr(521);
+                                    end
+                                    else begin
+                                        if (is_success(roll_vs_skill(dude_obj, 13, -70))) then begin
+                                            debug_msg("Regulator install was a success");
+                                            play_sfx("carrepar");
+                                            set_local_var(0, 0);
+                                            set_global_var(GVAR_MAKE_GREATER_STIMS, 0);
+                                            set_global_var(GVAR_CYBERDOG_UPGRADE, game_time);
+                                            set_global_var(GVAR_BREAKDOWN_VALUE, 0);
+                                            call Remove_Delete_Item(859);
+                                            display_mstr(511);
+                                        end
+                                        else begin
+                                            display_mstr(516);
+                                        end
+                                    end
+                                end
+                                else begin
+                                    if (obj_pid(get_sfall_global_int("source02")) == 860) then begin
+                                        script_overrides;
+                                        gfade_out(10);
+                                        game_time_advance(60 * (60 * 10));
+                                        gfade_in(10);
+                                        if (party_member_obj(16777278) != 0) then begin
+                                            debug_msg("Starter install was a success");
+                                            play_sfx("carrepar");
+                                            set_local_var(0, 0);
+                                            set_global_var(GVAR_MAKE_GREATER_STIMS, 0);
+                                            set_global_var(GVAR_CYBERDOG_UPGRADE, game_time);
+                                            set_global_var(GVAR_BREAKDOWN_VALUE, 0);
+                                            call Remove_Delete_Item(860);
+                                            display_mstr(522);
+                                        end
+                                        else begin
+                                            if (is_success(roll_vs_skill(dude_obj, 13, -60))) then begin
+                                                debug_msg("Starter install was a success");
+                                                play_sfx("carrepar");
+                                                set_local_var(0, 0);
+                                                set_global_var(GVAR_MAKE_GREATER_STIMS, 0);
+                                                set_global_var(GVAR_CYBERDOG_UPGRADE, game_time);
+                                                set_global_var(GVAR_BREAKDOWN_VALUE, 0);
+                                                call Remove_Delete_Item(860);
+                                                display_mstr(512);
+                                            end
+                                            else begin
+                                                display_mstr(517);
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure map_exit_p_proc
+begin
+    if (CUR_MAP_NEWR1) then begin
+        if (global_var(GVAR_NEW_RENO_STOLEN_CAR) == 0) then begin
+            if (car_was_used_to_exit == 0) then begin
+                set_global_var(GVAR_NEW_RENO_FLAG_3, global_var(GVAR_NEW_RENO_FLAG_3) bwor 67108864);
+                debug_msg("STEALING THE CAR!!!");
+            end
+            else begin
+                debug_msg("can't steal car, the player used it on exit");
+            end
+        end
+    end
+    car_was_used_to_exit := 0;
+end
+
+procedure map_enter_p_proc
+begin
+    car_object := self_obj;
+end
+
+procedure use_skill_on_p_proc
+begin
+    if (global_var(GVAR_PLAYER_GOT_CAR) == 0) then begin
+        if ((action_being_used == 13) and ((global_var(GVAR_DEN_SMITTY_PART) == 0) == 0)) then begin
+            script_overrides;
+            display_mstr(300);
+        end
+    end
+end
+
+procedure Remove_Delete_Item(variable arg0)
+begin
+    rm_obj_from_inven(get_sfall_global_int("source01"), get_sfall_global_int("source02"));
+    return 0;
+    arg0 := 0;
+end

@@ -1,0 +1,274 @@
+variable tmp_gen_rep;
+variable global_temp;
+variable Static_Reaction;
+variable Evil_Critter;
+variable Slavery_Tolerant := 2;
+variable Karma_Perception;
+variable reaction_bonus_town_rep;
+variable reaction_bonus_karma;
+
+procedure start;
+procedure description_p_proc;
+procedure destroy_p_proc;
+procedure map_enter_p_proc;
+procedure look_at_p_proc;
+procedure pickup_p_proc;
+procedure timed_event_p_proc;
+procedure talk_p_proc;
+procedure Make_Ainven;
+procedure fNode;
+procedure Node001;
+procedure Node002;
+procedure NodeBarter;
+procedure Node005;
+procedure Node006;
+procedure Node999;
+
+variable Only_Once;
+
+procedure critter_p_proc;
+procedure damage_p_proc;
+
+
+procedure start
+begin
+end
+
+procedure description_p_proc
+begin
+    script_overrides;
+    display_mstr(101);
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(4) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1)) and (global_var(GVAR_CHILDKILLER_REPUTATION) == 0)) then begin
+            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
+            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
+            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+        end
+        set_global_var(GVAR_PLAYER_REPUTATION, global_var(GVAR_PLAYER_REPUTATION) + -10);
+        debug_msg("Player gains " + -10 + " Karma Points.");
+        set_global_var(GVAR_KARMA_HOLY_WARRIOR, 0);
+        set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 0);
+        set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 0);
+        set_global_var(GVAR_KARMA_DEFENDER, 0);
+        set_global_var(GVAR_KARMA_WANDERER, 0);
+        set_global_var(GVAR_KARMA_BETRAYER, 0);
+        set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 0);
+        set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 0);
+        set_global_var(GVAR_KARMA_DEMON_SPAWN, 0);
+        tmp_gen_rep := global_var(GVAR_PLAYER_REPUTATION);
+        if (has_trait(TRAIT_PERK, dude_obj, PERK_karma_beacon_perk)) then begin
+            tmp_gen_rep := global_var(GVAR_PLAYER_REPUTATION) * 2;
+        end
+        if (tmp_gen_rep >= 1000) then begin
+            set_global_var(GVAR_KARMA_HOLY_WARRIOR, 1);
+        end
+        else begin
+            if (tmp_gen_rep >= 750) then begin
+                set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 1);
+            end
+            else begin
+                if (tmp_gen_rep >= 500) then begin
+                    set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 1);
+                end
+                else begin
+                    if (tmp_gen_rep >= 250) then begin
+                        set_global_var(GVAR_KARMA_DEFENDER, 1);
+                    end
+                    else begin
+                        if (tmp_gen_rep > -250) then begin
+                            set_global_var(GVAR_KARMA_WANDERER, 1);
+                        end
+                        else begin
+                            if (tmp_gen_rep > -500) then begin
+                                set_global_var(GVAR_KARMA_BETRAYER, 1);
+                            end
+                            else begin
+                                if (tmp_gen_rep > -750) then begin
+                                    set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 1);
+                                end
+                                else begin
+                                    if (tmp_gen_rep > -1000) then begin
+                                        set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 1);
+                                    end
+                                    else begin
+                                        set_global_var(GVAR_KARMA_DEMON_SPAWN, 1);
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        set_global_var(GVAR_TOWN_REP_ABBEY, global_var(GVAR_TOWN_REP_ABBEY) + -5);
+        debug_msg("Added " + -5 + " to Town Rep");
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    Only_Once := 0;
+    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_STORE_OWNER);
+    if (local_var(7) == 0) then begin
+        set_local_var(7, 1);
+        call Make_Ainven();
+    end
+    add_timer_event(self_obj, random(5, 10) * 10, 1);
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    display_mstr(100);
+end
+
+procedure pickup_p_proc
+begin
+    variable LVar0 := 0;
+    if (source_obj == dude_obj) then begin
+        if (local_var(8) == 1) then begin
+            set_global_var(GVAR_TOWN_REP_ABBEY, -30);
+            attack(dude_obj);
+        end
+        else begin
+            float_msg(self_obj, mstr(500), FLOAT_MSG_RED);
+            set_local_var(8, 1);
+            LVar0 := create_object(236, 0, 0);
+            add_obj_to_inven(self_obj, LVar0);
+            wield_obj_critter(self_obj, LVar0);
+        end
+    end
+end
+
+procedure timed_event_p_proc
+begin
+    if ((fixed_param == 1) and not(combat_is_initialized) and obj_can_see_obj(self_obj, dude_obj) and (tile_distance(tile_num(self_obj), dude_tile) <= 4)) then begin
+        call Node001();
+    end
+    add_timer_event(self_obj, random(5, 10) * 10, 1);
+end
+
+procedure talk_p_proc
+begin
+    if (not(dude_is_stupid)) then begin
+        start_gdialog(2276, self_obj, 4, -1, -1);
+        gsay_start;
+        call Node001();
+        gsay_end;
+        end_dialogue;
+    end
+    else begin
+        float_msg(self_obj, mstr(203), FLOAT_MSG_LIGHT_RED);
+    end
+end
+
+procedure Make_Ainven
+begin
+    variable LVar0 := 0;
+    if (random(1, 20) <= 15) then begin
+        LVar0 := create_object(71, 0, 0);
+        add_mult_objs_to_inven(self_obj, LVar0, random(2, 3));
+    end
+    if (random(1, 20) <= 10) then begin
+        LVar0 := create_object(379, 0, 0);
+        add_mult_objs_to_inven(self_obj, LVar0, 1);
+    end
+    if (random(1, 20) <= 3) then begin
+        LVar0 := create_object(40, 0, 0);
+        add_mult_objs_to_inven(self_obj, LVar0, random(1, 2));
+    end
+    if (random(1, 20) <= 5) then begin
+        LVar0 := create_object(300, 0, 0);
+        add_mult_objs_to_inven(self_obj, LVar0, random(1, 2));
+    end
+    if (random(1, 20) <= 7) then begin
+        LVar0 := create_object(121, 0, 0);
+        add_mult_objs_to_inven(self_obj, LVar0, random(1, 2));
+    end
+    if (random(1, 20) <= 1) then begin
+        LVar0 := create_object(1, 0, 0);
+        add_mult_objs_to_inven(self_obj, LVar0, 1);
+    end
+    if (random(1, 20) <= 2) then begin
+        LVar0 := create_object(122, 0, 0);
+        add_mult_objs_to_inven(self_obj, LVar0, 1);
+    end
+    if (random(1, 20) <= 3) then begin
+        LVar0 := create_object(360, 0, 0);
+        add_mult_objs_to_inven(self_obj, LVar0, random(1, 2));
+    end
+    if (random(1, 20) <= 5) then begin
+        LVar0 := create_object(159, 0, 0);
+        add_mult_objs_to_inven(self_obj, LVar0, random(1, 2));
+    end
+end
+
+procedure fNode
+begin
+    float_msg(self_obj, mstr(random(200, 202)), FLOAT_MSG_YELLOW);
+end
+
+procedure Node001
+begin
+    Reply(300);
+    giq_option(4, NAME, 301, Node002, NEUTRAL_REACTION);
+    giq_option(4, NAME, 302, NodeBarter, NEUTRAL_REACTION);
+    giq_option(4, NAME, 303, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node002
+begin
+    Reply(400);
+    giq_option(4, NAME, 401, Node005, NEUTRAL_REACTION);
+    giq_option(4, NAME, 402, Node006, NEUTRAL_REACTION);
+end
+
+procedure NodeBarter
+begin
+    gdialog_barter;
+    call Node001();
+end
+
+procedure Node005
+begin
+    Reply(403);
+    giq_option(4, NAME, 402, Node006, NEUTRAL_REACTION);
+    giq_option(4, NAME, 405, Node001, NEUTRAL_REACTION);
+end
+
+procedure Node006
+begin
+    Reply(404);
+    giq_option(4, NAME, 401, Node005, NEUTRAL_REACTION);
+    giq_option(4, NAME, 406, Node001, NEUTRAL_REACTION);
+end
+
+procedure Node999
+begin
+end
+
+procedure critter_p_proc
+begin
+    if ((global_var(GVAR_TOWN_REP_ABBEY) <= -30) and obj_can_see_obj(self_obj, dude_obj)) then begin
+        attack(dude_obj);
+    end
+end
+
+procedure damage_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_local_var(0, local_var(0) bwor 8);
+        set_local_var(0, local_var(0) bwor 2);
+        if (global_var(GVAR_TOWN_REP_ABBEY) > -30) then begin
+            set_global_var(GVAR_TOWN_REP_ABBEY, -30);
+        end
+    end
+end

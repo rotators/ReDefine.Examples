@@ -1,0 +1,64 @@
+procedure start;
+procedure Click;
+procedure Move;
+procedure LightOff;
+
+variable Slot;
+variable ItemOnPtr;
+variable ItemOffPtr;
+variable IsOn;
+
+
+procedure start
+begin
+    register_hook_proc(24, Move);
+    register_hook_proc(18, Click);
+    if (game_loaded) then begin
+        set_global_script_repeat(1);
+    end
+    else begin
+        if (IsOn) then begin
+            obj_set_light_level(dude_obj, 100, 15);
+            set_global_var(GVAR_PLAYER_IS_BLADE, 1);
+        end
+        else begin
+            obj_set_light_level(dude_obj, 0, 0);
+        end
+    end
+end
+
+procedure Click
+begin
+    if (obj_pid(critter_inven_obj(dude_obj, 2 - active_hand)) != 810) then begin
+        return 0;
+    end
+    if (IsOn) then begin
+        call LightOff();
+    end
+    else begin
+        obj_set_light_level(dude_obj, 100, 15);
+        IsOn := 1;
+        script_overrides;
+        set_global_var(GVAR_PLAYER_IS_BLADE, 1);
+        display_msg("Flashlight is on.");
+    end
+end
+
+procedure Move
+begin
+    Slot := get_sfall_arg;
+    ItemOnPtr := get_sfall_arg;
+    ItemOffPtr := get_sfall_arg;
+    if ((obj_pid(ItemOffPtr) == 810) or ((obj_pid(ItemOnPtr) == 810) and (Slot == 0))) then begin
+        call LightOff();
+    end
+end
+
+procedure LightOff
+begin
+    obj_set_light_level(dude_obj, 0, 0);
+    IsOn := 0;
+    script_overrides;
+    display_msg("Flashlight is off.");
+    set_global_var(GVAR_PLAYER_IS_BLADE, 0);
+end

@@ -1,0 +1,1114 @@
+variable global_temp;
+variable restock_amt;
+variable restock_obj;
+variable restock_trash;
+variable removed_qty;
+
+procedure start;
+procedure critter_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure destroy_p_proc;
+procedure look_at_p_proc;
+procedure description_p_proc;
+procedure use_skill_on_p_proc;
+procedure damage_p_proc;
+procedure map_enter_p_proc;
+procedure timed_event_p_proc;
+procedure Node998;
+procedure Node999;
+procedure Node000;
+procedure Node001;
+procedure Node002;
+procedure Node003;
+procedure Node004;
+procedure Node005;
+procedure Node006;
+procedure Node007;
+procedure Node008;
+procedure Node009;
+procedure Node010;
+procedure Node011;
+procedure Node012;
+procedure Node012a;
+procedure Node012b;
+procedure Node013;
+procedure Node014;
+procedure Node015;
+procedure Node016;
+procedure Node017;
+procedure Node018;
+procedure Node019;
+procedure Node020;
+procedure Node021;
+procedure Node022;
+procedure Node023;
+procedure Node024;
+procedure Node025;
+procedure Node026;
+procedure Node027;
+procedure Node030;
+procedure Node031;
+
+import variable den_smitty_box_obj;
+import variable generic_temp_box;
+import variable smitty_obj;
+
+procedure Node990;
+procedure Node120;
+procedure Node121;
+procedure Node122;
+procedure Node123;
+procedure Node124;
+procedure Node125;
+procedure Node126;
+procedure Node127;
+procedure Node128;
+procedure Node129;
+procedure Node130;
+procedure Node131;
+procedure Node132;
+procedure Node133;
+procedure Node134;
+procedure Node135;
+
+
+procedure start
+begin
+    smitty_obj := self_obj;
+end
+
+procedure critter_p_proc
+begin
+    if (obj_can_see_obj(self_obj, dude_obj)) then begin
+        if ((local_var(4) bwand 2) != 0) then begin
+            if (critter_is_fleeing(self_obj)) then begin
+                if (anim_busy(self_obj) == 0) then begin
+                    if ((tile_distance_objs(self_obj, dude_obj) < 8) or obj_can_see_obj(self_obj, dude_obj)) then begin
+                        if (anim_busy(self_obj) == 0) then begin
+                            global_temp := rotation_to_tile(dude_tile, tile_num(self_obj));
+                            animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                            global_temp := (global_temp + 1) % 6;
+                            while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(dude_tile, tile_num(self_obj)))) do begin
+                                debug_msg("flee loop: rot == " + global_temp);
+                                animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                                global_temp := (global_temp + 1) % 6;
+                            end
+                        end
+                    end
+                end
+            end
+            else begin
+                attack(dude_obj);
+            end
+        end
+        else begin
+            if ((local_var(4) bwand 2048) != 0) then begin
+                set_local_var(4, local_var(4) bwand (-1 - 2048));
+                set_local_var(4, local_var(4) bwor 1024);
+                float_msg(self_obj, mstr(600), FLOAT_MSG_YELLOW);
+            end
+        end
+    end
+    else begin
+        if ((local_var(4) bwand 2048) != 0) then begin
+            if (((local_var(4) bwand 1024) != 0) == 0) then begin
+                if (tile_distance_objs(self_obj, dude_obj) > 2) then begin
+                    animate_move_obj_to_tile(self_obj, tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), 1);
+                end
+            end
+        end
+        else begin
+            if (tile_num(self_obj) != local_var(5)) then begin
+                animate_move_obj_to_tile(self_obj, local_var(5), 0);
+            end
+            else begin
+                if (obj_get_rot(self_obj) != local_var(6)) then begin
+                    anim(self_obj, 1000, local_var(6));
+                end
+            end
+        end
+    end
+end
+
+procedure pickup_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        call Node998();
+    end
+end
+
+procedure talk_p_proc
+begin
+    if (((global_var(GVAR_DEN_FLAG_2) bwand 524288) != 0) or ((global_var(GVAR_DEN_FLAG_2) bwand 1048576) != 0)) then begin
+        call Node001();
+    end
+    else begin
+        if (dude_is_stupid) then begin
+            call Node002();
+        end
+        else begin
+            move_obj_inven_to_obj(self_obj, generic_temp_box);
+            move_obj_inven_to_obj(den_smitty_box_obj, self_obj);
+            start_gdialog(45, self_obj, 4, -1, -1);
+            gsay_start;
+            call Node000();
+            gsay_end;
+            end_dialogue;
+            move_obj_inven_to_obj(self_obj, den_smitty_box_obj);
+            move_obj_inven_to_obj(generic_temp_box, self_obj);
+            set_local_var(4, local_var(4) bwor 1);
+        end
+    end
+    set_local_var(4, local_var(4) bwor 1);
+end
+
+procedure destroy_p_proc
+begin
+    smitty_obj := 0;
+    move_obj_inven_to_obj(den_smitty_box_obj, self_obj);
+    if (source_obj == dude_obj) then begin
+        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(4) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1)) and (global_var(GVAR_CHILDKILLER_REPUTATION) == 0)) then begin
+            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
+            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
+            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+        end
+        set_global_var(GVAR_PLAYER_REPUTATION, global_var(GVAR_PLAYER_REPUTATION) + -10);
+        debug_msg("Player gains " + -10 + " Karma Points.");
+        set_global_var(GVAR_KARMA_HOLY_WARRIOR, 0);
+        set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 0);
+        set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 0);
+        set_global_var(GVAR_KARMA_DEFENDER, 0);
+        set_global_var(GVAR_KARMA_WANDERER, 0);
+        set_global_var(GVAR_KARMA_BETRAYER, 0);
+        set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 0);
+        set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 0);
+        set_global_var(GVAR_KARMA_DEMON_SPAWN, 0);
+        if (global_var(GVAR_PLAYER_REPUTATION) >= 1000) then begin
+            set_global_var(GVAR_KARMA_HOLY_WARRIOR, 1);
+        end
+        else begin
+            if (global_var(GVAR_PLAYER_REPUTATION) >= 750) then begin
+                set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 1);
+            end
+            else begin
+                if (global_var(GVAR_PLAYER_REPUTATION) >= 500) then begin
+                    set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 1);
+                end
+                else begin
+                    if (global_var(GVAR_PLAYER_REPUTATION) >= 250) then begin
+                        set_global_var(GVAR_KARMA_DEFENDER, 1);
+                    end
+                    else begin
+                        if (global_var(GVAR_PLAYER_REPUTATION) > -250) then begin
+                            set_global_var(GVAR_KARMA_WANDERER, 1);
+                        end
+                        else begin
+                            if (global_var(GVAR_PLAYER_REPUTATION) > -500) then begin
+                                set_global_var(GVAR_KARMA_BETRAYER, 1);
+                            end
+                            else begin
+                                if (global_var(GVAR_PLAYER_REPUTATION) > -750) then begin
+                                    set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 1);
+                                end
+                                else begin
+                                    if (global_var(GVAR_PLAYER_REPUTATION) > -1000) then begin
+                                        set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 1);
+                                    end
+                                    else begin
+                                        set_global_var(GVAR_KARMA_DEMON_SPAWN, 1);
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    if (global_var(GVAR_DEN_SMITTY_DELIVER) == 1) then begin
+        set_global_var(GVAR_DEN_SMITTY_DELIVER, 2);
+    end
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    display_mstr(100);
+end
+
+procedure description_p_proc
+begin
+    script_overrides;
+    display_mstr(151 - ((local_var(4) bwand 1) != 0));
+    set_local_var(4, local_var(4) bwor 4);
+end
+
+procedure use_skill_on_p_proc
+begin
+end
+
+procedure damage_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_local_var(4, local_var(4) bwor 8);
+        set_local_var(4, local_var(4) bwor 2);
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    smitty_obj := self_obj;
+    if (is_loading_game == 0) then begin
+        if (map_first_run) then begin
+            critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 9);
+            critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_TOUGH_CITIZEN);
+            set_local_var(5, tile_num(self_obj));
+            set_local_var(6, obj_get_rot(self_obj));
+        end
+        metarule3(100, self_obj, 0, 0);
+        add_timer_event(self_obj, game_ticks(random(15, 90)), 0);
+        metarule3(100, self_obj, 1, 0);
+        add_timer_event(self_obj, game_ticks(random(15, 90)), 1);
+    end
+end
+
+procedure timed_event_p_proc
+begin
+    if (fixed_param == 0) then begin
+        if (combat_is_initialized == 0) then begin
+        end
+    end
+    else begin
+        if (fixed_param == 1) then begin
+            if (combat_is_initialized == 0) then begin
+                if (((local_var(4) bwand 2048) != 0) == 0) then begin
+                end
+            end
+            metarule3(100, self_obj, 1, 0);
+            add_timer_event(self_obj, game_ticks(random(15, 90)), 1);
+        end
+        else begin
+            if (fixed_param == 11) then begin
+                if ((local_var(4) bwand 1024) != 0) then begin
+                    set_local_var(4, local_var(4) bwor 2);
+                end
+                set_local_var(4, local_var(4) bwor 2048);
+            end
+        end
+    end
+end
+
+procedure Node998
+begin
+    set_local_var(4, local_var(4) bwor 2);
+end
+
+procedure Node999
+begin
+end
+
+procedure Node000
+begin
+    if (global_var(GVAR_PLAYER_GOT_CAR)) then begin
+        call Node018();
+    end
+    else begin
+        if (((local_var(4) bwand 1024) != 0) or ((local_var(4) bwand 2048) != 0) and (((local_var(4) bwand 4096) != 0) == 0)) then begin
+            call Node027();
+        end
+        else begin
+            call Node003();
+        end
+    end
+end
+
+procedure Node001
+begin
+    float_msg(self_obj, mstr(random(200, 204)), FLOAT_MSG_YELLOW);
+end
+
+procedure Node002
+begin
+    float_msg(self_obj, mstr(random(220, 224)), FLOAT_MSG_YELLOW);
+end
+
+procedure Node003
+begin
+    if ((local_var(4) bwand 1) != 0) then begin
+        Reply(242 + ((local_var(4) bwand 512) != 0));
+        set_local_var(4, local_var(4) bwand (-1 - 512));
+    end
+    else begin
+        Reply(240 + (dude_gender == 1));
+    end
+    giq_option(4, NAME, 244, Node020, NEUTRAL_REACTION);
+    if (obj_is_carrying_obj_pid(dude_obj, 253) > 0) then begin
+        giq_option(4, NAME, 245, Node004, GOOD_REACTION);
+    end
+    else begin
+        if (global_var(GVAR_DEN_SMITTY_PART) == 1) then begin
+            giq_option(4, NAME, 246, Node011, GOOD_REACTION);
+        end
+    end
+    if (obj_is_carrying_obj_pid(dude_obj, 254) > 0) then begin
+        giq_option(4, NAME, 248, Node005, GOOD_REACTION);
+    end
+    if ((global_var(GVAR_DEN_SMITTY_DELIVER) == 1) and (obj_is_carrying_obj_pid(dude_obj, 468) > 0)) then begin
+        giq_option(4, NAME, 247, Node008, GOOD_REACTION);
+    end
+    if (obj_is_carrying_obj_pid(dude_obj, 851) or obj_is_carrying_obj_pid(dude_obj, 852) or obj_is_carrying_obj_pid(dude_obj, 853) or obj_is_carrying_obj_pid(dude_obj, 854) or obj_is_carrying_obj_pid(dude_obj, 855)) then begin
+        giq_option(4, NAME, 700, Node120, NEUTRAL_REACTION);
+    end
+    if (global_var(GVAR_PLAYER_GOT_CAR) != 0) then begin
+        giq_option(4, NAME, 725, Node030, NEUTRAL_REACTION);
+    end
+    giq_option(4, NAME, 249, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node004
+begin
+    Reply(260);
+    giq_option(4, NAME, 261, Node006, GOOD_REACTION);
+    giq_option(4, NAME, 262, Node003, NEUTRAL_REACTION);
+    giq_option(4, NAME, 263, Node999, BAD_REACTION);
+end
+
+procedure Node005
+begin
+    Reply(280);
+    giq_option(4, NAME, 281, Node007, GOOD_REACTION);
+    giq_option(4, NAME, 282, Node003, NEUTRAL_REACTION);
+    giq_option(4, NAME, 283, Node999, BAD_REACTION);
+end
+
+procedure Node006
+begin
+    Reply(300);
+    giq_option(4, NAME, 301, Node009, NEUTRAL_REACTION);
+end
+
+procedure Node007
+begin
+    Reply(310);
+    giq_option(4, NAME, 311, Node009, NEUTRAL_REACTION);
+end
+
+procedure Node008
+begin
+    if ((game_time > global_var(GVAR_SMITTY_DELIVER_TIME)) and (global_var(GVAR_SMITTY_DELIVER_TIME) != 0)) then begin
+        if (2 == 3) then begin
+            if (global_var(GVAR_DEN_SMITTY_DELIVER) < 3) then begin
+                display_msg(message_str(SCRIPT_DENBUS1, 1200));
+                give_exp_points(150);
+                display_msg(g_mstr(100) + 150 + g_mstr(101));
+                set_global_var(GVAR_PLAYER_REPUTATION, global_var(GVAR_PLAYER_REPUTATION) + 10);
+                debug_msg("Player gains " + 10 + " Karma Points.");
+                set_global_var(GVAR_KARMA_HOLY_WARRIOR, 0);
+                set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 0);
+                set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 0);
+                set_global_var(GVAR_KARMA_DEFENDER, 0);
+                set_global_var(GVAR_KARMA_WANDERER, 0);
+                set_global_var(GVAR_KARMA_BETRAYER, 0);
+                set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 0);
+                set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 0);
+                set_global_var(GVAR_KARMA_DEMON_SPAWN, 0);
+                if (global_var(GVAR_PLAYER_REPUTATION) >= 1000) then begin
+                    set_global_var(GVAR_KARMA_HOLY_WARRIOR, 1);
+                end
+                else begin
+                    if (global_var(GVAR_PLAYER_REPUTATION) >= 750) then begin
+                        set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 1);
+                    end
+                    else begin
+                        if (global_var(GVAR_PLAYER_REPUTATION) >= 500) then begin
+                            set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 1);
+                        end
+                        else begin
+                            if (global_var(GVAR_PLAYER_REPUTATION) >= 250) then begin
+                                set_global_var(GVAR_KARMA_DEFENDER, 1);
+                            end
+                            else begin
+                                if (global_var(GVAR_PLAYER_REPUTATION) > -250) then begin
+                                    set_global_var(GVAR_KARMA_WANDERER, 1);
+                                end
+                                else begin
+                                    if (global_var(GVAR_PLAYER_REPUTATION) > -500) then begin
+                                        set_global_var(GVAR_KARMA_BETRAYER, 1);
+                                    end
+                                    else begin
+                                        if (global_var(GVAR_PLAYER_REPUTATION) > -750) then begin
+                                            set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 1);
+                                        end
+                                        else begin
+                                            if (global_var(GVAR_PLAYER_REPUTATION) > -1000) then begin
+                                                set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 1);
+                                            end
+                                            else begin
+                                                set_global_var(GVAR_KARMA_DEMON_SPAWN, 1);
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        else begin
+            if (2 == 1) then begin
+                if (global_var(GVAR_SMITTY_DELIVER_TIME) == 0) then begin
+                    set_global_var(GVAR_SMITTY_DELIVER_TIME, game_time + (24 * (60 * (60 * 10))));
+                end
+            end
+        end
+        if (global_var(GVAR_DEN_SMITTY_DELIVER) < 2) then begin
+            set_global_var(GVAR_DEN_SMITTY_DELIVER, 2);
+        end
+        Reply(322);
+        giq_option(4, NAME, 323, Node999, BAD_REACTION);
+        giq_option(4, NAME, 324, Node999, NEUTRAL_REACTION);
+        giq_option(4, NAME, 325, Node999, BAD_REACTION);
+        giq_option(4, NAME, 326, Node999, NEUTRAL_REACTION);
+        giq_option(4, NAME, 327, Node999, NEUTRAL_REACTION);
+    end
+    else begin
+        set_local_var(4, local_var(4) bwor 512);
+        if (3 == 3) then begin
+            if (global_var(GVAR_DEN_SMITTY_DELIVER) < 3) then begin
+                display_msg(message_str(SCRIPT_DENBUS1, 1200));
+                give_exp_points(150);
+                display_msg(g_mstr(100) + 150 + g_mstr(101));
+                set_global_var(GVAR_PLAYER_REPUTATION, global_var(GVAR_PLAYER_REPUTATION) + 10);
+                debug_msg("Player gains " + 10 + " Karma Points.");
+                set_global_var(GVAR_KARMA_HOLY_WARRIOR, 0);
+                set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 0);
+                set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 0);
+                set_global_var(GVAR_KARMA_DEFENDER, 0);
+                set_global_var(GVAR_KARMA_WANDERER, 0);
+                set_global_var(GVAR_KARMA_BETRAYER, 0);
+                set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 0);
+                set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 0);
+                set_global_var(GVAR_KARMA_DEMON_SPAWN, 0);
+                if (global_var(GVAR_PLAYER_REPUTATION) >= 1000) then begin
+                    set_global_var(GVAR_KARMA_HOLY_WARRIOR, 1);
+                end
+                else begin
+                    if (global_var(GVAR_PLAYER_REPUTATION) >= 750) then begin
+                        set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 1);
+                    end
+                    else begin
+                        if (global_var(GVAR_PLAYER_REPUTATION) >= 500) then begin
+                            set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 1);
+                        end
+                        else begin
+                            if (global_var(GVAR_PLAYER_REPUTATION) >= 250) then begin
+                                set_global_var(GVAR_KARMA_DEFENDER, 1);
+                            end
+                            else begin
+                                if (global_var(GVAR_PLAYER_REPUTATION) > -250) then begin
+                                    set_global_var(GVAR_KARMA_WANDERER, 1);
+                                end
+                                else begin
+                                    if (global_var(GVAR_PLAYER_REPUTATION) > -500) then begin
+                                        set_global_var(GVAR_KARMA_BETRAYER, 1);
+                                    end
+                                    else begin
+                                        if (global_var(GVAR_PLAYER_REPUTATION) > -750) then begin
+                                            set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 1);
+                                        end
+                                        else begin
+                                            if (global_var(GVAR_PLAYER_REPUTATION) > -1000) then begin
+                                                set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 1);
+                                            end
+                                            else begin
+                                                set_global_var(GVAR_KARMA_DEMON_SPAWN, 1);
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        else begin
+            if (3 == 1) then begin
+                if (global_var(GVAR_SMITTY_DELIVER_TIME) == 0) then begin
+                    set_global_var(GVAR_SMITTY_DELIVER_TIME, game_time + (24 * (60 * (60 * 10))));
+                end
+            end
+        end
+        if (global_var(GVAR_DEN_SMITTY_DELIVER) < 3) then begin
+            set_global_var(GVAR_DEN_SMITTY_DELIVER, 3);
+        end
+        restock_obj := create_object(40, 0, 0);
+        add_mult_objs_to_inven(dude_obj, restock_obj, 1);
+        removed_qty := obj_is_carrying_obj_pid(dude_obj, 468);
+        if (1 < removed_qty) then begin
+            removed_qty := 1;
+        end
+        if (removed_qty > 0) then begin
+            restock_obj := obj_carrying_pid_obj(dude_obj, 468);
+            if (obj_type(self_obj) == 1) then begin
+                restock_obj := obj_carrying_pid_obj(dude_obj, 468);
+                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+                    if (obj_item_subtype(critter_inven_obj(dude_obj, 0)) == 0) then begin
+                        restock_obj := critter_inven_obj(dude_obj, 0);
+                        debug_msg("armour pid == " + obj_pid(restock_obj));
+                        rm_obj_from_inven(dude_obj, restock_obj);
+                        add_obj_to_inven(dude_obj, restock_obj);
+                    end
+                end
+                else begin
+                    if ((critter_inven_obj(dude_obj, 2) == restock_obj) or (critter_inven_obj(dude_obj, 1) == restock_obj)) then begin
+                        inven_unwield(dude_obj);
+                    end
+                end
+            end
+            restock_amt := rm_mult_objs_from_inven(dude_obj, restock_obj, removed_qty);
+            destroy_object(restock_obj);
+        end
+        restock_obj := 0;
+        restock_amt := 0;
+        Reply(320);
+        giq_option(4, NAME, 328, Node003, NEUTRAL_REACTION);
+        giq_option(4, NAME, 321, Node999, GOOD_REACTION);
+    end
+end
+
+procedure Node009
+begin
+    Reply(330);
+    if (obj_is_carrying_obj_pid(dude_obj, 253) > 0) then begin
+        giq_option(4, NAME, 331, Node010, NEUTRAL_REACTION);
+    end
+    else begin
+        giq_option(4, NAME, 331, Node013, NEUTRAL_REACTION);
+    end
+end
+
+procedure Node010
+begin
+    Reply(340);
+    giq_option(4, NAME, 341, Node011, NEUTRAL_REACTION);
+end
+
+procedure Node011
+begin
+    if (global_var(GVAR_DEN_CAR_PART_PIP) < 1) then begin
+        set_global_var(GVAR_DEN_CAR_PART_PIP, 1);
+    end
+    if (global_var(GVAR_DEN_SMITTY_PART) < 1) then begin
+        set_global_var(GVAR_DEN_SMITTY_PART, 1);
+    end
+    Reply(350);
+    if (obj_is_carrying_obj_pid(dude_obj, 253) > 0) then begin
+        if ((has_skill(dude_obj, SKILL_BARTER) + (5 * (is_skill_tagged(17) + has_trait(TRAIT_PERK, dude_obj, PERK_master_trader) + has_trait(TRAIT_PERK, dude_obj, PERK_salesman_perk) + has_trait(TRAIT_PERK, dude_obj, PERK_negotiator_perk)))) >= 95) then begin
+            giq_option(5, NAME, 700, Node012a, NEUTRAL_REACTION);
+        end
+        if (item_caps_total(dude_obj) >= 10000) then begin
+            giq_option(4, NAME, 351, Node012, GOOD_REACTION);
+        end
+        giq_option(4, NAME, 352, Node003, NEUTRAL_REACTION);
+    end
+    giq_option(4, NAME, 353, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node012
+begin
+    gfade_out(30);
+    game_time_advance(36000);
+    if (global_var(GVAR_DEN_SMITTY_PART) < 2) then begin
+        set_global_var(GVAR_DEN_SMITTY_PART, 2);
+    end
+    if (global_var(GVAR_DEN_CAR_PART_PIP) < 2) then begin
+        set_global_var(GVAR_DEN_CAR_PART_PIP, 2);
+    end
+    item_caps_adjust(self_obj, 750);
+    item_caps_adjust(dude_obj, -10000);
+    set_global_var(GVAR_PLAYER_GOT_CAR, 1);
+    if (obj_is_carrying_obj_pid(dude_obj, 253) > 0) then begin
+        restock_obj := obj_carrying_pid_obj(dude_obj, 253);
+        if ((critter_inven_obj(dude_obj, 2) == restock_obj) or (critter_inven_obj(dude_obj, 1) == restock_obj)) then begin
+            inven_unwield(dude_obj);
+        end
+        rm_obj_from_inven(dude_obj, restock_obj);
+        destroy_object(restock_obj);
+        restock_obj := 0;
+    end
+    gfade_in(30);
+    Reply(370);
+    giq_option(4, NAME, 371, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node012a
+begin
+    Reply(801);
+    giq_option(4, NAME, 806, Node999, NEUTRAL_REACTION);
+    giq_option(4, NAME, 328, Node003, NEUTRAL_REACTION);
+    if (item_caps_total(dude_obj) >= 7500) then begin
+        giq_option(4, NAME, 805, Node012b, GOOD_REACTION);
+    end
+    else begin
+        giq_option(4, NAME, 807, Node999, NEUTRAL_REACTION);
+    end
+end
+
+procedure Node012b
+begin
+    gfade_out(30);
+    game_time_advance(36000);
+    if (global_var(GVAR_DEN_SMITTY_PART) < 2) then begin
+        set_global_var(GVAR_DEN_SMITTY_PART, 2);
+    end
+    if (global_var(GVAR_DEN_CAR_PART_PIP) < 2) then begin
+        set_global_var(GVAR_DEN_CAR_PART_PIP, 2);
+    end
+    item_caps_adjust(self_obj, 500);
+    item_caps_adjust(dude_obj, -7500);
+    set_global_var(GVAR_PLAYER_GOT_CAR, 1);
+    if (obj_is_carrying_obj_pid(dude_obj, 253) > 0) then begin
+        restock_obj := obj_carrying_pid_obj(dude_obj, 253);
+        if ((critter_inven_obj(dude_obj, 2) == restock_obj) or (critter_inven_obj(dude_obj, 1) == restock_obj)) then begin
+            inven_unwield(dude_obj);
+        end
+        rm_obj_from_inven(dude_obj, restock_obj);
+        destroy_object(restock_obj);
+        restock_obj := 0;
+    end
+    gfade_in(30);
+    Reply(370);
+    giq_option(4, NAME, 371, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node013
+begin
+    Reply(380);
+    giq_option(4, NAME, 381, Node014, NEUTRAL_REACTION);
+end
+
+procedure Node014
+begin
+    Reply(390);
+    giq_option(4, NAME, 391, Node015, NEUTRAL_REACTION);
+end
+
+procedure Node015
+begin
+    if (global_var(GVAR_DEN_CAR_PART_PIP) < 1) then begin
+        set_global_var(GVAR_DEN_CAR_PART_PIP, 1);
+    end
+    if (global_var(GVAR_DEN_SMITTY_PART) < 1) then begin
+        set_global_var(GVAR_DEN_SMITTY_PART, 1);
+    end
+    Reply(400);
+    giq_option(4, NAME, 401, Node016, NEUTRAL_REACTION);
+end
+
+procedure Node016
+begin
+    Reply(410);
+    giq_option(4, NAME, 411, Node017, NEUTRAL_REACTION);
+end
+
+procedure Node017
+begin
+    Reply(420);
+    giq_option(4, NAME, 421, Node003, NEUTRAL_REACTION);
+    giq_option(4, NAME, 422, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node018
+begin
+    Reply(430);
+    if ((obj_is_carrying_obj_pid(dude_obj, 254) > 0) and ((car_current_town == 1) or (((global_var(GVAR_DEN_FLAG_3) bwand 32768) != 0) == 0))) then begin
+        giq_option(4, NAME, 431, Node019, GOOD_REACTION);
+    end
+    if ((global_var(GVAR_DEN_SMITTY_DELIVER) == 1) and (obj_is_carrying_obj_pid(dude_obj, 468) > 0)) then begin
+        giq_option(4, NAME, 432, Node008, GOOD_REACTION);
+    end
+    if (obj_is_carrying_obj_pid(dude_obj, 851) or obj_is_carrying_obj_pid(dude_obj, 852) or obj_is_carrying_obj_pid(dude_obj, 853) or obj_is_carrying_obj_pid(dude_obj, 854) or obj_is_carrying_obj_pid(dude_obj, 855)) then begin
+        giq_option(4, NAME, 700, Node120, NEUTRAL_REACTION);
+    end
+    giq_option(4, NAME, 433, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node019
+begin
+    Reply(450);
+    if (item_caps_total(dude_obj) >= 750) then begin
+        giq_option(4, NAME, 451, Node026, GOOD_REACTION);
+    end
+    giq_option(4, NAME, 452, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node020
+begin
+    Reply(460);
+    giq_option(4, NAME, 461, Node021, NEUTRAL_REACTION);
+    giq_option(4, NAME, 462, Node003, BAD_REACTION);
+end
+
+procedure Node021
+begin
+    Reply(470);
+    giq_option(4, NAME, 471, Node022, NEUTRAL_REACTION);
+end
+
+procedure Node022
+begin
+    Reply(480);
+    giq_option(4, NAME, 481, Node023, NEUTRAL_REACTION);
+    giq_option(4, NAME, 482, Node024, NEUTRAL_REACTION);
+end
+
+procedure Node023
+begin
+    Reply(490);
+    giq_option(4, NAME, 491, Node025, NEUTRAL_REACTION);
+end
+
+procedure Node024
+begin
+    Reply(500);
+    giq_option(4, NAME, 501, Node025, NEUTRAL_REACTION);
+end
+
+procedure Node025
+begin
+    if (global_var(GVAR_DEN_CAR_PART_PIP) < 1) then begin
+        set_global_var(GVAR_DEN_CAR_PART_PIP, 1);
+    end
+    if (global_var(GVAR_DEN_SMITTY_PART) < 1) then begin
+        set_global_var(GVAR_DEN_SMITTY_PART, 1);
+    end
+    Reply(510);
+    giq_option(4, NAME, 511, Node003, NEUTRAL_REACTION);
+    giq_option(4, NAME, 512, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node026
+begin
+    gfade_out(30);
+    game_time_advance(36000);
+    item_caps_adjust(self_obj, 150);
+    item_caps_adjust(dude_obj, -750);
+    if (obj_is_carrying_obj_pid(dude_obj, 254) > 0) then begin
+        restock_obj := obj_carrying_pid_obj(dude_obj, 254);
+        if ((critter_inven_obj(dude_obj, 2) == restock_obj) or (critter_inven_obj(dude_obj, 1) == restock_obj)) then begin
+            inven_unwield(dude_obj);
+        end
+        rm_obj_from_inven(dude_obj, restock_obj);
+        destroy_object(restock_obj);
+        restock_obj := 0;
+    end
+    set_global_var(GVAR_CAR_UPGRADE_FUEL_CELL_REGULATOR, 1);
+    gfade_in(30);
+    Reply(520);
+    giq_option(4, NAME, 521, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node027
+begin
+    set_local_var(4, local_var(4) bwor 4096);
+    Reply(650);
+    giq_option(4, NAME, 651, Node999, NEUTRAL_REACTION);
+    giq_option(-3, NAME, 652, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node030
+begin
+    Reply(726);
+    giq_option(4, NAME, 727, Node031, NEUTRAL_REACTION);
+    giq_option(4, NAME, 731, Node003, NEUTRAL_REACTION);
+    giq_option(4, NAME, 728, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node031
+begin
+    Reply(729);
+    giq_option(4, NAME, 732, Node003, NEUTRAL_REACTION);
+    giq_option(4, NAME, 730, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node990
+begin
+end
+
+procedure Node120
+begin
+    Reply(701);
+    if (obj_is_carrying_obj_pid(dude_obj, 851)) then begin
+        giq_option(4, NAME, 702, Node121, NEUTRAL_REACTION);
+    end
+    if (obj_is_carrying_obj_pid(dude_obj, 852)) then begin
+        giq_option(4, NAME, 702, Node122, NEUTRAL_REACTION);
+    end
+    if (obj_is_carrying_obj_pid(dude_obj, 853)) then begin
+        giq_option(4, NAME, 703, Node123, NEUTRAL_REACTION);
+    end
+    if (obj_is_carrying_obj_pid(dude_obj, 854)) then begin
+        giq_option(4, NAME, 702, Node124, NEUTRAL_REACTION);
+    end
+    if (obj_is_carrying_obj_pid(dude_obj, 855)) then begin
+        giq_option(4, NAME, 702, Node125, NEUTRAL_REACTION);
+    end
+    giq_option(4, NAME, 716, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node121
+begin
+    Reply(704);
+    if (item_caps_total(dude_obj) < 1600) then begin
+        giq_option(4, NAME, 717, Node999, NEUTRAL_REACTION);
+    end
+    if (item_caps_total(dude_obj) > 1599) then begin
+        giq_option(4, NAME, 710, Node126, NEUTRAL_REACTION);
+    end
+    giq_option(4, NAME, 709, Node131, NEUTRAL_REACTION);
+    if (item_caps_total(dude_obj) > 1599) then begin
+        giq_option(4, NAME, 713, Node126, NEUTRAL_REACTION);
+    end
+    giq_option(4, NAME, 711, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node122
+begin
+    Reply(705);
+    if (item_caps_total(dude_obj) < 1600) then begin
+        giq_option(4, NAME, 717, Node999, NEUTRAL_REACTION);
+    end
+    if (item_caps_total(dude_obj) > 1599) then begin
+        giq_option(4, NAME, 710, Node127, NEUTRAL_REACTION);
+    end
+    giq_option(4, NAME, 709, Node132, NEUTRAL_REACTION);
+    if (item_caps_total(dude_obj) > 1599) then begin
+        giq_option(4, NAME, 713, Node127, NEUTRAL_REACTION);
+    end
+    giq_option(4, NAME, 716, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node123
+begin
+    Reply(708);
+    if (item_caps_total(dude_obj) < 500) then begin
+        giq_option(4, NAME, 717, Node999, NEUTRAL_REACTION);
+    end
+    if (item_caps_total(dude_obj) > 499) then begin
+        giq_option(4, NAME, 710, Node128, NEUTRAL_REACTION);
+    end
+    giq_option(4, NAME, 709, Node133, NEUTRAL_REACTION);
+    if (item_caps_total(dude_obj) > 499) then begin
+        giq_option(4, NAME, 713, Node128, NEUTRAL_REACTION);
+    end
+    giq_option(4, NAME, 711, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node124
+begin
+    Reply(706);
+    if (item_caps_total(dude_obj) < 1600) then begin
+        giq_option(4, NAME, 717, Node999, NEUTRAL_REACTION);
+    end
+    if (item_caps_total(dude_obj) > 1599) then begin
+        giq_option(4, NAME, 710, Node129, NEUTRAL_REACTION);
+    end
+    giq_option(4, NAME, 709, Node134, NEUTRAL_REACTION);
+    if (item_caps_total(dude_obj) > 1599) then begin
+        giq_option(4, NAME, 713, Node129, NEUTRAL_REACTION);
+    end
+    giq_option(4, NAME, 716, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node125
+begin
+    Reply(707);
+    if (item_caps_total(dude_obj) < 1600) then begin
+        giq_option(4, NAME, 717, Node999, NEUTRAL_REACTION);
+    end
+    if (item_caps_total(dude_obj) > 1599) then begin
+        giq_option(4, NAME, 710, Node130, NEUTRAL_REACTION);
+    end
+    giq_option(4, NAME, 709, Node135, NEUTRAL_REACTION);
+    if (item_caps_total(dude_obj) > 1599) then begin
+        giq_option(4, NAME, 713, Node130, NEUTRAL_REACTION);
+    end
+    giq_option(4, NAME, 711, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node126
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    gfade_out(60 * 10);
+    game_time_advance(3 * (60 * (60 * 10)));
+    item_caps_adjust(dude_obj, -1600);
+    item_caps_adjust(self_obj, 400);
+    LVar0 := create_object(857, 0, 0);
+    add_obj_to_inven(dude_obj, LVar0);
+    LVar1 := obj_carrying_pid_obj(dude_obj, 851);
+    rm_obj_from_inven(dude_obj, LVar1);
+    destroy_object(LVar1);
+    gfade_in(60 * 10);
+    return 0;
+    LVar0 := 0;
+    LVar1 := 0;
+end
+
+procedure Node127
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    gfade_out(60 * 10);
+    game_time_advance(3 * (60 * (60 * 10)));
+    item_caps_adjust(dude_obj, -1600);
+    item_caps_adjust(self_obj, 400);
+    LVar0 := create_object(858, 0, 0);
+    add_obj_to_inven(dude_obj, LVar0);
+    LVar1 := obj_carrying_pid_obj(dude_obj, 852);
+    rm_obj_from_inven(dude_obj, LVar1);
+    destroy_object(LVar1);
+    gfade_in(60 * 10);
+    return 0;
+    LVar0 := 0;
+    LVar1 := 0;
+end
+
+procedure Node128
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    gfade_out(60 * 10);
+    game_time_advance(60 * (60 * 10));
+    item_caps_adjust(dude_obj, -500);
+    item_caps_adjust(self_obj, 100);
+    LVar0 := create_object(856, 0, 0);
+    add_obj_to_inven(dude_obj, LVar0);
+    LVar1 := obj_carrying_pid_obj(dude_obj, 853);
+    rm_obj_from_inven(dude_obj, LVar1);
+    destroy_object(LVar1);
+    gfade_in(60 * 10);
+    return 0;
+    LVar0 := 0;
+    LVar1 := 0;
+end
+
+procedure Node129
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    gfade_out(60 * 10);
+    game_time_advance(3 * (60 * (60 * 10)));
+    item_caps_adjust(dude_obj, -1600);
+    item_caps_adjust(self_obj, 400);
+    LVar0 := create_object(859, 0, 0);
+    add_obj_to_inven(dude_obj, LVar0);
+    LVar1 := obj_carrying_pid_obj(dude_obj, 854);
+    rm_obj_from_inven(dude_obj, LVar1);
+    destroy_object(LVar1);
+    gfade_in(60 * 10);
+    return 0;
+    LVar0 := 0;
+    LVar1 := 0;
+end
+
+procedure Node130
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    gfade_out(60 * 10);
+    game_time_advance(3 * (60 * (60 * 10)));
+    item_caps_adjust(dude_obj, -1600);
+    item_caps_adjust(self_obj, 400);
+    LVar0 := create_object(860, 0, 0);
+    add_obj_to_inven(dude_obj, LVar0);
+    LVar1 := obj_carrying_pid_obj(dude_obj, 855);
+    rm_obj_from_inven(dude_obj, LVar1);
+    destroy_object(LVar1);
+    gfade_in(60 * 10);
+    return 0;
+    LVar0 := 0;
+    LVar1 := 0;
+end
+
+procedure Node131
+begin
+    Reply(712);
+    if (item_caps_total(dude_obj) < 1600) then begin
+        giq_option(4, NAME, 717, Node999, NEUTRAL_REACTION);
+    end
+    if (item_caps_total(dude_obj) > 1599) then begin
+        giq_option(4, NAME, 710, Node126, NEUTRAL_REACTION);
+    end
+    if (item_caps_total(dude_obj) > 1599) then begin
+        giq_option(4, NAME, 713, Node126, NEUTRAL_REACTION);
+    end
+    giq_option(4, NAME, 711, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node132
+begin
+    Reply(712);
+    if (item_caps_total(dude_obj) < 1600) then begin
+        giq_option(4, NAME, 717, Node999, NEUTRAL_REACTION);
+    end
+    if (item_caps_total(dude_obj) > 1599) then begin
+        giq_option(4, NAME, 710, Node127, NEUTRAL_REACTION);
+    end
+    if (item_caps_total(dude_obj) > 1599) then begin
+        giq_option(4, NAME, 713, Node127, NEUTRAL_REACTION);
+    end
+    giq_option(4, NAME, 716, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node133
+begin
+    Reply(712);
+    if (item_caps_total(dude_obj) < 500) then begin
+        giq_option(4, NAME, 717, Node999, NEUTRAL_REACTION);
+    end
+    if (item_caps_total(dude_obj) > 499) then begin
+        giq_option(4, NAME, 710, Node128, NEUTRAL_REACTION);
+    end
+    if (item_caps_total(dude_obj) > 499) then begin
+        giq_option(4, NAME, 713, Node128, NEUTRAL_REACTION);
+    end
+    giq_option(4, NAME, 711, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node134
+begin
+    Reply(712);
+    if (item_caps_total(dude_obj) < 1600) then begin
+        giq_option(4, NAME, 717, Node999, NEUTRAL_REACTION);
+    end
+    if (item_caps_total(dude_obj) > 1599) then begin
+        giq_option(4, NAME, 710, Node129, NEUTRAL_REACTION);
+    end
+    if (item_caps_total(dude_obj) > 1599) then begin
+        giq_option(4, NAME, 713, Node129, NEUTRAL_REACTION);
+    end
+    giq_option(4, NAME, 716, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node135
+begin
+    Reply(712);
+    if (item_caps_total(dude_obj) < 1600) then begin
+        giq_option(4, NAME, 717, Node999, NEUTRAL_REACTION);
+    end
+    if (item_caps_total(dude_obj) > 1599) then begin
+        giq_option(4, NAME, 710, Node130, NEUTRAL_REACTION);
+    end
+    if (item_caps_total(dude_obj) > 1599) then begin
+        giq_option(4, NAME, 713, Node130, NEUTRAL_REACTION);
+    end
+    giq_option(4, NAME, 711, Node999, NEUTRAL_REACTION);
+end

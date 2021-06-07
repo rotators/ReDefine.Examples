@@ -1,0 +1,804 @@
+variable weapon;
+variable dropped_hex;
+variable critter_flags;
+variable random_roll;
+variable armor_piece;
+variable random_armor_piece;
+variable temp_box;
+variable item;
+variable decide;
+variable chance;
+variable skill;
+variable count;
+variable delete_item;
+variable number_items_remove;
+variable critter;
+
+procedure start;
+procedure Scrounger_Perks(variable arg0);
+procedure Drop_Weapons(variable arg0);
+procedure Lootable_Armor_Vanilla(variable arg0);
+procedure Lootable_Armor_Megamod(variable arg0);
+procedure Lootable_Armor_FRP(variable arg0);
+procedure Gecko_Items(variable arg0);
+procedure Delete_Worn_Armor(variable arg0);
+procedure Delete_All_Checks(variable arg0);
+procedure Delete_All_Weapons_Armor(variable arg0);
+procedure remove_inventory(variable arg0, variable arg1, variable arg2);
+
+
+procedure start
+begin
+    if (init_hook) then begin
+        set_sfall_global("MM_00002", get_ini_setting("On_Death.ini|SETTINGS|weapon_drop"));
+        set_sfall_global("MM_00003", get_ini_setting("On_Death.ini|SETTINGS|lootable_armor"));
+        set_sfall_global("MM_00004", get_ini_setting("megamod.ini|SETTINGS|armor_pieces"));
+        set_sfall_global("MM_00005", get_ini_setting("On_Death.ini|SETTINGS|gecko_meat_drop"));
+        set_sfall_global("MM_00006", get_ini_setting("On_Death.ini|SETTINGS|gecko_pelt_drop"));
+        set_sfall_global("MM_00007", get_ini_setting("On_Death.ini|SETTINGS|DeleteWeaponsArmorEnable"));
+        set_sfall_global("MM_00008", get_ini_setting("On_Death.ini|SETTINGS|DeleteWeaponsArmorSkill"));
+        set_sfall_global("MM_00009", get_ini_setting("On_Death.ini|SETTINGS|DeleteWeaponsArmorSkillAmount"));
+        set_sfall_global("MM_00010", get_ini_setting("On_Death.ini|SETTINGS|DeleteWeaponsArmorChanceAmount"));
+        set_sfall_global("MM_00011", get_ini_setting("On_Death.ini|SETTINGS|Spefic_Fallout_2_Instalation"));
+        set_sfall_global("MM_00012", get_ini_setting("On_Death.ini|SETTINGS|BypassCodeUseFix"));
+    end
+    else begin
+        critter := get_sfall_arg;
+        if (get_sfall_global_int("MM_00012") != 1) then begin
+            call Scrounger_Perks(critter);
+            if (get_sfall_global_int("MM_00003") == 1) then begin
+                if (get_sfall_global_int("MM_00011") == 0) then begin
+                    call Lootable_Armor_Vanilla(critter);
+                end
+                else begin
+                    if (get_sfall_global_int("MM_00011") == 1) then begin
+                        call Lootable_Armor_Megamod(critter);
+                    end
+                    else begin
+                        if (get_sfall_global_int("MM_00011") == 2) then begin
+                            call Lootable_Armor_FRP(critter);
+                        end
+                    end
+                end
+            end
+            if (get_sfall_global_int("MM_00006") == 1) then begin
+                call Gecko_Items(critter);
+            end
+            if (get_sfall_global_int("MM_00002") == 1) then begin
+                call Drop_Weapons(critter);
+            end
+            if (get_sfall_global_int("MM_00007") == 1) then begin
+                call Delete_All_Checks(critter);
+            end
+            if ((get_sfall_global_int("eleccrit") == critter) and not(get_proto_data(obj_pid(critter), 32))) then begin
+                move_obj_inven_to_obj(get_sfall_global_int("elec_box"), critter);
+                destroy_object(get_sfall_global_int("elec_box"));
+                set_sfall_global("elec_box", 0);
+                set_sfall_global("eleccrit", 0);
+            end
+        end
+        else begin
+            if (get_sfall_global_int("eleccrit") == critter) then begin
+                move_obj_inven_to_obj(get_sfall_global_int("elec_box"), critter);
+                destroy_object(get_sfall_global_int("elec_box"));
+                set_sfall_global("elec_box", 0);
+                set_sfall_global("eleccrit", 0);
+            end
+        end
+    end
+end
+
+procedure Scrounger_Perks(variable arg0)
+begin
+    critter_flags := get_proto_data(obj_pid(arg0), 32);
+    if (not(critter_flags bwand 32)) then begin
+        if (has_fake_perk("Fortune Finder") and (get_sfall_global_int(182) == 1)) then begin
+            item_caps_adjust(arg0, get_sfall_global_int(183) * has_fake_perk("Fortune Finder"));
+        end
+        if (has_fake_perk("Scrounger") and (get_sfall_global_int(185) == 1)) then begin
+            if (obj_pid(critter_inven_obj(arg0, 1)) > 0) then begin
+                if (get_weapon_ammo_pid(critter_inven_obj(arg0, 1)) > 0) then begin
+                    add_mult_objs_to_inven(arg0, create_object(get_weapon_ammo_pid(critter_inven_obj(arg0, 1)), 0, 0), get_sfall_global_int(186) * has_fake_perk("Scrounger"));
+                end
+            end
+            if (obj_pid(critter_inven_obj(arg0, 2)) > 0) then begin
+                if (get_weapon_ammo_pid(critter_inven_obj(arg0, 2)) > 0) then begin
+                    add_mult_objs_to_inven(arg0, create_object(get_weapon_ammo_pid(critter_inven_obj(arg0, 2)), 0, 0), get_sfall_global_int(186) * has_fake_perk("Scrounger"));
+                end
+            end
+        end
+    end
+    return 0;
+    arg0 := 0;
+end
+
+procedure Drop_Weapons(variable arg0)
+begin
+    critter_flags := get_proto_data(obj_pid(arg0), 32);
+    if (critter_inven_obj(arg0, 1)) then begin
+        weapon := critter_inven_obj(arg0, 1);
+        if (not(critter_flags bwand 64)) then begin
+            rm_obj_from_inven(arg0, weapon);
+            dropped_hex := tile_num_in_direction(tile_num(arg0), random(0, 5), random(1, 2));
+            while (tile_contains_obj_pid(dropped_hex, elevation(dude_obj), 33554499) != 0) do begin
+                dropped_hex := tile_num_in_direction(tile_num(arg0), random(0, 5), random(1, 2));
+            end
+            move_to(weapon, dropped_hex, elevation(arg0));
+        end
+    end
+    if (critter_inven_obj(arg0, 2)) then begin
+        weapon := critter_inven_obj(arg0, 2);
+        if (not(critter_flags bwand 64)) then begin
+            rm_obj_from_inven(arg0, weapon);
+            dropped_hex := tile_num_in_direction(tile_num(arg0), random(0, 5), random(1, 2));
+            while (tile_contains_obj_pid(dropped_hex, elevation(dude_obj), 33554499) != 0) do begin
+                dropped_hex := tile_num_in_direction(tile_num(arg0), random(0, 5), random(1, 2));
+            end
+            move_to(weapon, dropped_hex, elevation(arg0));
+        end
+    end
+    return 0;
+    arg0 := 0;
+end
+
+procedure Lootable_Armor_Vanilla(variable arg0)
+begin
+    call Delete_Worn_Armor(arg0);
+    if (((obj_art_fid(arg0) % 512) == 13) or ((obj_art_fid(arg0) % 512) == 6) or ((obj_art_fid(arg0) % 512) == 45) or ((obj_art_fid(arg0) % 512) == 34) or ((obj_art_fid(arg0) % 512) == 95)) then begin
+        if ((has_skill(dude_obj, SKILL_REPAIR) >= 50) or has_trait(TRAIT_PERK, dude_obj, PERK_animal_friend)) then begin
+            random_roll := random(1, 100);
+            if (random_roll < (100 - (3 * dude_luck))) then begin
+                add_obj_to_inven(arg0, create_object(74, 0, 0));
+            end
+            else begin
+                add_obj_to_inven(arg0, create_object(265, 0, 0));
+            end
+        end
+    end
+    else begin
+        if (((obj_art_fid(arg0) % 512) == 5) or ((obj_art_fid(arg0) % 512) == 12) or ((obj_art_fid(arg0) % 512) == 44) or ((obj_art_fid(arg0) % 512) == 77) or ((obj_art_fid(arg0) % 512) == 78)) then begin
+            if ((has_skill(dude_obj, SKILL_REPAIR) >= 60) or has_trait(TRAIT_PERK, dude_obj, PERK_animal_friend)) then begin
+                random_roll := random(1, 100);
+                if (random_roll < (100 - (3 * dude_luck))) then begin
+                    add_obj_to_inven(arg0, create_object(1, 0, 0));
+                end
+                else begin
+                    add_obj_to_inven(arg0, create_object(379, 0, 0));
+                end
+            end
+        end
+        else begin
+            if (((obj_art_fid(arg0) % 512) == 14) or ((obj_art_fid(arg0) % 512) == 7) or ((obj_art_fid(arg0) % 512) == 9) or ((obj_art_fid(arg0) % 512) == 35)) then begin
+                if ((has_skill(dude_obj, SKILL_REPAIR) >= 80) or has_trait(TRAIT_PERK, dude_obj, PERK_animal_friend)) then begin
+                    random_roll := random(1, 100);
+                    if (random_roll < 76) then begin
+                        add_obj_to_inven(arg0, create_object(2, 0, 0));
+                    end
+                    else begin
+                        if (random_roll < 96) then begin
+                            add_obj_to_inven(arg0, create_object(380, 0, 0));
+                        end
+                        else begin
+                            add_obj_to_inven(arg0, create_object(240, 0, 0));
+                        end
+                    end
+                end
+            end
+            else begin
+                if (((obj_art_fid(arg0) % 512) == 10) or ((obj_art_fid(arg0) % 512) == 2)) then begin
+                    if ((has_skill(dude_obj, SKILL_REPAIR) >= 110) or has_trait(TRAIT_PERK, dude_obj, PERK_animal_friend)) then begin
+                        random_roll := random(1, 100);
+                        if (random_roll < 34) then begin
+                            add_obj_to_inven(arg0, create_object(17, 0, 0));
+                        end
+                        else begin
+                            if (random_roll < 67) then begin
+                                add_obj_to_inven(arg0, create_object(381, 0, 0));
+                            end
+                            else begin
+                                add_obj_to_inven(arg0, create_object(239, 0, 0));
+                            end
+                        end
+                    end
+                end
+                else begin
+                    if ((obj_art_fid(arg0) % 512) == 1) then begin
+                        if ((has_skill(dude_obj, SKILL_REPAIR) >= 130) and (has_skill(dude_obj, SKILL_SCIENCE) >= 110) or has_trait(TRAIT_PERK, dude_obj, PERK_animal_friend)) then begin
+                            random_roll := random(1, 100);
+                            if (random_roll < (100 - (3 * dude_luck))) then begin
+                                add_obj_to_inven(arg0, create_object(3, 0, 0));
+                            end
+                            else begin
+                                add_obj_to_inven(arg0, create_object(232, 0, 0));
+                            end
+                        end
+                    end
+                    else begin
+                        if ((obj_art_fid(arg0) % 512) == 71) then begin
+                            if ((has_skill(dude_obj, SKILL_REPAIR) >= 140) and (has_skill(dude_obj, SKILL_SCIENCE) >= 120) or has_trait(TRAIT_PERK, dude_obj, PERK_animal_friend)) then begin
+                                random_roll := random(1, 100);
+                                if (random_roll < (100 - (3 * dude_luck))) then begin
+                                    add_obj_to_inven(arg0, create_object(348, 0, 0));
+                                end
+                                else begin
+                                    add_obj_to_inven(arg0, create_object(349, 0, 0));
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return 0;
+    arg0 := 0;
+end
+
+procedure Lootable_Armor_Megamod(variable arg0)
+begin
+    call Delete_Worn_Armor(arg0);
+    if (get_sfall_global_int("MM_00004") == 0) then begin
+        if (((obj_art_fid(arg0) % 512) == 2) or ((obj_art_fid(arg0) % 512) == 26) or ((obj_art_fid(arg0) % 512) == 31) or ((obj_art_fid(arg0) % 512) == 56) or ((obj_art_fid(arg0) % 512) == 84) and (cur_town != 36)) then begin
+            if ((has_skill(dude_obj, SKILL_REPAIR) >= 30) or has_trait(TRAIT_PERK, dude_obj, PERK_animal_friend)) then begin
+                add_obj_to_inven(arg0, create_object(113, 0, 0));
+            end
+        end
+        else begin
+            if (((obj_art_fid(arg0) % 512) == 6) or ((obj_art_fid(arg0) % 512) == 13) or ((obj_art_fid(arg0) % 512) == 34) or ((obj_art_fid(arg0) % 512) == 45) or ((obj_art_fid(arg0) % 512) == 116) or ((obj_art_fid(arg0) % 512) == 121)) then begin
+                if ((has_skill(dude_obj, SKILL_REPAIR) >= 50) or has_trait(TRAIT_PERK, dude_obj, PERK_animal_friend)) then begin
+                    random_roll := random(1, 100);
+                    if (random_roll < (100 - (3 * dude_luck))) then begin
+                        add_obj_to_inven(arg0, create_object(74, 0, 0));
+                    end
+                    else begin
+                        add_obj_to_inven(arg0, create_object(265, 0, 0));
+                    end
+                end
+            end
+            else begin
+                if (((obj_art_fid(arg0) % 512) == 5) or ((obj_art_fid(arg0) % 512) == 6) or ((obj_art_fid(arg0) % 512) == 12) or ((obj_art_fid(arg0) % 512) == 13) or ((obj_art_fid(arg0) % 512) == 34) or ((obj_art_fid(arg0) % 512) == 44) or ((obj_art_fid(arg0) % 512) == 45) or ((obj_art_fid(arg0) % 512) == 116) or ((obj_art_fid(arg0) % 512) == 120) or ((obj_art_fid(arg0) % 512) == 122)) then begin
+                    if ((has_skill(dude_obj, SKILL_REPAIR) >= 60) or has_trait(TRAIT_PERK, dude_obj, PERK_animal_friend)) then begin
+                        random_roll := random(1, 100);
+                        if (random_roll < (100 - (3 * dude_luck))) then begin
+                            add_obj_to_inven(arg0, create_object(1, 0, 0));
+                        end
+                        else begin
+                            add_obj_to_inven(arg0, create_object(379, 0, 0));
+                        end
+                    end
+                end
+                else begin
+                    if (((obj_art_fid(arg0) % 512) == 7) or ((obj_art_fid(arg0) % 512) == 9) or ((obj_art_fid(arg0) % 512) == 14) or ((obj_art_fid(arg0) % 512) == 117) or ((obj_art_fid(arg0) % 512) == 123) or ((obj_art_fid(arg0) % 512) == 125) or ((obj_art_fid(arg0) % 512) == 35) or ((obj_art_fid(arg0) % 512) == 109)) then begin
+                        if ((has_skill(dude_obj, SKILL_REPAIR) >= 80) or has_trait(TRAIT_PERK, dude_obj, PERK_animal_friend)) then begin
+                            random_roll := random(1, 100);
+                            if (random_roll < 76) then begin
+                                add_obj_to_inven(arg0, create_object(2, 0, 0));
+                            end
+                            else begin
+                                if (random_roll < 96) then begin
+                                    add_obj_to_inven(arg0, create_object(380, 0, 0));
+                                end
+                                else begin
+                                    add_obj_to_inven(arg0, create_object(240, 0, 0));
+                                end
+                            end
+                        end
+                    end
+                    else begin
+                        if (((obj_art_fid(arg0) % 512) == 3) or ((obj_art_fid(arg0) % 512) == 10) or ((obj_art_fid(arg0) % 512) == 118) or ((obj_art_fid(arg0) % 512) == 124) or ((obj_art_fid(arg0) % 512) == 132) or ((obj_art_fid(arg0) % 512) == 136)) then begin
+                            if ((has_skill(dude_obj, SKILL_REPAIR) >= 110) or has_trait(TRAIT_PERK, dude_obj, PERK_animal_friend)) then begin
+                                random_roll := random(1, 100);
+                                if (random_roll < 34) then begin
+                                    add_obj_to_inven(arg0, create_object(17, 0, 0));
+                                end
+                                else begin
+                                    if (random_roll < 67) then begin
+                                        add_obj_to_inven(arg0, create_object(381, 0, 0));
+                                    end
+                                    else begin
+                                        add_obj_to_inven(arg0, create_object(235, 0, 0));
+                                    end
+                                end
+                            end
+                        end
+                        else begin
+                            if (((obj_art_fid(arg0) % 512) == 1) or ((obj_art_fid(arg0) % 512) == 30) or ((obj_art_fid(arg0) % 512) == 119) or ((obj_art_fid(arg0) % 512) == 128) or ((obj_art_fid(arg0) % 512) == 133) or ((obj_art_fid(arg0) % 512) == 137)) then begin
+                                if ((has_skill(dude_obj, SKILL_REPAIR) >= 130) and (has_skill(dude_obj, SKILL_SCIENCE) >= 110) or has_trait(TRAIT_PERK, dude_obj, PERK_animal_friend)) then begin
+                                    random_roll := random(1, 100);
+                                    if (random_roll < (100 - (3 * dude_luck))) then begin
+                                        add_obj_to_inven(arg0, create_object(3, 0, 0));
+                                    end
+                                    else begin
+                                        add_obj_to_inven(arg0, create_object(232, 0, 0));
+                                    end
+                                end
+                            end
+                            else begin
+                                if ((obj_art_fid(arg0) % 512) == 71) then begin
+                                    if ((has_skill(dude_obj, SKILL_REPAIR) >= 140) and (has_skill(dude_obj, SKILL_SCIENCE) >= 120) or has_trait(TRAIT_PERK, dude_obj, PERK_animal_friend)) then begin
+                                        random_roll := random(1, 100);
+                                        if (random_roll < (100 - (3 * dude_luck))) then begin
+                                            add_obj_to_inven(arg0, create_object(348, 0, 0));
+                                        end
+                                        else begin
+                                            add_obj_to_inven(arg0, create_object(349, 0, 0));
+                                        end
+                                    end
+                                end
+                                else begin
+                                    if ((obj_art_fid(arg0) % 512) == 85) then begin
+                                        if ((has_skill(dude_obj, SKILL_REPAIR) >= 160) and (has_skill(dude_obj, SKILL_SCIENCE) >= 145) or has_trait(TRAIT_PERK, dude_obj, PERK_animal_friend)) then begin
+                                            add_obj_to_inven(arg0, create_object(554, 0, 0));
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    else begin
+        if (get_sfall_global_int("MM_00004") == 1) then begin
+            if (((obj_art_fid(arg0) % 512) == 31) or ((obj_art_fid(arg0) % 512) == 2) or ((obj_art_fid(arg0) % 512) == 84) or ((obj_art_fid(arg0) % 512) == 56) or ((obj_art_fid(arg0) % 512) == 26)) then begin
+                if ((has_skill(dude_obj, SKILL_REPAIR) >= 30) or has_trait(TRAIT_PERK, dude_obj, PERK_animal_friend)) then begin
+                    armor_piece := 0;
+                    if (random(1, 100) > (100 - (3 * dude_luck))) then begin
+                        if (obj_is_carrying_obj_pid(dude_obj, 811) < obj_is_carrying_obj_pid(dude_obj, 809)) then begin
+                            armor_piece := 811;
+                        end
+                        else begin
+                            if (obj_is_carrying_obj_pid(dude_obj, 809) < obj_is_carrying_obj_pid(dude_obj, 811)) then begin
+                                armor_piece := 809;
+                            end
+                        end
+                    end
+                    if (armor_piece == 0) then begin
+                        random_armor_piece := random(1, 2);
+                        if (random_armor_piece == 1) then begin
+                            armor_piece := 811;
+                        end
+                        else begin
+                            if (random_armor_piece == 2) then begin
+                                armor_piece := 809;
+                            end
+                        end
+                    end
+                    add_obj_to_inven(arg0, create_object(armor_piece, 0, 0));
+                end
+            end
+            else begin
+                if (((obj_art_fid(arg0) % 512) == 13) or ((obj_art_fid(arg0) % 512) == 6) or ((obj_art_fid(arg0) % 512) == 45) or ((obj_art_fid(arg0) % 512) == 34) or ((obj_art_fid(arg0) % 512) == 95)) then begin
+                    if ((has_skill(dude_obj, SKILL_REPAIR) >= 50) or has_trait(TRAIT_PERK, dude_obj, PERK_animal_friend)) then begin
+                        armor_piece := 0;
+                        if (random(1, 100) > (100 - (3 * dude_luck))) then begin
+                            if (obj_is_carrying_obj_pid(dude_obj, 850) < obj_is_carrying_obj_pid(dude_obj, 812)) then begin
+                                armor_piece := 850;
+                            end
+                            else begin
+                                if (obj_is_carrying_obj_pid(dude_obj, 812) < obj_is_carrying_obj_pid(dude_obj, 850)) then begin
+                                    armor_piece := 812;
+                                end
+                            end
+                        end
+                        if (armor_piece == 0) then begin
+                            random_armor_piece := random(1, 2);
+                            if (random_armor_piece == 1) then begin
+                                armor_piece := 812;
+                            end
+                            else begin
+                                if (random_armor_piece == 2) then begin
+                                    armor_piece := 850;
+                                end
+                            end
+                        end
+                        add_obj_to_inven(arg0, create_object(armor_piece, 0, 0));
+                    end
+                end
+                else begin
+                    if (((obj_art_fid(arg0) % 512) == 5) or ((obj_art_fid(arg0) % 512) == 12) or ((obj_art_fid(arg0) % 512) == 44)) then begin
+                        if ((has_skill(dude_obj, SKILL_REPAIR) >= 50) or has_trait(TRAIT_PERK, dude_obj, PERK_animal_friend)) then begin
+                            armor_piece := 0;
+                            if (random(1, 100) > (100 - (3 * dude_luck))) then begin
+                                if (obj_is_carrying_obj_pid(dude_obj, 850) < obj_is_carrying_obj_pid(dude_obj, 812)) then begin
+                                    armor_piece := 850;
+                                end
+                                else begin
+                                    if (obj_is_carrying_obj_pid(dude_obj, 812) < obj_is_carrying_obj_pid(dude_obj, 850)) then begin
+                                        armor_piece := 812;
+                                    end
+                                end
+                            end
+                            if (armor_piece == 0) then begin
+                                random_armor_piece := random(1, 2);
+                                if (random_armor_piece == 1) then begin
+                                    armor_piece := 812;
+                                end
+                                else begin
+                                    if (random_armor_piece == 2) then begin
+                                        armor_piece := 850;
+                                    end
+                                end
+                            end
+                            add_obj_to_inven(arg0, create_object(armor_piece, 0, 0));
+                        end
+                    end
+                    else begin
+                        if (((obj_art_fid(arg0) % 512) == 14) or ((obj_art_fid(arg0) % 512) == 7) or ((obj_art_fid(arg0) % 512) == 9) or ((obj_art_fid(arg0) % 512) == 35)) then begin
+                            if ((has_skill(dude_obj, SKILL_REPAIR) >= 80) or has_trait(TRAIT_PERK, dude_obj, PERK_animal_friend)) then begin
+                                armor_piece := 0;
+                                if (random(1, 100) > (100 - (3 * dude_luck))) then begin
+                                    if ((obj_is_carrying_obj_pid(dude_obj, 842) < obj_is_carrying_obj_pid(dude_obj, 841)) and (obj_is_carrying_obj_pid(dude_obj, 842) < obj_is_carrying_obj_pid(dude_obj, 840))) then begin
+                                        armor_piece := 842;
+                                    end
+                                    else begin
+                                        if ((obj_is_carrying_obj_pid(dude_obj, 841) < obj_is_carrying_obj_pid(dude_obj, 842)) and (obj_is_carrying_obj_pid(dude_obj, 841) < obj_is_carrying_obj_pid(dude_obj, 840))) then begin
+                                            armor_piece := 841;
+                                        end
+                                        else begin
+                                            if ((obj_is_carrying_obj_pid(dude_obj, 840) < obj_is_carrying_obj_pid(dude_obj, 842)) and (obj_is_carrying_obj_pid(dude_obj, 840) < obj_is_carrying_obj_pid(dude_obj, 841))) then begin
+                                                armor_piece := 840;
+                                            end
+                                        end
+                                    end
+                                end
+                                if (armor_piece == 0) then begin
+                                    random_armor_piece := random(1, 3);
+                                    if (random_armor_piece == 1) then begin
+                                        armor_piece := 842;
+                                    end
+                                    else begin
+                                        if (random_armor_piece == 2) then begin
+                                            armor_piece := 841;
+                                        end
+                                        else begin
+                                            if (random_armor_piece == 3) then begin
+                                                armor_piece := 840;
+                                            end
+                                        end
+                                    end
+                                end
+                                add_obj_to_inven(arg0, create_object(armor_piece, 0, 0));
+                            end
+                        end
+                        else begin
+                            if (((obj_art_fid(arg0) % 512) == 10) or ((obj_art_fid(arg0) % 512) == 2)) then begin
+                                if ((has_skill(dude_obj, SKILL_REPAIR) >= 110) and (has_skill(dude_obj, SKILL_SCIENCE) >= 75) or has_trait(TRAIT_PERK, dude_obj, PERK_animal_friend)) then begin
+                                    armor_piece := 0;
+                                    if (random(1, 100) > (100 - (3 * dude_luck))) then begin
+                                        if ((obj_is_carrying_obj_pid(dude_obj, 843) < obj_is_carrying_obj_pid(dude_obj, 845)) and (obj_is_carrying_obj_pid(dude_obj, 843) < obj_is_carrying_obj_pid(dude_obj, 844))) then begin
+                                            armor_piece := 843;
+                                        end
+                                        else begin
+                                            if ((obj_is_carrying_obj_pid(dude_obj, 845) < obj_is_carrying_obj_pid(dude_obj, 843)) and (obj_is_carrying_obj_pid(dude_obj, 845) < obj_is_carrying_obj_pid(dude_obj, 844))) then begin
+                                                armor_piece := 845;
+                                            end
+                                            else begin
+                                                if ((obj_is_carrying_obj_pid(dude_obj, 844) < obj_is_carrying_obj_pid(dude_obj, 843)) and (obj_is_carrying_obj_pid(dude_obj, 844) < obj_is_carrying_obj_pid(dude_obj, 845))) then begin
+                                                    armor_piece := 844;
+                                                end
+                                            end
+                                        end
+                                    end
+                                    if (armor_piece == 0) then begin
+                                        random_armor_piece := random(1, 3);
+                                        if (random_armor_piece == 1) then begin
+                                            armor_piece := 845;
+                                        end
+                                        else begin
+                                            if (random_armor_piece == 2) then begin
+                                                armor_piece := 844;
+                                            end
+                                            else begin
+                                                if (random_armor_piece == 3) then begin
+                                                    armor_piece := 843;
+                                                end
+                                            end
+                                        end
+                                    end
+                                    add_obj_to_inven(arg0, create_object(armor_piece, 0, 0));
+                                end
+                            end
+                            else begin
+                                if ((obj_art_fid(arg0) % 512) == 1) then begin
+                                    if ((has_skill(dude_obj, SKILL_REPAIR) >= 130) and (has_skill(dude_obj, SKILL_SCIENCE) >= 110) or has_trait(TRAIT_PERK, dude_obj, PERK_animal_friend)) then begin
+                                        armor_piece := 0;
+                                        if (random(1, 100) > (100 - (3 * dude_luck))) then begin
+                                            if ((obj_is_carrying_obj_pid(dude_obj, 848) < obj_is_carrying_obj_pid(dude_obj, 847)) and (obj_is_carrying_obj_pid(dude_obj, 848) < obj_is_carrying_obj_pid(dude_obj, 846))) then begin
+                                                armor_piece := 848;
+                                            end
+                                            else begin
+                                                if ((obj_is_carrying_obj_pid(dude_obj, 847) < obj_is_carrying_obj_pid(dude_obj, 848)) and (obj_is_carrying_obj_pid(dude_obj, 847) < obj_is_carrying_obj_pid(dude_obj, 846))) then begin
+                                                    armor_piece := 847;
+                                                end
+                                                else begin
+                                                    if ((obj_is_carrying_obj_pid(dude_obj, 846) < obj_is_carrying_obj_pid(dude_obj, 848)) and (obj_is_carrying_obj_pid(dude_obj, 846) < obj_is_carrying_obj_pid(dude_obj, 847))) then begin
+                                                        armor_piece := 846;
+                                                    end
+                                                end
+                                            end
+                                        end
+                                        if (armor_piece == 0) then begin
+                                            random_armor_piece := random(1, 3);
+                                            if (random_armor_piece == 1) then begin
+                                                armor_piece := 848;
+                                            end
+                                            else begin
+                                                if (random_armor_piece == 2) then begin
+                                                    armor_piece := 847;
+                                                end
+                                                else begin
+                                                    if (random_armor_piece == 3) then begin
+                                                        armor_piece := 846;
+                                                    end
+                                                end
+                                            end
+                                        end
+                                        add_obj_to_inven(arg0, create_object(armor_piece, 0, 0));
+                                    end
+                                end
+                                else begin
+                                    if ((obj_art_fid(arg0) % 512) == 71) then begin
+                                        if ((has_skill(dude_obj, SKILL_REPAIR) >= 130) and (has_skill(dude_obj, SKILL_SCIENCE) >= 110) or has_trait(TRAIT_PERK, dude_obj, PERK_animal_friend)) then begin
+                                            armor_piece := 0;
+                                            if (random(1, 100) > (100 - (3 * dude_luck))) then begin
+                                                if ((obj_is_carrying_obj_pid(dude_obj, 848) < obj_is_carrying_obj_pid(dude_obj, 847)) and (obj_is_carrying_obj_pid(dude_obj, 848) < obj_is_carrying_obj_pid(dude_obj, 846))) then begin
+                                                    armor_piece := 848;
+                                                end
+                                                else begin
+                                                    if ((obj_is_carrying_obj_pid(dude_obj, 847) < obj_is_carrying_obj_pid(dude_obj, 848)) and (obj_is_carrying_obj_pid(dude_obj, 847) < obj_is_carrying_obj_pid(dude_obj, 846))) then begin
+                                                        armor_piece := 847;
+                                                    end
+                                                    else begin
+                                                        if ((obj_is_carrying_obj_pid(dude_obj, 846) < obj_is_carrying_obj_pid(dude_obj, 848)) and (obj_is_carrying_obj_pid(dude_obj, 846) < obj_is_carrying_obj_pid(dude_obj, 847))) then begin
+                                                            armor_piece := 846;
+                                                        end
+                                                    end
+                                                end
+                                            end
+                                            if (armor_piece == 0) then begin
+                                                random_armor_piece := random(1, 3);
+                                                if (random_armor_piece == 1) then begin
+                                                    armor_piece := 848;
+                                                end
+                                                else begin
+                                                    if (random_armor_piece == 2) then begin
+                                                        armor_piece := 847;
+                                                    end
+                                                    else begin
+                                                        if (random_armor_piece == 3) then begin
+                                                            armor_piece := 846;
+                                                        end
+                                                    end
+                                                end
+                                            end
+                                            add_obj_to_inven(arg0, create_object(armor_piece, 0, 0));
+                                        end
+                                    end
+                                    else begin
+                                        if ((obj_art_fid(arg0) % 512) == 85) then begin
+                                            if ((has_skill(dude_obj, SKILL_REPAIR) >= 160) and (has_skill(dude_obj, SKILL_SCIENCE) >= 145) or has_trait(TRAIT_PERK, dude_obj, PERK_animal_friend)) then begin
+                                                add_obj_to_inven(arg0, create_object(554, 0, 0));
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return 0;
+    arg0 := 0;
+end
+
+procedure Lootable_Armor_FRP(variable arg0)
+begin
+    call Delete_Worn_Armor(arg0);
+    if (((obj_art_fid(arg0) % 512) == 13) or ((obj_art_fid(arg0) % 512) == 6) or ((obj_art_fid(arg0) % 512) == 45) or ((obj_art_fid(arg0) % 512) == 34) or ((obj_art_fid(arg0) % 512) == 105) or ((obj_art_fid(arg0) % 512) == 113) or ((obj_art_fid(arg0) % 512) == 130) or ((obj_art_fid(arg0) % 512) == 145) or ((obj_art_fid(arg0) % 512) == 95)) then begin
+        if ((has_skill(dude_obj, SKILL_REPAIR) >= 50) or has_trait(TRAIT_PERK, dude_obj, PERK_animal_friend)) then begin
+            random_roll := random(1, 100);
+            if (random_roll < (100 - (3 * dude_luck))) then begin
+                add_obj_to_inven(arg0, create_object(74, 0, 0));
+            end
+            else begin
+                add_obj_to_inven(arg0, create_object(265, 0, 0));
+            end
+        end
+    end
+    else begin
+        if (((obj_art_fid(arg0) % 512) == 5) or ((obj_art_fid(arg0) % 512) == 12) or ((obj_art_fid(arg0) % 512) == 44) or ((obj_art_fid(arg0) % 512) == 77) or ((obj_art_fid(arg0) % 512) == 109) or ((obj_art_fid(arg0) % 512) == 117) or ((obj_art_fid(arg0) % 512) == 131) or ((obj_art_fid(arg0) % 512) == 137) or ((obj_art_fid(arg0) % 512) == 78)) then begin
+            if ((has_skill(dude_obj, SKILL_REPAIR) >= 60) or has_trait(TRAIT_PERK, dude_obj, PERK_animal_friend)) then begin
+                random_roll := random(1, 100);
+                if (random_roll < (100 - (3 * dude_luck))) then begin
+                    add_obj_to_inven(arg0, create_object(1, 0, 0));
+                end
+                else begin
+                    add_obj_to_inven(arg0, create_object(379, 0, 0));
+                end
+            end
+        end
+        else begin
+            if (((obj_art_fid(arg0) % 512) == 14) or ((obj_art_fid(arg0) % 512) == 7) or ((obj_art_fid(arg0) % 512) == 9) or ((obj_art_fid(arg0) % 512) == 35) or ((obj_art_fid(arg0) % 512) == 107) or ((obj_art_fid(arg0) % 512) == 111) or ((obj_art_fid(arg0) % 512) == 115) or ((obj_art_fid(arg0) % 512) == 119) or ((obj_art_fid(arg0) % 512) == 132)) then begin
+                if ((has_skill(dude_obj, SKILL_REPAIR) >= 80) or has_trait(TRAIT_PERK, dude_obj, PERK_animal_friend)) then begin
+                    random_roll := random(1, 100);
+                    if (random_roll < 76) then begin
+                        add_obj_to_inven(arg0, create_object(2, 0, 0));
+                    end
+                    else begin
+                        if (random_roll < 96) then begin
+                            add_obj_to_inven(arg0, create_object(380, 0, 0));
+                        end
+                        else begin
+                            add_obj_to_inven(arg0, create_object(240, 0, 0));
+                        end
+                    end
+                end
+            end
+            else begin
+                if (((obj_art_fid(arg0) % 512) == 10) or ((obj_art_fid(arg0) % 512) == 2) or ((obj_art_fid(arg0) % 512) == 110) or ((obj_art_fid(arg0) % 512) == 106) or ((obj_art_fid(arg0) % 512) == 114)) then begin
+                    if ((has_skill(dude_obj, SKILL_REPAIR) >= 110) or has_trait(TRAIT_PERK, dude_obj, PERK_animal_friend)) then begin
+                        random_roll := random(1, 100);
+                        if (random_roll < 34) then begin
+                            add_obj_to_inven(arg0, create_object(17, 0, 0));
+                        end
+                        else begin
+                            if (random_roll < 67) then begin
+                                add_obj_to_inven(arg0, create_object(381, 0, 0));
+                            end
+                            else begin
+                                add_obj_to_inven(arg0, create_object(239, 0, 0));
+                            end
+                        end
+                    end
+                end
+                else begin
+                    if (((obj_art_fid(arg0) % 512) == 1) or ((obj_art_fid(arg0) % 512) == 104) or ((obj_art_fid(arg0) % 512) == 108) or ((obj_art_fid(arg0) % 512) == 112) or ((obj_art_fid(arg0) % 512) == 116)) then begin
+                        if ((has_skill(dude_obj, SKILL_REPAIR) >= 130) and (has_skill(dude_obj, SKILL_SCIENCE) >= 110) or has_trait(TRAIT_PERK, dude_obj, PERK_animal_friend)) then begin
+                            random_roll := random(1, 100);
+                            if (random_roll < (100 - (3 * dude_luck))) then begin
+                                add_obj_to_inven(arg0, create_object(3, 0, 0));
+                            end
+                            else begin
+                                add_obj_to_inven(arg0, create_object(232, 0, 0));
+                            end
+                        end
+                    end
+                    else begin
+                        if ((obj_art_fid(arg0) % 512) == 71) then begin
+                            if ((has_skill(dude_obj, SKILL_REPAIR) >= 140) and (has_skill(dude_obj, SKILL_SCIENCE) >= 120) or has_trait(TRAIT_PERK, dude_obj, PERK_animal_friend)) then begin
+                                random_roll := random(1, 100);
+                                if (random_roll < (100 - (3 * dude_luck))) then begin
+                                    add_obj_to_inven(arg0, create_object(348, 0, 0));
+                                end
+                                else begin
+                                    add_obj_to_inven(arg0, create_object(349, 0, 0));
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return 0;
+    arg0 := 0;
+end
+
+procedure Gecko_Items(variable arg0)
+begin
+    if (((obj_art_fid(arg0) % 512) == 67) or ((obj_art_fid(arg0) % 512) == 68) or ((obj_art_fid(arg0) % 512) == 81)) then begin
+        temp_box := create_object(128, 0, 0);
+        move_obj_inven_to_obj(arg0, temp_box);
+        destroy_object(temp_box);
+        if (has_trait(TRAIT_PERK, dude_obj, PERK_gecko_skinning_perk)) then begin
+            if ((obj_art_fid(arg0) % 512) == 67) then begin
+                item := create_object(276, 0, 0);
+            end
+            else begin
+                if ((obj_art_fid(arg0) % 512) == 68) then begin
+                    item := create_object(277, 0, 0);
+                    if (global_var(GVAR_JENFARM_FLAGS) == 1) then begin
+                        add_obj_to_inven(arg0, create_object(640, 0, 0));
+                    end
+                end
+                else begin
+                    if ((obj_art_fid(arg0) % 512) == 81) then begin
+                        item := create_object(552, 0, 0);
+                    end
+                end
+            end
+            add_obj_to_inven(arg0, item);
+        end
+        if (get_sfall_global_int("MM_00005") == 1) then begin
+            if (has_trait(TRAIT_PERK, dude_obj, PERK_scrounger)) then begin
+                if (random(1, 100) > (100 - (3 * dude_luck))) then begin
+                    decide := random(1, 2);
+                    if (decide == 1) then begin
+                        item := create_object(803, 0, 0);
+                    end
+                    else begin
+                        if (decide == 2) then begin
+                            item := create_object(804, 0, 0);
+                        end
+                    end
+                end
+                else begin
+                    item := create_object(800, 0, 0);
+                end
+            end
+            add_obj_to_inven(arg0, item);
+        end
+    end
+    return 0;
+    arg0 := 0;
+end
+
+procedure Delete_Worn_Armor(variable arg0)
+begin
+    if ((obj_pid(critter_inven_obj(arg0, 0)) > 0) and (obj_pid(critter_inven_obj(arg0, 0)) != 524)) then begin
+        delete_item := critter_inven_obj(arg0, 0);
+        rm_obj_from_inven(arg0, delete_item);
+        if (tile_contains_obj_pid(1, 0, obj_pid(delete_item))) then begin
+            delete_item := tile_contains_pid_obj(1, 0, obj_pid(delete_item));
+            destroy_object(delete_item);
+        end
+    end
+    return 0;
+    arg0 := 0;
+end
+
+procedure Delete_All_Checks(variable arg0)
+begin
+    chance := 0;
+    skill := 0;
+    skill := has_skill(dude_obj, get_sfall_global_int("MM_00008"));
+    while (skill >= get_sfall_global_int("MM_00009")) do begin
+        skill := skill - get_sfall_global_int("MM_00009");
+        chance := chance + get_sfall_global_int("MM_00010");
+    end
+    if (random(1, 100) < (100 - chance)) then begin
+        call Delete_All_Weapons_Armor(arg0);
+    end
+    return 0;
+    arg0 := 0;
+end
+
+procedure Delete_All_Weapons_Armor(variable arg0)
+begin
+    while (count < 1000) do begin
+        if (obj_is_carrying_obj_pid(arg0, count) > 0) then begin
+            delete_item := obj_carrying_pid_obj(arg0, count);
+            if ((obj_item_subtype(delete_item) == 0) or (obj_item_subtype(delete_item) == 3)) then begin
+                call remove_inventory(arg0, count, 0);
+            end
+        end
+        count := count + 1;
+    end
+    return 0;
+    arg0 := 0;
+end
+
+procedure remove_inventory(variable arg0, variable arg1, variable arg2)
+begin
+    if (obj_is_carrying_obj_pid(arg0, arg1) > 0) then begin
+        while (obj_is_carrying_obj_pid(arg0, arg1) > 0) do begin
+            delete_item := obj_carrying_pid_obj(arg0, arg1);
+            rm_obj_from_inven(arg0, delete_item);
+            if (tile_contains_obj_pid(1, 0, arg1)) then begin
+                delete_item := tile_contains_pid_obj(1, 0, arg1);
+                destroy_object(delete_item);
+            end
+            number_items_remove := number_items_remove + 1;
+        end
+        add_mult_objs_to_inven(arg0, create_object(arg2, 0, 0), number_items_remove);
+        number_items_remove := 0;
+    end
+    return 0;
+    arg0 := 0;
+    arg1 := 0;
+    arg2 := 0;
+end

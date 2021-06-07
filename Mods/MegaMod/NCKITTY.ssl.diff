@@ -1,0 +1,1987 @@
+diff --git a/Mods/MegaMod/Original/NCKITTY.ssl b/Mods/MegaMod/ReDefine/NCKITTY.ssl
+index 0cc80d5..0860905 100644
+--- a/Mods/MegaMod/Original/NCKITTY.ssl
++++ b/Mods/MegaMod/ReDefine/NCKITTY.ssl
+@@ -114,10 +114,10 @@ begin
+                 if (anim_busy(self_obj) == 0) then begin
+                     if ((tile_distance_objs(self_obj, dude_obj) < 8) or obj_can_see_obj(self_obj, dude_obj)) then begin
+                         if (anim_busy(self_obj) == 0) then begin
+-                            global_temp := rotation_to_tile(tile_num(dude_obj), tile_num(self_obj));
++                            global_temp := rotation_to_tile(dude_tile, tile_num(self_obj));
+                             animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                             global_temp := (global_temp + 1) % 6;
+-                            while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)))) do begin
++                            while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(dude_tile, tile_num(self_obj)))) do begin
+                                 debug_msg("flee loop: rot == " + global_temp);
+                                 animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                                 global_temp := (global_temp + 1) % 6;
+@@ -127,7 +127,7 @@ begin
+                 end
+             end
+             else begin
+-                attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++                attack(dude_obj);
+             end
+         end
+     end
+@@ -136,7 +136,7 @@ begin
+             animate_move_obj_to_tile(self_obj, local_var(6), 0);
+         end
+         else begin
+-            if (has_trait(1, self_obj, 10) != local_var(7)) then begin
++            if (obj_get_rot(self_obj) != local_var(7)) then begin
+                 anim(self_obj, 1000, local_var(7));
+             end
+         end
+@@ -153,7 +153,7 @@ end
+ procedure talk_p_proc
+ begin
+     sex_partner_obj := dude_obj;
+-    if (global_var(494) == 8) then begin
++    if (global_var(GVAR_FALLOUT_2) == 8) then begin
+         if (in_dialog == 0) then begin
+             in_dialog := 1;
+             start_gdialog(452, self_obj, 4, 26, 13);
+@@ -188,63 +188,63 @@ end
+ procedure destroy_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        set_global_var(5, global_var(5) + 1);
+-        if (((global_var(4) + global_var(5)) >= 25) and ((global_var(4) > (3 * global_var(5))) or (global_var(2) == 1)) and (global_var(1) == 0)) then begin
+-            set_global_var(2, 1);
+-            set_global_var(3, 0);
++        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(4) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1)) and (global_var(GVAR_CHILDKILLER_REPUTATION) == 0)) then begin
++            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+         end
+-        if (((global_var(4) + global_var(5)) >= 25) and ((global_var(5) > (2 * global_var(4))) or (global_var(3) == 1))) then begin
+-            set_global_var(3, 1);
+-            set_global_var(2, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+         end
+-        set_global_var(0, global_var(0) + -10);
++        set_global_var(GVAR_PLAYER_REPUTATION, global_var(GVAR_PLAYER_REPUTATION) + -10);
+         debug_msg("Player gains " + -10 + " Karma Points.");
+-        set_global_var(37, 0);
+-        set_global_var(38, 0);
+-        set_global_var(39, 0);
+-        set_global_var(40, 0);
+-        set_global_var(41, 0);
+-        set_global_var(42, 0);
+-        set_global_var(43, 0);
+-        set_global_var(44, 0);
+-        set_global_var(45, 0);
+-        tmp_gen_rep := global_var(0);
+-        if (has_trait(0, dude_obj, 95)) then begin
+-            tmp_gen_rep := global_var(0) * 2;
++        set_global_var(GVAR_KARMA_HOLY_WARRIOR, 0);
++        set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 0);
++        set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 0);
++        set_global_var(GVAR_KARMA_DEFENDER, 0);
++        set_global_var(GVAR_KARMA_WANDERER, 0);
++        set_global_var(GVAR_KARMA_BETRAYER, 0);
++        set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 0);
++        set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 0);
++        set_global_var(GVAR_KARMA_DEMON_SPAWN, 0);
++        tmp_gen_rep := global_var(GVAR_PLAYER_REPUTATION);
++        if (has_trait(TRAIT_PERK, dude_obj, PERK_karma_beacon_perk)) then begin
++            tmp_gen_rep := global_var(GVAR_PLAYER_REPUTATION) * 2;
+         end
+         if (tmp_gen_rep >= 1000) then begin
+-            set_global_var(37, 1);
++            set_global_var(GVAR_KARMA_HOLY_WARRIOR, 1);
+         end
+         else begin
+             if (tmp_gen_rep >= 750) then begin
+-                set_global_var(38, 1);
++                set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 1);
+             end
+             else begin
+                 if (tmp_gen_rep >= 500) then begin
+-                    set_global_var(39, 1);
++                    set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 1);
+                 end
+                 else begin
+                     if (tmp_gen_rep >= 250) then begin
+-                        set_global_var(40, 1);
++                        set_global_var(GVAR_KARMA_DEFENDER, 1);
+                     end
+                     else begin
+                         if (tmp_gen_rep > -250) then begin
+-                            set_global_var(41, 1);
++                            set_global_var(GVAR_KARMA_WANDERER, 1);
+                         end
+                         else begin
+                             if (tmp_gen_rep > -500) then begin
+-                                set_global_var(42, 1);
++                                set_global_var(GVAR_KARMA_BETRAYER, 1);
+                             end
+                             else begin
+                                 if (tmp_gen_rep > -750) then begin
+-                                    set_global_var(43, 1);
++                                    set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 1);
+                                 end
+                                 else begin
+                                     if (tmp_gen_rep > -1000) then begin
+-                                        set_global_var(44, 1);
++                                        set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 1);
+                                     end
+                                     else begin
+-                                        set_global_var(45, 1);
++                                        set_global_var(GVAR_KARMA_DEMON_SPAWN, 1);
+                                     end
+                                 end
+                             end
+@@ -253,7 +253,7 @@ begin
+                 end
+             end
+         end
+-        set_global_var(55, global_var(55) + -5);
++        set_global_var(GVAR_TOWN_REP_NEW_RENO, global_var(GVAR_TOWN_REP_NEW_RENO) + -5);
+         debug_msg("Added " + -5 + " to Town Rep");
+     end
+ end
+@@ -261,13 +261,13 @@ end
+ procedure look_at_p_proc
+ begin
+     script_overrides;
+-    display_msg(message_str(452, 100));
++    display_mstr(100);
+ end
+ 
+ procedure description_p_proc
+ begin
+     script_overrides;
+-    display_msg(message_str(452, 150));
++    display_mstr(150);
+     set_local_var(4, local_var(4) bwor 4);
+ end
+ 
+@@ -285,12 +285,12 @@ end
+ 
+ procedure map_enter_p_proc
+ begin
+-    if (metarule(22, 0) == 0) then begin
+-        if (metarule(14, 0)) then begin
+-            critter_add_trait(self_obj, 1, 6, 70);
+-            critter_add_trait(self_obj, 1, 5, 24);
++    if (is_loading_game == 0) then begin
++        if (map_first_run) then begin
++            critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 70);
++            critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_TOUGH_CITIZEN);
+             set_local_var(6, tile_num(self_obj));
+-            set_local_var(7, has_trait(1, self_obj, 10));
++            set_local_var(7, obj_get_rot(self_obj));
+         end
+         metarule3(100, self_obj, 1, 0);
+         add_timer_event(self_obj, game_ticks(20 + random(0, 20)), 1);
+@@ -309,70 +309,70 @@ begin
+             if (sex_partner_obj != 0) then begin
+                 if (sex_partner_obj != dude_obj) then begin
+                     if (random(1, 5) != 3) then begin
+-                        float_msg(dude_obj, message_str(452, random(720, 723)), 8);
++                        float_msg(dude_obj, mstr(random(720, 723)), FLOAT_MSG_YELLOW);
+                     end
+                 end
+                 if ((party_member_obj(16777376) != 0) and (sex_partner_obj != party_member_obj(16777376))) then begin
+                     if (random(1, 5) != 3) then begin
+-                        float_msg(party_member_obj(16777376), message_str(452, 772), 8);
++                        float_msg(party_member_obj(16777376), mstr(772), FLOAT_MSG_YELLOW);
+                     end
+                 end
+                 if ((party_member_obj(16777377) != 0) and (sex_partner_obj != party_member_obj(16777377))) then begin
+                     if (random(1, 5) != 3) then begin
+-                        float_msg(party_member_obj(16777377), message_str(452, random(720, 723)), 8);
++                        float_msg(party_member_obj(16777377), mstr(random(720, 723)), FLOAT_MSG_YELLOW);
+                     end
+                 end
+                 if ((party_member_obj(16777305) != 0) and (sex_partner_obj != party_member_obj(16777305))) then begin
+                     if (random(1, 5) != 3) then begin
+-                        float_msg(party_member_obj(16777305), message_str(452, random(720, 723)), 8);
++                        float_msg(party_member_obj(16777305), mstr(random(720, 723)), FLOAT_MSG_YELLOW);
+                     end
+                 end
+                 if ((party_member_obj(16777278) != 0) and (sex_partner_obj != party_member_obj(16777278))) then begin
+                     if (sex_partner_obj == dude_obj) then begin
+-                        float_msg(party_member_obj(16777278), message_str(452, 770), 8);
++                        float_msg(party_member_obj(16777278), mstr(770), FLOAT_MSG_YELLOW);
+                     end
+                     else begin
+                         if (random(1, 5) != 3) then begin
+-                            float_msg(party_member_obj(16777278), message_str(452, random(720, 723)), 8);
++                            float_msg(party_member_obj(16777278), mstr(random(720, 723)), FLOAT_MSG_YELLOW);
+                         end
+                     end
+                 end
+                 if ((party_member_obj(16777313) != 0) and (sex_partner_obj != party_member_obj(16777313))) then begin
+                     if (random(1, 5) != 3) then begin
+-                        float_msg(party_member_obj(16777313), message_str(452, random(720, 723)), 8);
++                        float_msg(party_member_obj(16777313), mstr(random(720, 723)), FLOAT_MSG_YELLOW);
+                     end
+                 end
+                 if ((party_member_obj(16777323) != 0) and (sex_partner_obj != party_member_obj(16777323))) then begin
+                     if (random(1, 5) != 3) then begin
+-                        float_msg(party_member_obj(16777323), message_str(452, random(720, 723)), 8);
++                        float_msg(party_member_obj(16777323), mstr(random(720, 723)), FLOAT_MSG_YELLOW);
+                     end
+                 end
+                 if ((party_member_obj(16777352) != 0) and (sex_partner_obj != party_member_obj(16777352))) then begin
+-                    float_msg(party_member_obj(16777352), message_str(452, 750), 8);
++                    float_msg(party_member_obj(16777352), mstr(750), FLOAT_MSG_YELLOW);
+                 end
+                 if ((party_member_obj(16777378) != 0) and (sex_partner_obj != party_member_obj(16777378))) then begin
+                     if (party_member_obj(16777378) == party_member_obj(16777352)) then begin
+-                        float_msg(party_member_obj(16777378), message_str(452, 750), 8);
++                        float_msg(party_member_obj(16777378), mstr(750), FLOAT_MSG_YELLOW);
+                     end
+                     else begin
+                         if (party_member_obj(16777378) == party_member_obj(16777295)) then begin
+-                            float_msg(party_member_obj(16777378), message_str(452, 760), 8);
++                            float_msg(party_member_obj(16777378), mstr(760), FLOAT_MSG_YELLOW);
+                         end
+                         else begin
+                             if ((party_member_obj(16777378) == party_member_obj(16777379)) or (party_member_obj(16777378) == party_member_obj(16777380))) then begin
+-                                float_msg(party_member_obj(16777378), message_str(452, random(730, 731)), 8);
++                                float_msg(party_member_obj(16777378), mstr(random(730, 731)), FLOAT_MSG_YELLOW);
+                             end
+                             else begin
+                                 if (party_member_obj(16777378) == party_member_obj(16777368)) then begin
+-                                    float_msg(party_member_obj(16777378), message_str(452, 740), 8);
++                                    float_msg(party_member_obj(16777378), mstr(740), FLOAT_MSG_YELLOW);
+                                 end
+                                 else begin
+                                     if ((party_member_obj(16777378) == party_member_obj(16777278)) and (sex_partner_obj == dude_obj)) then begin
+-                                        float_msg(party_member_obj(16777378), message_str(452, 770), 8);
++                                        float_msg(party_member_obj(16777378), mstr(770), FLOAT_MSG_YELLOW);
+                                     end
+                                     else begin
+                                         if (random(1, 5) != 3) then begin
+-                                            float_msg(party_member_obj(16777378), message_str(452, random(720, 723)), 8);
++                                            float_msg(party_member_obj(16777378), mstr(random(720, 723)), FLOAT_MSG_YELLOW);
+                                         end
+                                     end
+                                 end
+@@ -382,84 +382,84 @@ begin
+                 end
+                 if ((party_member_obj(16777368) != 0) and (sex_partner_obj != party_member_obj(16777368))) then begin
+                     if ((party_member_obj(16777377) != sex_partner_obj) and (party_member_obj(16777295) != sex_partner_obj)) then begin
+-                        float_msg(party_member_obj(16777368), message_str(452, 740), 8);
++                        float_msg(party_member_obj(16777368), mstr(740), FLOAT_MSG_YELLOW);
+                     end
+                     else begin
+                         if (random(1, 5) != 3) then begin
+-                            float_msg(party_member_obj(16777368), message_str(452, random(720, 723)), 8);
++                            float_msg(party_member_obj(16777368), mstr(random(720, 723)), FLOAT_MSG_YELLOW);
+                         end
+                     end
+                 end
+                 if ((party_member_obj(16777379) != 0) and (sex_partner_obj != party_member_obj(16777379))) then begin
+                     if (sex_partner_obj == dude_obj) then begin
+-                        float_msg(party_member_obj(16777379), message_str(452, 730), 8);
++                        float_msg(party_member_obj(16777379), mstr(730), FLOAT_MSG_YELLOW);
+                     end
+                     else begin
+                         if (random(1, 5) != 3) then begin
+-                            float_msg(party_member_obj(16777379), message_str(452, random(720, 723)), 8);
++                            float_msg(party_member_obj(16777379), mstr(random(720, 723)), FLOAT_MSG_YELLOW);
+                         end
+                     end
+                 end
+                 if ((party_member_obj(16777380) != 0) and (sex_partner_obj != party_member_obj(16777380))) then begin
+                     if (sex_partner_obj == dude_obj) then begin
+-                        float_msg(party_member_obj(16777380), message_str(452, 731), 8);
++                        float_msg(party_member_obj(16777380), mstr(731), FLOAT_MSG_YELLOW);
+                     end
+                     else begin
+                         if (random(1, 5) != 3) then begin
+-                            float_msg(party_member_obj(16777380), message_str(452, random(720, 723)), 8);
++                            float_msg(party_member_obj(16777380), mstr(random(720, 723)), FLOAT_MSG_YELLOW);
+                         end
+                     end
+                 end
+                 if ((party_member_obj(16777295) != 0) and (sex_partner_obj != party_member_obj(16777295))) then begin
+-                    float_msg(party_member_obj(16777295), message_str(452, 773), 8);
++                    float_msg(party_member_obj(16777295), mstr(773), FLOAT_MSG_YELLOW);
+                 end
+                 if ((party_member_obj(16777875) != 0) and (sex_partner_obj != party_member_obj(16777875))) then begin
+                     if (random(1, 5) != 3) then begin
+-                        float_msg(party_member_obj(16777875), message_str(452, random(720, 723)), 8);
++                        float_msg(party_member_obj(16777875), mstr(random(720, 723)), FLOAT_MSG_YELLOW);
+                     end
+                 end
+                 if ((party_member_obj(16777876) != 0) and (sex_partner_obj != party_member_obj(16777876))) then begin
+                     if (random(1, 5) != 3) then begin
+-                        float_msg(party_member_obj(16777876), message_str(452, random(720, 723)), 8);
++                        float_msg(party_member_obj(16777876), mstr(random(720, 723)), FLOAT_MSG_YELLOW);
+                     end
+                 end
+                 if ((party_member_obj(16777874) != 0) and (sex_partner_obj != party_member_obj(16777874))) then begin
+                     if (random(1, 5) != 3) then begin
+-                        float_msg(party_member_obj(16777874), message_str(452, random(720, 723)), 8);
++                        float_msg(party_member_obj(16777874), mstr(random(720, 723)), FLOAT_MSG_YELLOW);
+                     end
+                 end
+                 if ((party_member_obj(16777872) != 0) and (sex_partner_obj != party_member_obj(16777872))) then begin
+                     if (random(1, 5) != 3) then begin
+-                        float_msg(party_member_obj(16777872), message_str(452, random(720, 723)), 8);
++                        float_msg(party_member_obj(16777872), mstr(random(720, 723)), FLOAT_MSG_YELLOW);
+                     end
+                 end
+                 if ((party_member_obj(16777785) != 0) and (sex_partner_obj != party_member_obj(16777785))) then begin
+-                    float_msg(party_member_obj(16777785), message_str(452, 773), 8);
++                    float_msg(party_member_obj(16777785), mstr(773), FLOAT_MSG_YELLOW);
+                 end
+                 if ((party_member_obj(16777749) != 0) and (sex_partner_obj != party_member_obj(16777749))) then begin
+                     if (random(1, 5) != 3) then begin
+-                        float_msg(party_member_obj(16777749), message_str(452, random(720, 723)), 8);
++                        float_msg(party_member_obj(16777749), mstr(random(720, 723)), FLOAT_MSG_YELLOW);
+                     end
+                 end
+                 if ((party_member_obj(16777801) != 0) and (sex_partner_obj != party_member_obj(16777801))) then begin
+                     if (random(1, 5) != 3) then begin
+-                        float_msg(party_member_obj(16777801), message_str(452, random(720, 723)), 8);
++                        float_msg(party_member_obj(16777801), mstr(random(720, 723)), FLOAT_MSG_YELLOW);
+                     end
+                 end
+                 if ((party_member_obj(16777859) != 0) and (sex_partner_obj != party_member_obj(16777859))) then begin
+                     if (random(1, 5) != 3) then begin
+-                        float_msg(party_member_obj(16777859), message_str(452, random(720, 723)), 8);
++                        float_msg(party_member_obj(16777859), mstr(random(720, 723)), FLOAT_MSG_YELLOW);
+                     end
+                 end
+             end
+         end
+         else begin
+             if (fixed_param == 32) then begin
+-                float_msg(self_obj, message_str(452, 704), 8);
++                float_msg(self_obj, mstr(704), FLOAT_MSG_YELLOW);
+             end
+             else begin
+                 if (fixed_param == 45) then begin
+-                    set_global_var(345, global_var(345) bwand (-1 - 1073741824));
++                    set_global_var(GVAR_NEW_RENO_FLAG_2, global_var(GVAR_NEW_RENO_FLAG_2) bwand (-1 - 1073741824));
+                 end
+             end
+         end
+@@ -481,108 +481,108 @@ end
+ 
+ procedure Node001
+ begin
+-    float_msg(self_obj, message_str(452, random(200, 206)), 8);
++    float_msg(self_obj, mstr(random(200, 206)), FLOAT_MSG_YELLOW);
+ end
+ 
+ procedure Node002
+ begin
+     variable LVar0 := 0;
+     if ((local_var(4) bwand 1) != 0) then begin
+-        if (global_var(259) > 0) then begin
+-            LVar0 := message_str(452, 217);
++        if (global_var(GVAR_NEW_RENO_HAS_REP_PRIZEFIGHTER) > 0) then begin
++            LVar0 := mstr(217);
+         end
+         else begin
+-            if (global_var(232) > 0) then begin
+-                LVar0 := message_str(452, 219);
++            if (global_var(GVAR_NEW_RENO_PORN_STAR) > 0) then begin
++                LVar0 := mstr(219);
+             end
+             else begin
+-                if (global_var(230) > 0) then begin
+-                    LVar0 := message_str(452, 218) + message_str(353, 200 + (global_var(230) / 100)) + message_str(452, 1218);
++                if (global_var(GVAR_NEW_RENO_MADE_MAN) > 0) then begin
++                    LVar0 := mstr(218) + message_str(SCRIPT_NEWR1, 200 + (global_var(GVAR_NEW_RENO_MADE_MAN) / 100)) + mstr(1218);
+                 end
+                 else begin
+-                    LVar0 := message_str(452, 216);
++                    LVar0 := mstr(216);
+                 end
+             end
+         end
+     end
+     else begin
+-        LVar0 := message_str(452, 215);
++        LVar0 := mstr(215);
+         set_local_var(4, local_var(4) bwor 1);
+     end
+-    gsay_reply(452, LVar0 + message_str(452, 220 + (get_critter_stat(dude_obj, 34) == 1)));
+-    giq_option(-3, 452, 222, Node003, 50);
+-    giq_option(-3, 452, 223, Node003, 50);
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        giq_option(-3, 452, 224, Node003, 50);
++    Reply(LVar0 + mstr(220 + (dude_gender == 1)));
++    giq_option(-3, NAME, 222, Node003, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 223, Node003, NEUTRAL_REACTION);
++    if (dude_gender == 0) then begin
++        giq_option(-3, NAME, 224, Node003, NEUTRAL_REACTION);
+     end
+-    giq_option(-3, 452, 225, Node999, 50);
+-    if (global_var(347) == 1) then begin
+-        giq_option(4, 452, 226, Node990, 50);
++    giq_option(-3, NAME, 225, Node999, NEUTRAL_REACTION);
++    if (global_var(GVAR_NEW_RENO_JULES_KITTY) == 1) then begin
++        giq_option(4, NAME, 226, Node990, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 452, 227, Node004, 50);
+-    giq_option(4, 452, 228, Node012, 50);
+-    if (global_var(894) bwand 8192) then begin
+-        giq_option(4, 452, 2125, Node100, 50);
++    giq_option(4, NAME, 227, Node004, NEUTRAL_REACTION);
++    giq_option(4, NAME, 228, Node012, NEUTRAL_REACTION);
++    if (global_var(GVAR_NC_SONG) bwand 8192) then begin
++        giq_option(4, NAME, 2125, Node100, NEUTRAL_REACTION);
+     end
+-    if (global_var(501) == 0) then begin
++    if (global_var(GVAR_NEW_RENO_KITTY_MAGAZINES) == 0) then begin
+         if (obj_is_carrying_obj_pid(dude_obj, 225) > 0) then begin
+-            giq_option(4, 452, 229, Node016, 50);
++            giq_option(4, NAME, 229, Node016, NEUTRAL_REACTION);
+         end
+     end
+     else begin
+-        if (global_var(501) == 1) then begin
++        if (global_var(GVAR_NEW_RENO_KITTY_MAGAZINES) == 1) then begin
+             if (obj_is_carrying_obj_pid(dude_obj, 225) >= 10) then begin
+-                giq_option(4, 452, 230, Node019, 50);
++                giq_option(4, NAME, 230, Node019, NEUTRAL_REACTION);
+             end
+         end
+     end
+-    giq_option(4, 452, 231, Node999, 50);
++    giq_option(4, NAME, 231, Node999, NEUTRAL_REACTION);
+     return 0;
+     LVar0 := 0;
+ end
+ 
+ procedure Node003
+ begin
+-    gsay_reply(452, 240);
+-    giq_option(-3, 452, 241, Node999, 50);
++    Reply(240);
++    giq_option(-3, NAME, 241, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node004
+ begin
+-    gsay_reply(452, 245);
+-    if ((local_var(5) == 0) and ((global_var(494) == 8) == 0)) then begin
+-        if (get_critter_stat(dude_obj, 3) > 8) then begin
+-            giq_option(4, 452, 246, Node005, 50);
++    Reply(245);
++    if ((local_var(5) == 0) and ((global_var(GVAR_FALLOUT_2) == 8) == 0)) then begin
++        if (dude_charisma > 8) then begin
++            giq_option(4, NAME, 246, Node005, NEUTRAL_REACTION);
+         end
+     end
+-    giq_option(4, 452, 247, Node007, 50);
+-    if ((metarule(16, 0) - 1 - (party_member_obj(16777352) != 0) - (party_member_obj(16777368) != 0) - (party_member_obj(16777558) != 0) - (party_member_obj(16777687) != 0) - (party_member_obj(16777600) != 0) - (party_member_obj(16777596) != 0) - (party_member_obj(16777595) != 0) - (party_member_obj(16777381) != 0) - (party_member_obj(16777748) != 0) - (party_member_obj(16777747) != 0) - (party_member_obj(16777762) != 0)) == 1) then begin
+-        giq_option(4, 452, 248, Node989, 50);
++    giq_option(4, NAME, 247, Node007, NEUTRAL_REACTION);
++    if ((party_member_count(0) - 1 - (party_member_obj(16777352) != 0) - (party_member_obj(16777368) != 0) - (party_member_obj(16777558) != 0) - (party_member_obj(16777687) != 0) - (party_member_obj(16777600) != 0) - (party_member_obj(16777596) != 0) - (party_member_obj(16777595) != 0) - (party_member_obj(16777381) != 0) - (party_member_obj(16777748) != 0) - (party_member_obj(16777747) != 0) - (party_member_obj(16777762) != 0)) == 1) then begin
++        giq_option(4, NAME, 248, Node989, NEUTRAL_REACTION);
+     end
+     else begin
+-        if ((metarule(16, 0) - 1 - (party_member_obj(16777352) != 0) - (party_member_obj(16777368) != 0) - (party_member_obj(16777558) != 0) - (party_member_obj(16777687) != 0) - (party_member_obj(16777600) != 0) - (party_member_obj(16777596) != 0) - (party_member_obj(16777595) != 0) - (party_member_obj(16777381) != 0) - (party_member_obj(16777748) != 0) - (party_member_obj(16777747) != 0) - (party_member_obj(16777762) != 0)) > 0) then begin
+-            giq_option(4, 452, 249, Node014, 50);
++        if ((party_member_count(0) - 1 - (party_member_obj(16777352) != 0) - (party_member_obj(16777368) != 0) - (party_member_obj(16777558) != 0) - (party_member_obj(16777687) != 0) - (party_member_obj(16777600) != 0) - (party_member_obj(16777596) != 0) - (party_member_obj(16777595) != 0) - (party_member_obj(16777381) != 0) - (party_member_obj(16777748) != 0) - (party_member_obj(16777747) != 0) - (party_member_obj(16777762) != 0)) > 0) then begin
++            giq_option(4, NAME, 249, Node014, NEUTRAL_REACTION);
+         end
+     end
+-    giq_option(4, 452, 250, Node012, 50);
+-    giq_option(4, 452, 251, Node999, 50);
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        giq_option(4, 452, 251, Node999, 50);
++    giq_option(4, NAME, 250, Node012, NEUTRAL_REACTION);
++    giq_option(4, NAME, 251, Node999, NEUTRAL_REACTION);
++    if (dude_gender == 0) then begin
++        giq_option(4, NAME, 251, Node999, NEUTRAL_REACTION);
+     end
+-    if (get_critter_stat(dude_obj, 34) == 1) then begin
+-        giq_option(4, 452, 252, Node999, 50);
++    if (dude_gender == 1) then begin
++        giq_option(4, NAME, 252, Node999, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure Node005
+ begin
+-    gsay_reply(452, 255);
+-    giq_option(4, 452, 256 + (get_critter_stat(dude_obj, 34) == 1), Node006, 50);
++    Reply(255);
++    giq_option(4, NAME, 256 + (dude_gender == 1), Node006, NEUTRAL_REACTION);
+     if ((obj_is_carrying_obj_pid(dude_obj, 3) + obj_is_carrying_obj_pid(dude_obj, 348) + obj_is_carrying_obj_pid(dude_obj, 349) + obj_is_carrying_obj_pid(dude_obj, 232)) > 0) then begin
+-        giq_option(4, 452, 258, Node006, 50);
++        giq_option(4, NAME, 258, Node006, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 452, 259, Node012, 50);
+-    giq_option(4, 452, 260, Node999, 50);
++    giq_option(4, NAME, 259, Node012, NEUTRAL_REACTION);
++    giq_option(4, NAME, 260, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node006
+@@ -590,214 +590,214 @@ begin
+     if (local_var(5) < 1) then begin
+         set_local_var(5, 1);
+     end
+-    gsay_reply(452, 265);
+-    giq_option(4, 452, 266, Node012, 50);
+-    giq_option(4, 452, 267, Node999, 50);
++    Reply(265);
++    giq_option(4, NAME, 266, Node012, NEUTRAL_REACTION);
++    giq_option(4, NAME, 267, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node007
+ begin
+-    gsay_reply(452, 275);
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        giq_option(4, 452, message_str(452, random(2000, 2002)), Node008, 50);
+-        giq_option(4, 452, message_str(452, random(2003, 2006)), Node009, 50);
+-        giq_option(4, 452, 279, Node010, 50);
+-        giq_option(7, 452, 280, Node013, 50);
+-        giq_option(4, 452, 250, Node012, 50);
+-        giq_option(4, 452, 251, Node999, 50);
++    Reply(275);
++    if (dude_gender == 0) then begin
++        giq_option(4, NAME, mstr(random(2000, 2002)), Node008, NEUTRAL_REACTION);
++        giq_option(4, NAME, mstr(random(2003, 2006)), Node009, NEUTRAL_REACTION);
++        giq_option(4, NAME, 279, Node010, NEUTRAL_REACTION);
++        giq_option(7, NAME, 280, Node013, NEUTRAL_REACTION);
++        giq_option(4, NAME, 250, Node012, NEUTRAL_REACTION);
++        giq_option(4, NAME, 251, Node999, NEUTRAL_REACTION);
+     end
+-    if (get_critter_stat(dude_obj, 34) == 1) then begin
+-        giq_option(4, 452, message_str(452, random(2020, 2024)), Node008, 50);
+-        giq_option(4, 452, message_str(452, random(2025, 2028)), Node009, 50);
+-        giq_option(4, 452, 2010, Node010, 50);
+-        giq_option(7, 452, 280, Node013, 50);
+-        giq_option(4, 452, 250, Node012, 50);
+-        giq_option(4, 452, 252, Node999, 50);
++    if (dude_gender == 1) then begin
++        giq_option(4, NAME, mstr(random(2020, 2024)), Node008, NEUTRAL_REACTION);
++        giq_option(4, NAME, mstr(random(2025, 2028)), Node009, NEUTRAL_REACTION);
++        giq_option(4, NAME, 2010, Node010, NEUTRAL_REACTION);
++        giq_option(7, NAME, 280, Node013, NEUTRAL_REACTION);
++        giq_option(4, NAME, 250, Node012, NEUTRAL_REACTION);
++        giq_option(4, NAME, 252, Node999, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure Node008
+ begin
+     sex_type := 700;
+-    temp_cost := 100 * (100 - (get_critter_stat(dude_obj, 3) + (10 * (global_var(347) == 2)) + (25 * ((global_var(259) > 0) or (global_var(232) > 0))))) / 100 * (((global_var(494) == 8) == 0) and ((global_var(230) > 0) == 0));
++    temp_cost := 100 * (100 - (dude_charisma + (10 * (global_var(GVAR_NEW_RENO_JULES_KITTY) == 2)) + (25 * ((global_var(GVAR_NEW_RENO_HAS_REP_PRIZEFIGHTER) > 0) or (global_var(GVAR_NEW_RENO_PORN_STAR) > 0))))) / 100 * (((global_var(GVAR_FALLOUT_2) == 8) == 0) and ((global_var(GVAR_NEW_RENO_MADE_MAN) > 0) == 0));
+     sex_partner_obj := dude_obj;
+     if (temp_cost > 0) then begin
+-        gsay_reply(452, message_str(452, 290) + message_str(452, 292) + temp_cost + message_str(452, 422));
++        Reply(mstr(290) + mstr(292) + temp_cost + mstr(422));
+         if (item_caps_total(dude_obj) >= temp_cost) then begin
+-            giq_option(4, 452, 293, Node988, 50);
++            giq_option(4, NAME, 293, Node988, NEUTRAL_REACTION);
+         end
+         else begin
+-            giq_option(4, 452, 296, Node999, 50);
++            giq_option(4, NAME, 296, Node999, NEUTRAL_REACTION);
+         end
+     end
+     else begin
+-        gsay_reply(452, message_str(452, 290) + message_str(452, 291));
+-        giq_option(4, 452, 294, Node988, 50);
++        Reply(mstr(290) + mstr(291));
++        giq_option(4, NAME, 294, Node988, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 452, 295, Node012, 50);
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        giq_option(4, 452, 251, Node999, 50);
++    giq_option(4, NAME, 295, Node012, NEUTRAL_REACTION);
++    if (dude_gender == 0) then begin
++        giq_option(4, NAME, 251, Node999, NEUTRAL_REACTION);
+     end
+-    if (get_critter_stat(dude_obj, 34) == 1) then begin
+-        giq_option(4, 452, 252, Node999, 50);
++    if (dude_gender == 1) then begin
++        giq_option(4, NAME, 252, Node999, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure Node009
+ begin
+     sex_type := 701;
+-    temp_cost := 200 * (100 - (get_critter_stat(dude_obj, 3) + (10 * (global_var(347) == 2)) + (25 * ((global_var(259) > 0) or (global_var(232) > 0))))) / 100 * (((global_var(494) == 8) == 0) and ((global_var(230) > 0) == 0));
++    temp_cost := 200 * (100 - (dude_charisma + (10 * (global_var(GVAR_NEW_RENO_JULES_KITTY) == 2)) + (25 * ((global_var(GVAR_NEW_RENO_HAS_REP_PRIZEFIGHTER) > 0) or (global_var(GVAR_NEW_RENO_PORN_STAR) > 0))))) / 100 * (((global_var(GVAR_FALLOUT_2) == 8) == 0) and ((global_var(GVAR_NEW_RENO_MADE_MAN) > 0) == 0));
+     sex_partner_obj := dude_obj;
+     if (temp_cost > 0) then begin
+-        gsay_reply(452, message_str(452, 290) + message_str(452, 292) + temp_cost + message_str(452, 422));
++        Reply(mstr(290) + mstr(292) + temp_cost + mstr(422));
+         if (item_caps_total(dude_obj) >= temp_cost) then begin
+-            giq_option(4, 452, 293, Node988, 50);
++            giq_option(4, NAME, 293, Node988, NEUTRAL_REACTION);
+         end
+         else begin
+-            giq_option(4, 452, 296, Node999, 50);
++            giq_option(4, NAME, 296, Node999, NEUTRAL_REACTION);
+         end
+     end
+     else begin
+-        gsay_reply(452, message_str(452, 290) + message_str(452, 291));
+-        giq_option(4, 452, 294, Node988, 50);
++        Reply(mstr(290) + mstr(291));
++        giq_option(4, NAME, 294, Node988, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 452, 295, Node012, 50);
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        giq_option(4, 452, 251, Node999, 50);
++    giq_option(4, NAME, 295, Node012, NEUTRAL_REACTION);
++    if (dude_gender == 0) then begin
++        giq_option(4, NAME, 251, Node999, NEUTRAL_REACTION);
+     end
+-    if (get_critter_stat(dude_obj, 34) == 1) then begin
+-        giq_option(4, 452, 252, Node999, 50);
++    if (dude_gender == 1) then begin
++        giq_option(4, NAME, 252, Node999, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure Node010
+ begin
+     sex_type := 702;
+-    temp_cost := 100 * (100 - (get_critter_stat(dude_obj, 3) + (10 * (global_var(347) == 2)) + (25 * ((global_var(259) > 0) or (global_var(232) > 0))))) / 100 * (((global_var(494) == 8) == 0) and ((global_var(230) > 0) == 0));
++    temp_cost := 100 * (100 - (dude_charisma + (10 * (global_var(GVAR_NEW_RENO_JULES_KITTY) == 2)) + (25 * ((global_var(GVAR_NEW_RENO_HAS_REP_PRIZEFIGHTER) > 0) or (global_var(GVAR_NEW_RENO_PORN_STAR) > 0))))) / 100 * (((global_var(GVAR_FALLOUT_2) == 8) == 0) and ((global_var(GVAR_NEW_RENO_MADE_MAN) > 0) == 0));
+     sex_partner_obj := dude_obj;
+     if (temp_cost > 0) then begin
+-        gsay_reply(452, message_str(452, 320) + message_str(452, 322) + temp_cost + message_str(452, 422));
++        Reply(mstr(320) + mstr(322) + temp_cost + mstr(422));
+         if (item_caps_total(dude_obj) >= temp_cost) then begin
+-            giq_option(4, 452, 293, Node988, 50);
++            giq_option(4, NAME, 293, Node988, NEUTRAL_REACTION);
+         end
+         else begin
+-            giq_option(4, 452, 296, Node999, 50);
++            giq_option(4, NAME, 296, Node999, NEUTRAL_REACTION);
+         end
+     end
+     else begin
+-        gsay_reply(452, message_str(452, 320) + message_str(452, 291));
+-        giq_option(4, 452, 325, Node988, 50);
++        Reply(mstr(320) + mstr(291));
++        giq_option(4, NAME, 325, Node988, NEUTRAL_REACTION);
+     end
+-    giq_option(8, 452, 323, Node011, 50);
+-    giq_option(4, 452, 326, Node012, 50);
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        giq_option(4, 452, 251, Node999, 50);
++    giq_option(8, NAME, 323, Node011, NEUTRAL_REACTION);
++    giq_option(4, NAME, 326, Node012, NEUTRAL_REACTION);
++    if (dude_gender == 0) then begin
++        giq_option(4, NAME, 251, Node999, NEUTRAL_REACTION);
+     end
+-    if (get_critter_stat(dude_obj, 34) == 1) then begin
+-        giq_option(4, 452, 252, Node999, 50);
++    if (dude_gender == 1) then begin
++        giq_option(4, NAME, 252, Node999, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure Node011
+ begin
+     if (temp_cost > 0) then begin
+-        gsay_reply(452, message_str(452, 335) + message_str(452, 336) + temp_cost + message_str(452, 1336));
++        Reply(mstr(335) + mstr(336) + temp_cost + mstr(1336));
+         if (item_caps_total(dude_obj) >= temp_cost) then begin
+-            giq_option(4, 452, message_str(452, 338) + temp_cost + message_str(452, 422), Node988, 50);
++            giq_option(4, NAME, mstr(338) + temp_cost + mstr(422), Node988, NEUTRAL_REACTION);
+         end
+         else begin
+-            giq_option(4, 452, 296, Node999, 50);
++            giq_option(4, NAME, 296, Node999, NEUTRAL_REACTION);
+         end
+     end
+     else begin
+-        gsay_reply(452, message_str(452, 335) + message_str(452, 337));
+-        giq_option(4, 452, 294, Node988, 50);
++        Reply(mstr(335) + mstr(337));
++        giq_option(4, NAME, 294, Node988, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 452, 340, Node012, 50);
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        giq_option(4, 452, 251, Node999, 50);
++    giq_option(4, NAME, 340, Node012, NEUTRAL_REACTION);
++    if (dude_gender == 0) then begin
++        giq_option(4, NAME, 251, Node999, NEUTRAL_REACTION);
+     end
+-    if (get_critter_stat(dude_obj, 34) == 1) then begin
+-        giq_option(4, 452, 252, Node999, 50);
++    if (dude_gender == 1) then begin
++        giq_option(4, NAME, 252, Node999, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure Node012
+ begin
+-    gsay_reply(452, random(350, 353));
+-    if (((global_var(284) bwand 8192) != 0) and (((global_var(694) bwand 16) != 0) == 0)) then begin
+-        if (((global_var(284) bwand 8) == 0) and ((global_var(284) bwand 16) == 0) and (party_member_obj(16777376) == 0)) then begin
+-            giq_option(4, 452, 354, Node028, 50);
++    Reply(random(350, 353));
++    if (((global_var(GVAR_NEW_RENO_MYRON) bwand 8192) != 0) and (((global_var(GVAR_EMILY_SUBST_TIME) bwand 16) != 0) == 0)) then begin
++        if (((global_var(GVAR_NEW_RENO_MYRON) bwand 8) == 0) and ((global_var(GVAR_NEW_RENO_MYRON) bwand 16) == 0) and (party_member_obj(16777376) == 0)) then begin
++            giq_option(4, NAME, 354, Node028, NEUTRAL_REACTION);
+         end
+     end
+-    if (((global_var(284) bwand 8) == 0) and ((global_var(284) bwand 16) == 0) and (party_member_obj(16777376) == 0)) then begin
+-        if ((local_var(9) != 0) and ((local_var(4) bwand 8388608) == 0) and ((local_var(4) bwand 16777216) != 0) and get_critter_stat(dude_obj, 34)) then begin
+-            giq_option(4, 452, 2120, Node105, 50);
++    if (((global_var(GVAR_NEW_RENO_MYRON) bwand 8) == 0) and ((global_var(GVAR_NEW_RENO_MYRON) bwand 16) == 0) and (party_member_obj(16777376) == 0)) then begin
++        if ((local_var(9) != 0) and ((local_var(4) bwand 8388608) == 0) and ((local_var(4) bwand 16777216) != 0) and dude_gender) then begin
++            giq_option(4, NAME, 2120, Node105, NEUTRAL_REACTION);
+         end
+     end
+-    if (global_var(347) == 1) then begin
+-        giq_option(4, 452, 226, Node990, 50);
++    if (global_var(GVAR_NEW_RENO_JULES_KITTY) == 1) then begin
++        giq_option(4, NAME, 226, Node990, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 452, 227, Node004, 50);
+-    if ((metarule(16, 0) - 1 - (party_member_obj(16777352) != 0) - (party_member_obj(16777368) != 0) - (party_member_obj(16777558) != 0) - (party_member_obj(16777687) != 0) - (party_member_obj(16777600) != 0) - (party_member_obj(16777596) != 0) - (party_member_obj(16777595) != 0) - (party_member_obj(16777381) != 0) - (party_member_obj(16777748) != 0) - (party_member_obj(16777747) != 0) - (party_member_obj(16777762) != 0)) == 1) then begin
+-        giq_option(4, 452, 248, Node989, 50);
++    giq_option(4, NAME, 227, Node004, NEUTRAL_REACTION);
++    if ((party_member_count(0) - 1 - (party_member_obj(16777352) != 0) - (party_member_obj(16777368) != 0) - (party_member_obj(16777558) != 0) - (party_member_obj(16777687) != 0) - (party_member_obj(16777600) != 0) - (party_member_obj(16777596) != 0) - (party_member_obj(16777595) != 0) - (party_member_obj(16777381) != 0) - (party_member_obj(16777748) != 0) - (party_member_obj(16777747) != 0) - (party_member_obj(16777762) != 0)) == 1) then begin
++        giq_option(4, NAME, 248, Node989, NEUTRAL_REACTION);
+     end
+     else begin
+-        if ((metarule(16, 0) - 1 - (party_member_obj(16777352) != 0) - (party_member_obj(16777368) != 0) - (party_member_obj(16777558) != 0) - (party_member_obj(16777687) != 0) - (party_member_obj(16777600) != 0) - (party_member_obj(16777596) != 0) - (party_member_obj(16777595) != 0) - (party_member_obj(16777381) != 0) - (party_member_obj(16777748) != 0) - (party_member_obj(16777747) != 0) - (party_member_obj(16777762) != 0)) > 0) then begin
+-            giq_option(4, 452, 249, Node014, 50);
++        if ((party_member_count(0) - 1 - (party_member_obj(16777352) != 0) - (party_member_obj(16777368) != 0) - (party_member_obj(16777558) != 0) - (party_member_obj(16777687) != 0) - (party_member_obj(16777600) != 0) - (party_member_obj(16777596) != 0) - (party_member_obj(16777595) != 0) - (party_member_obj(16777381) != 0) - (party_member_obj(16777748) != 0) - (party_member_obj(16777747) != 0) - (party_member_obj(16777762) != 0)) > 0) then begin
++            giq_option(4, NAME, 249, Node014, NEUTRAL_REACTION);
+         end
+     end
+-    if (global_var(501) == 0) then begin
++    if (global_var(GVAR_NEW_RENO_KITTY_MAGAZINES) == 0) then begin
+         if (obj_is_carrying_obj_pid(dude_obj, 225) > 0) then begin
+-            giq_option(4, 452, 229, Node016, 50);
++            giq_option(4, NAME, 229, Node016, NEUTRAL_REACTION);
+         end
+     end
+     else begin
+-        if (global_var(501) == 1) then begin
++        if (global_var(GVAR_NEW_RENO_KITTY_MAGAZINES) == 1) then begin
+             if (obj_is_carrying_obj_pid(dude_obj, 225) >= 10) then begin
+-                giq_option(4, 452, 230, Node019, 50);
++                giq_option(4, NAME, 230, Node019, NEUTRAL_REACTION);
+             end
+         end
+     end
+-    giq_option(4, 452, 361, Node999, 50);
++    giq_option(4, NAME, 361, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node013
+ begin
+     sex_partner_obj := dude_obj;
+-    gsay_reply(452, 375);
+-    if (message_str(452, 100) != 0) then begin
++    Reply(375);
++    if (mstr(100) != 0) then begin
+         if (obj_is_carrying_obj_pid(dude_obj, 470)) then begin
+-            if (get_critter_stat(dude_obj, 34) == 0) then begin
+-                giq_option(4, 452, 2040, Node031, 50);
+-                giq_option(4, 452, 2041, Node031, 50);
++            if (dude_gender == 0) then begin
++                giq_option(4, NAME, 2040, Node031, NEUTRAL_REACTION);
++                giq_option(4, NAME, 2041, Node031, NEUTRAL_REACTION);
+             end
+-            if (get_critter_stat(dude_obj, 34) == 1) then begin
+-                giq_option(4, 452, 2042, Node031, 50);
+-                giq_option(4, 452, 2043, Node031, 50);
++            if (dude_gender == 1) then begin
++                giq_option(4, NAME, 2042, Node031, NEUTRAL_REACTION);
++                giq_option(4, NAME, 2043, Node031, NEUTRAL_REACTION);
+             end
+         end
+         else begin
+             if (obj_is_carrying_obj_pid(dude_obj, 470) == 0) then begin
+-                if (get_critter_stat(dude_obj, 34) == 0) then begin
+-                    giq_option(4, 452, random(2030, 2034), Node031, 50);
++                if (dude_gender == 0) then begin
++                    giq_option(4, NAME, random(2030, 2034), Node031, NEUTRAL_REACTION);
+                 end
+-                if (get_critter_stat(dude_obj, 34) == 1) then begin
+-                    giq_option(4, 452, random(2031, 2035), Node031, 50);
++                if (dude_gender == 1) then begin
++                    giq_option(4, NAME, random(2031, 2035), Node031, NEUTRAL_REACTION);
+                 end
+             end
+         end
+     end
+-    if ((global_var(260) bwand 1) != 0) then begin
+-        giq_option(4, 452, 381, Node031, 50);
++    if ((global_var(GVAR_NEW_RENO_ANGELA) bwand 1) != 0) then begin
++        giq_option(4, NAME, 381, Node031, NEUTRAL_REACTION);
+     end
+     else begin
+-        if ((global_var(263) bwand 1) != 0) then begin
+-            giq_option(4, 452, 382, Node031, 50);
++        if ((global_var(GVAR_NEW_RENO_MRS_BISHOP) bwand 1) != 0) then begin
++            giq_option(4, NAME, 382, Node031, NEUTRAL_REACTION);
+         end
+     end
+-    giq_option(4, 452, 383, Node012, 50);
+-    giq_option(4, 452, 384, Node999, 50);
++    giq_option(4, NAME, 383, Node012, NEUTRAL_REACTION);
++    giq_option(4, NAME, 384, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node014
+@@ -856,52 +856,52 @@ end
+ procedure Node014a
+ begin
+     variable LVar0 := 0;
+-    gsay_reply(452, 395);
++    Reply(395);
+     if (party_member_obj(16777376) != 0) then begin
+         LVar0 := LVar0 + 1;
+         set_local_var(4, local_var(4) bwor 2048);
+-        giq_option(4, 452, 398, Node985, 50);
++        giq_option(4, NAME, 398, Node985, NEUTRAL_REACTION);
+     end
+     if (party_member_obj(16777377) != 0) then begin
+         LVar0 := LVar0 + 1;
+         set_local_var(4, local_var(4) bwor 4096);
+-        if (get_critter_stat(dude_obj, 34) == 0) then begin
+-            giq_option(4, 452, 397, Node986, 50);
++        if (dude_gender == 0) then begin
++            giq_option(4, NAME, 397, Node986, NEUTRAL_REACTION);
+         end
+         else begin
+-            giq_option(4, 452, 410, Node986, 50);
++            giq_option(4, NAME, 410, Node986, NEUTRAL_REACTION);
+         end
+     end
+     if (party_member_obj(16777305) != 0) then begin
+         LVar0 := LVar0 + 1;
+         set_local_var(4, local_var(4) bwor 8192);
+-        giq_option(4, 452, 400, Node983, 50);
++        giq_option(4, NAME, 400, Node983, NEUTRAL_REACTION);
+     end
+     if (party_member_obj(16777313) != 0) then begin
+         if (LVar0 < 3) then begin
+             set_local_var(4, local_var(4) bwor 16384);
+-            giq_option(4, 452, 399, Node984, 50);
++            giq_option(4, NAME, 399, Node984, NEUTRAL_REACTION);
+         end
+         LVar0 := LVar0 + 1;
+     end
+     if (party_member_obj(16777323) != 0) then begin
+         if (LVar0 < 3) then begin
+             set_local_var(4, local_var(4) bwor 32768);
+-            giq_option(4, 452, 396, Node987, 50);
++            giq_option(4, NAME, 396, Node987, NEUTRAL_REACTION);
+         end
+         LVar0 := LVar0 + 1;
+     end
+     if (party_member_obj(16777379) != 0) then begin
+         if (LVar0 < 3) then begin
+             set_local_var(4, local_var(4) bwor 65536);
+-            giq_option(4, 452, 404, Node979, 50);
++            giq_option(4, NAME, 404, Node979, NEUTRAL_REACTION);
+         end
+         LVar0 := LVar0 + 1;
+     end
+     if (party_member_obj(16777380) != 0) then begin
+         if (LVar0 < 3) then begin
+             set_local_var(4, local_var(4) bwor 131072);
+-            giq_option(4, 452, 405, Node978, 50);
++            giq_option(4, NAME, 405, Node978, NEUTRAL_REACTION);
+         end
+         LVar0 := LVar0 + 1;
+     end
+@@ -909,10 +909,10 @@ begin
+         if (LVar0 < 3) then begin
+             set_local_var(4, local_var(4) bwor 262144);
+             if (party_member_obj(16777295) != 0) then begin
+-                giq_option(4, 452, 402, Node981, 50);
++                giq_option(4, NAME, 402, Node981, NEUTRAL_REACTION);
+             end
+             else begin
+-                giq_option(4, 452, 402, Node994, 50);
++                giq_option(4, NAME, 402, Node994, NEUTRAL_REACTION);
+             end
+         end
+         LVar0 := LVar0 + 1;
+@@ -920,35 +920,35 @@ begin
+     if (party_member_obj(16777278) != 0) then begin
+         if (LVar0 < 3) then begin
+             set_local_var(4, local_var(4) bwor 524288);
+-            giq_option(4, 452, 401, Node982, 50);
++            giq_option(4, NAME, 401, Node982, NEUTRAL_REACTION);
+         end
+         LVar0 := LVar0 + 1;
+     end
+     if (party_member_obj(16777874) != 0) then begin
+         if (LVar0 < 3) then begin
+             set_local_var(4, local_var(4) bwor 1048576);
+-            giq_option(4, 452, 409, Node993, 50);
++            giq_option(4, NAME, 409, Node993, NEUTRAL_REACTION);
+         end
+         LVar0 := LVar0 + 1;
+     end
+     if (party_member_obj(16777875) != 0) then begin
+         if (LVar0 < 3) then begin
+             set_local_var(4, local_var(4) bwor 2097152);
+-            giq_option(4, 452, 407, Node991, 50);
++            giq_option(4, NAME, 407, Node991, NEUTRAL_REACTION);
+         end
+         LVar0 := LVar0 + 1;
+     end
+     if (party_member_obj(16777876) != 0) then begin
+         if (LVar0 < 3) then begin
+             set_local_var(4, local_var(4) bwor 4194304);
+-            giq_option(4, 452, 408, Node992, 50);
++            giq_option(4, NAME, 408, Node992, NEUTRAL_REACTION);
+         end
+         LVar0 := LVar0 + 1;
+     end
+     if (party_member_obj(16777872) != 0) then begin
+         if (LVar0 < 3) then begin
+             set_local_var(4, local_var(4) bwor 33554432);
+-            giq_option(4, 452, 411, Node995, 50);
++            giq_option(4, NAME, 411, Node995, NEUTRAL_REACTION);
+         end
+         LVar0 := LVar0 + 1;
+     end
+@@ -956,10 +956,10 @@ begin
+         if (LVar0 < 3) then begin
+             set_local_var(4, local_var(4) bwor 67108864);
+             if (party_member_obj(16777785) != 0) then begin
+-                giq_option(4, 452, 402, Node995a, 50);
++                giq_option(4, NAME, 402, Node995a, NEUTRAL_REACTION);
+             end
+             else begin
+-                giq_option(4, 452, 402, Node995b, 50);
++                giq_option(4, NAME, 402, Node995b, NEUTRAL_REACTION);
+             end
+         end
+         LVar0 := LVar0 + 1;
+@@ -967,22 +967,22 @@ begin
+     if (party_member_obj(16777801) != 0) then begin
+         if (LVar0 < 3) then begin
+             set_local_var(4, local_var(4) bwor 134217728);
+-            giq_option(4, 452, 412, Node995c, 50);
++            giq_option(4, NAME, 412, Node995c, NEUTRAL_REACTION);
+         end
+         LVar0 := LVar0 + 1;
+     end
+     if (party_member_obj(16777859) != 0) then begin
+         if (LVar0 < 3) then begin
+             set_local_var(4, local_var(4) bwor 268435456);
+-            giq_option(4, 452, 413, Node995d, 50);
++            giq_option(4, NAME, 413, Node995d, NEUTRAL_REACTION);
+         end
+         LVar0 := LVar0 + 1;
+     end
+     if (LVar0 > 3) then begin
+-        giq_option(4, 452, 2100, Node014b, 50);
++        giq_option(4, NAME, 2100, Node014b, NEUTRAL_REACTION);
+     end
+     else begin
+-        giq_option(4, 452, 406, Node999, 50);
++        giq_option(4, NAME, 406, Node999, NEUTRAL_REACTION);
+     end
+     return 0;
+     LVar0 := 0;
+@@ -991,25 +991,25 @@ end
+ procedure Node014b
+ begin
+     variable LVar0 := 0;
+-    gsay_reply(452, 395);
++    Reply(395);
+     if (party_member_obj(16777323) != 0) then begin
+         if ((LVar0 < 3) and ((local_var(4) bwand 32768) == 0)) then begin
+             set_local_var(4, local_var(4) bwor 32768);
+-            giq_option(4, 452, 396, Node987, 50);
++            giq_option(4, NAME, 396, Node987, NEUTRAL_REACTION);
+             LVar0 := LVar0 + 1;
+         end
+     end
+     if (party_member_obj(16777379) != 0) then begin
+         if ((LVar0 < 3) and ((local_var(4) bwand 65536) == 0)) then begin
+             set_local_var(4, local_var(4) bwor 65536);
+-            giq_option(4, 452, 404, Node979, 50);
++            giq_option(4, NAME, 404, Node979, NEUTRAL_REACTION);
+             LVar0 := LVar0 + 1;
+         end
+     end
+     if (party_member_obj(16777380) != 0) then begin
+         if ((LVar0 < 3) and ((local_var(4) bwand 131072) == 0)) then begin
+             set_local_var(4, local_var(4) bwor 131072);
+-            giq_option(4, 452, 405, Node978, 50);
++            giq_option(4, NAME, 405, Node978, NEUTRAL_REACTION);
+             LVar0 := LVar0 + 1;
+         end
+     end
+@@ -1017,10 +1017,10 @@ begin
+         if ((LVar0 < 3) and ((local_var(4) bwand 262144) == 0)) then begin
+             set_local_var(4, local_var(4) bwor 262144);
+             if (party_member_obj(16777295) != 0) then begin
+-                giq_option(4, 452, 402, Node981, 50);
++                giq_option(4, NAME, 402, Node981, NEUTRAL_REACTION);
+             end
+             else begin
+-                giq_option(4, 452, 402, Node994, 50);
++                giq_option(4, NAME, 402, Node994, NEUTRAL_REACTION);
+             end
+             LVar0 := LVar0 + 1;
+         end
+@@ -1028,35 +1028,35 @@ begin
+     if (party_member_obj(16777278) != 0) then begin
+         if ((LVar0 < 3) and ((local_var(4) bwand 524288) == 0)) then begin
+             set_local_var(4, local_var(4) bwor 524288);
+-            giq_option(4, 452, 401, Node982, 50);
++            giq_option(4, NAME, 401, Node982, NEUTRAL_REACTION);
+             LVar0 := LVar0 + 1;
+         end
+     end
+     if (party_member_obj(16777874) != 0) then begin
+         if ((LVar0 < 3) and ((local_var(4) bwand 1048576) == 0)) then begin
+             set_local_var(4, local_var(4) bwor 1048576);
+-            giq_option(4, 452, 409, Node993, 50);
++            giq_option(4, NAME, 409, Node993, NEUTRAL_REACTION);
+             LVar0 := LVar0 + 1;
+         end
+     end
+     if (party_member_obj(16777875) != 0) then begin
+         if ((LVar0 < 3) and ((local_var(4) bwand 2097152) == 0)) then begin
+             set_local_var(4, local_var(4) bwor 2097152);
+-            giq_option(4, 452, 407, Node991, 50);
++            giq_option(4, NAME, 407, Node991, NEUTRAL_REACTION);
+             LVar0 := LVar0 + 1;
+         end
+     end
+     if (party_member_obj(16777876) != 0) then begin
+         if ((LVar0 < 3) and ((local_var(4) bwand 4194304) == 0)) then begin
+             set_local_var(4, local_var(4) bwor 4194304);
+-            giq_option(4, 452, 408, Node992, 50);
++            giq_option(4, NAME, 408, Node992, NEUTRAL_REACTION);
+             LVar0 := LVar0 + 1;
+         end
+     end
+     if (party_member_obj(16777872) != 0) then begin
+         if ((LVar0 < 3) and ((local_var(4) bwand 33554432) == 0)) then begin
+             set_local_var(4, local_var(4) bwor 33554432);
+-            giq_option(4, 452, 411, Node995, 50);
++            giq_option(4, NAME, 411, Node995, NEUTRAL_REACTION);
+             LVar0 := LVar0 + 1;
+         end
+     end
+@@ -1064,10 +1064,10 @@ begin
+         if ((LVar0 < 3) and ((local_var(4) bwand 67108864) == 0)) then begin
+             set_local_var(4, local_var(4) bwor 67108864);
+             if (party_member_obj(16777785) != 0) then begin
+-                giq_option(4, 452, 402, Node995a, 50);
++                giq_option(4, NAME, 402, Node995a, NEUTRAL_REACTION);
+             end
+             else begin
+-                giq_option(4, 452, 402, Node995b, 50);
++                giq_option(4, NAME, 402, Node995b, NEUTRAL_REACTION);
+             end
+             LVar0 := LVar0 + 1;
+         end
+@@ -1075,22 +1075,22 @@ begin
+     if (party_member_obj(16777801) != 0) then begin
+         if ((LVar0 < 3) and ((local_var(4) bwand 134217728) == 0)) then begin
+             set_local_var(4, local_var(4) bwor 134217728);
+-            giq_option(4, 452, 412, Node995c, 50);
++            giq_option(4, NAME, 412, Node995c, NEUTRAL_REACTION);
+             LVar0 := LVar0 + 1;
+         end
+     end
+     if (party_member_obj(16777859) != 0) then begin
+         if ((LVar0 < 3) and ((local_var(4) bwand 268435456) == 0)) then begin
+             set_local_var(4, local_var(4) bwor 268435456);
+-            giq_option(4, 452, 413, Node995d, 50);
++            giq_option(4, NAME, 413, Node995d, NEUTRAL_REACTION);
+             LVar0 := LVar0 + 1;
+         end
+     end
+     if (LVar0 > 3) then begin
+-        giq_option(4, 452, 2100, Node014c, 50);
++        giq_option(4, NAME, 2100, Node014c, NEUTRAL_REACTION);
+     end
+     else begin
+-        giq_option(4, 452, 2101, Node014, 50);
++        giq_option(4, NAME, 2101, Node014, NEUTRAL_REACTION);
+     end
+     return 0;
+     LVar0 := 0;
+@@ -1099,25 +1099,25 @@ end
+ procedure Node014c
+ begin
+     variable LVar0 := 0;
+-    gsay_reply(452, 395);
++    Reply(395);
+     if (party_member_obj(16777323) != 0) then begin
+         if ((LVar0 < 3) and ((local_var(4) bwand 32768) == 0)) then begin
+             set_local_var(4, local_var(4) bwor 32768);
+-            giq_option(4, 452, 396, Node987, 50);
++            giq_option(4, NAME, 396, Node987, NEUTRAL_REACTION);
+             LVar0 := LVar0 + 1;
+         end
+     end
+     if (party_member_obj(16777379) != 0) then begin
+         if ((LVar0 < 3) and ((local_var(4) bwand 65536) == 0)) then begin
+             set_local_var(4, local_var(4) bwor 65536);
+-            giq_option(4, 452, 404, Node979, 50);
++            giq_option(4, NAME, 404, Node979, NEUTRAL_REACTION);
+             LVar0 := LVar0 + 1;
+         end
+     end
+     if (party_member_obj(16777380) != 0) then begin
+         if ((LVar0 < 3) and ((local_var(4) bwand 131072) == 0)) then begin
+             set_local_var(4, local_var(4) bwor 131072);
+-            giq_option(4, 452, 405, Node978, 50);
++            giq_option(4, NAME, 405, Node978, NEUTRAL_REACTION);
+             LVar0 := LVar0 + 1;
+         end
+     end
+@@ -1125,10 +1125,10 @@ begin
+         if ((LVar0 < 3) and ((local_var(4) bwand 262144) == 0)) then begin
+             set_local_var(4, local_var(4) bwor 262144);
+             if (party_member_obj(16777295) != 0) then begin
+-                giq_option(4, 452, 402, Node981, 50);
++                giq_option(4, NAME, 402, Node981, NEUTRAL_REACTION);
+             end
+             else begin
+-                giq_option(4, 452, 402, Node994, 50);
++                giq_option(4, NAME, 402, Node994, NEUTRAL_REACTION);
+             end
+             LVar0 := LVar0 + 1;
+         end
+@@ -1136,35 +1136,35 @@ begin
+     if (party_member_obj(16777278) != 0) then begin
+         if ((LVar0 < 3) and ((local_var(4) bwand 524288) == 0)) then begin
+             set_local_var(4, local_var(4) bwor 524288);
+-            giq_option(4, 452, 401, Node982, 50);
++            giq_option(4, NAME, 401, Node982, NEUTRAL_REACTION);
+             LVar0 := LVar0 + 1;
+         end
+     end
+     if (party_member_obj(16777874) != 0) then begin
+         if ((LVar0 < 3) and ((local_var(4) bwand 1048576) == 0)) then begin
+             set_local_var(4, local_var(4) bwor 1048576);
+-            giq_option(4, 452, 409, Node993, 50);
++            giq_option(4, NAME, 409, Node993, NEUTRAL_REACTION);
+             LVar0 := LVar0 + 1;
+         end
+     end
+     if (party_member_obj(16777875) != 0) then begin
+         if ((LVar0 < 3) and ((local_var(4) bwand 2097152) == 0)) then begin
+             set_local_var(4, local_var(4) bwor 2097152);
+-            giq_option(4, 452, 407, Node991, 50);
++            giq_option(4, NAME, 407, Node991, NEUTRAL_REACTION);
+             LVar0 := LVar0 + 1;
+         end
+     end
+     if (party_member_obj(16777876) != 0) then begin
+         if ((LVar0 < 3) and ((local_var(4) bwand 4194304) == 0)) then begin
+             set_local_var(4, local_var(4) bwor 4194304);
+-            giq_option(4, 452, 408, Node992, 50);
++            giq_option(4, NAME, 408, Node992, NEUTRAL_REACTION);
+             LVar0 := LVar0 + 1;
+         end
+     end
+     if (party_member_obj(16777872) != 0) then begin
+         if ((LVar0 < 3) and ((local_var(4) bwand 33554432) == 0)) then begin
+             set_local_var(4, local_var(4) bwor 33554432);
+-            giq_option(4, 452, 411, Node995, 50);
++            giq_option(4, NAME, 411, Node995, NEUTRAL_REACTION);
+             LVar0 := LVar0 + 1;
+         end
+     end
+@@ -1172,10 +1172,10 @@ begin
+         if ((LVar0 < 3) and ((local_var(4) bwand 67108864) == 0)) then begin
+             set_local_var(4, local_var(4) bwor 67108864);
+             if (party_member_obj(16777785) != 0) then begin
+-                giq_option(4, 452, 402, Node995a, 50);
++                giq_option(4, NAME, 402, Node995a, NEUTRAL_REACTION);
+             end
+             else begin
+-                giq_option(4, 452, 402, Node995b, 50);
++                giq_option(4, NAME, 402, Node995b, NEUTRAL_REACTION);
+             end
+             LVar0 := LVar0 + 1;
+         end
+@@ -1183,22 +1183,22 @@ begin
+     if (party_member_obj(16777801) != 0) then begin
+         if ((LVar0 < 3) and ((local_var(4) bwand 134217728) == 0)) then begin
+             set_local_var(4, local_var(4) bwor 134217728);
+-            giq_option(4, 452, 412, Node995c, 50);
++            giq_option(4, NAME, 412, Node995c, NEUTRAL_REACTION);
+             LVar0 := LVar0 + 1;
+         end
+     end
+     if (party_member_obj(16777859) != 0) then begin
+         if ((LVar0 < 3) and ((local_var(4) bwand 268435456) == 0)) then begin
+             set_local_var(4, local_var(4) bwor 268435456);
+-            giq_option(4, 452, 413, Node995d, 50);
++            giq_option(4, NAME, 413, Node995d, NEUTRAL_REACTION);
+             LVar0 := LVar0 + 1;
+         end
+     end
+     if (LVar0 > 3) then begin
+-        giq_option(4, 452, 2100, Node014d, 50);
++        giq_option(4, NAME, 2100, Node014d, NEUTRAL_REACTION);
+     end
+     else begin
+-        giq_option(4, 452, 2101, Node014, 50);
++        giq_option(4, NAME, 2101, Node014, NEUTRAL_REACTION);
+     end
+     return 0;
+     LVar0 := 0;
+@@ -1206,138 +1206,138 @@ end
+ 
+ procedure Node014d
+ begin
+-    gsay_reply(452, 395);
++    Reply(395);
+     if ((party_member_obj(16777295) != 0) or (party_member_obj(16777597) != 0)) then begin
+         if ((local_var(4) bwand 262144) == 0) then begin
+             set_local_var(4, local_var(4) bwor 262144);
+             if (party_member_obj(16777295) != 0) then begin
+-                giq_option(4, 452, 402, Node981, 50);
++                giq_option(4, NAME, 402, Node981, NEUTRAL_REACTION);
+             end
+             else begin
+-                giq_option(4, 452, 402, Node994, 50);
++                giq_option(4, NAME, 402, Node994, NEUTRAL_REACTION);
+             end
+         end
+     end
+     if (party_member_obj(16777278) != 0) then begin
+         if ((local_var(4) bwand 524288) == 0) then begin
+             set_local_var(4, local_var(4) bwor 524288);
+-            giq_option(4, 452, 401, Node982, 50);
++            giq_option(4, NAME, 401, Node982, NEUTRAL_REACTION);
+         end
+     end
+     if (party_member_obj(16777874) != 0) then begin
+         if ((local_var(4) bwand 1048576) == 0) then begin
+             set_local_var(4, local_var(4) bwor 1048576);
+-            giq_option(4, 452, 409, Node993, 50);
++            giq_option(4, NAME, 409, Node993, NEUTRAL_REACTION);
+         end
+     end
+     if (party_member_obj(16777875) != 0) then begin
+         if ((local_var(4) bwand 2097152) == 0) then begin
+             set_local_var(4, local_var(4) bwor 2097152);
+-            giq_option(4, 452, 407, Node991, 50);
++            giq_option(4, NAME, 407, Node991, NEUTRAL_REACTION);
+         end
+     end
+     if (party_member_obj(16777876) != 0) then begin
+         if ((local_var(4) bwand 4194304) == 0) then begin
+             set_local_var(4, local_var(4) bwor 4194304);
+-            giq_option(4, 452, 408, Node992, 50);
++            giq_option(4, NAME, 408, Node992, NEUTRAL_REACTION);
+         end
+     end
+     if (party_member_obj(16777872) != 0) then begin
+         if ((local_var(4) bwand 33554432) == 0) then begin
+             set_local_var(4, local_var(4) bwor 33554432);
+-            giq_option(4, 452, 411, Node992, 50);
++            giq_option(4, NAME, 411, Node992, NEUTRAL_REACTION);
+         end
+     end
+     if ((party_member_obj(16777785) != 0) or (party_member_obj(16777749) != 0)) then begin
+         if ((local_var(4) bwand 67108864) == 0) then begin
+             set_local_var(4, local_var(4) bwor 67108864);
+             if (party_member_obj(16777785) != 0) then begin
+-                giq_option(4, 452, 402, Node981, 50);
++                giq_option(4, NAME, 402, Node981, NEUTRAL_REACTION);
+             end
+             else begin
+-                giq_option(4, 452, 402, Node994, 50);
++                giq_option(4, NAME, 402, Node994, NEUTRAL_REACTION);
+             end
+         end
+     end
+     if (party_member_obj(16777801) != 0) then begin
+         if ((local_var(4) bwand 134217728) == 0) then begin
+             set_local_var(4, local_var(4) bwor 134217728);
+-            giq_option(4, 452, 412, Node992, 50);
++            giq_option(4, NAME, 412, Node992, NEUTRAL_REACTION);
+         end
+     end
+     if (party_member_obj(16777859) != 0) then begin
+         if ((local_var(4) bwand 268435456) == 0) then begin
+             set_local_var(4, local_var(4) bwor 268435456);
+-            giq_option(4, 452, 413, Node995d, 50);
++            giq_option(4, NAME, 413, Node995d, NEUTRAL_REACTION);
+         end
+     end
+-    giq_option(4, 452, 2102, Node014, 50);
+-    giq_option(4, 452, 406, Node999, 50);
++    giq_option(4, NAME, 2102, Node014, NEUTRAL_REACTION);
++    giq_option(4, NAME, 406, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node015
+ begin
+     sex_type := 703;
+-    temp_cost := 200 * (100 - (get_critter_stat(dude_obj, 3) + (10 * (global_var(347) == 2)) + (25 * ((global_var(259) > 0) or (global_var(232) > 0))))) / 100 * (((global_var(494) == 8) == 0) and ((global_var(230) > 0) == 0));
++    temp_cost := 200 * (100 - (dude_charisma + (10 * (global_var(GVAR_NEW_RENO_JULES_KITTY) == 2)) + (25 * ((global_var(GVAR_NEW_RENO_HAS_REP_PRIZEFIGHTER) > 0) or (global_var(GVAR_NEW_RENO_PORN_STAR) > 0))))) / 100 * (((global_var(GVAR_FALLOUT_2) == 8) == 0) and ((global_var(GVAR_NEW_RENO_MADE_MAN) > 0) == 0));
+     if (temp_cost > 0) then begin
+-        gsay_reply(452, message_str(452, 420 + ((metarule(16, 0) - 1 - (party_member_obj(16777352) != 0) - (party_member_obj(16777368) != 0) - (party_member_obj(16777558) != 0) - (party_member_obj(16777687) != 0) - (party_member_obj(16777600) != 0) - (party_member_obj(16777596) != 0) - (party_member_obj(16777595) != 0) - (party_member_obj(16777381) != 0) - (party_member_obj(16777748) != 0) - (party_member_obj(16777747) != 0) - (party_member_obj(16777762) != 0)) == 1)) + temp_cost + message_str(452, 422));
++        Reply(mstr(420 + ((party_member_count(0) - 1 - (party_member_obj(16777352) != 0) - (party_member_obj(16777368) != 0) - (party_member_obj(16777558) != 0) - (party_member_obj(16777687) != 0) - (party_member_obj(16777600) != 0) - (party_member_obj(16777596) != 0) - (party_member_obj(16777595) != 0) - (party_member_obj(16777381) != 0) - (party_member_obj(16777748) != 0) - (party_member_obj(16777747) != 0) - (party_member_obj(16777762) != 0)) == 1)) + temp_cost + mstr(422));
+         if (item_caps_total(dude_obj) >= temp_cost) then begin
+-            giq_option(4, 452, 424, Node988, 50);
++            giq_option(4, NAME, 424, Node988, NEUTRAL_REACTION);
+         end
+         else begin
+-            giq_option(4, 452, 427, Node999, 50);
++            giq_option(4, NAME, 427, Node999, NEUTRAL_REACTION);
+         end
+     end
+     else begin
+-        gsay_reply(452, message_str(452, 420 + ((metarule(16, 0) - 1 - (party_member_obj(16777352) != 0) - (party_member_obj(16777368) != 0) - (party_member_obj(16777558) != 0) - (party_member_obj(16777687) != 0) - (party_member_obj(16777600) != 0) - (party_member_obj(16777596) != 0) - (party_member_obj(16777595) != 0) - (party_member_obj(16777381) != 0) - (party_member_obj(16777748) != 0) - (party_member_obj(16777747) != 0) - (party_member_obj(16777762) != 0)) == 1)) + message_str(452, 423));
+-        giq_option(4, 452, 425, Node988, 50);
++        Reply(mstr(420 + ((party_member_count(0) - 1 - (party_member_obj(16777352) != 0) - (party_member_obj(16777368) != 0) - (party_member_obj(16777558) != 0) - (party_member_obj(16777687) != 0) - (party_member_obj(16777600) != 0) - (party_member_obj(16777596) != 0) - (party_member_obj(16777595) != 0) - (party_member_obj(16777381) != 0) - (party_member_obj(16777748) != 0) - (party_member_obj(16777747) != 0) - (party_member_obj(16777762) != 0)) == 1)) + mstr(423));
++        giq_option(4, NAME, 425, Node988, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 452, 426, Node012, 50);
+-    giq_option(4, 452, 428, Node999, 50);
++    giq_option(4, NAME, 426, Node012, NEUTRAL_REACTION);
++    giq_option(4, NAME, 428, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node016
+ begin
+-    gsay_reply(452, 440);
+-    giq_option(1, 452, 441 + (get_critter_stat(dude_obj, 4) > 4), Node017, 50);
++    Reply(440);
++    giq_option(1, NAME, 441 + (dude_iq > 4), Node017, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node017
+ begin
+-    gsay_reply(452, 450);
+-    giq_option(4, 452, 451, Node018, 50);
+-    giq_option(4, 452, 452, Node018, 50);
+-    giq_option(4, 452, 453, Node018, 50);
++    Reply(450);
++    giq_option(4, NAME, 451, Node018, NEUTRAL_REACTION);
++    giq_option(4, NAME, 452, Node018, NEUTRAL_REACTION);
++    giq_option(4, NAME, 453, Node018, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node018
+ begin
+-    if (global_var(501) < 1) then begin
+-        set_global_var(501, 1);
++    if (global_var(GVAR_NEW_RENO_KITTY_MAGAZINES) < 1) then begin
++        set_global_var(GVAR_NEW_RENO_KITTY_MAGAZINES, 1);
+     end
+-    gsay_reply(452, 460);
+-    giq_option(4, 452, 461, Node012, 50);
++    Reply(460);
++    giq_option(4, NAME, 461, Node012, NEUTRAL_REACTION);
+     if (obj_is_carrying_obj_pid(dude_obj, 225) >= 10) then begin
+-        giq_option(4, 452, 462, Node019, 50);
++        giq_option(4, NAME, 462, Node019, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 452, 463, Node999, 50);
++    giq_option(4, NAME, 463, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node019
+ begin
+-    gsay_reply(452, 470);
+-    giq_option(4, 452, 471, Node020, 50);
+-    giq_option(4, 452, 472, Node022, 50);
+-    giq_option(4, 452, 473, Node012, 50);
+-    giq_option(4, 452, 474, Node999, 50);
++    Reply(470);
++    giq_option(4, NAME, 471, Node020, NEUTRAL_REACTION);
++    giq_option(4, NAME, 472, Node022, NEUTRAL_REACTION);
++    giq_option(4, NAME, 473, Node012, NEUTRAL_REACTION);
++    giq_option(4, NAME, 474, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node020
+ begin
+-    gsay_reply(452, 480);
+-    giq_option(4, 452, 481, Node021, 50);
+-    giq_option(4, 452, 482, Node012, 50);
+-    giq_option(4, 452, 483, Node999, 50);
++    Reply(480);
++    giq_option(4, NAME, 481, Node021, NEUTRAL_REACTION);
++    giq_option(4, NAME, 482, Node012, NEUTRAL_REACTION);
++    giq_option(4, NAME, 483, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node021
+@@ -1361,7 +1361,7 @@ begin
+             end
+             else begin
+                 if ((critter_inven_obj(dude_obj, 2) == restock_obj) or (critter_inven_obj(dude_obj, 1) == restock_obj)) then begin
+-                    metarule(43, dude_obj);
++                    inven_unwield(dude_obj);
+                 end
+             end
+         end
+@@ -1370,29 +1370,29 @@ begin
+     end
+     restock_obj := 0;
+     restock_amt := 0;
+-    if ((2 == 2) and ((global_var(501) == 2) == 0)) then begin
+-        display_msg(message_str(452, 800));
+-        set_global_var(55, global_var(55) + 1);
++    if ((2 == 2) and ((global_var(GVAR_NEW_RENO_KITTY_MAGAZINES) == 2) == 0)) then begin
++        display_mstr(800);
++        set_global_var(GVAR_TOWN_REP_NEW_RENO, global_var(GVAR_TOWN_REP_NEW_RENO) + 1);
+         give_exp_points(1000);
+-        display_msg(message_str(14, 100) + 1000 + message_str(14, 101));
++        display_msg(g_mstr(100) + 1000 + g_mstr(101));
+     end
+-    if (global_var(501) < 2) then begin
+-        set_global_var(501, 2);
++    if (global_var(GVAR_NEW_RENO_KITTY_MAGAZINES) < 2) then begin
++        set_global_var(GVAR_NEW_RENO_KITTY_MAGAZINES, 2);
+     end
+-    gsay_reply(452, 490);
+-    giq_option(4, 452, 491, Node012, 50);
+-    giq_option(4, 452, 492, Node999, 50);
++    Reply(490);
++    giq_option(4, NAME, 491, Node012, NEUTRAL_REACTION);
++    giq_option(4, NAME, 492, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node022
+ begin
+-    gsay_reply(452, 500);
+-    giq_option(4, 452, 501 + (get_critter_stat(dude_obj, 34) == 1), Node023, 50);
++    Reply(500);
++    giq_option(4, NAME, 501 + (dude_gender == 1), Node023, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node023
+ begin
+-    restock_obj := create_object_sid(331, 0, 0, -1);
++    restock_obj := create_object(331, 0, 0);
+     add_mult_objs_to_inven(dude_obj, restock_obj, 1);
+     item_caps_adjust(dude_obj, 500);
+     removed_qty := obj_is_carrying_obj_pid(dude_obj, 225);
+@@ -1413,7 +1413,7 @@ begin
+             end
+             else begin
+                 if ((critter_inven_obj(dude_obj, 2) == restock_obj) or (critter_inven_obj(dude_obj, 1) == restock_obj)) then begin
+-                    metarule(43, dude_obj);
++                    inven_unwield(dude_obj);
+                 end
+             end
+         end
+@@ -1422,182 +1422,182 @@ begin
+     end
+     restock_obj := 0;
+     restock_amt := 0;
+-    if ((2 == 2) and ((global_var(501) == 2) == 0)) then begin
+-        display_msg(message_str(452, 800));
+-        set_global_var(55, global_var(55) + 1);
++    if ((2 == 2) and ((global_var(GVAR_NEW_RENO_KITTY_MAGAZINES) == 2) == 0)) then begin
++        display_mstr(800);
++        set_global_var(GVAR_TOWN_REP_NEW_RENO, global_var(GVAR_TOWN_REP_NEW_RENO) + 1);
+         give_exp_points(1000);
+-        display_msg(message_str(14, 100) + 1000 + message_str(14, 101));
++        display_msg(g_mstr(100) + 1000 + g_mstr(101));
+     end
+-    if (global_var(501) < 2) then begin
+-        set_global_var(501, 2);
++    if (global_var(GVAR_NEW_RENO_KITTY_MAGAZINES) < 2) then begin
++        set_global_var(GVAR_NEW_RENO_KITTY_MAGAZINES, 2);
+     end
+-    gsay_reply(452, 510);
+-    giq_option(4, 452, 511, Node012, 50);
+-    giq_option(4, 452, 512, Node999, 50);
++    Reply(510);
++    giq_option(4, NAME, 511, Node012, NEUTRAL_REACTION);
++    giq_option(4, NAME, 512, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node024
+ begin
+     if ((local_var(4) bwand 512) != 0) then begin
+-        gsay_reply(452, obj_name(dude_obj) + message_str(452, 522));
++        Reply(dude_name + mstr(522));
+     end
+     else begin
+-        gsay_reply(452, 520 + (((local_var(4) bwand 1) != 0) == 0));
++        Reply(520 + (((local_var(4) bwand 1) != 0) == 0));
+         set_local_var(4, local_var(4) bwor 1);
+         set_local_var(4, local_var(4) bwor 512);
+     end
+-    if (global_var(0) >= 0) then begin
+-        if (get_critter_stat(dude_obj, 34) == 0) then begin
+-            giq_option(4, 452, 523, Node025, 50);
+-            giq_option(4, 452, 528, Node025, 50);
++    if (global_var(GVAR_PLAYER_REPUTATION) >= 0) then begin
++        if (dude_gender == 0) then begin
++            giq_option(4, NAME, 523, Node025, NEUTRAL_REACTION);
++            giq_option(4, NAME, 528, Node025, NEUTRAL_REACTION);
+         end
+         else begin
+-            giq_option(4, 452, 525, Node025, 50);
+-            giq_option(4, 452, 527, Node025, 50);
++            giq_option(4, NAME, 525, Node025, NEUTRAL_REACTION);
++            giq_option(4, NAME, 527, Node025, NEUTRAL_REACTION);
+         end
+     end
+     else begin
+-        if (get_critter_stat(dude_obj, 34) == 0) then begin
+-            giq_option(4, 452, 524, Node025, 50);
++        if (dude_gender == 0) then begin
++            giq_option(4, NAME, 524, Node025, NEUTRAL_REACTION);
+         end
+         else begin
+-            giq_option(4, 452, 526, Node025, 50);
++            giq_option(4, NAME, 526, Node025, NEUTRAL_REACTION);
+         end
+-        giq_option(4, 452, 529, Node025, 50);
++        giq_option(4, NAME, 529, Node025, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure Node025
+ begin
+-    if (global_var(0) >= 0) then begin
+-        gsay_reply(452, message_str(452, 545) + message_str(452, 547));
++    if (global_var(GVAR_PLAYER_REPUTATION) >= 0) then begin
++        Reply(mstr(545) + mstr(547));
+         if (local_var(5) == 1) then begin
+-            giq_option(4, 452, 548, Node026, 50);
++            giq_option(4, NAME, 548, Node026, NEUTRAL_REACTION);
+         end
+-        giq_option(4, 452, 549, Node026, 50);
+-        giq_option(4, 452, 551, Node012, 50);
+-        giq_option(4, 452, 552, Node999, 50);
++        giq_option(4, NAME, 549, Node026, NEUTRAL_REACTION);
++        giq_option(4, NAME, 551, Node012, NEUTRAL_REACTION);
++        giq_option(4, NAME, 552, Node999, NEUTRAL_REACTION);
+     end
+     else begin
+-        gsay_reply(452, message_str(452, 546) + message_str(452, 547));
++        Reply(mstr(546) + mstr(547));
+         if (local_var(5) == 1) then begin
+-            giq_option(4, 452, 548, Node026, 50);
++            giq_option(4, NAME, 548, Node026, NEUTRAL_REACTION);
+         end
+-        giq_option(4, 452, 550, Node027, 50);
+-        giq_option(4, 452, 551, Node012, 50);
+-        giq_option(4, 452, 553, Node999, 50);
++        giq_option(4, NAME, 550, Node027, NEUTRAL_REACTION);
++        giq_option(4, NAME, 551, Node012, NEUTRAL_REACTION);
++        giq_option(4, NAME, 553, Node999, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure Node026
+ begin
+-    gsay_reply(452, message_str(452, 565) + obj_name(dude_obj) + message_str(452, 566));
+-    giq_option(4, 452, 567, Node977, 50);
+-    if (get_critter_stat(dude_obj, 34) == 1) then begin
+-        giq_option(4, 452, 569, Node977, 50);
+-        giq_option(4, 452, 570, Node977, 50);
++    Reply(mstr(565) + dude_name + mstr(566));
++    giq_option(4, NAME, 567, Node977, NEUTRAL_REACTION);
++    if (dude_gender == 1) then begin
++        giq_option(4, NAME, 569, Node977, NEUTRAL_REACTION);
++        giq_option(4, NAME, 570, Node977, NEUTRAL_REACTION);
+     end
+     else begin
+         if ((obj_is_carrying_obj_pid(dude_obj, 314) + obj_is_carrying_obj_pid(dude_obj, 315) + obj_is_carrying_obj_pid(dude_obj, 316)) > 0) then begin
+-            giq_option(4, 452, 568, Node977, 50);
++            giq_option(4, NAME, 568, Node977, NEUTRAL_REACTION);
+         end
+     end
+ end
+ 
+ procedure Node027
+ begin
+-    gsay_reply(452, message_str(452, 575) + obj_name(dude_obj) + message_str(452, 576));
+-    giq_option(4, 452, 577, Node977, 50);
++    Reply(mstr(575) + dude_name + mstr(576));
++    giq_option(4, NAME, 577, Node977, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node028
+ begin
+-    gsay_reply(452, 585);
+-    if (get_critter_stat(dude_obj, 34) == 1) then begin
+-        giq_option(4, 452, 586, Node029, 50);
++    Reply(585);
++    if (dude_gender == 1) then begin
++        giq_option(4, NAME, 586, Node029, NEUTRAL_REACTION);
+     end
+-    if (global_var(889) != 0) then begin
+-        giq_option(4, 452, 589, Node029a, 50);
++    if (global_var(GVAR_EXTRA_FLAGS) != 0) then begin
++        giq_option(4, NAME, 589, Node029a, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 452, 587, Node012, 50);
+-    giq_option(4, 452, 588, Node999, 50);
++    giq_option(4, NAME, 587, Node012, NEUTRAL_REACTION);
++    giq_option(4, NAME, 588, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node029
+ begin
+-    if ((get_critter_stat(dude_obj, 3) + get_critter_stat(dude_obj, 5) + has_trait(2, dude_obj, 13)) > 13) then begin
+-        gsay_reply(452, message_str(452, 595) + message_str(452, 597));
+-        giq_option(4, 452, 598, Node030b, 50);
+-        giq_option(4, 452, 600, Node012, 50);
++    if ((dude_charisma + get_critter_stat(dude_obj, STAT_ag) + has_trait(TRAIT_TRAIT, dude_obj, TRAIT_sex_appeal)) > 13) then begin
++        Reply(mstr(595) + mstr(597));
++        giq_option(4, NAME, 598, Node030b, NEUTRAL_REACTION);
++        giq_option(4, NAME, 600, Node012, NEUTRAL_REACTION);
+     end
+     else begin
+-        gsay_reply(452, message_str(452, 595) + message_str(452, 596));
+-        giq_option(4, 452, 599, Node012, 50);
++        Reply(mstr(595) + mstr(596));
++        giq_option(4, NAME, 599, Node012, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 452, 588, Node999, 50);
++    giq_option(4, NAME, 588, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node029a
+ begin
+-    if ((get_critter_stat(dude_obj, 3) + get_critter_stat(dude_obj, 5) + has_trait(2, dude_obj, 13) + (global_var(889) != 0)) > 12) then begin
+-        gsay_reply(452, message_str(452, 2105) + message_str(452, 2107));
+-        giq_option(4, 452, 2111, Node030c, 50);
+-        giq_option(4, 452, 2112, Node012, 50);
++    if ((dude_charisma + get_critter_stat(dude_obj, STAT_ag) + has_trait(TRAIT_TRAIT, dude_obj, TRAIT_sex_appeal) + (global_var(GVAR_EXTRA_FLAGS) != 0)) > 12) then begin
++        Reply(mstr(2105) + mstr(2107));
++        giq_option(4, NAME, 2111, Node030c, NEUTRAL_REACTION);
++        giq_option(4, NAME, 2112, Node012, NEUTRAL_REACTION);
+     end
+     else begin
+-        gsay_reply(452, message_str(452, 2105) + message_str(452, 2106));
+-        giq_option(4, 452, 2110, Node012, 50);
++        Reply(mstr(2105) + mstr(2106));
++        giq_option(4, NAME, 2110, Node012, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure Node030
+ begin
+-    gsay_reply(452, 610);
+-    giq_option(4, 452, 611, Node976, 50);
+-    giq_option(4, 452, 612, Node012, 50);
+-    giq_option(4, 452, 613, Node999, 50);
++    Reply(610);
++    giq_option(4, NAME, 611, Node976, NEUTRAL_REACTION);
++    giq_option(4, NAME, 612, Node012, NEUTRAL_REACTION);
++    giq_option(4, NAME, 613, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node030a
+ begin
+-    set_global_var(894, global_var(894) bwor 8192);
+-    gsay_reply(452, 610);
+-    giq_option(4, 452, 611, Node976, 50);
++    set_global_var(GVAR_NC_SONG, global_var(GVAR_NC_SONG) bwor 8192);
++    Reply(610);
++    giq_option(4, NAME, 611, Node976, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node030b
+ begin
+-    gsay_reply(452, 2118);
+-    giq_option(4, 452, 2116, Node030, 50);
+-    giq_option(4, 452, 2117, Node999, 50);
++    Reply(2118);
++    giq_option(4, NAME, 2116, Node030, NEUTRAL_REACTION);
++    giq_option(4, NAME, 2117, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node030c
+ begin
+-    gsay_reply(452, 2115);
+-    giq_option(4, 452, 2116, Node030a, 50);
+-    giq_option(4, 452, 2117, Node999, 50);
++    Reply(2115);
++    giq_option(4, NAME, 2116, Node030a, NEUTRAL_REACTION);
++    giq_option(4, NAME, 2117, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node031
+ begin
+     sex_type := 703;
+-    temp_cost := 500 * (100 - (get_critter_stat(dude_obj, 3) + (10 * (global_var(347) == 2)) + (25 * ((global_var(259) > 0) or (global_var(232) > 0))))) / 100 * (((global_var(494) == 8) == 0) and ((global_var(230) > 0) == 0));
++    temp_cost := 500 * (100 - (dude_charisma + (10 * (global_var(GVAR_NEW_RENO_JULES_KITTY) == 2)) + (25 * ((global_var(GVAR_NEW_RENO_HAS_REP_PRIZEFIGHTER) > 0) or (global_var(GVAR_NEW_RENO_PORN_STAR) > 0))))) / 100 * (((global_var(GVAR_FALLOUT_2) == 8) == 0) and ((global_var(GVAR_NEW_RENO_MADE_MAN) > 0) == 0));
+     if (temp_cost > 0) then begin
+-        gsay_reply(452, message_str(452, 620 + (sex_partner_obj != dude_obj)) + temp_cost + message_str(452, 422));
++        Reply(mstr(620 + (sex_partner_obj != dude_obj)) + temp_cost + mstr(422));
+         if (item_caps_total(dude_obj) >= temp_cost) then begin
+-            giq_option(4, 452, 424, Node988, 50);
++            giq_option(4, NAME, 424, Node988, NEUTRAL_REACTION);
+         end
+         else begin
+-            giq_option(4, 452, 427, Node999, 50);
++            giq_option(4, NAME, 427, Node999, NEUTRAL_REACTION);
+         end
+     end
+     else begin
+-        gsay_reply(452, message_str(452, 620 + (sex_partner_obj != dude_obj)) + message_str(452, 623));
+-        giq_option(4, 452, 425, Node988, 50);
++        Reply(mstr(620 + (sex_partner_obj != dude_obj)) + mstr(623));
++        giq_option(4, NAME, 425, Node988, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 452, 426, Node012, 50);
+-    giq_option(4, 452, 428, Node999, 50);
++    giq_option(4, NAME, 426, Node012, NEUTRAL_REACTION);
++    giq_option(4, NAME, 428, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure push_p_proc
+@@ -1609,7 +1609,7 @@ end
+ 
+ procedure Node990
+ begin
+-    set_global_var(347, 2);
++    set_global_var(GVAR_NEW_RENO_JULES_KITTY, 2);
+     call Node004();
+ end
+ 
+@@ -1732,33 +1732,33 @@ end
+ procedure Node988
+ begin
+     gfade_out(10);
+-    set_global_var(345, global_var(345) bwor 1073741824);
++    set_global_var(GVAR_NEW_RENO_FLAG_2, global_var(GVAR_NEW_RENO_FLAG_2) bwor 1073741824);
+     metarule3(100, self_obj, 45, 0);
+     add_timer_event(self_obj, game_ticks(5), 45);
+     if (temp_cost > 0) then begin
+         item_caps_adjust(dude_obj, -temp_cost);
+     end
+     if (sex_type == 700) then begin
+-        game_time_advance(get_critter_stat(dude_obj, 2) * random(4, 8) * (60 * 10) / 2);
++        game_time_advance(dude_endurance * random(4, 8) * (60 * 10) / 2);
+         set_map_var(2, 1);
+     end
+     else begin
+         if (sex_type == 702) then begin
+             game_time_advance(60 * (60 * 10) * 3);
+             if (((local_var(4) bwand 1024) != 0) == 0) then begin
+-                critter_mod_skill(dude_obj, 14, 3);
++                critter_mod_skill(dude_obj, SKILL_CONVERSANT, 3);
+             end
+             set_local_var(4, local_var(4) bwor 1024);
+-            display_msg(message_str(452, 710));
++            display_mstr(710);
+             set_map_var(2, 2);
+         end
+         else begin
+             if (sex_type == 701) then begin
+-                game_time_advance(get_critter_stat(dude_obj, 2) * random(4, 8) * (60 * 10) * 2);
++                game_time_advance(dude_endurance * random(4, 8) * (60 * 10) * 2);
+                 set_map_var(2, 1);
+             end
+             else begin
+-                game_time_advance(get_critter_stat(sex_partner_obj, 2) * random(4, 8) * (60 * 10));
++                game_time_advance(get_critter_stat(sex_partner_obj, STAT_en) * random(4, 8) * (60 * 10));
+                 if (sex_partner_obj != dude_obj) then begin
+                     set_map_var(2, sex_partner_obj);
+                 end
+@@ -1771,31 +1771,31 @@ begin
+     if (sex_partner_obj == dude_obj) then begin
+         if ((sex_type != 702) and (sex_type != 700)) then begin
+             if (local_var(8) == 0) then begin
+-                set_global_var(358, global_var(358) + 1);
++                set_global_var(GVAR_SEX_COUNTER, global_var(GVAR_SEX_COUNTER) + 1);
+             end
+             set_local_var(8, local_var(8) + 1);
+-            set_global_var(194, global_var(194) + (((((get_critter_stat(dude_obj, 3) * 50) + (get_critter_stat(dude_obj, 2) * 25) + (get_critter_stat(dude_obj, 5) * 13) + (get_critter_stat(dude_obj, 0) * 12)) / 100) + (has_trait(0, dude_obj, 94) * 2) + has_trait(2, dude_obj, 13) + (((global_var(194) >= 100) or (global_var(232) > 0)) * 2 * (dude_obj == dude_obj))) * 1));
+-            if (global_var(358) >= 10) then begin
+-                set_global_var(589, 1);
++            set_global_var(GVAR_PLAYER_SEX_LEVEL, global_var(194) + (((((dude_charisma * 50) + (dude_endurance * 25) + (get_critter_stat(dude_obj, STAT_ag) * 13) + (dude_strength * 12)) / 100) + (has_trait(TRAIT_PERK, dude_obj, PERK_kama_sutra_perk) * 2) + has_trait(2, dude_obj, 13) + (((global_var(GVAR_PLAYER_SEX_LEVEL) >= 100) or (global_var(GVAR_NEW_RENO_PORN_STAR) > 0)) * 2 * (dude_obj == dude_obj))) * 1));
++            if (global_var(GVAR_SEX_COUNTER) >= 10) then begin
++                set_global_var(GVAR_GIGALO, 1);
+             end
+-            if (((((get_critter_stat(dude_obj, 3) * 50) + (get_critter_stat(dude_obj, 2) * 25) + (get_critter_stat(dude_obj, 5) * 13) + (get_critter_stat(dude_obj, 0) * 12)) / 100) + (has_trait(0, dude_obj, 94) * 2) + has_trait(2, dude_obj, 13) + (((global_var(194) >= 100) or (global_var(232) > 0)) * 2 * (dude_obj == dude_obj))) >= 9) then begin
+-                set_global_var(588, 1);
++            if (((((dude_charisma * 50) + (dude_endurance * 25) + (get_critter_stat(dude_obj, STAT_ag) * 13) + (dude_strength * 12)) / 100) + (has_trait(TRAIT_PERK, dude_obj, PERK_kama_sutra_perk) * 2) + has_trait(2, dude_obj, 13) + (((global_var(GVAR_PLAYER_SEX_LEVEL) >= 100) or (global_var(GVAR_NEW_RENO_PORN_STAR) > 0)) * 2 * (dude_obj == dude_obj))) >= 9) then begin
++                set_global_var(GVAR_SEXPERT, 1);
+             end
+-            if (global_var(590) == 1) then begin
+-                set_global_var(590, 0);
++            if (global_var(GVAR_DUDE_VIRGIN) == 1) then begin
++                set_global_var(GVAR_DUDE_VIRGIN, 0);
+             end
+         end
+     end
+     if (sex_partner_obj == party_member_obj(16777875)) then begin
+-        float_msg(sex_partner_obj, message_str(452, random(706, 709)), 8);
++        float_msg(sex_partner_obj, mstr(random(706, 709)), FLOAT_MSG_YELLOW);
+     end
+     else begin
+         if (sex_partner_obj != party_member_obj(16777377)) then begin
+-            float_msg(sex_partner_obj, message_str(452, sex_type), 8);
++            float_msg(sex_partner_obj, mstr(sex_type), FLOAT_MSG_YELLOW);
+         end
+         else begin
+-            set_global_var(495, global_var(495) bwor 1073741824);
+-            float_msg(sex_partner_obj, message_str(452, 705), 8);
++            set_global_var(GVAR_NEW_RENO_FLAG_3, global_var(GVAR_NEW_RENO_FLAG_3) bwor 1073741824);
++            float_msg(sex_partner_obj, mstr(705), FLOAT_MSG_YELLOW);
+         end
+     end
+     metarule3(100, self_obj, 31, 0);
+@@ -1896,27 +1896,27 @@ begin
+     gfade_out(600);
+     if ((sex_type != 702) and (sex_type != 700)) then begin
+         if (local_var(8) == 0) then begin
+-            set_global_var(358, global_var(358) + 1);
++            set_global_var(GVAR_SEX_COUNTER, global_var(GVAR_SEX_COUNTER) + 1);
+         end
+         set_local_var(8, local_var(8) + 1);
+-        set_global_var(194, global_var(194) + (((((get_critter_stat(dude_obj, 3) * 50) + (get_critter_stat(dude_obj, 2) * 25) + (get_critter_stat(dude_obj, 5) * 13) + (get_critter_stat(dude_obj, 0) * 12)) / 100) + (has_trait(0, dude_obj, 94) * 2) + has_trait(2, dude_obj, 13) + (((global_var(194) >= 100) or (global_var(232) > 0)) * 2 * (dude_obj == dude_obj))) * 1));
+-        if (global_var(358) >= 10) then begin
+-            set_global_var(589, 1);
++        set_global_var(GVAR_PLAYER_SEX_LEVEL, global_var(194) + (((((dude_charisma * 50) + (dude_endurance * 25) + (get_critter_stat(dude_obj, STAT_ag) * 13) + (dude_strength * 12)) / 100) + (has_trait(TRAIT_PERK, dude_obj, PERK_kama_sutra_perk) * 2) + has_trait(2, dude_obj, 13) + (((global_var(GVAR_PLAYER_SEX_LEVEL) >= 100) or (global_var(GVAR_NEW_RENO_PORN_STAR) > 0)) * 2 * (dude_obj == dude_obj))) * 1));
++        if (global_var(GVAR_SEX_COUNTER) >= 10) then begin
++            set_global_var(GVAR_GIGALO, 1);
+         end
+-        if (((((get_critter_stat(dude_obj, 3) * 50) + (get_critter_stat(dude_obj, 2) * 25) + (get_critter_stat(dude_obj, 5) * 13) + (get_critter_stat(dude_obj, 0) * 12)) / 100) + (has_trait(0, dude_obj, 94) * 2) + has_trait(2, dude_obj, 13) + (((global_var(194) >= 100) or (global_var(232) > 0)) * 2 * (dude_obj == dude_obj))) >= 9) then begin
+-            set_global_var(588, 1);
++        if (((((dude_charisma * 50) + (dude_endurance * 25) + (get_critter_stat(dude_obj, STAT_ag) * 13) + (dude_strength * 12)) / 100) + (has_trait(TRAIT_PERK, dude_obj, PERK_kama_sutra_perk) * 2) + has_trait(2, dude_obj, 13) + (((global_var(GVAR_PLAYER_SEX_LEVEL) >= 100) or (global_var(GVAR_NEW_RENO_PORN_STAR) > 0)) * 2 * (dude_obj == dude_obj))) >= 9) then begin
++            set_global_var(GVAR_SEXPERT, 1);
+         end
+-        if (global_var(590) == 1) then begin
+-            set_global_var(590, 0);
++        if (global_var(GVAR_DUDE_VIRGIN) == 1) then begin
++            set_global_var(GVAR_DUDE_VIRGIN, 0);
+         end
+     end
+     game_time_advance(60 * (60 * 10) * 12);
+     metarule3(100, self_obj, 32, 0);
+     add_timer_event(self_obj, game_ticks(1), 32);
+-    if ((global_var(494) == 8) and (local_var(5) == 1)) then begin
+-        set_global_var(55, global_var(55) + 10);
+-        set_critter_stat(dude_obj, 5, 1);
+-        display_msg(message_str(452, 900));
++    if ((global_var(GVAR_FALLOUT_2) == 8) and (local_var(5) == 1)) then begin
++        set_global_var(GVAR_TOWN_REP_NEW_RENO, global_var(GVAR_TOWN_REP_NEW_RENO) + 10);
++        set_critter_stat(dude_obj, STAT_ag, 1);
++        display_mstr(900);
+     end
+     if (local_var(5) < 2) then begin
+         set_local_var(5, 2);
+@@ -1927,15 +1927,15 @@ end
+ procedure Node976
+ begin
+     gfade_out(30);
+-    display_msg(message_str(452, 711));
+-    if ((global_var(694) bwand 16) == 0) then begin
++    display_mstr(711);
++    if ((global_var(GVAR_EMILY_SUBST_TIME) bwand 16) == 0) then begin
+         give_exp_points(500);
+-        display_msg(message_str(14, 100) + 500 + message_str(14, 101));
+-        set_global_var(694, global_var(694) bwor 16);
++        display_msg(g_mstr(100) + 500 + g_mstr(101));
++        set_global_var(GVAR_EMILY_SUBST_TIME, global_var(GVAR_EMILY_SUBST_TIME) bwor 16);
+     end
+     game_time_advance(2 * (60 * (60 * 10)));
+     set_local_var(9, game_time + 6048000);
+-    set_global_var(897, game_time + 432000);
++    set_global_var(GVAR_RESERVED, game_time + 432000);
+     gfade_in(30);
+     load_map(60, 0);
+ end
+@@ -1996,58 +1996,57 @@ end
+ 
+ procedure Node100
+ begin
+-    if ((global_var(894) bwand 16384) == 0) then begin
+-        set_global_var(894, global_var(894) bwand (-1 - 8192));
++    if ((global_var(GVAR_NC_SONG) bwand 16384) == 0) then begin
++        set_global_var(GVAR_NC_SONG, global_var(GVAR_NC_SONG) bwand (-1 - 8192));
+         set_local_var(4, local_var(4) bwor 8388608);
+-        gsay_reply(452, 2150);
+-        giq_option(4, 452, 2151, Node002, 50);
++        Reply(2150);
++        giq_option(4, NAME, 2151, Node002, NEUTRAL_REACTION);
+     end
+     else begin
+         set_local_var(4, local_var(4) bwor 16777216);
+-        set_global_var(894, global_var(894) bwand (-1 - 8192));
+-        set_global_var(894, global_var(894) bwand (-1 - 16384));
++        set_global_var(GVAR_NC_SONG, global_var(GVAR_NC_SONG) bwand (-1 - 8192));
++        set_global_var(GVAR_NC_SONG, global_var(GVAR_NC_SONG) bwand (-1 - 16384));
+         item_caps_adjust(dude_obj, 100);
+-        gsay_reply(452, 2155);
+-        giq_option(4, 452, 2156, Node101, 50);
+-        giq_option(4, 452, 2157, Node002, 50);
++        Reply(2155);
++        giq_option(4, NAME, 2156, Node101, NEUTRAL_REACTION);
++        giq_option(4, NAME, 2157, Node002, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure Node101
+ begin
+-    gsay_reply(452, 2160);
+-    giq_option(4, 452, 2161, Node002, 50);
+-    giq_option(4, 452, 2162, Node999, 50);
++    Reply(2160);
++    giq_option(4, NAME, 2161, Node002, NEUTRAL_REACTION);
++    giq_option(4, NAME, 2162, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node105
+ begin
+     if (game_time > local_var(9)) then begin
+-        gsay_reply(452, 2176);
+-        giq_option(4, 452, 2172, Node106, 50);
+-        giq_option(4, 452, 2173, Node999, 50);
++        Reply(2176);
++        giq_option(4, NAME, 2172, Node106, NEUTRAL_REACTION);
++        giq_option(4, NAME, 2173, Node999, NEUTRAL_REACTION);
+     end
+     else begin
+-        gsay_reply(452, 2175);
+-        giq_option(4, 452, 2161, Node002, 50);
+-        giq_option(4, 452, 2162, Node999, 50);
++        Reply(2175);
++        giq_option(4, NAME, 2161, Node002, NEUTRAL_REACTION);
++        giq_option(4, NAME, 2162, Node999, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure Node106
+ begin
+     gfade_out(30);
+-    display_msg(message_str(452, 711));
+-    if ((global_var(694) bwand 16) == 0) then begin
++    display_mstr(711);
++    if ((global_var(GVAR_EMILY_SUBST_TIME) bwand 16) == 0) then begin
+         give_exp_points(500);
+-        display_msg(message_str(14, 100) + 500 + message_str(14, 101));
+-        set_global_var(694, global_var(694) bwor 16);
++        display_msg(g_mstr(100) + 500 + g_mstr(101));
++        set_global_var(GVAR_EMILY_SUBST_TIME, global_var(GVAR_EMILY_SUBST_TIME) bwor 16);
+     end
+     game_time_advance(2 * (60 * (60 * 10)));
+     set_local_var(9, game_time + 6048000);
+-    set_global_var(894, global_var(894) bwor 8192);
+-    set_global_var(897, game_time + 432000);
++    set_global_var(GVAR_NC_SONG, global_var(GVAR_NC_SONG) bwor 8192);
++    set_global_var(GVAR_RESERVED, game_time + 432000);
+     gfade_in(30);
+     load_map(60, 0);
+ end
+-

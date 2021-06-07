@@ -1,0 +1,650 @@
+variable grave_was_open;
+
+procedure def_use_obj_on_p_proc;
+procedure pre_use_obj_on_p_proc;
+procedure post_use_obj_on_p_proc;
+procedure grave_description_proc;
+procedure use_obj_on_p_proc;
+procedure description_p_proc;
+
+variable ProtoOfItemGiven;
+variable ValueOfRollCheck := 1;
+variable Scenery_Creation;
+variable Scenery_Creation_Hex;
+variable Scenery_Creation_Count;
+variable Temp_Scenery_Creation_Hex;
+variable Scenery_Creation_Ptr;
+variable How_Many_Party_Members_Are_Injured;
+variable How_Many_Party_Members_Armed;
+variable PartyHealingItem;
+
+procedure checkPartyMembersNearDoor;
+
+variable global_temp;
+variable dest_tile;
+variable step_tile;
+variable in_dialog;
+variable forced_node;
+variable restock_amt;
+variable restock_obj;
+variable restock_trash;
+variable removed_qty;
+
+procedure start;
+procedure look_at_p_proc;
+procedure def_description_p_proc;
+procedure map_enter_p_proc;
+procedure use_p_proc;
+procedure pickup_p_proc;
+procedure use_skill_on_p_proc;
+procedure Set_Trap;
+procedure Explode_Grave;
+procedure Disarm_Traps;
+
+variable trap_roll;
+variable no_karma_penalty;
+
+procedure num_to_bit(variable arg0);
+procedure give_headstone_name;
+
+variable caught_thief;
+variable the_follow_obj;
+
+
+procedure def_use_obj_on_p_proc
+begin
+    script_overrides;
+    if (((33555669 <= obj_pid(self_obj)) and (obj_pid(self_obj) <= 33555674) or ((33555445 <= obj_pid(self_obj)) and (obj_pid(self_obj) <= 33555448))) == 0) then begin
+        if (local_var(2) != 0) then begin
+            if (is_success(roll_vs_skill(source_obj, 11, -20))) then begin
+                if (source_obj == dude_obj) then begin
+                    display_msg(message_str(SCRIPT_ZIGENGRV, 515));
+                end
+                else begin
+                    display_msg(obj_name(source_obj) + message_str(SCRIPT_ZIGENGRV, 520));
+                end
+            end
+            else begin
+                call Explode_Grave();
+            end
+        end
+        else begin
+            if (obj_pid(obj_being_used_with) == 289) then begin
+                fade_out;
+                if (local_var(0) == -1) then begin
+                    set_local_var(0, 1);
+                    play_sfx("iccntnre");
+                    anim(self_obj, 1010, 0);
+                end
+                else begin
+                    set_local_var(0, -1);
+                    play_sfx("iocntnre");
+                    anim(self_obj, 1010, 1);
+                    if (no_karma_penalty == 0) then begin
+                        if (local_var(1) == 0) then begin
+                            set_local_var(1, 1);
+                            set_global_var(GVAR_PLAYER_REPUTATION, global_var(GVAR_PLAYER_REPUTATION) + -5);
+                            debug_msg("Player gains " + -5 + " Karma Points.");
+                            set_global_var(GVAR_KARMA_HOLY_WARRIOR, 0);
+                            set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 0);
+                            set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 0);
+                            set_global_var(GVAR_KARMA_DEFENDER, 0);
+                            set_global_var(GVAR_KARMA_WANDERER, 0);
+                            set_global_var(GVAR_KARMA_BETRAYER, 0);
+                            set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 0);
+                            set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 0);
+                            set_global_var(GVAR_KARMA_DEMON_SPAWN, 0);
+                            if (global_var(GVAR_PLAYER_REPUTATION) >= 1000) then begin
+                                set_global_var(GVAR_KARMA_HOLY_WARRIOR, 1);
+                            end
+                            else begin
+                                if (global_var(GVAR_PLAYER_REPUTATION) >= 750) then begin
+                                    set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 1);
+                                end
+                                else begin
+                                    if (global_var(GVAR_PLAYER_REPUTATION) >= 500) then begin
+                                        set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 1);
+                                    end
+                                    else begin
+                                        if (global_var(GVAR_PLAYER_REPUTATION) >= 250) then begin
+                                            set_global_var(GVAR_KARMA_DEFENDER, 1);
+                                        end
+                                        else begin
+                                            if (global_var(GVAR_PLAYER_REPUTATION) > -250) then begin
+                                                set_global_var(GVAR_KARMA_WANDERER, 1);
+                                            end
+                                            else begin
+                                                if (global_var(GVAR_PLAYER_REPUTATION) > -500) then begin
+                                                    set_global_var(GVAR_KARMA_BETRAYER, 1);
+                                                end
+                                                else begin
+                                                    if (global_var(GVAR_PLAYER_REPUTATION) > -750) then begin
+                                                        set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 1);
+                                                    end
+                                                    else begin
+                                                        if (global_var(GVAR_PLAYER_REPUTATION) > -1000) then begin
+                                                            set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 1);
+                                                        end
+                                                        else begin
+                                                            set_global_var(GVAR_KARMA_DEMON_SPAWN, 1);
+                                                        end
+                                                    end
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                            set_global_var(GVAR_GRAVES_UNEARTHED, global_var(GVAR_GRAVES_UNEARTHED) + 1);
+                        end
+                    end
+                end
+                display_msg(message_str(SCRIPT_ZIGENGRV, 150 + (local_var(0) == -1)));
+                game_time_advance(60 * 10 * (15 + (random(30, 45) / dude_strength)));
+                fade_in;
+            end
+            else begin
+                if ((obj_pid(obj_being_used_with) == 51) or (obj_pid(obj_being_used_with) == 85)) then begin
+                    call Set_Trap();
+                end
+            end
+        end
+    end
+end
+
+procedure pre_use_obj_on_p_proc
+begin
+    if (local_var(0) == -1) then begin
+        grave_was_open := 1;
+        if (obj_pid(obj_being_used_with) == 251) then begin
+            restock_amt := obj_is_carrying_obj_pid(source_obj, 251);
+            if (restock_amt > 0) then begin
+                restock_obj := obj_carrying_pid_obj(source_obj, 251);
+                restock_trash := rm_mult_objs_from_inven(source_obj, restock_obj, restock_amt);
+                add_mult_objs_to_inven(self_obj, restock_obj, restock_amt);
+            end
+        end
+    end
+    else begin
+        grave_was_open := 0;
+        no_karma_penalty := (global_var(GVAR_DEN_FLAG_3) bwand 2) != 0;
+    end
+end
+
+procedure post_use_obj_on_p_proc
+begin
+    if (grave_was_open) then begin
+        if (local_var(0) == 1) then begin
+            if (obj_carrying_pid_obj(self_obj, 251)) then begin
+                removed_qty := obj_is_carrying_obj_pid(self_obj, 251);
+                if (1 < removed_qty) then begin
+                    removed_qty := 1;
+                end
+                if (removed_qty > 0) then begin
+                    restock_obj := obj_carrying_pid_obj(self_obj, 251);
+                    if (obj_type(self_obj) == 1) then begin
+                        restock_obj := obj_carrying_pid_obj(self_obj, 251);
+                        if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+                            if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+                                restock_obj := critter_inven_obj(self_obj, 0);
+                                debug_msg("armour pid == " + obj_pid(restock_obj));
+                                rm_obj_from_inven(self_obj, restock_obj);
+                                add_obj_to_inven(self_obj, restock_obj);
+                            end
+                        end
+                        else begin
+                            if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+                                inven_unwield(self_obj);
+                            end
+                        end
+                    end
+                    restock_amt := rm_mult_objs_from_inven(self_obj, restock_obj, removed_qty);
+                    destroy_object(restock_obj);
+                end
+                restock_obj := 0;
+                restock_amt := 0;
+                set_global_var(GVAR_PLAYER_REPUTATION, global_var(GVAR_PLAYER_REPUTATION) + 25);
+                debug_msg("Player gains " + 25 + " Karma Points.");
+                set_global_var(GVAR_KARMA_HOLY_WARRIOR, 0);
+                set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 0);
+                set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 0);
+                set_global_var(GVAR_KARMA_DEFENDER, 0);
+                set_global_var(GVAR_KARMA_WANDERER, 0);
+                set_global_var(GVAR_KARMA_BETRAYER, 0);
+                set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 0);
+                set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 0);
+                set_global_var(GVAR_KARMA_DEMON_SPAWN, 0);
+                if (global_var(GVAR_PLAYER_REPUTATION) >= 1000) then begin
+                    set_global_var(GVAR_KARMA_HOLY_WARRIOR, 1);
+                end
+                else begin
+                    if (global_var(GVAR_PLAYER_REPUTATION) >= 750) then begin
+                        set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 1);
+                    end
+                    else begin
+                        if (global_var(GVAR_PLAYER_REPUTATION) >= 500) then begin
+                            set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 1);
+                        end
+                        else begin
+                            if (global_var(GVAR_PLAYER_REPUTATION) >= 250) then begin
+                                set_global_var(GVAR_KARMA_DEFENDER, 1);
+                            end
+                            else begin
+                                if (global_var(GVAR_PLAYER_REPUTATION) > -250) then begin
+                                    set_global_var(GVAR_KARMA_WANDERER, 1);
+                                end
+                                else begin
+                                    if (global_var(GVAR_PLAYER_REPUTATION) > -500) then begin
+                                        set_global_var(GVAR_KARMA_BETRAYER, 1);
+                                    end
+                                    else begin
+                                        if (global_var(GVAR_PLAYER_REPUTATION) > -750) then begin
+                                            set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 1);
+                                        end
+                                        else begin
+                                            if (global_var(GVAR_PLAYER_REPUTATION) > -1000) then begin
+                                                set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 1);
+                                            end
+                                            else begin
+                                                set_global_var(GVAR_KARMA_DEMON_SPAWN, 1);
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+                set_global_var(GVAR_TOWN_REP_THE_DEN, global_var(GVAR_TOWN_REP_THE_DEN) + 5);
+                display_mstr(200);
+                give_exp_points(600);
+                display_msg(g_mstr(100) + 600 + g_mstr(101));
+            end
+        end
+    end
+    no_karma_penalty := 0;
+end
+
+procedure grave_description_proc
+begin
+    if ((33555669 <= obj_pid(self_obj)) and (obj_pid(self_obj) <= 33555674) or ((33555445 <= obj_pid(self_obj)) and (obj_pid(self_obj) <= 33555448))) then begin
+        script_overrides;
+        display_mstr(101);
+    end
+    else begin
+        call def_description_p_proc();
+    end
+end
+
+procedure use_obj_on_p_proc
+begin
+    call pre_use_obj_on_p_proc();
+    call def_use_obj_on_p_proc();
+    call post_use_obj_on_p_proc();
+end
+
+procedure description_p_proc
+begin
+    call grave_description_proc();
+end
+
+procedure checkPartyMembersNearDoor
+begin
+    if (party_member_obj(16777278) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777278)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777376) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777376)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777377) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777377)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777305) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777305)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777313) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777313)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777323) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777323)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777352) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777352)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777378) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777378)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777368) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777368)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777379) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777379)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777380) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777380)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777295) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777295)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777381) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777381)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777407) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777407)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777411) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777411)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777412) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777412)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777413) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777413)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777481) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777481)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777558) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777558)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777600) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777600)) <= 5) then begin
+            return 1;
+        end
+    end
+    return 0;
+end
+
+procedure start
+begin
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    if (((33555669 <= obj_pid(self_obj)) and (obj_pid(self_obj) <= 33555674) or ((33555445 <= obj_pid(self_obj)) and (obj_pid(self_obj) <= 33555448))) == 0) then begin
+        display_msg(message_str(SCRIPT_ZIGENGRV, 100 + (local_var(0) == -1)));
+    end
+    else begin
+        display_msg(message_str(SCRIPT_ZIGENGRV, 200 + ((33555669 <= obj_pid(self_obj)) and (obj_pid(self_obj) <= 33555674))));
+    end
+end
+
+procedure def_description_p_proc
+begin
+    script_overrides;
+    if (((33555669 <= obj_pid(self_obj)) and (obj_pid(self_obj) <= 33555674) or ((33555445 <= obj_pid(self_obj)) and (obj_pid(self_obj) <= 33555448))) == 0) then begin
+        if ((local_var(2) != 0) and is_success(roll_vs_skill(source_obj, 11, -20))) then begin
+            if (source_obj == dude_obj) then begin
+                display_msg(message_str(SCRIPT_ZIGENGRV, 515));
+            end
+            else begin
+                display_msg(obj_name(source_obj) + message_str(SCRIPT_ZIGENGRV, 520));
+            end
+        end
+        else begin
+            display_msg(message_str(SCRIPT_ZIGENGRV, 102 + (local_var(0) == -1)));
+        end
+    end
+    else begin
+        debug_msg("grave site message #" + local_var(0));
+        display_msg(message_str(SCRIPT_ZIGENGRV, 275 + ((33555669 <= obj_pid(self_obj)) and (obj_pid(self_obj) <= 33555674))) + message_str(SCRIPT_ZIGENGRV, local_var(0)));
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    if (local_var(0) == 0) then begin
+        if (((33555669 <= obj_pid(self_obj)) and (obj_pid(self_obj) <= 33555674) or ((33555445 <= obj_pid(self_obj)) and (obj_pid(self_obj) <= 33555448))) == 0) then begin
+            if (1 == -1) then begin
+                set_local_var(0, -1);
+                play_sfx("iocntnre");
+                anim(self_obj, 1010, 1);
+            end
+            else begin
+                set_local_var(0, 1);
+            end
+            set_local_var(2, 0);
+        end
+        else begin
+            if (0) then begin
+                call give_headstone_name();
+            end
+        end
+    end
+end
+
+procedure use_p_proc
+begin
+    if (((33555669 <= obj_pid(self_obj)) and (obj_pid(self_obj) <= 33555674) or ((33555445 <= obj_pid(self_obj)) and (obj_pid(self_obj) <= 33555448))) == 0) then begin
+        script_overrides;
+        if (local_var(2) != 0) then begin
+            if (is_success(roll_vs_skill(source_obj, 11, -20))) then begin
+                if (source_obj == dude_obj) then begin
+                    display_msg(message_str(SCRIPT_ZIGENGRV, 515));
+                end
+                else begin
+                    display_msg(obj_name(source_obj) + message_str(SCRIPT_ZIGENGRV, 520));
+                end
+            end
+            else begin
+                call Explode_Grave();
+            end
+        end
+        else begin
+            if (local_var(0) == 1) then begin
+                script_overrides;
+            end
+        end
+    end
+end
+
+procedure pickup_p_proc
+begin
+    if (((33555669 <= obj_pid(self_obj)) and (obj_pid(self_obj) <= 33555674) or ((33555445 <= obj_pid(self_obj)) and (obj_pid(self_obj) <= 33555448))) == 0) then begin
+        if (local_var(2) != 0) then begin
+            if (is_success(roll_vs_skill(source_obj, 11, -20))) then begin
+                if (source_obj == dude_obj) then begin
+                    display_msg(message_str(SCRIPT_ZIGENGRV, 515));
+                end
+                else begin
+                    display_msg(obj_name(source_obj) + message_str(SCRIPT_ZIGENGRV, 520));
+                end
+            end
+            else begin
+                call Explode_Grave();
+            end
+        end
+        else begin
+            if (local_var(0) == 1) then begin
+                script_overrides;
+            end
+        end
+    end
+end
+
+procedure use_skill_on_p_proc
+begin
+    if (action_being_used == 11) then begin
+        script_overrides;
+        if (local_var(2) != 0) then begin
+            call Disarm_Traps();
+        end
+        else begin
+            if (source_obj == dude_obj) then begin
+                display_msg(message_str(SCRIPT_ZIGENGRV, 516));
+            end
+            else begin
+                display_msg(obj_name(source_obj) + message_str(SCRIPT_ZIGENGRV, 521));
+            end
+        end
+    end
+end
+
+procedure Set_Trap
+begin
+    variable LVar0 := 0;
+    script_overrides;
+    if (local_var(2) == 0) then begin
+        trap_roll := roll_vs_skill(source_obj, 11, -10);
+        if (is_success(trap_roll)) then begin
+            set_local_var(2, obj_pid(obj_being_used_with));
+            LVar0 := rm_mult_objs_from_inven(source_obj, obj_being_used_with, 1);
+            if (source_obj == dude_obj) then begin
+                display_msg(message_str(SCRIPT_ZIGENGRV, 500));
+            end
+            else begin
+                display_msg(obj_name(source_obj) + message_str(SCRIPT_ZIGENGRV, 510));
+            end
+        end
+        else begin
+            if (is_critical(trap_roll)) then begin
+                set_local_var(2, obj_pid(obj_being_used_with));
+                LVar0 := rm_mult_objs_from_inven(source_obj, obj_being_used_with, 1);
+                call Explode_Grave();
+            end
+            else begin
+                if (source_obj == dude_obj) then begin
+                    display_msg(message_str(SCRIPT_ZIGENGRV, 501));
+                end
+                else begin
+                    display_msg(obj_name(source_obj) + message_str(SCRIPT_ZIGENGRV, 511));
+                end
+            end
+        end
+    end
+    else begin
+        if (source_obj == dude_obj) then begin
+            display_msg(message_str(SCRIPT_ZIGENGRV, 501));
+        end
+        else begin
+            display_msg(obj_name(source_obj) + message_str(SCRIPT_ZIGENGRV, 511));
+        end
+    end
+end
+
+procedure Explode_Grave
+begin
+    if (local_var(2) == 85) then begin
+        explosion(tile_num(self_obj), elevation(self_obj), random(40, 80));
+    end
+    else begin
+        explosion(tile_num(self_obj), elevation(self_obj), random(30, 50));
+    end
+    set_local_var(2, 0);
+end
+
+procedure Disarm_Traps
+begin
+    script_overrides;
+    trap_roll := roll_vs_skill(source_obj, 11, -10);
+    if (is_success(trap_roll)) then begin
+        set_local_var(2, 0);
+        if (source_obj == dude_obj) then begin
+            display_msg(message_str(SCRIPT_ZIGENGRV, 525));
+        end
+        else begin
+            display_msg(obj_name(source_obj) + message_str(SCRIPT_ZIGENGRV, 530));
+        end
+        if (local_var(3) == 1) then begin
+            if (local_var(4) == 0) then begin
+                set_local_var(4, 1);
+                give_exp_points(25);
+                display_msg(g_mstr(100) + 25 + g_mstr(101));
+            end
+        end
+        else begin
+            set_local_var(3, 1);
+        end
+    end
+    else begin
+        if (is_critical(trap_roll)) then begin
+            call Explode_Grave();
+        end
+        else begin
+            if (local_var(3) == 0) then begin
+                if (source_obj == dude_obj) then begin
+                    display_msg(message_str(SCRIPT_ZIGENGRV, 516));
+                end
+                else begin
+                    display_msg(obj_name(source_obj) + message_str(SCRIPT_ZIGENGRV, 521));
+                end
+            end
+            else begin
+                if (source_obj == dude_obj) then begin
+                    display_msg(message_str(SCRIPT_ZIGENGRV, 526));
+                end
+                else begin
+                    display_msg(obj_name(source_obj) + message_str(SCRIPT_ZIGENGRV, 531));
+                end
+            end
+        end
+    end
+end
+
+procedure num_to_bit(variable arg0)
+begin
+    variable LVar1 := 1;
+    arg0 := arg0 % 32;
+    while (arg0 > 1) do begin
+        LVar1 := LVar1 * 2;
+        arg0 := arg0 - 1;
+    end
+    return LVar1;
+end
+
+procedure give_headstone_name
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    LVar0 := random(0, 84 + (84 / 10));
+    while ((local_var(0) == 0) and (LVar0 <= 84)) do begin
+        LVar1 := num_to_bit(LVar0);
+        if ((global_var(200 + (LVar0 / 32)) bwand LVar1) == 0) then begin
+            set_global_var(200 + (LVar0 / 32), global_var(200 + (LVar0 / 32)) bwor LVar1);
+            set_local_var(0, 300 + LVar0);
+        end
+        LVar0 := LVar0 + 1;
+    end
+    if (local_var(0) == 0) then begin
+        set_local_var(0, random(250, 253) + (10 * ((33555669 <= obj_pid(self_obj)) and (obj_pid(self_obj) <= 33555674))));
+    end
+end

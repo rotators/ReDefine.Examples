@@ -1,0 +1,162 @@
+variable tmp_gen_rep;
+variable global_temp;
+variable dest_tile;
+variable step_tile;
+variable in_dialog;
+variable forced_node;
+variable restock_amt;
+variable restock_obj;
+variable restock_trash;
+variable removed_qty;
+
+procedure start;
+procedure use_p_proc;
+procedure look_at_p_proc;
+procedure description_p_proc;
+procedure use_skill_on_p_proc;
+procedure use_obj_on_p_proc;
+procedure damage_p_proc;
+procedure map_enter_p_proc;
+procedure map_update_p_proc;
+procedure talk_p_proc;
+
+variable Final_Hex;
+variable projectile;
+
+procedure checkHit;
+procedure Missile_Fired;
+procedure timed_event_p_proc;
+
+
+procedure start
+begin
+end
+
+procedure use_p_proc
+begin
+end
+
+procedure look_at_p_proc
+begin
+end
+
+procedure description_p_proc
+begin
+    script_overrides;
+    display_msg(message_str(1273, 100));
+end
+
+procedure use_skill_on_p_proc
+begin
+end
+
+procedure use_obj_on_p_proc
+begin
+    variable LVar0 := 0;
+    LVar0 := obj_pid(obj_being_used_with);
+    if (LVar0 == 41) then begin
+        script_overrides;
+        debug_msg("ZINUKE: stock: " + local_var(0));
+        if (local_var(0) > 0) then begin
+            set_local_var(0, local_var(0) - 1);
+            item_caps_adjust(source_obj, -1);
+            display_msg(message_str(1273, 101));
+            if (not(is_success(do_check(source_obj, 6, 0)))) then begin
+                projectile := create_object_sid(83886086, tile_num(self_obj), elevation(self_obj), -1);
+                call checkHit();
+            end
+            else begin
+                display_msg(message_str(1273, 102));
+                add_obj_to_inven(source_obj, create_object_sid(106, 0, 0, -1));
+            end
+        end
+        else begin
+            display_msg(message_str(1273, 106));
+        end
+    end
+    return 0;
+    LVar0 := 0;
+end
+
+procedure damage_p_proc
+begin
+end
+
+procedure map_enter_p_proc
+begin
+    if ((game_time < 0) and (local_var(2) == 0)) then begin
+        set_local_var(1, game_time - 1);
+        set_local_var(2, 1);
+    end
+    if (game_time > local_var(1)) then begin
+        if (local_var(0) < 30) then begin
+            set_local_var(0, random(30 / 2, 30));
+        end
+        set_local_var(1, game_time + (7 * (24 * (60 * (60 * 10))) * random(1, 7)));
+    end
+end
+
+procedure map_update_p_proc
+begin
+end
+
+procedure talk_p_proc
+begin
+end
+
+procedure checkHit
+begin
+    if (is_success(do_check(source_obj, 5, 0))) then begin
+        if (source_obj == dude_obj) then begin
+            display_msg(message_str(1273, 104));
+        end
+        else begin
+            display_msg(obj_name(source_obj) + message_str(1273, 105));
+        end
+        Final_Hex := tile_num_in_direction(tile_num(source_obj), rotation_to_tile(tile_num(self_obj), tile_num(source_obj)), 3);
+        call Missile_Fired();
+    end
+    else begin
+        Final_Hex := tile_num(source_obj);
+        call Missile_Fired();
+        float_msg(dude_obj, message_str(1273, 103), 2);
+        critter_dmg(source_obj, random(1, 2), 256 bwor 512);
+    end
+    add_timer_event(self_obj, game_ticks(0), 1);
+end
+
+procedure Missile_Fired
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    while ((tile_num(projectile) != Final_Hex) and (LVar1 < 10000)) do begin
+        if ((LVar1 % 500) == 0) then begin
+            LVar0 := tile_num_in_direction(tile_num(projectile), rotation_to_tile(tile_num(projectile), Final_Hex), 1);
+            move_to(projectile, LVar0, elevation(self_obj));
+            if (Final_Hex == tile_num(source_obj)) then begin
+                anim(source_obj, 15, 0);
+            end
+            else begin
+                anim(source_obj, 13, 0);
+            end
+            debug_msg("Projectile == " + tile_num(projectile) + ". Final_Hex == " + Final_Hex);
+        end
+        LVar1 := LVar1 + 1;
+    end
+    debug_msg("ZINUKE: " + LVar1);
+    return 0;
+    LVar0 := 0;
+    LVar1 := 0;
+end
+
+procedure timed_event_p_proc
+begin
+    if (fixed_param == 1) then begin
+        destroy_object(projectile);
+        if (106 != 0) then begin
+            projectile := create_object_sid(106, Final_Hex, elevation(self_obj), -1);
+            anim(projectile, 1000, rotation_to_tile(tile_num(self_obj), Final_Hex));
+        end
+    end
+end
+

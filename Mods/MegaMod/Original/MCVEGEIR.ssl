@@ -1,0 +1,695 @@
+variable global_temp;
+variable in_dialog;
+variable forced_node;
+variable restock_obj;
+variable Static_Reaction;
+variable Evil_Critter;
+variable Slavery_Tolerant := 2;
+variable Karma_Perception;
+variable reaction_bonus_town_rep;
+variable reaction_bonus_karma;
+
+procedure start;
+procedure critter_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure destroy_p_proc;
+procedure look_at_p_proc;
+procedure description_p_proc;
+procedure use_skill_on_p_proc;
+procedure damage_p_proc;
+procedure map_enter_p_proc;
+procedure combat_p_proc;
+procedure Node000;
+procedure Node001;
+procedure Node002;
+procedure Node003;
+procedure Node010;
+procedure Node011;
+procedure Node012;
+procedure Node013;
+procedure Node014;
+procedure Node015;
+procedure Node016;
+procedure Node017;
+procedure Node018;
+procedure Node019;
+procedure Node020;
+procedure Node021;
+procedure Node022;
+procedure Node023;
+procedure Node024;
+procedure Node025;
+procedure Node026;
+procedure Node027;
+procedure Node028;
+procedure Node029;
+procedure Node030;
+procedure Node031;
+procedure Node032;
+procedure Node033;
+procedure Node034;
+procedure Node035;
+procedure Node999;
+procedure Node998;
+
+variable only_once;
+
+procedure timed_event_p_proc;
+procedure Node990;
+
+
+procedure start
+begin
+end
+
+procedure critter_p_proc
+begin
+    if ((global_var(297) bwand 8192) != 0) then begin
+        set_global_var(297, global_var(297) bwand (-1 - 8192));
+        debug_msg("SETTING SURRENDER_TO_SLAG ON");
+        debug_msg("going to force 1");
+        set_global_var(297, global_var(297) bwor 536870912);
+        anim(dude_obj, 1000, rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)));
+        anim(self_obj, 1000, rotation_to_tile(tile_num(self_obj), tile_num(dude_obj)));
+        gfade_in(5);
+        debug_msg("force_dialog_start(" + forced_node + "): " + obj_name(self_obj));
+        forced_node := "Node010";
+        dialogue_system_enter;
+    end
+    else begin
+        if ((global_var(297) bwand 67108864) != 0) then begin
+            set_global_var(297, global_var(297) bwand (-1 - 67108864));
+            debug_msg("going to force 2");
+            set_global_var(297, global_var(297) bwor 536870912);
+            anim(dude_obj, 1000, rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)));
+            anim(self_obj, 1000, rotation_to_tile(tile_num(self_obj), tile_num(dude_obj)));
+            gfade_in(5);
+            debug_msg("force_dialog_start(" + forced_node + "): " + obj_name(self_obj));
+            forced_node := "Node000";
+            dialogue_system_enter;
+        end
+        else begin
+            if (obj_can_see_obj(self_obj, dude_obj)) then begin
+                if ((local_var(5) != 0) or ((global_var(297) bwand 512) != 0)) then begin
+                    if (critter_is_fleeing(self_obj)) then begin
+                        if (anim_busy(self_obj) == 0) then begin
+                            if ((tile_distance_objs(self_obj, dude_obj) < 8) or obj_can_see_obj(self_obj, dude_obj)) then begin
+                                if (anim_busy(self_obj) == 0) then begin
+                                    global_temp := rotation_to_tile(tile_num(dude_obj), tile_num(self_obj));
+                                    animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                                    global_temp := (global_temp + 1) % 6;
+                                    while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)))) do begin
+                                        debug_msg("flee loop: rot == " + global_temp);
+                                        animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                                        global_temp := (global_temp + 1) % 6;
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    else begin
+                        attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure pickup_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        call Node998();
+    end
+end
+
+procedure talk_p_proc
+begin
+    script_overrides;
+    if ((local_var(5) != 0) or ((global_var(297) bwand 512) != 0)) then begin
+        if (critter_is_fleeing(self_obj)) then begin
+            if (anim_busy(self_obj) == 0) then begin
+                if ((tile_distance_objs(self_obj, dude_obj) < 8) or obj_can_see_obj(self_obj, dude_obj)) then begin
+                    if (anim_busy(self_obj) == 0) then begin
+                        global_temp := rotation_to_tile(tile_num(dude_obj), tile_num(self_obj));
+                        animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                        global_temp := (global_temp + 1) % 6;
+                        while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)))) do begin
+                            debug_msg("flee loop: rot == " + global_temp);
+                            animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                            global_temp := (global_temp + 1) % 6;
+                        end
+                    end
+                end
+            end
+        end
+        else begin
+            attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
+        end
+    end
+    else begin
+        if (forced_node != 0) then begin
+            debug_msg("calling forced dialog: " + forced_node);
+            if (in_dialog == 0) then begin
+                in_dialog := 1;
+                start_gdialog(109, self_obj, 4, -1, -1);
+                gsay_start;
+                call forced_node();
+                gsay_end;
+                end_dialogue;
+                in_dialog := 0;
+            end
+            else begin
+                call forced_node();
+            end
+            forced_node := 0;
+        end
+        else begin
+            if (cur_map_index == 24) then begin
+                call Node998();
+            end
+            else begin
+                if ((global_var(131) >= 1) and ((global_var(131) >= 2) == 0)) then begin
+                    if (get_critter_stat(dude_obj, 4) <= 3) then begin
+                        float_msg(self_obj, message_str(109, random(151, 154)), 8);
+                    end
+                    else begin
+                        float_msg(self_obj, message_str(109, random(150, 151)), 8);
+                    end
+                end
+                else begin
+                    set_global_var(297, global_var(297) bwor 536870912);
+                    start_gdialog(109, self_obj, 4, -1, -1);
+                    gsay_start;
+                    if (global_var(131) >= 2) then begin
+                        if (local_var(4)) then begin
+                            call Node003();
+                        end
+                        else begin
+                            call Node001();
+                        end
+                    end
+                    else begin
+                        if (local_var(7)) then begin
+                            call Node002();
+                        end
+                        else begin
+                            call Node010();
+                        end
+                    end
+                    gsay_end;
+                    end_dialogue;
+                end
+            end
+        end
+    end
+    set_local_var(6, local_var(6) + 1);
+end
+
+procedure destroy_p_proc
+begin
+    set_global_var(297, global_var(297) bwor 1048576);
+    set_global_var(310, global_var(310) - 1);
+    if (((global_var(402) bwand 1024) != 0) and (global_var(310) <= 0) or ((global_var(112) == 2) or (((global_var(403) - (game_time / (10 * 60 * 60 * 24))) <= 0) or ((global_var(403) - (game_time / (10 * 60 * 60 * 24))) > 31) and (global_var(403) > 0)))) then begin
+        if (global_var(112) != 0) then begin
+            if (global_var(111) >= 4) then begin
+                if (global_var(631) < 3) then begin
+                    set_global_var(631, 3);
+                end
+                debug_msg("ghost pip == " + global_var(631));
+            end
+            if (global_var(388) < 2) then begin
+                set_global_var(388, 2);
+            end
+            debug_msg("set_modoc_ending_wipeout_1");
+        end
+        else begin
+            if (global_var(111) >= 4) then begin
+                if (global_var(631) < 3) then begin
+                    set_global_var(631, 3);
+                end
+                debug_msg("ghost pip == " + global_var(631));
+            end
+            if (global_var(388) < 3) then begin
+                set_global_var(388, 3);
+            end
+            debug_msg("set_modoc_ending_wipeout_2");
+        end
+    end
+    debug_msg("current slag count == " + global_var(310));
+    if (source_obj == dude_obj) then begin
+        set_global_var(5, global_var(5) + 1);
+        if (((global_var(4) + global_var(5)) >= 25) and ((global_var(4) > (3 * global_var(5))) or (global_var(2) == 1)) and (global_var(1) == 0)) then begin
+            set_global_var(2, 1);
+            set_global_var(3, 0);
+        end
+        if (((global_var(4) + global_var(5)) >= 25) and ((global_var(5) > (2 * global_var(4))) or (global_var(3) == 1))) then begin
+            set_global_var(3, 1);
+            set_global_var(2, 0);
+        end
+        set_global_var(0, global_var(0) + -10);
+        debug_msg("Player gains " + -10 + " Karma Points.");
+        set_global_var(37, 0);
+        set_global_var(38, 0);
+        set_global_var(39, 0);
+        set_global_var(40, 0);
+        set_global_var(41, 0);
+        set_global_var(42, 0);
+        set_global_var(43, 0);
+        set_global_var(44, 0);
+        set_global_var(45, 0);
+        if (global_var(0) >= 1000) then begin
+            set_global_var(37, 1);
+        end
+        else begin
+            if (global_var(0) >= 750) then begin
+                set_global_var(38, 1);
+            end
+            else begin
+                if (global_var(0) >= 500) then begin
+                    set_global_var(39, 1);
+                end
+                else begin
+                    if (global_var(0) >= 250) then begin
+                        set_global_var(40, 1);
+                    end
+                    else begin
+                        if (global_var(0) > -250) then begin
+                            set_global_var(41, 1);
+                        end
+                        else begin
+                            if (global_var(0) > -500) then begin
+                                set_global_var(42, 1);
+                            end
+                            else begin
+                                if (global_var(0) > -750) then begin
+                                    set_global_var(43, 1);
+                                end
+                                else begin
+                                    if (global_var(0) > -1000) then begin
+                                        set_global_var(44, 1);
+                                    end
+                                    else begin
+                                        set_global_var(45, 1);
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        set_global_var(308, global_var(308) + -5);
+        debug_msg("Added " + -5 + " to Town Rep");
+    end
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    if (local_var(6) > 0) then begin
+        display_msg(message_str(109, 101));
+    end
+    else begin
+        display_msg(message_str(109, 100));
+    end
+end
+
+procedure description_p_proc
+begin
+    script_overrides;
+    display_msg(message_str(109, 102));
+end
+
+procedure use_skill_on_p_proc
+begin
+end
+
+procedure damage_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_global_var(297, global_var(297) bwor 512);
+        debug_msg("HEY: I SET ENEMY SLAGS!!!! I'M SCRIPT #" + 109);
+        call Node998();
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    if (((global_var(297) bwand 1048576) != 0) or ((global_var(112) == 2) or (((global_var(403) - (game_time / (10 * 60 * 60 * 24))) <= 0) or ((global_var(403) - (game_time / (10 * 60 * 60 * 24))) > 31) and (global_var(403) > 0)) and (((global_var(402) bwand 2048) != 0) == 0))) then begin
+        set_global_var(310, global_var(310) - 1);
+        if (((global_var(402) bwand 1024) != 0) and (global_var(310) <= 0) or ((global_var(112) == 2) or (((global_var(403) - (game_time / (10 * 60 * 60 * 24))) <= 0) or ((global_var(403) - (game_time / (10 * 60 * 60 * 24))) > 31) and (global_var(403) > 0)))) then begin
+            if (global_var(112) != 0) then begin
+                if (global_var(111) >= 4) then begin
+                    if (global_var(631) < 3) then begin
+                        set_global_var(631, 3);
+                    end
+                    debug_msg("ghost pip == " + global_var(631));
+                end
+                if (global_var(388) < 2) then begin
+                    set_global_var(388, 2);
+                end
+                debug_msg("set_modoc_ending_wipeout_1");
+            end
+            else begin
+                if (global_var(111) >= 4) then begin
+                    if (global_var(631) < 3) then begin
+                        set_global_var(631, 3);
+                    end
+                    debug_msg("ghost pip == " + global_var(631));
+                end
+                if (global_var(388) < 3) then begin
+                    set_global_var(388, 3);
+                end
+                debug_msg("set_modoc_ending_wipeout_2");
+            end
+        end
+        debug_msg("current slag count == " + global_var(310));
+        destroy_object(self_obj);
+    end
+    if (only_once == 0) then begin
+        only_once := 1;
+        critter_add_trait(self_obj, 1, 6, 29);
+        critter_add_trait(self_obj, 1, 5, 22);
+    end
+end
+
+procedure combat_p_proc
+begin
+    if (fixed_param == 4) then begin
+    end
+    return 0;
+    LVar0 := 0;
+end
+
+procedure Node000
+begin
+    gsay_reply(109, 155);
+    giq_option(4, 109, 300, Node011, 50);
+    giq_option(4, 109, 301, Node012, 50);
+    giq_option(4, 109, 302, Node011, 50);
+    giq_option(-3, 109, 303, Node035, 50);
+end
+
+procedure Node001
+begin
+    gsay_reply(109, 156);
+    debug_msg("get_ending_state/happy == " + global_var(388) + "/" + 4);
+    if ((global_var(388) == 4) and ((global_var(128) == 2) == 0)) then begin
+        giq_option(4, 109, 400, Node003, 50);
+    end
+    giq_option(4, 109, 157, Node026, 50);
+    giq_option(4, 109, 158, Node028, 50);
+    if (global_var(128) == 1) then begin
+        giq_option(4, 109, 159, Node033, 50);
+    end
+    giq_option(4, 109, message_str(14, random(375, 376)), Node999, 50);
+end
+
+procedure Node002
+begin
+    gsay_reply(109, 160);
+    giq_option(4, 109, 161, Node013, 50);
+    giq_option(4, 109, 162, Node027, 50);
+    giq_option(4, 109, 163, Node024, 50);
+    if (global_var(128) == 1) then begin
+        giq_option(4, 109, 159, Node033, 50);
+    end
+    giq_option(4, 109, message_str(14, random(375, 376)), Node999, 50);
+end
+
+procedure Node003
+begin
+    debug_msg("Node003");
+    if (local_var(4)) then begin
+        gsay_reply(109, 166);
+    end
+    else begin
+        restock_obj := create_object_sid(23, 0, 0, -1);
+        add_mult_objs_to_inven(dude_obj, restock_obj, 1);
+        restock_obj := create_object_sid(35, 0, 0, -1);
+        add_mult_objs_to_inven(dude_obj, restock_obj, 1);
+        gsay_reply(109, 165);
+        set_local_var(4, 1);
+    end
+    debug_msg("jonny_request_home == " + (global_var(128) == 1) + " / jonny_known == " + (global_var(113) >= 1) + " / jonny_seed_active == " + ((global_var(693) > 0) and (global_var(693) < 4)));
+    if ((global_var(128) == 1) or (global_var(113) >= 1) and ((global_var(693) > 0) and (global_var(693) < 4))) then begin
+        giq_option(4, 109, 167, Node034, 50);
+    end
+    giq_option(4, 109, message_str(14, random(375, 376)), Node999, 50);
+    giq_option(-3, 109, message_str(14, random(300, 303)), Node999, 50);
+end
+
+procedure Node010
+begin
+    gsay_reply(109, 168);
+    giq_option(4, 109, 169, Node011, 50);
+    giq_option(4, 109, 170, Node012, 50);
+    giq_option(4, 109, message_str(14, random(375, 376)), Node011, 50);
+    giq_option(-3, 109, 171, Node035, 50);
+end
+
+procedure Node011
+begin
+    gsay_reply(109, 172);
+    giq_option(1, 109, message_str(14, 353), Node012, 50);
+end
+
+procedure Node012
+begin
+    gsay_reply(109, 173);
+    giq_option(4, 109, 174, Node025, 50);
+    giq_option(4, 109, 175, Node013, 50);
+    giq_option(4, 109, message_str(14, 207), Node024, 50);
+    giq_option(4, 109, message_str(14, 208), Node021, 50);
+end
+
+procedure Node013
+begin
+    gsay_reply(109, 176);
+    giq_option(4, 109, 177, Node016, 50);
+    giq_option(4, 109, 178, Node017, 50);
+    giq_option(4, 109, 179, Node020, 50);
+    giq_option(4, 109, 180, Node023, 50);
+end
+
+procedure Node014
+begin
+    gsay_reply(109, 181);
+    giq_option(4, 109, 177, Node016, 50);
+    giq_option(4, 109, 178, Node017, 50);
+    giq_option(4, 109, 179, Node020, 50);
+    giq_option(4, 109, 180, Node023, 50);
+end
+
+procedure Node015
+begin
+    gsay_reply(109, 181);
+    giq_option(4, 109, 177, Node016, 50);
+    giq_option(4, 109, 178, Node017, 50);
+    giq_option(4, 109, 179, Node020, 50);
+    giq_option(4, 109, 190, Node018, 50);
+    giq_option(4, 109, 191, Node019, 50);
+    giq_option(4, 109, 192, Node022, 50);
+    giq_option(4, 109, 180, Node023, 50);
+end
+
+procedure Node016
+begin
+    set_global_var(402, global_var(402) bwor 1);
+    gsay_reply(109, 194);
+    giq_option(4, 109, 195, Node015, 50);
+    giq_option(4, 109, 180, Node023, 50);
+end
+
+procedure Node017
+begin
+    gsay_reply(109, 197);
+    giq_option(4, 109, 195, Node015, 50);
+    giq_option(4, 109, 180, Node023, 50);
+end
+
+procedure Node018
+begin
+    gsay_reply(109, 200);
+    giq_option(4, 109, 195, Node015, 50);
+    giq_option(4, 109, 180, Node023, 50);
+end
+
+procedure Node019
+begin
+    set_global_var(402, global_var(402) bwor 2);
+    gsay_reply(109, 203);
+    giq_option(4, 109, 195, Node015, 50);
+    giq_option(4, 109, 180, Node023, 50);
+end
+
+procedure Node020
+begin
+    gsay_reply(109, 206);
+    giq_option(4, 109, 207, Node021, 50);
+    giq_option(4, 109, 208, Node024, 50);
+end
+
+procedure Node021
+begin
+    set_local_var(7, 1);
+    gsay_reply(109, 209);
+    giq_option(4, 109, message_str(14, 350), Node999, 50);
+end
+
+procedure Node022
+begin
+    gsay_reply(109, 210);
+    giq_option(4, 109, 195, Node015, 50);
+    giq_option(4, 109, 180, Node023, 50);
+end
+
+procedure Node023
+begin
+    gsay_reply(109, 213);
+    giq_option(4, 109, 207, Node021, 50);
+    giq_option(4, 109, 208, Node024, 50);
+end
+
+procedure Node024
+begin
+    if (global_var(131) == 0) then begin
+        set_global_var(131, 1);
+        if (global_var(631) < 2) then begin
+            set_global_var(631, 2);
+        end
+        debug_msg("ghost pip == " + global_var(631));
+        add_obj_to_inven(dude_obj, create_object_sid(263, 0, 0, -1));
+    end
+    gsay_reply(109, 216);
+    giq_option(4, 109, message_str(14, 350), Node999, 50);
+end
+
+procedure Node025
+begin
+    set_local_var(7, 1);
+    gsay_reply(109, 217);
+    giq_option(4, 109, message_str(14, 350), Node999, 50);
+end
+
+procedure Node026
+begin
+    gsay_reply(109, 218);
+    giq_option(4, 109, message_str(14, 350), Node999, 50);
+end
+
+procedure Node027
+begin
+    gsay_reply(109, 219);
+    giq_option(4, 109, message_str(14, 350), Node999, 50);
+end
+
+procedure Node028
+begin
+    gsay_reply(109, 220);
+    giq_option(4, 109, 221, Node029, 50);
+    giq_option(4, 109, 222, Node031, 50);
+    giq_option(4, 109, message_str(14, random(375, 376)), Node999, 50);
+end
+
+procedure Node029
+begin
+    if (global_var(120) == 0) then begin
+        set_global_var(120, 2);
+    end
+    gsay_reply(109, 223);
+    giq_option(4, 109, 224, Node030, 50);
+end
+
+procedure Node030
+begin
+    gsay_reply(109, 225);
+    giq_option(4, 109, 226, Node999, 50);
+end
+
+procedure Node031
+begin
+    gsay_reply(109, 227);
+    giq_option(4, 109, 221, Node032, 50);
+end
+
+procedure Node032
+begin
+    if (global_var(120) == 0) then begin
+        set_global_var(120, 2);
+    end
+    gsay_reply(109, 223);
+    giq_option(4, 109, 226, Node999, 50);
+end
+
+procedure Node033
+begin
+    gsay_reply(109, 231);
+    giq_option(4, 109, message_str(14, 350), Node999, 50);
+end
+
+procedure Node034
+begin
+    gsay_reply(109, 232);
+    giq_option(4, 109, message_str(14, 350), Node990, 50);
+end
+
+procedure Node035
+begin
+    if (global_var(131) == 0) then begin
+        set_global_var(131, 1);
+        if (global_var(631) < 2) then begin
+            set_global_var(631, 2);
+        end
+        debug_msg("ghost pip == " + global_var(631));
+        add_obj_to_inven(dude_obj, create_object_sid(263, 0, 0, -1));
+    end
+    gsay_reply(109, 233);
+    giq_option(1, 109, message_str(14, 350), Node999, 50);
+end
+
+procedure Node999
+begin
+end
+
+procedure Node998
+begin
+    set_local_var(5, 1);
+end
+
+procedure timed_event_p_proc
+begin
+end
+
+procedure Node990
+begin
+    if (global_var(693) < 4) then begin
+        set_global_var(693, 4);
+    end
+    if (global_var(693) != ((global_var(693) > 0) and (global_var(693) < 4))) then begin
+    end
+    else begin
+        if (global_var(693) == 1) then begin
+            if (global_var(693) < 2) then begin
+                set_global_var(693, 2);
+            end
+        end
+        else begin
+            if (global_var(693) == 4) then begin
+                if (global_var(693) < 4) then begin
+                    set_global_var(693, 4);
+                end
+            end
+        end
+    end
+    set_global_var(128, 2);
+    set_global_var(402, global_var(402) bwor 512);
+    game_time_advance(24 * (60 * (60 * 10)) * 2);
+    if (global_var(126) == -1) then begin
+        set_global_var(402, global_var(402) bwor 64);
+    end
+    load_map(18, 555);
+end
+

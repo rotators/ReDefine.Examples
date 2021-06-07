@@ -1,0 +1,897 @@
+diff --git a/Mods/MegaMod/Original/ECDOGMET.ssl b/Mods/MegaMod/ReDefine/ECDOGMET.ssl
+index 97cfc2a..d2464ea 100644
+--- a/Mods/MegaMod/Original/ECDOGMET.ssl
++++ b/Mods/MegaMod/ReDefine/ECDOGMET.ssl
+@@ -54,7 +54,7 @@ begin
+         if (not(local_var(7))) then begin
+             LVar0 := tile_num_in_direction(tile_num(self_obj), random(0, 5), 1);
+             set_local_var(7, LVar0);
+-            critter_add_trait(self_obj, 1, 6, 80);
++            critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 80);
+             add_timer_event(self_obj, game_ticks(3), 1);
+         end
+         else begin
+@@ -62,10 +62,10 @@ begin
+                 if (anim_busy(self_obj) == 0) then begin
+                     if ((tile_distance_objs(self_obj, dude_obj) < 8) or obj_can_see_obj(self_obj, dude_obj)) then begin
+                         if (anim_busy(self_obj) == 0) then begin
+-                            global_temp := rotation_to_tile(tile_num(dude_obj), tile_num(self_obj));
++                            global_temp := rotation_to_tile(dude_tile, tile_num(self_obj));
+                             animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                             global_temp := (global_temp + 1) % 6;
+-                            while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)))) do begin
++                            while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(dude_tile, tile_num(self_obj)))) do begin
+                                 debug_msg("flee loop: rot == " + global_temp);
+                                 animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                                 global_temp := (global_temp + 1) % 6;
+@@ -75,7 +75,7 @@ begin
+                 end
+             end
+             else begin
+-                attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++                attack(dude_obj);
+             end
+         end
+     end
+@@ -85,14 +85,14 @@ begin
+         if (tile_num(self_obj) == tile_num(item_ptr)) then begin
+             if (random(1, 100) > 95) then begin
+                 if (random(1, 100) > 95) then begin
+-                    float_msg(self_obj, "Woof woof woof woof!", 4);
++                    float_msg(self_obj, "Woof woof woof woof!", FLOAT_MSG_BLUE);
+                 end
+             end
+         end
+         else begin
+             if (random(1, 100) > 95) then begin
+                 if (random(1, 100) > 95) then begin
+-                    float_msg(self_obj, "Woof!", 4);
++                    float_msg(self_obj, "Woof!", FLOAT_MSG_BLUE);
+                 end
+             end
+         end
+@@ -100,13 +100,13 @@ begin
+     else begin
+         if (local_var(7) == 0) then begin
+             if (party_member_obj(16777558) != 0) then begin
+-                if (((local_var(9) != 0) == 0) and ((global_var(398) != 0) == 0)) then begin
++                if (((local_var(9) != 0) == 0) and ((global_var(GVAR_PARTY_NO_FOLLOW) != 0) == 0)) then begin
+                     if (local_var(10) == 0) then begin
+                         set_local_var(10, 6);
+                     end
+                     if (tile_distance_objs(self_obj, dude_obj) > (3 * local_var(10) / 2)) then begin
+                         if (anim_busy(self_obj) == 0) then begin
+-                            dest_tile := tile_num_in_direction(tile_num_in_direction(tile_num(dude_obj), rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)), local_var(10)), random(0, 5), random(0, 2));
++                            dest_tile := tile_num_in_direction(tile_num_in_direction(dude_tile, rotation_to_tile(dude_tile, tile_num(self_obj)), local_var(10)), random(0, 5), random(0, 2));
+                             if (tile_distance_objs(self_obj, dude_obj) > (3 * local_var(10) / 2 * 2)) then begin
+                                 animate_move_obj_to_tile(self_obj, dest_tile, 1);
+                             end
+@@ -115,7 +115,7 @@ begin
+                             end
+                         end
+                         else begin
+-                            if (tile_distance(tile_num(self_obj), tile_num(dude_obj)) < tile_distance(tile_num(self_obj), dest_tile)) then begin
++                            if (tile_distance(tile_num(self_obj), dude_tile) < tile_distance(tile_num(self_obj), dest_tile)) then begin
+                                 reg_anim_func(2, self_obj);
+                             end
+                         end
+@@ -125,7 +125,7 @@ begin
+             if ((local_var(9) != 0) == 1) then begin
+                 if (obj_can_see_obj(self_obj, dude_obj)) then begin
+                     if (game_time > lastHowelTime) then begin
+-                        float_msg(self_obj, message_str(1095, 135), 4);
++                        float_msg(self_obj, mstr(135), FLOAT_MSG_BLUE);
+                         lastHowelTime := game_time + game_ticks(random(30, 90));
+                     end
+                 end
+@@ -191,54 +191,54 @@ end
+ procedure destroy_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        set_global_var(5, global_var(5) + 1);
+-        if (metarule(51, self_obj) == 2) then begin
++        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
++        if (critter_kill_type(self_obj) == 2) then begin
+             if (source_obj == dude_obj) then begin
+-                set_global_var(2, 0);
+-                set_global_var(1, global_var(1) + 1);
+-                set_global_var(0, global_var(0) - -15);
+-                set_global_var(37, 0);
+-                set_global_var(38, 0);
+-                set_global_var(39, 0);
+-                set_global_var(40, 0);
+-                set_global_var(41, 0);
+-                set_global_var(42, 0);
+-                set_global_var(43, 0);
+-                set_global_var(44, 0);
+-                set_global_var(45, 0);
+-                if (global_var(0) >= 1000) then begin
+-                    set_global_var(37, 1);
++                set_global_var(GVAR_CHAMPION_REPUTATION, 0);
++                set_global_var(GVAR_CHILDKILLER_REPUTATION, global_var(GVAR_CHILDKILLER_REPUTATION) + 1);
++                set_global_var(GVAR_PLAYER_REPUTATION, global_var(GVAR_PLAYER_REPUTATION) - -15);
++                set_global_var(GVAR_KARMA_HOLY_WARRIOR, 0);
++                set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 0);
++                set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 0);
++                set_global_var(GVAR_KARMA_DEFENDER, 0);
++                set_global_var(GVAR_KARMA_WANDERER, 0);
++                set_global_var(GVAR_KARMA_BETRAYER, 0);
++                set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 0);
++                set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 0);
++                set_global_var(GVAR_KARMA_DEMON_SPAWN, 0);
++                if (global_var(GVAR_PLAYER_REPUTATION) >= 1000) then begin
++                    set_global_var(GVAR_KARMA_HOLY_WARRIOR, 1);
+                 end
+                 else begin
+-                    if (global_var(0) >= 750) then begin
+-                        set_global_var(38, 1);
++                    if (global_var(GVAR_PLAYER_REPUTATION) >= 750) then begin
++                        set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 1);
+                     end
+                     else begin
+-                        if (global_var(0) >= 500) then begin
+-                            set_global_var(39, 1);
++                        if (global_var(GVAR_PLAYER_REPUTATION) >= 500) then begin
++                            set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 1);
+                         end
+                         else begin
+-                            if (global_var(0) >= 250) then begin
+-                                set_global_var(40, 1);
++                            if (global_var(GVAR_PLAYER_REPUTATION) >= 250) then begin
++                                set_global_var(GVAR_KARMA_DEFENDER, 1);
+                             end
+                             else begin
+-                                if (global_var(0) > -250) then begin
+-                                    set_global_var(41, 1);
++                                if (global_var(GVAR_PLAYER_REPUTATION) > -250) then begin
++                                    set_global_var(GVAR_KARMA_WANDERER, 1);
+                                 end
+                                 else begin
+-                                    if (global_var(0) > -500) then begin
+-                                        set_global_var(42, 1);
++                                    if (global_var(GVAR_PLAYER_REPUTATION) > -500) then begin
++                                        set_global_var(GVAR_KARMA_BETRAYER, 1);
+                                     end
+                                     else begin
+-                                        if (global_var(0) > -750) then begin
+-                                            set_global_var(43, 1);
++                                        if (global_var(GVAR_PLAYER_REPUTATION) > -750) then begin
++                                            set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 1);
+                                         end
+                                         else begin
+-                                            if (global_var(0) > -1000) then begin
+-                                                set_global_var(44, 1);
++                                            if (global_var(GVAR_PLAYER_REPUTATION) > -1000) then begin
++                                                set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 1);
+                                             end
+                                             else begin
+-                                                set_global_var(45, 1);
++                                                set_global_var(GVAR_KARMA_DEMON_SPAWN, 1);
+                                             end
+                                         end
+                                     end
+@@ -249,58 +249,58 @@ begin
+                 end
+             end
+         end
+-        if (((global_var(4) + global_var(5)) >= 25) and ((global_var(4) > (3 * global_var(5))) or (global_var(2) == 1)) and (global_var(1) == 0)) then begin
+-            set_global_var(2, 1);
+-            set_global_var(3, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(4) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1)) and (global_var(GVAR_CHILDKILLER_REPUTATION) == 0)) then begin
++            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+         end
+-        if (((global_var(4) + global_var(5)) >= 25) and ((global_var(5) > (2 * global_var(4))) or (global_var(3) == 1))) then begin
+-            set_global_var(3, 1);
+-            set_global_var(2, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+         end
+-        set_global_var(0, global_var(0) + -10);
++        set_global_var(GVAR_PLAYER_REPUTATION, global_var(GVAR_PLAYER_REPUTATION) + -10);
+         debug_msg("Player gains " + -10 + " Karma Points.");
+-        set_global_var(37, 0);
+-        set_global_var(38, 0);
+-        set_global_var(39, 0);
+-        set_global_var(40, 0);
+-        set_global_var(41, 0);
+-        set_global_var(42, 0);
+-        set_global_var(43, 0);
+-        set_global_var(44, 0);
+-        set_global_var(45, 0);
+-        if (global_var(0) >= 1000) then begin
+-            set_global_var(37, 1);
++        set_global_var(GVAR_KARMA_HOLY_WARRIOR, 0);
++        set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 0);
++        set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 0);
++        set_global_var(GVAR_KARMA_DEFENDER, 0);
++        set_global_var(GVAR_KARMA_WANDERER, 0);
++        set_global_var(GVAR_KARMA_BETRAYER, 0);
++        set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 0);
++        set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 0);
++        set_global_var(GVAR_KARMA_DEMON_SPAWN, 0);
++        if (global_var(GVAR_PLAYER_REPUTATION) >= 1000) then begin
++            set_global_var(GVAR_KARMA_HOLY_WARRIOR, 1);
+         end
+         else begin
+-            if (global_var(0) >= 750) then begin
+-                set_global_var(38, 1);
++            if (global_var(GVAR_PLAYER_REPUTATION) >= 750) then begin
++                set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 1);
+             end
+             else begin
+-                if (global_var(0) >= 500) then begin
+-                    set_global_var(39, 1);
++                if (global_var(GVAR_PLAYER_REPUTATION) >= 500) then begin
++                    set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 1);
+                 end
+                 else begin
+-                    if (global_var(0) >= 250) then begin
+-                        set_global_var(40, 1);
++                    if (global_var(GVAR_PLAYER_REPUTATION) >= 250) then begin
++                        set_global_var(GVAR_KARMA_DEFENDER, 1);
+                     end
+                     else begin
+-                        if (global_var(0) > -250) then begin
+-                            set_global_var(41, 1);
++                        if (global_var(GVAR_PLAYER_REPUTATION) > -250) then begin
++                            set_global_var(GVAR_KARMA_WANDERER, 1);
+                         end
+                         else begin
+-                            if (global_var(0) > -500) then begin
+-                                set_global_var(42, 1);
++                            if (global_var(GVAR_PLAYER_REPUTATION) > -500) then begin
++                                set_global_var(GVAR_KARMA_BETRAYER, 1);
+                             end
+                             else begin
+-                                if (global_var(0) > -750) then begin
+-                                    set_global_var(43, 1);
++                                if (global_var(GVAR_PLAYER_REPUTATION) > -750) then begin
++                                    set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 1);
+                                 end
+                                 else begin
+-                                    if (global_var(0) > -1000) then begin
+-                                        set_global_var(44, 1);
++                                    if (global_var(GVAR_PLAYER_REPUTATION) > -1000) then begin
++                                        set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 1);
+                                     end
+                                     else begin
+-                                        set_global_var(45, 1);
++                                        set_global_var(GVAR_KARMA_DEMON_SPAWN, 1);
+                                     end
+                                 end
+                             end
+@@ -316,17 +316,17 @@ procedure look_at_p_proc
+ begin
+     script_overrides;
+     if (local_var(4) == 0) then begin
+-        display_msg(message_str(1095, 100));
++        display_mstr(100);
+     end
+     else begin
+-        display_msg(message_str(1095, 101));
++        display_mstr(101);
+     end
+ end
+ 
+ procedure description_p_proc
+ begin
+     script_overrides;
+-    display_msg(message_str(1095, 102));
++    display_mstr(102);
+ end
+ 
+ procedure use_skill_on_p_proc
+@@ -347,16 +347,16 @@ end
+ procedure map_enter_p_proc
+ begin
+     Only_Once := 0;
+-    if ((cur_map_index == 19) or (cur_map_index == 37) or (cur_map_index == 38)) then begin
++    if ((CUR_MAP_MODINN) or (CUR_MAP_V15ENT) or (CUR_MAP_V15ENTB)) then begin
+         if ((elevation(self_obj) != elevation(dude_obj)) and (local_var(9) != 0)) then begin
+             move_to(self_obj, tile_num(self_obj), elevation(dude_obj));
+         end
+     end
+     if (party_member_obj(16777558) != 0) then begin
+-        critter_add_trait(self_obj, 1, 6, 0);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 0);
+     end
+     else begin
+-        critter_add_trait(self_obj, 1, 6, 80);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 80);
+     end
+ end
+ 
+@@ -366,7 +366,7 @@ begin
+         if (anim_busy(self_obj) == 0) then begin
+             if (party_member_obj(obj_pid(self_obj)) != 0) then begin
+                 if (metarule3(109, self_obj, 0, 0) == 1) then begin
+-                    if ((100 * get_critter_stat(self_obj, 35) / get_critter_stat(self_obj, 7)) <= 60) then begin
++                    if ((100 * get_critter_stat(self_obj, STAT_current_hp) / get_critter_stat(self_obj, STAT_max_hp)) <= 60) then begin
+                         global_temp := 1;
+                         if (obj_is_carrying_obj_pid(self_obj, 144)) then begin
+                             if ((global_temp == 0) and (combat_is_initialized == 0)) then begin
+@@ -375,7 +375,7 @@ begin
+                             end
+                             PartyHealingItem := obj_carrying_pid_obj(self_obj, 144);
+                             use_obj_on_obj(PartyHealingItem, self_obj);
+-                            debug_msg(obj_name(self_obj) + " used super stimpak.");
++                            debug_msg(self_name + " used super stimpak.");
+                         end
+                         else begin
+                             if (obj_is_carrying_obj_pid(self_obj, 40)) then begin
+@@ -384,7 +384,7 @@ begin
+                                     gfade_in(600);
+                                 end
+                                 use_obj_on_obj(obj_carrying_pid_obj(self_obj, 40), self_obj);
+-                                debug_msg(obj_name(self_obj) + " used stimpak.");
++                                debug_msg(self_name + " used stimpak.");
+                             end
+                             else begin
+                                 if (obj_is_carrying_obj_pid(self_obj, 273)) then begin
+@@ -393,7 +393,7 @@ begin
+                                         gfade_in(600);
+                                     end
+                                     use_obj_on_obj(obj_carrying_pid_obj(self_obj, 273), self_obj);
+-                                    debug_msg(obj_name(self_obj) + " used healing powder.");
++                                    debug_msg(self_name + " used healing powder.");
+                                 end
+                                 else begin
+                                     if (obj_is_carrying_obj_pid(self_obj, 91)) then begin
+@@ -402,7 +402,7 @@ begin
+                                             gfade_in(600);
+                                         end
+                                         use_obj_on_obj(obj_carrying_pid_obj(self_obj, 91), self_obj);
+-                                        debug_msg(obj_name(self_obj) + " used doctor's bag kit.");
++                                        debug_msg(self_name + " used doctor's bag kit.");
+                                     end
+                                     else begin
+                                         if (obj_is_carrying_obj_pid(self_obj, 47)) then begin
+@@ -411,7 +411,7 @@ begin
+                                                 gfade_in(600);
+                                             end
+                                             use_obj_on_obj(obj_carrying_pid_obj(self_obj, 47), self_obj);
+-                                            debug_msg(obj_name(self_obj) + " used First Aid kit.");
++                                            debug_msg(self_name + " used First Aid kit.");
+                                         end
+                                     end
+                                 end
+@@ -421,7 +421,7 @@ begin
+                 end
+                 else begin
+                     if (metarule3(109, self_obj, 0, 0) == 2) then begin
+-                        if ((100 * get_critter_stat(self_obj, 35) / get_critter_stat(self_obj, 7)) <= 30) then begin
++                        if ((100 * get_critter_stat(self_obj, STAT_current_hp) / get_critter_stat(self_obj, STAT_max_hp)) <= 30) then begin
+                             global_temp := 1;
+                             if (obj_is_carrying_obj_pid(self_obj, 144)) then begin
+                                 if ((global_temp == 0) and (combat_is_initialized == 0)) then begin
+@@ -430,7 +430,7 @@ begin
+                                 end
+                                 PartyHealingItem := obj_carrying_pid_obj(self_obj, 144);
+                                 use_obj_on_obj(PartyHealingItem, self_obj);
+-                                debug_msg(obj_name(self_obj) + " used super stimpak.");
++                                debug_msg(self_name + " used super stimpak.");
+                             end
+                             else begin
+                                 if (obj_is_carrying_obj_pid(self_obj, 40)) then begin
+@@ -439,7 +439,7 @@ begin
+                                         gfade_in(600);
+                                     end
+                                     use_obj_on_obj(obj_carrying_pid_obj(self_obj, 40), self_obj);
+-                                    debug_msg(obj_name(self_obj) + " used stimpak.");
++                                    debug_msg(self_name + " used stimpak.");
+                                 end
+                                 else begin
+                                     if (obj_is_carrying_obj_pid(self_obj, 273)) then begin
+@@ -448,7 +448,7 @@ begin
+                                             gfade_in(600);
+                                         end
+                                         use_obj_on_obj(obj_carrying_pid_obj(self_obj, 273), self_obj);
+-                                        debug_msg(obj_name(self_obj) + " used healing powder.");
++                                        debug_msg(self_name + " used healing powder.");
+                                     end
+                                     else begin
+                                         if (obj_is_carrying_obj_pid(self_obj, 91)) then begin
+@@ -457,7 +457,7 @@ begin
+                                                 gfade_in(600);
+                                             end
+                                             use_obj_on_obj(obj_carrying_pid_obj(self_obj, 91), self_obj);
+-                                            debug_msg(obj_name(self_obj) + " used doctor's bag kit.");
++                                            debug_msg(self_name + " used doctor's bag kit.");
+                                         end
+                                         else begin
+                                             if (obj_is_carrying_obj_pid(self_obj, 47)) then begin
+@@ -466,7 +466,7 @@ begin
+                                                     gfade_in(600);
+                                                 end
+                                                 use_obj_on_obj(obj_carrying_pid_obj(self_obj, 47), self_obj);
+-                                                debug_msg(obj_name(self_obj) + " used First Aid kit.");
++                                                debug_msg(self_name + " used First Aid kit.");
+                                             end
+                                         end
+                                     end
+@@ -476,7 +476,7 @@ begin
+                     end
+                     else begin
+                         if (metarule3(109, self_obj, 0, 0) == 3) then begin
+-                            if ((100 * get_critter_stat(self_obj, 35) / get_critter_stat(self_obj, 7)) <= 50) then begin
++                            if ((100 * get_critter_stat(self_obj, STAT_current_hp) / get_critter_stat(self_obj, STAT_max_hp)) <= 50) then begin
+                                 global_temp := 1;
+                                 if (obj_is_carrying_obj_pid(self_obj, 144)) then begin
+                                     if ((global_temp == 0) and (combat_is_initialized == 0)) then begin
+@@ -485,7 +485,7 @@ begin
+                                     end
+                                     PartyHealingItem := obj_carrying_pid_obj(self_obj, 144);
+                                     use_obj_on_obj(PartyHealingItem, self_obj);
+-                                    debug_msg(obj_name(self_obj) + " used super stimpak.");
++                                    debug_msg(self_name + " used super stimpak.");
+                                 end
+                                 else begin
+                                     if (obj_is_carrying_obj_pid(self_obj, 40)) then begin
+@@ -494,7 +494,7 @@ begin
+                                             gfade_in(600);
+                                         end
+                                         use_obj_on_obj(obj_carrying_pid_obj(self_obj, 40), self_obj);
+-                                        debug_msg(obj_name(self_obj) + " used stimpak.");
++                                        debug_msg(self_name + " used stimpak.");
+                                     end
+                                     else begin
+                                         if (obj_is_carrying_obj_pid(self_obj, 273)) then begin
+@@ -503,7 +503,7 @@ begin
+                                                 gfade_in(600);
+                                             end
+                                             use_obj_on_obj(obj_carrying_pid_obj(self_obj, 273), self_obj);
+-                                            debug_msg(obj_name(self_obj) + " used healing powder.");
++                                            debug_msg(self_name + " used healing powder.");
+                                         end
+                                         else begin
+                                             if (obj_is_carrying_obj_pid(self_obj, 91)) then begin
+@@ -512,7 +512,7 @@ begin
+                                                     gfade_in(600);
+                                                 end
+                                                 use_obj_on_obj(obj_carrying_pid_obj(self_obj, 91), self_obj);
+-                                                debug_msg(obj_name(self_obj) + " used doctor's bag kit.");
++                                                debug_msg(self_name + " used doctor's bag kit.");
+                                             end
+                                             else begin
+                                                 if (obj_is_carrying_obj_pid(self_obj, 47)) then begin
+@@ -521,7 +521,7 @@ begin
+                                                         gfade_in(600);
+                                                     end
+                                                     use_obj_on_obj(obj_carrying_pid_obj(self_obj, 47), self_obj);
+-                                                    debug_msg(obj_name(self_obj) + " used First Aid kit.");
++                                                    debug_msg(self_name + " used First Aid kit.");
+                                                 end
+                                             end
+                                         end
+@@ -531,7 +531,7 @@ begin
+                         end
+                         else begin
+                             if (metarule3(109, self_obj, 0, 0) == 4) then begin
+-                                if ((100 * get_critter_stat(self_obj, 35) / get_critter_stat(self_obj, 7)) <= 50) then begin
++                                if ((100 * get_critter_stat(self_obj, STAT_current_hp) / get_critter_stat(self_obj, STAT_max_hp)) <= 50) then begin
+                                     global_temp := 1;
+                                     if (obj_is_carrying_obj_pid(self_obj, 144)) then begin
+                                         if ((global_temp == 0) and (combat_is_initialized == 0)) then begin
+@@ -540,7 +540,7 @@ begin
+                                         end
+                                         PartyHealingItem := obj_carrying_pid_obj(self_obj, 144);
+                                         use_obj_on_obj(PartyHealingItem, self_obj);
+-                                        debug_msg(obj_name(self_obj) + " used super stimpak.");
++                                        debug_msg(self_name + " used super stimpak.");
+                                     end
+                                     else begin
+                                         if (obj_is_carrying_obj_pid(self_obj, 40)) then begin
+@@ -549,7 +549,7 @@ begin
+                                                 gfade_in(600);
+                                             end
+                                             use_obj_on_obj(obj_carrying_pid_obj(self_obj, 40), self_obj);
+-                                            debug_msg(obj_name(self_obj) + " used stimpak.");
++                                            debug_msg(self_name + " used stimpak.");
+                                         end
+                                         else begin
+                                             if (obj_is_carrying_obj_pid(self_obj, 273)) then begin
+@@ -558,7 +558,7 @@ begin
+                                                     gfade_in(600);
+                                                 end
+                                                 use_obj_on_obj(obj_carrying_pid_obj(self_obj, 273), self_obj);
+-                                                debug_msg(obj_name(self_obj) + " used healing powder.");
++                                                debug_msg(self_name + " used healing powder.");
+                                             end
+                                             else begin
+                                                 if (obj_is_carrying_obj_pid(self_obj, 91)) then begin
+@@ -567,7 +567,7 @@ begin
+                                                         gfade_in(600);
+                                                     end
+                                                     use_obj_on_obj(obj_carrying_pid_obj(self_obj, 91), self_obj);
+-                                                    debug_msg(obj_name(self_obj) + " used doctor's bag kit.");
++                                                    debug_msg(self_name + " used doctor's bag kit.");
+                                                 end
+                                                 else begin
+                                                     if (obj_is_carrying_obj_pid(self_obj, 47)) then begin
+@@ -576,7 +576,7 @@ begin
+                                                             gfade_in(600);
+                                                         end
+                                                         use_obj_on_obj(obj_carrying_pid_obj(self_obj, 47), self_obj);
+-                                                        debug_msg(obj_name(self_obj) + " used First Aid kit.");
++                                                        debug_msg(self_name + " used First Aid kit.");
+                                                     end
+                                                 end
+                                             end
+@@ -614,10 +614,10 @@ begin
+             if (anim_busy(self_obj) == 0) then begin
+                 if ((tile_distance_objs(self_obj, dude_obj) < 8) or obj_can_see_obj(self_obj, dude_obj)) then begin
+                     if (anim_busy(self_obj) == 0) then begin
+-                        global_temp := rotation_to_tile(tile_num(dude_obj), tile_num(self_obj));
++                        global_temp := rotation_to_tile(dude_tile, tile_num(self_obj));
+                         animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                         global_temp := (global_temp + 1) % 6;
+-                        while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)))) do begin
++                        while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(dude_tile, tile_num(self_obj)))) do begin
+                             debug_msg("flee loop: rot == " + global_temp);
+                             animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                             global_temp := (global_temp + 1) % 6;
+@@ -627,33 +627,33 @@ begin
+             end
+         end
+         else begin
+-            attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++            attack(dude_obj);
+         end
+     end
+ end
+ 
+ procedure Node1000
+ begin
+-    gsay_reply(1095, 117);
++    Reply(117);
+     if (obj_is_carrying_obj_pid(dude_obj, 676)) then begin
+-        giq_option(1, 1095, 200, Node010, 50);
++        giq_option(1, NAME, 200, Node010, NEUTRAL_REACTION);
+     end
+-    if (get_critter_stat(dude_obj, 4) < 4) then begin
++    if (dude_iq < 4) then begin
+         if ((local_var(9) != 0) == 0) then begin
+             if (local_var(10) == 0) then begin
+                 set_local_var(10, 6);
+             end
+-            if (message_str(1095, 113) != 0) then begin
+-                giq_option(1, 1095, message_str(1095, 113), Node1002, 50);
++            if (mstr(113) != 0) then begin
++                giq_option(1, NAME, mstr(113), Node1002, NEUTRAL_REACTION);
+             end
+         end
+         else begin
+-            if (message_str(1095, 111) != 0) then begin
+-                giq_option(1, 1095, message_str(1095, 111), Node1100, 50);
++            if (mstr(111) != 0) then begin
++                giq_option(1, NAME, mstr(111), Node1100, NEUTRAL_REACTION);
+             end
+         end
+-        if (message_str(1095, 121) != 0) then begin
+-            giq_option(1, 1095, message_str(1095, 121), Node999, 50);
++        if (mstr(121) != 0) then begin
++            giq_option(1, NAME, mstr(121), Node999, NEUTRAL_REACTION);
+         end
+         debug_msg("USED MY PARTY MEMBER OPTIONS");
+     end
+@@ -662,21 +662,21 @@ begin
+             if (local_var(10) == 0) then begin
+                 set_local_var(10, 6);
+             end
+-            if (message_str(1095, 139) != 0) then begin
+-                giq_option(1, 1095, message_str(1095, 139), Node1007, 50);
++            if (mstr(139) != 0) then begin
++                giq_option(1, NAME, mstr(139), Node1007, NEUTRAL_REACTION);
+             end
+-            if (message_str(1095, 127) != 0) then begin
+-                giq_option(1, 1095, message_str(1095, 127), Node1002, 50);
++            if (mstr(127) != 0) then begin
++                giq_option(1, NAME, mstr(127), Node1002, NEUTRAL_REACTION);
+             end
+         end
+         else begin
+-            if (message_str(1095, 122) != 0) then begin
+-                giq_option(1, 1095, message_str(1095, 122), Node1100, 50);
++            if (mstr(122) != 0) then begin
++                giq_option(1, NAME, mstr(122), Node1100, NEUTRAL_REACTION);
+             end
+         end
+     end
+-    if (message_str(1095, 128) != 0) then begin
+-        giq_option(1, 1095, message_str(1095, 128), Node999, 50);
++    if (mstr(128) != 0) then begin
++        giq_option(1, NAME, mstr(128), Node999, NEUTRAL_REACTION);
+     end
+     debug_msg("USED MY PARTY MEMBER OPTIONS");
+ end
+@@ -685,23 +685,23 @@ procedure Node1002
+ begin
+     set_local_var(9, game_time);
+     party_remove(self_obj);
+-    gsay_reply(1095, 135);
+-    if (get_critter_stat(dude_obj, 4) < 4) then begin
++    Reply(135);
++    if (dude_iq < 4) then begin
+         if ((local_var(9) != 0) == 0) then begin
+             if (local_var(10) == 0) then begin
+                 set_local_var(10, 6);
+             end
+-            if (message_str(1095, 113) != 0) then begin
+-                giq_option(1, 1095, message_str(1095, 113), Node1002, 50);
++            if (mstr(113) != 0) then begin
++                giq_option(1, NAME, mstr(113), Node1002, NEUTRAL_REACTION);
+             end
+         end
+         else begin
+-            if (message_str(1095, 111) != 0) then begin
+-                giq_option(1, 1095, message_str(1095, 111), Node1100, 50);
++            if (mstr(111) != 0) then begin
++                giq_option(1, NAME, mstr(111), Node1100, NEUTRAL_REACTION);
+             end
+         end
+-        if (message_str(1095, 121) != 0) then begin
+-            giq_option(1, 1095, message_str(1095, 121), Node999, 50);
++        if (mstr(121) != 0) then begin
++            giq_option(1, NAME, mstr(121), Node999, NEUTRAL_REACTION);
+         end
+         debug_msg("USED MY PARTY MEMBER OPTIONS");
+     end
+@@ -710,21 +710,21 @@ begin
+             if (local_var(10) == 0) then begin
+                 set_local_var(10, 6);
+             end
+-            if (message_str(1095, 139) != 0) then begin
+-                giq_option(1, 1095, message_str(1095, 139), Node1007, 50);
++            if (mstr(139) != 0) then begin
++                giq_option(1, NAME, mstr(139), Node1007, NEUTRAL_REACTION);
+             end
+-            if (message_str(1095, 127) != 0) then begin
+-                giq_option(1, 1095, message_str(1095, 127), Node1002, 50);
++            if (mstr(127) != 0) then begin
++                giq_option(1, NAME, mstr(127), Node1002, NEUTRAL_REACTION);
+             end
+         end
+         else begin
+-            if (message_str(1095, 122) != 0) then begin
+-                giq_option(1, 1095, message_str(1095, 122), Node1100, 50);
++            if (mstr(122) != 0) then begin
++                giq_option(1, NAME, mstr(122), Node1100, NEUTRAL_REACTION);
+             end
+         end
+     end
+-    if (message_str(1095, 128) != 0) then begin
+-        giq_option(1, 1095, message_str(1095, 128), Node999, 50);
++    if (mstr(128) != 0) then begin
++        giq_option(1, NAME, mstr(128), Node999, NEUTRAL_REACTION);
+     end
+     debug_msg("USED MY PARTY MEMBER OPTIONS");
+ end
+@@ -749,24 +749,24 @@ end
+ 
+ procedure Node1007
+ begin
+-    gsay_reply(1095, 129);
+-    if (message_str(1095, 124) != 0) then begin
++    Reply(129);
++    if (mstr(124) != 0) then begin
+         if (local_var(10) != 3) then begin
+-            giq_option(4, 1095, message_str(1095, 124), Node1004, 50);
++            giq_option(4, NAME, mstr(124), Node1004, NEUTRAL_REACTION);
+         end
+     end
+-    if (message_str(1095, 125) != 0) then begin
++    if (mstr(125) != 0) then begin
+         if (local_var(10) != 6) then begin
+-            giq_option(4, 1095, message_str(1095, 125), Node1005, 50);
++            giq_option(4, NAME, mstr(125), Node1005, NEUTRAL_REACTION);
+         end
+     end
+-    if (message_str(1095, 126) != 0) then begin
++    if (mstr(126) != 0) then begin
+         if (local_var(10) != 9) then begin
+-            giq_option(4, 1095, message_str(1095, 126), Node1006, 50);
++            giq_option(4, NAME, mstr(126), Node1006, NEUTRAL_REACTION);
+         end
+     end
+-    if (message_str(1095, 128) != 0) then begin
+-        giq_option(4, 1095, message_str(1095, 128), Node1000, 50);
++    if (mstr(128) != 0) then begin
++        giq_option(4, NAME, mstr(128), Node1000, NEUTRAL_REACTION);
+     end
+     debug_msg("USED PARTY FOLLOW OPTIONS");
+ end
+@@ -779,30 +779,30 @@ begin
+             set_local_var(10, 6);
+         end
+         set_local_var(9, 0);
+-        if (has_trait(1, self_obj, 6) != 0) then begin
+-            set_local_var(11, has_trait(1, self_obj, 6));
++        if (has_trait(TRAIT_OBJECT, self_obj, OBJECT_TEAM_NUM) != 0) then begin
++            set_local_var(11, has_trait(TRAIT_OBJECT, self_obj, OBJECT_TEAM_NUM));
+         end
+-        critter_add_trait(self_obj, 1, 6, 0);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 0);
+         party_add(self_obj);
+     end
+-    debug_msg("join party: " + obj_name(self_obj));
+-    gsay_reply(1095, 117);
+-    if (get_critter_stat(dude_obj, 4) < 4) then begin
++    debug_msg("join party: " + self_name);
++    Reply(117);
++    if (dude_iq < 4) then begin
+         if ((local_var(9) != 0) == 0) then begin
+             if (local_var(10) == 0) then begin
+                 set_local_var(10, 6);
+             end
+-            if (message_str(1095, 113) != 0) then begin
+-                giq_option(1, 1095, message_str(1095, 113), Node1002, 50);
++            if (mstr(113) != 0) then begin
++                giq_option(1, NAME, mstr(113), Node1002, NEUTRAL_REACTION);
+             end
+         end
+         else begin
+-            if (message_str(1095, 111) != 0) then begin
+-                giq_option(1, 1095, message_str(1095, 111), Node1100, 50);
++            if (mstr(111) != 0) then begin
++                giq_option(1, NAME, mstr(111), Node1100, NEUTRAL_REACTION);
+             end
+         end
+-        if (message_str(1095, 121) != 0) then begin
+-            giq_option(1, 1095, message_str(1095, 121), Node999, 50);
++        if (mstr(121) != 0) then begin
++            giq_option(1, NAME, mstr(121), Node999, NEUTRAL_REACTION);
+         end
+         debug_msg("USED MY PARTY MEMBER OPTIONS");
+     end
+@@ -811,58 +811,58 @@ begin
+             if (local_var(10) == 0) then begin
+                 set_local_var(10, 6);
+             end
+-            if (message_str(1095, 139) != 0) then begin
+-                giq_option(1, 1095, message_str(1095, 139), Node1007, 50);
++            if (mstr(139) != 0) then begin
++                giq_option(1, NAME, mstr(139), Node1007, NEUTRAL_REACTION);
+             end
+-            if (message_str(1095, 127) != 0) then begin
+-                giq_option(1, 1095, message_str(1095, 127), Node1002, 50);
++            if (mstr(127) != 0) then begin
++                giq_option(1, NAME, mstr(127), Node1002, NEUTRAL_REACTION);
+             end
+         end
+         else begin
+-            if (message_str(1095, 122) != 0) then begin
+-                giq_option(1, 1095, message_str(1095, 122), Node1100, 50);
++            if (mstr(122) != 0) then begin
++                giq_option(1, NAME, mstr(122), Node1100, NEUTRAL_REACTION);
+             end
+         end
+     end
+-    if (message_str(1095, 128) != 0) then begin
+-        giq_option(1, 1095, message_str(1095, 128), Node999, 50);
++    if (mstr(128) != 0) then begin
++        giq_option(1, NAME, mstr(128), Node999, NEUTRAL_REACTION);
+     end
+     debug_msg("USED MY PARTY MEMBER OPTIONS");
+ end
+ 
+ procedure Node001
+ begin
+-    gsay_reply(1095, 103);
+-    if (not(((metarule(16, 0) - 1) >= (floor(get_critter_stat(dude_obj, 3) / 2) + has_trait(0, dude_obj, 98) + (20 * has_trait(0, dude_obj, 39)))) or ((metarule(16, 0) - 1) >= (5 + (20 * has_trait(0, dude_obj, 39)))))) then begin
+-        giq_option(-3, 1095, 111, NodeJoin, 50);
+-        giq_option(4, 1095, 114, NodeJoin, 50);
++    Reply(103);
++    if (not(((party_member_count(0) - 1) >= (floor(dude_charisma / 2) + has_trait(TRAIT_PERK, dude_obj, PERK_magnetic_personality_perk) + (20 * has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality)))) or ((party_member_count(0) - 1) >= (5 + (20 * has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality)))))) then begin
++        giq_option(-3, NAME, 111, NodeJoin, NEUTRAL_REACTION);
++        giq_option(4, NAME, 114, NodeJoin, NEUTRAL_REACTION);
+     end
+     else begin
+-        giq_option(-3, 1095, 112, Node999, 50);
+-        giq_option(4, 1095, 123, Node999, 50);
++        giq_option(-3, NAME, 112, Node999, NEUTRAL_REACTION);
++        giq_option(4, NAME, 123, Node999, NEUTRAL_REACTION);
+     end
+-    giq_option(-3, 1095, 121, Node999, 50);
+-    giq_option(4, 1095, 128, Node999, 50);
++    giq_option(-3, NAME, 121, Node999, NEUTRAL_REACTION);
++    giq_option(4, NAME, 128, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node002
+ begin
+-    gsay_reply(1095, 110);
+-    if (not(((metarule(16, 0) - 1) >= (floor(get_critter_stat(dude_obj, 3) / 2) + has_trait(0, dude_obj, 98) + (20 * has_trait(0, dude_obj, 39)))) or ((metarule(16, 0) - 1) >= (5 + (20 * has_trait(0, dude_obj, 39)))))) then begin
+-        giq_option(-3, 1095, 111, NodeJoin, 50);
+-        giq_option(4, 1095, 114, NodeJoin, 50);
++    Reply(110);
++    if (not(((party_member_count(0) - 1) >= (floor(dude_charisma / 2) + has_trait(TRAIT_PERK, dude_obj, PERK_magnetic_personality_perk) + (20 * has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality)))) or ((party_member_count(0) - 1) >= (5 + (20 * has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality)))))) then begin
++        giq_option(-3, NAME, 111, NodeJoin, NEUTRAL_REACTION);
++        giq_option(4, NAME, 114, NodeJoin, NEUTRAL_REACTION);
+     end
+     else begin
+-        giq_option(-3, 1095, 112, Node999, 50);
+-        giq_option(4, 1095, 123, Node999, 50);
++        giq_option(-3, NAME, 112, Node999, NEUTRAL_REACTION);
++        giq_option(4, NAME, 123, Node999, NEUTRAL_REACTION);
+     end
+-    giq_option(-3, 1095, 121, Node999, 50);
+-    giq_option(4, 1095, 128, Node999, 50);
++    giq_option(-3, NAME, 121, Node999, NEUTRAL_REACTION);
++    giq_option(4, NAME, 128, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node003
+ begin
+-    float_msg(self_obj, message_str(1095, 138), 2);
++    float_msg(self_obj, mstr(138), FLOAT_MSG_RED);
+     doWalking := game_time;
+ end
+ 
+@@ -879,13 +879,13 @@ procedure Node010
+ begin
+     restock_obj := obj_carrying_pid_obj(dude_obj, 676);
+     metarule3(107, party_member_obj(16777558), 16777343, 0);
+-    critter_add_trait(party_member_obj(16777558), 0, 75, 1);
+-    critter_add_trait(party_member_obj(16777558), 0, 104, 1);
+-    critter_add_trait(party_member_obj(16777558), 0, 74, 1);
+-    critter_add_trait(party_member_obj(16777558), 0, 76, 1);
+-    critter_add_trait(party_member_obj(16777558), 0, 77, 1);
+-    critter_add_trait(party_member_obj(16777558), 0, 29, 2);
+-    critter_add_trait(party_member_obj(16777558), 0, 12, 3);
++    critter_add_trait(party_member_obj(16777558), TRAIT_PERK, PERK_dermal_enhancement_perk, 1);
++    critter_add_trait(party_member_obj(16777558), TRAIT_PERK, PERK_stonewall_perk, 1);
++    critter_add_trait(party_member_obj(16777558), TRAIT_PERK, PERK_dermal_armor_perk, 1);
++    critter_add_trait(party_member_obj(16777558), TRAIT_PERK, PERK_phoenix_armor_perk, 1);
++    critter_add_trait(party_member_obj(16777558), TRAIT_PERK, PERK_phoenix_enhancement_perk, 1);
++    critter_add_trait(party_member_obj(16777558), TRAIT_PERK, PERK_dodger, 2);
++    critter_add_trait(party_member_obj(16777558), TRAIT_PERK, PERK_toughness, 3);
+     destroy_object(restock_obj);
+ end
+ 
+@@ -896,10 +896,10 @@ begin
+             if (anim_busy(self_obj) == 0) then begin
+                 if ((tile_distance_objs(self_obj, dude_obj) < 8) or obj_can_see_obj(self_obj, dude_obj)) then begin
+                     if (anim_busy(self_obj) == 0) then begin
+-                        global_temp := rotation_to_tile(tile_num(dude_obj), tile_num(self_obj));
++                        global_temp := rotation_to_tile(dude_tile, tile_num(self_obj));
+                         animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                         global_temp := (global_temp + 1) % 6;
+-                        while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)))) do begin
++                        while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(dude_tile, tile_num(self_obj)))) do begin
+                             debug_msg("flee loop: rot == " + global_temp);
+                             animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                             global_temp := (global_temp + 1) % 6;
+@@ -909,7 +909,7 @@ begin
+             end
+         end
+         else begin
+-            attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++            attack(dude_obj);
+         end
+     end
+ end
+@@ -921,13 +921,13 @@ begin
+             set_local_var(10, 6);
+         end
+         set_local_var(9, 0);
+-        if (has_trait(1, self_obj, 6) != 0) then begin
+-            set_local_var(11, has_trait(1, self_obj, 6));
++        if (has_trait(TRAIT_OBJECT, self_obj, OBJECT_TEAM_NUM) != 0) then begin
++            set_local_var(11, has_trait(TRAIT_OBJECT, self_obj, OBJECT_TEAM_NUM));
+         end
+-        critter_add_trait(self_obj, 1, 6, 0);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 0);
+         party_add(self_obj);
+     end
+-    debug_msg("join party: " + obj_name(self_obj));
++    debug_msg("join party: " + self_name);
+     call Node999();
+ end
+ 
+@@ -954,4 +954,3 @@ begin
+         end
+     end
+ end
+-

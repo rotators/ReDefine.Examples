@@ -1,0 +1,135 @@
+procedure start;
+procedure Party_Close_To_Dude;
+procedure All_Run_Ten_Steps;
+procedure Return_To_Hex;
+
+variable Waiting;
+variable count := -1;
+variable do_once;
+variable real_time;
+variable critter_ptr;
+variable critter_hex;
+variable critter_elev;
+
+
+procedure start
+begin
+    if (game_loaded) then begin
+        set_global_script_repeat(1);
+        Waiting := game_time;
+        set_sfall_global("push_001", get_ini_setting("Push.ini|MISC|PushDistanceBetweenCritterAndDude"));
+        set_sfall_global("push_002", get_ini_setting("Push.ini|MISC|PushDistanceCritterIsPushed"));
+        set_sfall_global("push_003", get_ini_setting("Push.ini|MISC|PushAllowUseInCombat"));
+    end
+    else begin
+        if (not(combat_is_initialized) and (count == 0)) then begin
+            if (key_pressed(19)) then begin
+                if (3 * ((10 + Waiting) <= game_time)) then begin
+                    call Party_Close_To_Dude();
+                end
+            end
+            if (key_pressed(18) and (count == -1)) then begin
+                if (3 * ((10 + Waiting) <= game_time)) then begin
+                    call All_Run_Ten_Steps();
+                end
+            end
+        end
+    end
+    if (key_pressed(16) or (((10 + real_time) <= game_time) and (do_once == 0)) and not(combat_is_initialized) and (count > 0)) then begin
+        call Return_To_Hex();
+    end
+end
+
+procedure Party_Close_To_Dude
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    LVar1 := list_begin(0);
+    Waiting := game_time;
+    while (LVar1 != 0) do begin
+        LVar0 := list_next(LVar1);
+        if (LVar0) then begin
+            if ((LVar0 != dude_obj) and (party_member_obj(obj_pid(LVar0)) != 0) and (obj_pid(LVar0) > 16777216) and (obj_pid(LVar0) < 16778216)) then begin
+                if (elevation(LVar0) == elevation(dude_obj)) then begin
+                    if (has_trait(1, LVar0, 666) == 1) then begin
+                        critter_attempt_placement(LVar0, tile_num(dude_obj), elevation(dude_obj));
+                    end
+                end
+            end
+        end
+        else begin
+            list_end(LVar1);
+            LVar1 := 0;
+        end
+    end
+end
+
+procedure All_Run_Ten_Steps
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    do_once := 1;
+    count := 0;
+    LVar1 := list_begin(0);
+    while (LVar1 != 0) do begin
+        LVar0 := list_next(LVar1);
+        if (LVar0) then begin
+            if ((tile_distance_objs(dude_obj, LVar0) <= get_sfall_global_int("push_001")) and (LVar0 != dude_obj)) then begin
+                if (elevation(LVar0) == elevation(dude_obj)) then begin
+                    if ((has_trait(1, LVar0, 666) == 1) and (obj_pid(LVar0) > 16777216) and (obj_pid(LVar0) < 16778216)) then begin
+                        count := count + 1;
+                    end
+                end
+            end
+        end
+        else begin
+            list_end(LVar1);
+            LVar1 := 0;
+        end
+    end
+    critter_ptr := create_array(count + 2, 10);
+    critter_hex := create_array(count + 2, 10);
+    critter_elev := create_array(count + 2, 10);
+    count := 0;
+    LVar1 := list_begin(0);
+    Waiting := game_time;
+    while (LVar1 != 0) do begin
+        LVar0 := list_next(LVar1);
+        if (LVar0) then begin
+            if ((tile_distance_objs(dude_obj, LVar0) <= get_sfall_global_int("push_001")) and (LVar0 != dude_obj)) then begin
+                if (elevation(LVar0) == elevation(dude_obj)) then begin
+                    if ((has_trait(1, LVar0, 666) == 1) and (obj_pid(LVar0) > 16777216) and (obj_pid(LVar0) < 16778216)) then begin
+                        set_array(critter_ptr, count, LVar0);
+                        set_array(critter_hex, count, tile_num(LVar0));
+                        set_array(critter_elev, count, elevation(LVar0));
+                        display_msg("ptr " + get_array(critter_ptr, count) + " hex " + get_array(critter_hex, count) + " elev " + get_array(critter_elev, count) + " count " + count);
+                        critter_attempt_placement(LVar0, tile_num_in_direction(tile_num(dude_obj), has_trait(1, dude_obj, 10), get_sfall_global_int("push_002")), elevation(dude_obj));
+                        count := count + 1;
+                    end
+                end
+            end
+        end
+        else begin
+            list_end(LVar1);
+            LVar1 := 0;
+        end
+    end
+end
+
+procedure Return_To_Hex
+begin
+    do_once := 1;
+    while (count > -1) do begin
+        display_msg("ptr " + get_array(critter_ptr, count) + " hex " + get_array(critter_hex, count) + " elev " + get_array(critter_elev, count) + " count " + count);
+        critter_attempt_placement(get_array(critter_ptr, count), get_array(critter_hex, count), get_array(critter_elev, count));
+        count := count - 1;
+    end
+    if (count == -1) then begin
+        real_time := 0;
+        do_once := 0;
+        free_array(critter_ptr);
+        free_array(critter_hex);
+        free_array(critter_elev);
+    end
+end
+

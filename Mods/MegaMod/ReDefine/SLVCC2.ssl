@@ -1,0 +1,473 @@
+variable global_temp;
+variable in_dialog;
+
+procedure start;
+procedure use_p_proc;
+procedure look_at_p_proc;
+procedure description_p_proc;
+procedure use_skill_on_p_proc;
+procedure use_obj_on_p_proc;
+procedure damage_p_proc;
+procedure map_enter_p_proc;
+procedure map_update_p_proc;
+procedure talk_p_proc;
+procedure Node001;
+procedure Node002;
+procedure Node003;
+procedure Node004;
+procedure Node005;
+procedure Node006;
+procedure Node007;
+procedure Node008;
+procedure Node009;
+procedure Node010;
+procedure Node999;
+procedure Node998;
+procedure Node090;
+procedure Node091;
+
+import variable PENGUARD_obj;
+import variable PENGUARD2_obj;
+
+procedure destroy_p_proc;
+procedure critter_p_proc;
+procedure timed_event_p_proc;
+
+
+procedure start
+begin
+end
+
+procedure use_p_proc
+begin
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    display_msg(message_str(SCRIPT_KLATRAP, 2100));
+end
+
+procedure description_p_proc
+begin
+    script_overrides;
+    if (self_gender == 0) then begin
+        display_msg(message_str(SCRIPT_KLATRAP, 2101));
+    end
+    else begin
+        display_msg(message_str(SCRIPT_KLATRAP, 2102));
+    end
+end
+
+procedure use_skill_on_p_proc
+begin
+end
+
+procedure use_obj_on_p_proc
+begin
+end
+
+procedure damage_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_local_var(4, local_var(4) bwor 8);
+        set_local_var(4, local_var(4) bwor 2);
+        set_map_var(1, 1);
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    if (map_first_run) then begin
+        set_local_var(7, tile_num(self_obj));
+    end
+    if (local_var(7) == 17721) then begin
+        PENGUARD_obj := self_obj;
+    end
+    else begin
+        if (local_var(7) == 16921) then begin
+            PENGUARD2_obj := self_obj;
+        end
+    end
+    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 215);
+end
+
+procedure map_update_p_proc
+begin
+    if (local_var(7) == 17721) then begin
+        PENGUARD_obj := self_obj;
+    end
+    else begin
+        if (local_var(7) == 16921) then begin
+            PENGUARD2_obj := self_obj;
+        end
+    end
+end
+
+procedure talk_p_proc
+begin
+    if (((local_var(4) bwand 2) != 0) or (map_var(1) == 1)) then begin
+        call Node001();
+        if (critter_is_fleeing(self_obj)) then begin
+            if (anim_busy(self_obj) == 0) then begin
+                if ((tile_distance_objs(self_obj, dude_obj) < 8) or obj_can_see_obj(self_obj, dude_obj)) then begin
+                    if (anim_busy(self_obj) == 0) then begin
+                        global_temp := rotation_to_tile(dude_tile, tile_num(self_obj));
+                        animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                        global_temp := (global_temp + 1) % 6;
+                        while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(dude_tile, tile_num(self_obj)))) do begin
+                            debug_msg("flee loop: rot == " + global_temp);
+                            animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                            global_temp := (global_temp + 1) % 6;
+                        end
+                    end
+                end
+            end
+        end
+        else begin
+            attack(dude_obj);
+        end
+    end
+    else begin
+        call Node002();
+    end
+end
+
+procedure Node001
+begin
+    if (global_var(GVAR_NCR_PLAYER_RANGER)) then begin
+        float_msg(self_obj, message_str(SCRIPT_KLATRAP, 2202), FLOAT_MSG_YELLOW);
+    end
+    else begin
+        float_msg(self_obj, message_str(SCRIPT_KLATRAP, random(2200, 2201)), FLOAT_MSG_YELLOW);
+    end
+end
+
+procedure Node002
+begin
+    if (global_var(GVAR_REPUTATION_SLAVER) == 1) then begin
+        float_msg(self_obj, message_str(SCRIPT_KLATRAP, random(2304 - (dude_gender == 1), 2312 + (dude_gender == 0))), FLOAT_MSG_YELLOW);
+    end
+    else begin
+        if (map_var(7) == 2) then begin
+            float_msg(self_obj, message_str(SCRIPT_KLATRAP, 2910), FLOAT_MSG_YELLOW);
+        end
+        else begin
+            float_msg(self_obj, message_str(SCRIPT_KLATRAP, random(2300, 2302)), FLOAT_MSG_YELLOW);
+        end
+    end
+end
+
+procedure Node003
+begin
+    gsay_reply(SCRIPT_KLATRAP, 2400);
+    if (has_skill(dude_obj, SKILL_CONVERSANT) > 50) then begin
+        giq_option(4, SCRIPT_KLATRAP, 2401, Node009, NEUTRAL_REACTION);
+    end
+    else begin
+        giq_option(4, SCRIPT_KLATRAP, 2500, Node010, NEUTRAL_REACTION);
+    end
+    if ((((party_member_obj(16777376) != 0) + (party_member_obj(16777305) != 0) + (party_member_obj(16777313) != 0) + (party_member_obj(16777378) != 0) + (party_member_obj(16777379) != 0) + (party_member_obj(16777380) != 0)) > 0) and (has_skill(dude_obj, SKILL_CONVERSANT) > 59)) then begin
+        giq_option(4, SCRIPT_KLATRAP, 2402, Node006, NEUTRAL_REACTION);
+    end
+    giq_option(4, SCRIPT_KLATRAP, 2403, Node007, NEUTRAL_REACTION);
+end
+
+procedure Node004
+begin
+    gsay_reply(SCRIPT_KLATRAP, 2406);
+    if (is_success(roll_vs_skill(dude_obj, 14, -20))) then begin
+        giq_option(4, SCRIPT_KLATRAP, 2407, Node005, NEUTRAL_REACTION);
+    end
+    else begin
+        giq_option(4, SCRIPT_KLATRAP, 2409, Node008, NEUTRAL_REACTION);
+    end
+end
+
+procedure Node005
+begin
+    gsay_reply(SCRIPT_KLATRAP, 2408);
+    giq_option(4, SCRIPT_KLATRAP, 2800, Node090, NEUTRAL_REACTION);
+end
+
+procedure Node006
+begin
+    gsay_reply(SCRIPT_KLATRAP, 2405);
+    giq_option(4, SCRIPT_KLATRAP, 2800, Node090, NEUTRAL_REACTION);
+end
+
+procedure Node007
+begin
+    gsay_reply(SCRIPT_KLATRAP, 2404);
+    giq_option(4, SCRIPT_KLATRAP, 2800, Node998, NEUTRAL_REACTION);
+end
+
+procedure Node008
+begin
+    gsay_reply(SCRIPT_KLATRAP, 2410);
+    giq_option(4, SCRIPT_KLATRAP, 2411, Node091, NEUTRAL_REACTION);
+    giq_option(4, SCRIPT_KLATRAP, 2412, Node998, NEUTRAL_REACTION);
+end
+
+procedure Node009
+begin
+    gsay_reply(SCRIPT_KLATRAP, 2503);
+    giq_option(4, SCRIPT_KLATRAP, 2504, Node004, NEUTRAL_REACTION);
+end
+
+procedure Node010
+begin
+    gsay_reply(SCRIPT_KLATRAP, 2501);
+    giq_option(4, SCRIPT_KLATRAP, 2800, Node998, NEUTRAL_REACTION);
+end
+
+procedure Node999
+begin
+end
+
+procedure Node998
+begin
+    set_local_var(4, local_var(4) bwor 2);
+    set_map_var(1, 1);
+end
+
+procedure Node090
+begin
+    set_local_var(8, 1);
+end
+
+procedure Node091
+begin
+    set_local_var(9, 1);
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_global_var(GVAR_BAD_MONSTER, global_var(GVAR_BAD_MONSTER) + 1);
+        if (critter_kill_type(self_obj) == 2) then begin
+            if (source_obj == dude_obj) then begin
+                set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+                set_global_var(GVAR_CHILDKILLER_REPUTATION, global_var(GVAR_CHILDKILLER_REPUTATION) + 1);
+                set_global_var(GVAR_PLAYER_REPUTATION, global_var(GVAR_PLAYER_REPUTATION) + -15);
+                debug_msg("Player gains " + -15 + " Karma Points.");
+                set_global_var(GVAR_KARMA_HOLY_WARRIOR, 0);
+                set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 0);
+                set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 0);
+                set_global_var(GVAR_KARMA_DEFENDER, 0);
+                set_global_var(GVAR_KARMA_WANDERER, 0);
+                set_global_var(GVAR_KARMA_BETRAYER, 0);
+                set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 0);
+                set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 0);
+                set_global_var(GVAR_KARMA_DEMON_SPAWN, 0);
+                if (global_var(GVAR_PLAYER_REPUTATION) >= 1000) then begin
+                    set_global_var(GVAR_KARMA_HOLY_WARRIOR, 1);
+                end
+                else begin
+                    if (global_var(GVAR_PLAYER_REPUTATION) >= 750) then begin
+                        set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 1);
+                    end
+                    else begin
+                        if (global_var(GVAR_PLAYER_REPUTATION) >= 500) then begin
+                            set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 1);
+                        end
+                        else begin
+                            if (global_var(GVAR_PLAYER_REPUTATION) >= 250) then begin
+                                set_global_var(GVAR_KARMA_DEFENDER, 1);
+                            end
+                            else begin
+                                if (global_var(GVAR_PLAYER_REPUTATION) > -250) then begin
+                                    set_global_var(GVAR_KARMA_WANDERER, 1);
+                                end
+                                else begin
+                                    if (global_var(GVAR_PLAYER_REPUTATION) > -500) then begin
+                                        set_global_var(GVAR_KARMA_BETRAYER, 1);
+                                    end
+                                    else begin
+                                        if (global_var(GVAR_PLAYER_REPUTATION) > -750) then begin
+                                            set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 1);
+                                        end
+                                        else begin
+                                            if (global_var(GVAR_PLAYER_REPUTATION) > -1000) then begin
+                                                set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 1);
+                                            end
+                                            else begin
+                                                set_global_var(GVAR_KARMA_DEMON_SPAWN, 1);
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
+            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(4) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1)) and (global_var(GVAR_CHILDKILLER_REPUTATION) == 0)) then begin
+            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
+            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+        end
+        set_global_var(GVAR_PLAYER_REPUTATION, global_var(GVAR_PLAYER_REPUTATION) + 5);
+        debug_msg("Player gains " + 5 + " Karma Points.");
+        set_global_var(GVAR_KARMA_HOLY_WARRIOR, 0);
+        set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 0);
+        set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 0);
+        set_global_var(GVAR_KARMA_DEFENDER, 0);
+        set_global_var(GVAR_KARMA_WANDERER, 0);
+        set_global_var(GVAR_KARMA_BETRAYER, 0);
+        set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 0);
+        set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 0);
+        set_global_var(GVAR_KARMA_DEMON_SPAWN, 0);
+        if (global_var(GVAR_PLAYER_REPUTATION) >= 1000) then begin
+            set_global_var(GVAR_KARMA_HOLY_WARRIOR, 1);
+        end
+        else begin
+            if (global_var(GVAR_PLAYER_REPUTATION) >= 750) then begin
+                set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 1);
+            end
+            else begin
+                if (global_var(GVAR_PLAYER_REPUTATION) >= 500) then begin
+                    set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 1);
+                end
+                else begin
+                    if (global_var(GVAR_PLAYER_REPUTATION) >= 250) then begin
+                        set_global_var(GVAR_KARMA_DEFENDER, 1);
+                    end
+                    else begin
+                        if (global_var(GVAR_PLAYER_REPUTATION) > -250) then begin
+                            set_global_var(GVAR_KARMA_WANDERER, 1);
+                        end
+                        else begin
+                            if (global_var(GVAR_PLAYER_REPUTATION) > -500) then begin
+                                set_global_var(GVAR_KARMA_BETRAYER, 1);
+                            end
+                            else begin
+                                if (global_var(GVAR_PLAYER_REPUTATION) > -750) then begin
+                                    set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 1);
+                                end
+                                else begin
+                                    if (global_var(GVAR_PLAYER_REPUTATION) > -1000) then begin
+                                        set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 1);
+                                    end
+                                    else begin
+                                        set_global_var(GVAR_KARMA_DEMON_SPAWN, 1);
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    set_map_var(0, map_var(0) - 1);
+    if (map_var(0) == 0) then begin
+        set_global_var(GVAR_VAULT_EXPERIMENTS, 1);
+        display_msg(message_str(SCRIPT_KLATRAP, 3200));
+    end
+    if (local_var(7) == 17721) then begin
+        PENGUARD_obj := 0;
+    end
+    else begin
+        if (local_var(7) == 16921) then begin
+            PENGUARD2_obj := 0;
+        end
+    end
+end
+
+procedure critter_p_proc
+begin
+    if (obj_can_see_obj(self_obj, dude_obj)) then begin
+        if (((local_var(4) bwand 2) != 0) or (local_var(5) == 2) or global_var(GVAR_NCR_PLAYER_RANGER) or (map_var(1) == 1) or (local_var(9) == 1)) then begin
+            if (local_var(9) == 1) then begin
+                float_msg(self_obj, message_str(SCRIPT_KLATRAP, 2600), FLOAT_MSG_RED);
+                set_local_var(5, 1);
+                if (critter_is_fleeing(self_obj)) then begin
+                    if (anim_busy(self_obj) == 0) then begin
+                        if ((tile_distance_objs(self_obj, dude_obj) < 8) or obj_can_see_obj(self_obj, dude_obj)) then begin
+                            if (anim_busy(self_obj) == 0) then begin
+                                global_temp := rotation_to_tile(dude_tile, tile_num(self_obj));
+                                animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                                global_temp := (global_temp + 1) % 6;
+                                while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(dude_tile, tile_num(self_obj)))) do begin
+                                    debug_msg("flee loop: rot == " + global_temp);
+                                    animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                                    global_temp := (global_temp + 1) % 6;
+                                end
+                            end
+                        end
+                    end
+                end
+                else begin
+                    attack(dude_obj);
+                end
+            end
+            else begin
+                if (global_var(GVAR_NCR_PLAYER_RANGER)) then begin
+                    if (local_var(7) == 15692) then begin
+                        float_msg(self_obj, message_str(SCRIPT_KLATRAP, 2900), FLOAT_MSG_RED);
+                    end
+                    else begin
+                        call Node001();
+                    end
+                end
+                set_local_var(5, 1);
+                if (critter_is_fleeing(self_obj)) then begin
+                    if (anim_busy(self_obj) == 0) then begin
+                        if ((tile_distance_objs(self_obj, dude_obj) < 8) or obj_can_see_obj(self_obj, dude_obj)) then begin
+                            if (anim_busy(self_obj) == 0) then begin
+                                global_temp := rotation_to_tile(dude_tile, tile_num(self_obj));
+                                animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                                global_temp := (global_temp + 1) % 6;
+                                while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(dude_tile, tile_num(self_obj)))) do begin
+                                    debug_msg("flee loop: rot == " + global_temp);
+                                    animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                                    global_temp := (global_temp + 1) % 6;
+                                end
+                            end
+                        end
+                    end
+                end
+                else begin
+                    attack(dude_obj);
+                end
+            end
+        end
+        else begin
+            if ((local_var(7) == 15692) and (local_var(10) == 0)) then begin
+                if (tile_distance_objs(self_obj, dude_obj) < 8) then begin
+                    set_local_var(10, 1);
+                    if (in_dialog == 0) then begin
+                        in_dialog := 1;
+                        start_gdialog(964, self_obj, 4, -1, -1);
+                        gsay_start;
+                        call Node003();
+                        gsay_end;
+                        end_dialogue;
+                        in_dialog := 0;
+                    end
+                    else begin
+                        call Node003();
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure timed_event_p_proc
+begin
+    if (fixed_param == 2) then begin
+        if (local_var(11) == 0) then begin
+            float_msg(self_obj, message_str(SCRIPT_KLATRAP, 2599), FLOAT_MSG_RED);
+            set_local_var(11, 1);
+        end
+        else begin
+            call Node998();
+        end
+    end
+end

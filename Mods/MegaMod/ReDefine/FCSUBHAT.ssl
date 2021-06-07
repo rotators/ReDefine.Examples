@@ -1,0 +1,207 @@
+procedure start;
+procedure map_enter_p_proc;
+procedure use_p_proc;
+procedure timed_event_p_proc;
+procedure look_at_p_proc;
+procedure use_skill_on_p_proc;
+procedure use_obj_on_p_proc;
+procedure damage_p_proc;
+procedure open_hatch;
+procedure close_hatch;
+
+variable sequence;
+variable Locks_Roll;
+
+
+procedure start
+begin
+end
+
+procedure map_enter_p_proc
+begin
+    if (global_var(GVAR_SAN_FRAN_SUB) == 2) then begin
+        call close_hatch();
+    end
+    else begin
+        call open_hatch();
+    end
+end
+
+procedure use_p_proc
+begin
+    if (local_var(1) == 0) then begin
+        if (dude_strength >= 8) then begin
+            script_overrides;
+            display_mstr(200);
+            call open_hatch();
+        end
+        else begin
+            script_overrides;
+            if (party_member_obj(16777377) != 0) then begin
+                display_mstr(202);
+                sequence := 1;
+                add_timer_event(self_obj, game_ticks(1), 1);
+            end
+            else begin
+                display_mstr(201);
+            end
+        end
+    end
+    if (obj_is_locked(self_obj) and not(obj_is_open(self_obj))) then begin
+        script_overrides;
+    end
+end
+
+procedure timed_event_p_proc
+begin
+    if (fixed_param == 1) then begin
+        if (sequence == 1) then begin
+            float_msg(dude_obj, mstr(210), FLOAT_MSG_GREEN);
+            sequence := sequence + 1;
+            add_timer_event(self_obj, game_ticks(2), 1);
+        end
+        else begin
+            if (sequence == 2) then begin
+                float_msg(party_member_obj(16777377), mstr(211), FLOAT_MSG_GREEN);
+                sequence := sequence + 1;
+                animate_move_obj_to_tile(self_obj, 20094, 0);
+                add_timer_event(self_obj, game_ticks(2), 1);
+            end
+            else begin
+                if (sequence == 3) then begin
+                    if (tile_num(party_member_obj(16777377)) != 20094) then begin
+                        animate_move_obj_to_tile(party_member_obj(16777377), 20094, 0);
+                        add_timer_event(self_obj, game_ticks(1), 1);
+                    end
+                    else begin
+                        reg_anim_func(2, self_obj);
+                        anim(party_member_obj(16777377), 1000, 1);
+                        reg_anim_func(1, 1);
+                        reg_anim_animate(party_member_obj(16777377), 10, -1);
+                        reg_anim_func(3, 0);
+                        float_msg(party_member_obj(16777377), mstr(212), FLOAT_MSG_YELLOW);
+                        add_timer_event(self_obj, game_ticks(1), 1);
+                        sequence := sequence + 1;
+                    end
+                end
+                else begin
+                    if (sequence == 4) then begin
+                        display_mstr(213);
+                        call open_hatch();
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    display_mstr(100);
+end
+
+procedure use_skill_on_p_proc
+begin
+    variable LVar0 := 0;
+    LVar0 := action_being_used;
+    if (LVar0 == 9) then begin
+        script_overrides;
+        Locks_Roll := roll_vs_skill(source_obj, 9, -40);
+        if (is_success(Locks_Roll)) then begin
+            if (obj_is_locked(self_obj)) then begin
+                call open_hatch();
+                display_mstr(220);
+            end
+            else begin
+                call close_hatch();
+                display_mstr(240);
+            end
+        end
+        else begin
+            if (obj_is_locked(self_obj)) then begin
+                display_mstr(221);
+            end
+            else begin
+                display_mstr(241);
+            end
+        end
+    end
+    return 0;
+    LVar0 := 0;
+end
+
+procedure use_obj_on_p_proc
+begin
+    variable LVar0 := 0;
+    LVar0 := obj_pid(obj_being_used_with);
+    if (LVar0 == 84) then begin
+        script_overrides;
+        Locks_Roll := roll_vs_skill(source_obj, 9, -40 + 20);
+        if (is_success(Locks_Roll)) then begin
+            if (obj_is_locked(self_obj)) then begin
+                call open_hatch();
+                display_mstr(220);
+            end
+            else begin
+                call close_hatch();
+                display_mstr(240);
+            end
+        end
+        else begin
+            call close_hatch();
+            if (obj_is_locked(self_obj)) then begin
+                display_mstr(221);
+            end
+            else begin
+                display_mstr(241);
+            end
+        end
+    end
+    else begin
+        if (LVar0 == 410) then begin
+            script_overrides;
+            Locks_Roll := roll_vs_skill(source_obj, 9, -40 + 40);
+            if (is_success(Locks_Roll)) then begin
+                if (obj_is_locked(self_obj)) then begin
+                    call open_hatch();
+                    display_mstr(220);
+                end
+                else begin
+                    call close_hatch();
+                    display_mstr(240);
+                end
+            end
+            else begin
+                if (obj_is_locked(self_obj)) then begin
+                    display_mstr(221);
+                end
+                else begin
+                    display_mstr(241);
+                end
+            end
+        end
+    end
+    return 0;
+    LVar0 := 0;
+end
+
+procedure damage_p_proc
+begin
+    if (weapon_dmg_type(target_obj) == 6) then begin
+        destroy_object(self_obj);
+    end
+end
+
+procedure open_hatch
+begin
+    obj_unlock(self_obj);
+    obj_open(self_obj);
+    set_local_var(1, 1);
+end
+
+procedure close_hatch
+begin
+    obj_close(self_obj);
+    obj_lock(self_obj);
+end

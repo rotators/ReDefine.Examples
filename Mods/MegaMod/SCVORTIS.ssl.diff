@@ -1,0 +1,1536 @@
+diff --git a/Mods/MegaMod/Original/SCVORTIS.ssl b/Mods/MegaMod/ReDefine/SCVORTIS.ssl
+index 24aa5ce..4bc3750 100644
+--- a/Mods/MegaMod/Original/SCVORTIS.ssl
++++ b/Mods/MegaMod/ReDefine/SCVORTIS.ssl
+@@ -122,10 +122,10 @@ begin
+             if (anim_busy(self_obj) == 0) then begin
+                 if ((tile_distance_objs(self_obj, dude_obj) < 8) or obj_can_see_obj(self_obj, dude_obj)) then begin
+                     if (anim_busy(self_obj) == 0) then begin
+-                        SVar14 := rotation_to_tile(tile_num(dude_obj), tile_num(self_obj));
++                        SVar14 := rotation_to_tile(dude_tile, tile_num(self_obj));
+                         animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), SVar14, random(3, 10)), 1);
+                         SVar14 := (SVar14 + 1) % 6;
+-                        while ((anim_busy(self_obj) == 0) and (SVar14 != rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)))) do begin
++                        while ((anim_busy(self_obj) == 0) and (SVar14 != rotation_to_tile(dude_tile, tile_num(self_obj)))) do begin
+                             debug_msg("flee loop: rot == " + SVar14);
+                             animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), SVar14, random(3, 10)), 1);
+                             SVar14 := (SVar14 + 1) % 6;
+@@ -135,7 +135,7 @@ begin
+             end
+         end
+         else begin
+-            attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++            attack(dude_obj);
+         end
+     end
+     if (anim_busy(self_obj)) then begin
+@@ -164,52 +164,52 @@ begin
+     SVar24 := 1;
+     SVar25 := 3;
+     SVar26 := 20;
+-    set_global_var(37, 0);
+-    set_global_var(38, 0);
+-    set_global_var(39, 0);
+-    set_global_var(40, 0);
+-    set_global_var(41, 0);
+-    set_global_var(42, 0);
+-    set_global_var(43, 0);
+-    set_global_var(44, 0);
+-    set_global_var(45, 0);
+-    SVar13 := global_var(0);
+-    if (has_trait(0, dude_obj, 95)) then begin
+-        SVar13 := global_var(0) * 2;
++    set_global_var(GVAR_KARMA_HOLY_WARRIOR, 0);
++    set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 0);
++    set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 0);
++    set_global_var(GVAR_KARMA_DEFENDER, 0);
++    set_global_var(GVAR_KARMA_WANDERER, 0);
++    set_global_var(GVAR_KARMA_BETRAYER, 0);
++    set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 0);
++    set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 0);
++    set_global_var(GVAR_KARMA_DEMON_SPAWN, 0);
++    SVar13 := global_var(GVAR_PLAYER_REPUTATION);
++    if (has_trait(TRAIT_PERK, dude_obj, PERK_karma_beacon_perk)) then begin
++        SVar13 := global_var(GVAR_PLAYER_REPUTATION) * 2;
+     end
+     if (SVar13 >= 1000) then begin
+-        set_global_var(37, 1);
++        set_global_var(GVAR_KARMA_HOLY_WARRIOR, 1);
+     end
+     else begin
+         if (SVar13 >= 750) then begin
+-            set_global_var(38, 1);
++            set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 1);
+         end
+         else begin
+             if (SVar13 >= 500) then begin
+-                set_global_var(39, 1);
++                set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 1);
+             end
+             else begin
+                 if (SVar13 >= 250) then begin
+-                    set_global_var(40, 1);
++                    set_global_var(GVAR_KARMA_DEFENDER, 1);
+                 end
+                 else begin
+                     if (SVar13 > -250) then begin
+-                        set_global_var(41, 1);
++                        set_global_var(GVAR_KARMA_WANDERER, 1);
+                     end
+                     else begin
+                         if (SVar13 > -500) then begin
+-                            set_global_var(42, 1);
++                            set_global_var(GVAR_KARMA_BETRAYER, 1);
+                         end
+                         else begin
+                             if (SVar13 > -750) then begin
+-                                set_global_var(43, 1);
++                                set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 1);
+                             end
+                             else begin
+                                 if (SVar13 > -1000) then begin
+-                                    set_global_var(44, 1);
++                                    set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 1);
+                                 end
+                                 else begin
+-                                    set_global_var(45, 1);
++                                    set_global_var(GVAR_KARMA_DEMON_SPAWN, 1);
+                                 end
+                             end
+                         end
+@@ -220,7 +220,7 @@ begin
+     end
+     if (local_var(2) == 0) then begin
+         set_local_var(2, 1);
+-        set_local_var(3, (get_critter_stat(dude_obj, 3) - get_critter_stat(self_obj, 3)) * 5);
++        set_local_var(3, (dude_charisma - self_charisma) * 5);
+         debug_msg("Base Reaction == " + local_var(3));
+     end
+     SVar23 := 0;
+@@ -232,14 +232,14 @@ begin
+     else begin
+         SVar28 := -1 * (-1 * SVar28 / 1000);
+     end
+-    if (global_var(57) >= 0) then begin
+-        SVar27 := global_var(57) / 2;
++    if (global_var(GVAR_TOWN_REP_NCR) >= 0) then begin
++        SVar27 := global_var(GVAR_TOWN_REP_NCR) / 2;
+     end
+     else begin
+-        SVar27 := -1 * (-1 * global_var(57) / 2);
++        SVar27 := -1 * (-1 * global_var(GVAR_TOWN_REP_NCR) / 2);
+     end
+-    if (has_trait(2, dude_obj, 13)) then begin
+-        if (get_critter_stat(dude_obj, 34) == get_critter_stat(self_obj, 34)) then begin
++    if (has_trait(TRAIT_TRAIT, dude_obj, TRAIT_sex_appeal)) then begin
++        if (dude_gender == self_gender) then begin
+             SVar23 := SVar23 + -20;
+         end
+         else begin
+@@ -265,52 +265,52 @@ begin
+             SVar23 := SVar23 + SVar27;
+         end
+         debug_msg("Town Rep Bonus == " + SVar23);
+-        set_global_var(37, 0);
+-        set_global_var(38, 0);
+-        set_global_var(39, 0);
+-        set_global_var(40, 0);
+-        set_global_var(41, 0);
+-        set_global_var(42, 0);
+-        set_global_var(43, 0);
+-        set_global_var(44, 0);
+-        set_global_var(45, 0);
+-        SVar13 := global_var(0);
+-        if (has_trait(0, dude_obj, 95)) then begin
+-            SVar13 := global_var(0) * 2;
++        set_global_var(GVAR_KARMA_HOLY_WARRIOR, 0);
++        set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 0);
++        set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 0);
++        set_global_var(GVAR_KARMA_DEFENDER, 0);
++        set_global_var(GVAR_KARMA_WANDERER, 0);
++        set_global_var(GVAR_KARMA_BETRAYER, 0);
++        set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 0);
++        set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 0);
++        set_global_var(GVAR_KARMA_DEMON_SPAWN, 0);
++        SVar13 := global_var(GVAR_PLAYER_REPUTATION);
++        if (has_trait(TRAIT_PERK, dude_obj, PERK_karma_beacon_perk)) then begin
++            SVar13 := global_var(GVAR_PLAYER_REPUTATION) * 2;
+         end
+         if (SVar13 >= 1000) then begin
+-            set_global_var(37, 1);
++            set_global_var(GVAR_KARMA_HOLY_WARRIOR, 1);
+         end
+         else begin
+             if (SVar13 >= 750) then begin
+-                set_global_var(38, 1);
++                set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 1);
+             end
+             else begin
+                 if (SVar13 >= 500) then begin
+-                    set_global_var(39, 1);
++                    set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 1);
+                 end
+                 else begin
+                     if (SVar13 >= 250) then begin
+-                        set_global_var(40, 1);
++                        set_global_var(GVAR_KARMA_DEFENDER, 1);
+                     end
+                     else begin
+                         if (SVar13 > -250) then begin
+-                            set_global_var(41, 1);
++                            set_global_var(GVAR_KARMA_WANDERER, 1);
+                         end
+                         else begin
+                             if (SVar13 > -500) then begin
+-                                set_global_var(42, 1);
++                                set_global_var(GVAR_KARMA_BETRAYER, 1);
+                             end
+                             else begin
+                                 if (SVar13 > -750) then begin
+-                                    set_global_var(43, 1);
++                                    set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 1);
+                                 end
+                                 else begin
+                                     if (SVar13 > -1000) then begin
+-                                        set_global_var(44, 1);
++                                        set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 1);
+                                     end
+                                     else begin
+-                                        set_global_var(45, 1);
++                                        set_global_var(GVAR_KARMA_DEMON_SPAWN, 1);
+                                     end
+                                 end
+                             end
+@@ -319,35 +319,35 @@ begin
+                 end
+             end
+         end
+-        if (global_var(37) == 1) then begin
++        if (global_var(GVAR_KARMA_HOLY_WARRIOR) == 1) then begin
+             SVar23 := SVar23 - 20;
+         end
+         else begin
+-            if (global_var(38) == 1) then begin
++            if (global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES) == 1) then begin
+                 SVar23 := SVar23 - 15;
+             end
+             else begin
+-                if (global_var(39) == 1) then begin
++                if (global_var(GVAR_KARMA_SHIELD_OF_HOPE) == 1) then begin
+                     SVar23 := SVar23 - 10;
+                 end
+                 else begin
+-                    if (global_var(40) == 1) then begin
++                    if (global_var(GVAR_KARMA_DEFENDER) == 1) then begin
+                         SVar23 := SVar23 - 5;
+                     end
+                     else begin
+-                        if (global_var(41) == 1) then begin
++                        if (global_var(GVAR_KARMA_WANDERER) == 1) then begin
+                             SVar23 := SVar23 - 0;
+                         end
+                         else begin
+-                            if (global_var(42) == 1) then begin
++                            if (global_var(GVAR_KARMA_BETRAYER) == 1) then begin
+                                 SVar23 := SVar23 + -5;
+                             end
+                             else begin
+-                                if (global_var(43) == 1) then begin
++                                if (global_var(GVAR_KARMA_SWORD_OF_DESPAIR) == 1) then begin
+                                     SVar23 := SVar23 + -10;
+                                 end
+                                 else begin
+-                                    if (global_var(44) == 1) then begin
++                                    if (global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE) == 1) then begin
+                                         SVar23 := SVar23 + -15;
+                                     end
+                                     else begin
+@@ -367,52 +367,52 @@ begin
+         debug_msg("Karma Reaction Bonus == " + SVar23);
+         SVar23 := SVar23 + SVar27;
+         debug_msg("Town Rep Bonus == " + SVar23);
+-        set_global_var(37, 0);
+-        set_global_var(38, 0);
+-        set_global_var(39, 0);
+-        set_global_var(40, 0);
+-        set_global_var(41, 0);
+-        set_global_var(42, 0);
+-        set_global_var(43, 0);
+-        set_global_var(44, 0);
+-        set_global_var(45, 0);
+-        SVar13 := global_var(0);
+-        if (has_trait(0, dude_obj, 95)) then begin
+-            SVar13 := global_var(0) * 2;
++        set_global_var(GVAR_KARMA_HOLY_WARRIOR, 0);
++        set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 0);
++        set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 0);
++        set_global_var(GVAR_KARMA_DEFENDER, 0);
++        set_global_var(GVAR_KARMA_WANDERER, 0);
++        set_global_var(GVAR_KARMA_BETRAYER, 0);
++        set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 0);
++        set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 0);
++        set_global_var(GVAR_KARMA_DEMON_SPAWN, 0);
++        SVar13 := global_var(GVAR_PLAYER_REPUTATION);
++        if (has_trait(TRAIT_PERK, dude_obj, PERK_karma_beacon_perk)) then begin
++            SVar13 := global_var(GVAR_PLAYER_REPUTATION) * 2;
+         end
+         if (SVar13 >= 1000) then begin
+-            set_global_var(37, 1);
++            set_global_var(GVAR_KARMA_HOLY_WARRIOR, 1);
+         end
+         else begin
+             if (SVar13 >= 750) then begin
+-                set_global_var(38, 1);
++                set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 1);
+             end
+             else begin
+                 if (SVar13 >= 500) then begin
+-                    set_global_var(39, 1);
++                    set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 1);
+                 end
+                 else begin
+                     if (SVar13 >= 250) then begin
+-                        set_global_var(40, 1);
++                        set_global_var(GVAR_KARMA_DEFENDER, 1);
+                     end
+                     else begin
+                         if (SVar13 > -250) then begin
+-                            set_global_var(41, 1);
++                            set_global_var(GVAR_KARMA_WANDERER, 1);
+                         end
+                         else begin
+                             if (SVar13 > -500) then begin
+-                                set_global_var(42, 1);
++                                set_global_var(GVAR_KARMA_BETRAYER, 1);
+                             end
+                             else begin
+                                 if (SVar13 > -750) then begin
+-                                    set_global_var(43, 1);
++                                    set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 1);
+                                 end
+                                 else begin
+                                     if (SVar13 > -1000) then begin
+-                                        set_global_var(44, 1);
++                                        set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 1);
+                                     end
+                                     else begin
+-                                        set_global_var(45, 1);
++                                        set_global_var(GVAR_KARMA_DEMON_SPAWN, 1);
+                                     end
+                                 end
+                             end
+@@ -421,35 +421,35 @@ begin
+                 end
+             end
+         end
+-        if (global_var(37) == 1) then begin
++        if (global_var(GVAR_KARMA_HOLY_WARRIOR) == 1) then begin
+             SVar23 := SVar23 + 20;
+         end
+         else begin
+-            if (global_var(38) == 1) then begin
++            if (global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES) == 1) then begin
+                 SVar23 := SVar23 + 15;
+             end
+             else begin
+-                if (global_var(39) == 1) then begin
++                if (global_var(GVAR_KARMA_SHIELD_OF_HOPE) == 1) then begin
+                     SVar23 := SVar23 + 10;
+                 end
+                 else begin
+-                    if (global_var(40) == 1) then begin
++                    if (global_var(GVAR_KARMA_DEFENDER) == 1) then begin
+                         SVar23 := SVar23 + 5;
+                     end
+                     else begin
+-                        if (global_var(41) == 1) then begin
++                        if (global_var(GVAR_KARMA_WANDERER) == 1) then begin
+                             SVar23 := SVar23 + 0;
+                         end
+                         else begin
+-                            if (global_var(42) == 1) then begin
++                            if (global_var(GVAR_KARMA_BETRAYER) == 1) then begin
+                                 SVar23 := SVar23 + -5;
+                             end
+                             else begin
+-                                if (global_var(43) == 1) then begin
++                                if (global_var(GVAR_KARMA_SWORD_OF_DESPAIR) == 1) then begin
+                                     SVar23 := SVar23 + -10;
+                                 end
+                                 else begin
+-                                    if (global_var(44) == 1) then begin
++                                    if (global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE) == 1) then begin
+                                         SVar23 := SVar23 + -15;
+                                     end
+                                     else begin
+@@ -465,32 +465,32 @@ begin
+         debug_msg("Good Person Reaction Bonus == " + SVar23);
+     end
+     if (SVar25 == 0) then begin
+-        if (global_var(11) == 1) then begin
++        if (global_var(GVAR_REPUTATION_SLAVER) == 1) then begin
+             SVar23 := SVar23 + (2 * -25);
+         end
+     end
+     else begin
+         if (SVar25 == 1) then begin
+-            if (global_var(11) == 1) then begin
++            if (global_var(GVAR_REPUTATION_SLAVER) == 1) then begin
+                 SVar23 := SVar23 + -25;
+             end
+         end
+         else begin
+             if (SVar25 == 3) then begin
+-                if (global_var(11) == 1) then begin
++                if (global_var(GVAR_REPUTATION_SLAVER) == 1) then begin
+                     SVar23 := SVar23 - -25;
+                 end
+             end
+         end
+     end
+     debug_msg("Slaver + Aligned Reaction == " + SVar23);
+-    SVar23 := SVar23 + (10 * has_trait(0, dude_obj, 10));
++    SVar23 := SVar23 + (10 * has_trait(TRAIT_PERK, dude_obj, PERK_presence));
+     debug_msg("Presence Reaction == " + SVar23);
+-    if (global_var(1) >= 2) then begin
++    if (global_var(GVAR_CHILDKILLER_REPUTATION) >= 2) then begin
+         SVar23 := SVar23 + -30;
+     end
+     debug_msg("Childkiller Reaction == " + SVar23);
+-    if (has_trait(0, dude_obj, 39)) then begin
++    if (has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality)) then begin
+         if (SVar24 == 1) then begin
+             if (SVar23 > 0) then begin
+                 SVar23 := SVar23 * -1;
+@@ -546,7 +546,7 @@ begin
+         end
+     end
+     if (local_var(7) == 10510) then begin
+-        if (tile_distance(tile_num(dude_obj), 10510) < 9) then begin
++        if (tile_distance(dude_tile, 10510) < 9) then begin
+             call Node021();
+         end
+         else begin
+@@ -554,7 +554,7 @@ begin
+         end
+     end
+     else begin
+-        if (global_var(195) == 1) then begin
++        if (global_var(GVAR_NCR_VORTIS_QUEST_STATE) == 1) then begin
+             start_gdialog(299, self_obj, 4, -1, -1);
+             gsay_start;
+             call Node016();
+@@ -563,7 +563,7 @@ begin
+             set_local_var(4, 1);
+         end
+         else begin
+-            if (global_var(195) == 3) then begin
++            if (global_var(GVAR_NCR_VORTIS_QUEST_STATE) == 3) then begin
+                 if (local_var(8) == 1) then begin
+                     start_gdialog(299, self_obj, 4, -1, -1);
+                     gsay_start;
+@@ -591,7 +591,7 @@ begin
+                 end
+                 else begin
+                     debug_msg("SCVORTIS: local_var(LVAR_reaction_level): " + local_var(1));
+-                    if ((local_var(1) <= -3) and not(has_trait(0, dude_obj, 39))) then begin
++                    if ((local_var(1) <= -3) and not(has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality))) then begin
+                         start_gdialog(299, self_obj, 4, -1, -1);
+                         gsay_start;
+                         call Node002();
+@@ -620,63 +620,63 @@ end
+ procedure destroy_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        set_global_var(4, global_var(4) + 1);
+-        if (((global_var(4) + global_var(5)) >= 25) and ((global_var(5) > (2 * global_var(4))) or (global_var(3) == 1))) then begin
+-            set_global_var(3, 1);
+-            set_global_var(2, 0);
++        set_global_var(GVAR_BAD_MONSTER, global_var(GVAR_BAD_MONSTER) + 1);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+         end
+-        if (((global_var(4) + global_var(5)) >= 25) and ((global_var(4) > (3 * global_var(5))) or (global_var(2) == 1)) and (global_var(1) == 0)) then begin
+-            set_global_var(2, 1);
+-            set_global_var(3, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(4) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1)) and (global_var(GVAR_CHILDKILLER_REPUTATION) == 0)) then begin
++            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+         end
+-        set_global_var(0, global_var(0) + 5);
++        set_global_var(GVAR_PLAYER_REPUTATION, global_var(GVAR_PLAYER_REPUTATION) + 5);
+         debug_msg("Player gains " + 5 + " Karma Points.");
+-        set_global_var(37, 0);
+-        set_global_var(38, 0);
+-        set_global_var(39, 0);
+-        set_global_var(40, 0);
+-        set_global_var(41, 0);
+-        set_global_var(42, 0);
+-        set_global_var(43, 0);
+-        set_global_var(44, 0);
+-        set_global_var(45, 0);
+-        SVar13 := global_var(0);
+-        if (has_trait(0, dude_obj, 95)) then begin
+-            SVar13 := global_var(0) * 2;
++        set_global_var(GVAR_KARMA_HOLY_WARRIOR, 0);
++        set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 0);
++        set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 0);
++        set_global_var(GVAR_KARMA_DEFENDER, 0);
++        set_global_var(GVAR_KARMA_WANDERER, 0);
++        set_global_var(GVAR_KARMA_BETRAYER, 0);
++        set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 0);
++        set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 0);
++        set_global_var(GVAR_KARMA_DEMON_SPAWN, 0);
++        SVar13 := global_var(GVAR_PLAYER_REPUTATION);
++        if (has_trait(TRAIT_PERK, dude_obj, PERK_karma_beacon_perk)) then begin
++            SVar13 := global_var(GVAR_PLAYER_REPUTATION) * 2;
+         end
+         if (SVar13 >= 1000) then begin
+-            set_global_var(37, 1);
++            set_global_var(GVAR_KARMA_HOLY_WARRIOR, 1);
+         end
+         else begin
+             if (SVar13 >= 750) then begin
+-                set_global_var(38, 1);
++                set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 1);
+             end
+             else begin
+                 if (SVar13 >= 500) then begin
+-                    set_global_var(39, 1);
++                    set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 1);
+                 end
+                 else begin
+                     if (SVar13 >= 250) then begin
+-                        set_global_var(40, 1);
++                        set_global_var(GVAR_KARMA_DEFENDER, 1);
+                     end
+                     else begin
+                         if (SVar13 > -250) then begin
+-                            set_global_var(41, 1);
++                            set_global_var(GVAR_KARMA_WANDERER, 1);
+                         end
+                         else begin
+                             if (SVar13 > -500) then begin
+-                                set_global_var(42, 1);
++                                set_global_var(GVAR_KARMA_BETRAYER, 1);
+                             end
+                             else begin
+                                 if (SVar13 > -750) then begin
+-                                    set_global_var(43, 1);
++                                    set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 1);
+                                 end
+                                 else begin
+                                     if (SVar13 > -1000) then begin
+-                                        set_global_var(44, 1);
++                                        set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 1);
+                                     end
+                                     else begin
+-                                        set_global_var(45, 1);
++                                        set_global_var(GVAR_KARMA_DEMON_SPAWN, 1);
+                                     end
+                                 end
+                             end
+@@ -685,11 +685,11 @@ begin
+                 end
+             end
+         end
+-        set_global_var(57, global_var(57) + 2);
++        set_global_var(GVAR_TOWN_REP_NCR, global_var(GVAR_TOWN_REP_NCR) + 2);
+         debug_msg("Added " + 2 + " to Town Rep");
+     end
+-    if (global_var(195) == 3) then begin
+-        set_global_var(195, 5);
++    if (global_var(GVAR_NCR_VORTIS_QUEST_STATE) == 3) then begin
++        set_global_var(GVAR_NCR_VORTIS_QUEST_STATE, 5);
+     end
+     i_vortis_obj := -1;
+ end
+@@ -698,17 +698,17 @@ procedure look_at_p_proc
+ begin
+     script_overrides;
+     if (local_var(4) == 0) then begin
+-        display_msg(message_str(299, 100));
++        display_mstr(100);
+     end
+     else begin
+-        display_msg(message_str(299, 101));
++        display_mstr(101);
+     end
+ end
+ 
+ procedure description_p_proc
+ begin
+     script_overrides;
+-    display_msg(message_str(299, 102));
++    display_mstr(102);
+ end
+ 
+ procedure use_skill_on_p_proc
+@@ -726,9 +726,9 @@ end
+ procedure map_enter_p_proc
+ begin
+     SVar29 := 0;
+-    critter_add_trait(self_obj, 1, 6, 48);
+-    critter_add_trait(self_obj, 1, 5, 12);
+-    if (metarule(22, 0) == 0) then begin
++    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 48);
++    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_GENERIC_GUARDS);
++    if (is_loading_game == 0) then begin
+         call doLoadStuff();
+     end
+     add_timer_event(self_obj, 5, 1);
+@@ -747,7 +747,7 @@ procedure Node001
+ begin
+     variable LVar0 := 1;
+     if (local_var(4) == 0) then begin
+-        if (global_var(11) == 1) then begin
++        if (global_var(GVAR_REPUTATION_SLAVER) == 1) then begin
+             set_local_var(3, local_var(3) + 20);
+             set_local_var(0, local_var(0) + 20);
+             if (local_var(0) <= -75) then begin
+@@ -791,7 +791,7 @@ begin
+                     end
+                 end
+             end
+-            gsay_reply(299, 104);
++            Reply(104);
+         end
+         else begin
+             set_local_var(3, local_var(3) + -10);
+@@ -837,7 +837,7 @@ begin
+                     end
+                 end
+             end
+-            gsay_reply(299, 103);
++            Reply(103);
+         end
+         set_local_var(4, 1);
+     end
+@@ -888,7 +888,7 @@ begin
+             end
+             if (local_var(2) == 0) then begin
+                 set_local_var(2, 1);
+-                set_local_var(3, (get_critter_stat(dude_obj, 3) - get_critter_stat(self_obj, 3)) * 5);
++                set_local_var(3, (dude_charisma - self_charisma) * 5);
+                 debug_msg("Base Reaction == " + local_var(3));
+             end
+             SVar23 := 0;
+@@ -900,14 +900,14 @@ begin
+             else begin
+                 SVar28 := -1 * (-1 * SVar28 / 1000);
+             end
+-            if (global_var(57) >= 0) then begin
+-                SVar27 := global_var(57) / 2;
++            if (global_var(GVAR_TOWN_REP_NCR) >= 0) then begin
++                SVar27 := global_var(GVAR_TOWN_REP_NCR) / 2;
+             end
+             else begin
+-                SVar27 := -1 * (-1 * global_var(57) / 2);
++                SVar27 := -1 * (-1 * global_var(GVAR_TOWN_REP_NCR) / 2);
+             end
+-            if (has_trait(2, dude_obj, 13)) then begin
+-                if (get_critter_stat(dude_obj, 34) == get_critter_stat(self_obj, 34)) then begin
++            if (has_trait(TRAIT_TRAIT, dude_obj, TRAIT_sex_appeal)) then begin
++                if (dude_gender == self_gender) then begin
+                     SVar23 := SVar23 + -20;
+                 end
+                 else begin
+@@ -933,52 +933,52 @@ begin
+                     SVar23 := SVar23 + SVar27;
+                 end
+                 debug_msg("Town Rep Bonus == " + SVar23);
+-                set_global_var(37, 0);
+-                set_global_var(38, 0);
+-                set_global_var(39, 0);
+-                set_global_var(40, 0);
+-                set_global_var(41, 0);
+-                set_global_var(42, 0);
+-                set_global_var(43, 0);
+-                set_global_var(44, 0);
+-                set_global_var(45, 0);
+-                SVar13 := global_var(0);
+-                if (has_trait(0, dude_obj, 95)) then begin
+-                    SVar13 := global_var(0) * 2;
++                set_global_var(GVAR_KARMA_HOLY_WARRIOR, 0);
++                set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 0);
++                set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 0);
++                set_global_var(GVAR_KARMA_DEFENDER, 0);
++                set_global_var(GVAR_KARMA_WANDERER, 0);
++                set_global_var(GVAR_KARMA_BETRAYER, 0);
++                set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 0);
++                set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 0);
++                set_global_var(GVAR_KARMA_DEMON_SPAWN, 0);
++                SVar13 := global_var(GVAR_PLAYER_REPUTATION);
++                if (has_trait(TRAIT_PERK, dude_obj, PERK_karma_beacon_perk)) then begin
++                    SVar13 := global_var(GVAR_PLAYER_REPUTATION) * 2;
+                 end
+                 if (SVar13 >= 1000) then begin
+-                    set_global_var(37, 1);
++                    set_global_var(GVAR_KARMA_HOLY_WARRIOR, 1);
+                 end
+                 else begin
+                     if (SVar13 >= 750) then begin
+-                        set_global_var(38, 1);
++                        set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 1);
+                     end
+                     else begin
+                         if (SVar13 >= 500) then begin
+-                            set_global_var(39, 1);
++                            set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 1);
+                         end
+                         else begin
+                             if (SVar13 >= 250) then begin
+-                                set_global_var(40, 1);
++                                set_global_var(GVAR_KARMA_DEFENDER, 1);
+                             end
+                             else begin
+                                 if (SVar13 > -250) then begin
+-                                    set_global_var(41, 1);
++                                    set_global_var(GVAR_KARMA_WANDERER, 1);
+                                 end
+                                 else begin
+                                     if (SVar13 > -500) then begin
+-                                        set_global_var(42, 1);
++                                        set_global_var(GVAR_KARMA_BETRAYER, 1);
+                                     end
+                                     else begin
+                                         if (SVar13 > -750) then begin
+-                                            set_global_var(43, 1);
++                                            set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 1);
+                                         end
+                                         else begin
+                                             if (SVar13 > -1000) then begin
+-                                                set_global_var(44, 1);
++                                                set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 1);
+                                             end
+                                             else begin
+-                                                set_global_var(45, 1);
++                                                set_global_var(GVAR_KARMA_DEMON_SPAWN, 1);
+                                             end
+                                         end
+                                     end
+@@ -987,35 +987,35 @@ begin
+                         end
+                     end
+                 end
+-                if (global_var(37) == 1) then begin
++                if (global_var(GVAR_KARMA_HOLY_WARRIOR) == 1) then begin
+                     SVar23 := SVar23 - 20;
+                 end
+                 else begin
+-                    if (global_var(38) == 1) then begin
++                    if (global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES) == 1) then begin
+                         SVar23 := SVar23 - 15;
+                     end
+                     else begin
+-                        if (global_var(39) == 1) then begin
++                        if (global_var(GVAR_KARMA_SHIELD_OF_HOPE) == 1) then begin
+                             SVar23 := SVar23 - 10;
+                         end
+                         else begin
+-                            if (global_var(40) == 1) then begin
++                            if (global_var(GVAR_KARMA_DEFENDER) == 1) then begin
+                                 SVar23 := SVar23 - 5;
+                             end
+                             else begin
+-                                if (global_var(41) == 1) then begin
++                                if (global_var(GVAR_KARMA_WANDERER) == 1) then begin
+                                     SVar23 := SVar23 - 0;
+                                 end
+                                 else begin
+-                                    if (global_var(42) == 1) then begin
++                                    if (global_var(GVAR_KARMA_BETRAYER) == 1) then begin
+                                         SVar23 := SVar23 + -5;
+                                     end
+                                     else begin
+-                                        if (global_var(43) == 1) then begin
++                                        if (global_var(GVAR_KARMA_SWORD_OF_DESPAIR) == 1) then begin
+                                             SVar23 := SVar23 + -10;
+                                         end
+                                         else begin
+-                                            if (global_var(44) == 1) then begin
++                                            if (global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE) == 1) then begin
+                                                 SVar23 := SVar23 + -15;
+                                             end
+                                             else begin
+@@ -1035,52 +1035,52 @@ begin
+                 debug_msg("Karma Reaction Bonus == " + SVar23);
+                 SVar23 := SVar23 + SVar27;
+                 debug_msg("Town Rep Bonus == " + SVar23);
+-                set_global_var(37, 0);
+-                set_global_var(38, 0);
+-                set_global_var(39, 0);
+-                set_global_var(40, 0);
+-                set_global_var(41, 0);
+-                set_global_var(42, 0);
+-                set_global_var(43, 0);
+-                set_global_var(44, 0);
+-                set_global_var(45, 0);
+-                SVar13 := global_var(0);
+-                if (has_trait(0, dude_obj, 95)) then begin
+-                    SVar13 := global_var(0) * 2;
++                set_global_var(GVAR_KARMA_HOLY_WARRIOR, 0);
++                set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 0);
++                set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 0);
++                set_global_var(GVAR_KARMA_DEFENDER, 0);
++                set_global_var(GVAR_KARMA_WANDERER, 0);
++                set_global_var(GVAR_KARMA_BETRAYER, 0);
++                set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 0);
++                set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 0);
++                set_global_var(GVAR_KARMA_DEMON_SPAWN, 0);
++                SVar13 := global_var(GVAR_PLAYER_REPUTATION);
++                if (has_trait(TRAIT_PERK, dude_obj, PERK_karma_beacon_perk)) then begin
++                    SVar13 := global_var(GVAR_PLAYER_REPUTATION) * 2;
+                 end
+                 if (SVar13 >= 1000) then begin
+-                    set_global_var(37, 1);
++                    set_global_var(GVAR_KARMA_HOLY_WARRIOR, 1);
+                 end
+                 else begin
+                     if (SVar13 >= 750) then begin
+-                        set_global_var(38, 1);
++                        set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 1);
+                     end
+                     else begin
+                         if (SVar13 >= 500) then begin
+-                            set_global_var(39, 1);
++                            set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 1);
+                         end
+                         else begin
+                             if (SVar13 >= 250) then begin
+-                                set_global_var(40, 1);
++                                set_global_var(GVAR_KARMA_DEFENDER, 1);
+                             end
+                             else begin
+                                 if (SVar13 > -250) then begin
+-                                    set_global_var(41, 1);
++                                    set_global_var(GVAR_KARMA_WANDERER, 1);
+                                 end
+                                 else begin
+                                     if (SVar13 > -500) then begin
+-                                        set_global_var(42, 1);
++                                        set_global_var(GVAR_KARMA_BETRAYER, 1);
+                                     end
+                                     else begin
+                                         if (SVar13 > -750) then begin
+-                                            set_global_var(43, 1);
++                                            set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 1);
+                                         end
+                                         else begin
+                                             if (SVar13 > -1000) then begin
+-                                                set_global_var(44, 1);
++                                                set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 1);
+                                             end
+                                             else begin
+-                                                set_global_var(45, 1);
++                                                set_global_var(GVAR_KARMA_DEMON_SPAWN, 1);
+                                             end
+                                         end
+                                     end
+@@ -1089,35 +1089,35 @@ begin
+                         end
+                     end
+                 end
+-                if (global_var(37) == 1) then begin
++                if (global_var(GVAR_KARMA_HOLY_WARRIOR) == 1) then begin
+                     SVar23 := SVar23 + 20;
+                 end
+                 else begin
+-                    if (global_var(38) == 1) then begin
++                    if (global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES) == 1) then begin
+                         SVar23 := SVar23 + 15;
+                     end
+                     else begin
+-                        if (global_var(39) == 1) then begin
++                        if (global_var(GVAR_KARMA_SHIELD_OF_HOPE) == 1) then begin
+                             SVar23 := SVar23 + 10;
+                         end
+                         else begin
+-                            if (global_var(40) == 1) then begin
++                            if (global_var(GVAR_KARMA_DEFENDER) == 1) then begin
+                                 SVar23 := SVar23 + 5;
+                             end
+                             else begin
+-                                if (global_var(41) == 1) then begin
++                                if (global_var(GVAR_KARMA_WANDERER) == 1) then begin
+                                     SVar23 := SVar23 + 0;
+                                 end
+                                 else begin
+-                                    if (global_var(42) == 1) then begin
++                                    if (global_var(GVAR_KARMA_BETRAYER) == 1) then begin
+                                         SVar23 := SVar23 + -5;
+                                     end
+                                     else begin
+-                                        if (global_var(43) == 1) then begin
++                                        if (global_var(GVAR_KARMA_SWORD_OF_DESPAIR) == 1) then begin
+                                             SVar23 := SVar23 + -10;
+                                         end
+                                         else begin
+-                                            if (global_var(44) == 1) then begin
++                                            if (global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE) == 1) then begin
+                                                 SVar23 := SVar23 + -15;
+                                             end
+                                             else begin
+@@ -1133,32 +1133,32 @@ begin
+                 debug_msg("Good Person Reaction Bonus == " + SVar23);
+             end
+             if (SVar25 == 0) then begin
+-                if (global_var(11) == 1) then begin
++                if (global_var(GVAR_REPUTATION_SLAVER) == 1) then begin
+                     SVar23 := SVar23 + (2 * -25);
+                 end
+             end
+             else begin
+                 if (SVar25 == 1) then begin
+-                    if (global_var(11) == 1) then begin
++                    if (global_var(GVAR_REPUTATION_SLAVER) == 1) then begin
+                         SVar23 := SVar23 + -25;
+                     end
+                 end
+                 else begin
+                     if (SVar25 == 3) then begin
+-                        if (global_var(11) == 1) then begin
++                        if (global_var(GVAR_REPUTATION_SLAVER) == 1) then begin
+                             SVar23 := SVar23 - -25;
+                         end
+                     end
+                 end
+             end
+             debug_msg("Slaver + Aligned Reaction == " + SVar23);
+-            SVar23 := SVar23 + (10 * has_trait(0, dude_obj, 10));
++            SVar23 := SVar23 + (10 * has_trait(TRAIT_PERK, dude_obj, PERK_presence));
+             debug_msg("Presence Reaction == " + SVar23);
+-            if (global_var(1) >= 2) then begin
++            if (global_var(GVAR_CHILDKILLER_REPUTATION) >= 2) then begin
+                 SVar23 := SVar23 + -30;
+             end
+             debug_msg("Childkiller Reaction == " + SVar23);
+-            if (has_trait(0, dude_obj, 39)) then begin
++            if (has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality)) then begin
+                 if (SVar24 == 1) then begin
+                     if (SVar23 > 0) then begin
+                         SVar23 := SVar23 * -1;
+@@ -1176,12 +1176,12 @@ begin
+                 call Node005();
+                 LVar0 := 0;
+             end
+-            gsay_reply(299, 105);
++            Reply(105);
+             LVar0 := 1;
+         end
+         else begin
+             if (SVar30 == 1) then begin
+-                gsay_reply(299, 106);
++                Reply(106);
+                 LVar0 := 1;
+             end
+             else begin
+@@ -1229,7 +1229,7 @@ begin
+                             end
+                         end
+                     end
+-                    gsay_reply(299, 107);
++                    Reply(107);
+                     LVar0 := 1;
+                 end
+                 else begin
+@@ -1242,14 +1242,14 @@ begin
+         end
+     end
+     if (LVar0) then begin
+-        giq_option(4, 299, 109, Node003, 50);
+-        if ((global_var(195) != 2) and (global_var(195) != 4)) then begin
+-            giq_option(4, 299, 110, Node0405a, 50);
++        giq_option(4, NAME, 109, Node003, NEUTRAL_REACTION);
++        if ((global_var(GVAR_NCR_VORTIS_QUEST_STATE) != 2) and (global_var(GVAR_NCR_VORTIS_QUEST_STATE) != 4)) then begin
++            giq_option(4, NAME, 110, Node0405a, NEUTRAL_REACTION);
+         end
+-        giq_option(-3, 299, 111, Node001r, 50);
+-        giq_option(-3, 299, 112, Node999, 50);
+-        giq_option(4, 299, 113, Node001r, 50);
+-        giq_option(1, 299, 114, Node999, 50);
++        giq_option(-3, NAME, 111, Node001r, NEUTRAL_REACTION);
++        giq_option(-3, NAME, 112, Node999, NEUTRAL_REACTION);
++        giq_option(4, NAME, 113, Node001r, NEUTRAL_REACTION);
++        giq_option(1, NAME, 114, Node999, NEUTRAL_REACTION);
+     end
+     return 0;
+     LVar0 := 0;
+@@ -1257,9 +1257,9 @@ end
+ 
+ procedure Node002
+ begin
+-    gsay_reply(299, 115);
+-    giq_option(4, 299, 116, Node999, 50);
+-    giq_option(-3, 299, 111, Node999, 50);
++    Reply(115);
++    giq_option(4, NAME, 116, Node999, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 111, Node999, NEUTRAL_REACTION);
+     SVar32 := 1;
+ end
+ 
+@@ -1269,35 +1269,35 @@ begin
+         call Node005();
+     end
+     else begin
+-        gsay_reply(299, 117);
+-        giq_option(4, 299, 118, Node006, 50);
+-        giq_option(4, 299, 119, Node007, 50);
+-        giq_option(4, 299, 120, Node008, 50);
+-        giq_option(4, 299, 121, Node998, 51);
+-        if (global_var(196) bwand 1) then begin
+-            giq_option(4, 299, 122, Node91018a, 49);
+-        end
+-        giq_option(4, 299, 123, Node011, 51);
+-        if ((global_var(1123) == 1) and (local_var(9) == 0)) then begin
+-            giq_option(4, 299, 241, Node033, 50);
++        Reply(117);
++        giq_option(4, NAME, 118, Node006, NEUTRAL_REACTION);
++        giq_option(4, NAME, 119, Node007, NEUTRAL_REACTION);
++        giq_option(4, NAME, 120, Node008, NEUTRAL_REACTION);
++        giq_option(4, NAME, 121, Node998, BAD_REACTION);
++        if (global_var(GVAR_NCR_RANGERS_KNOWN) bwand 1) then begin
++            giq_option(4, NAME, 122, Node91018a, GOOD_REACTION);
++        end
++        giq_option(4, NAME, 123, Node011, BAD_REACTION);
++        if ((global_var(GVAR_SULIK_DEAD) == 1) and (local_var(9) == 0)) then begin
++            giq_option(4, NAME, 241, Node033, NEUTRAL_REACTION);
+         end
+         if (obj_is_carrying_obj_pid(dude_obj, 556) or obj_is_carrying_obj_pid(dude_obj, 557)) then begin
+-            giq_option(4, 299, 300, Node1000, 50);
++            giq_option(4, NAME, 300, Node1000, NEUTRAL_REACTION);
+         end
+     end
+ end
+ 
+ procedure Node004
+ begin
+-    gsay_reply(299, 124);
+-    giq_option(4, 299, 125, Node012, 50);
+-    giq_option(4, 299, 126, Node013, 50);
++    Reply(124);
++    giq_option(4, NAME, 125, Node012, NEUTRAL_REACTION);
++    giq_option(4, NAME, 126, Node013, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node005
+ begin
+-    gsay_reply(299, 127);
+-    giq_option(4, 299, 128, Node999, 50);
++    Reply(127);
++    giq_option(4, NAME, 128, Node999, NEUTRAL_REACTION);
+     SVar32 := 1;
+ end
+ 
+@@ -1346,9 +1346,9 @@ begin
+             end
+         end
+     end
+-    gsay_reply(299, 129);
+-    giq_option(4, 299, 130, Node003, 50);
+-    giq_option(4, 299, 131, Node999, 50);
++    Reply(129);
++    giq_option(4, NAME, 130, Node003, NEUTRAL_REACTION);
++    giq_option(4, NAME, 131, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node007
+@@ -1396,9 +1396,9 @@ begin
+             end
+         end
+     end
+-    gsay_reply(299, 132);
+-    giq_option(4, 299, 133, Node003, 50);
+-    giq_option(4, 299, 134, Node999, 50);
++    Reply(132);
++    giq_option(4, NAME, 133, Node003, NEUTRAL_REACTION);
++    giq_option(4, NAME, 134, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node008
+@@ -1446,9 +1446,9 @@ begin
+             end
+         end
+     end
+-    gsay_reply(299, 135);
+-    giq_option(4, 299, 136, Node003, 50);
+-    giq_option(4, 299, 137, Node999, 50);
++    Reply(135);
++    giq_option(4, NAME, 136, Node003, NEUTRAL_REACTION);
++    giq_option(4, NAME, 137, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node009
+@@ -1496,9 +1496,9 @@ begin
+             end
+         end
+     end
+-    gsay_reply(299, 138);
+-    giq_option(4, 299, 139, Node003, 50);
+-    giq_option(4, 299, 140, Node999, 50);
++    Reply(138);
++    giq_option(4, NAME, 139, Node003, NEUTRAL_REACTION);
++    giq_option(4, NAME, 140, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node010
+@@ -1546,9 +1546,9 @@ begin
+             end
+         end
+     end
+-    gsay_reply(299, 141);
+-    giq_option(4, 299, 142, Node012, 49);
+-    giq_option(4, 299, 143, Node003, 50);
++    Reply(141);
++    giq_option(4, NAME, 142, Node012, GOOD_REACTION);
++    giq_option(4, NAME, 143, Node003, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node011
+@@ -1596,64 +1596,64 @@ begin
+             end
+         end
+     end
+-    gsay_reply(299, 144);
+-    giq_option(4, 299, 145, Node003, 50);
+-    giq_option(4, 299, 146, Node999, 50);
++    Reply(144);
++    giq_option(4, NAME, 145, Node003, NEUTRAL_REACTION);
++    giq_option(4, NAME, 146, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node012
+ begin
+-    gsay_reply(299, 147);
+-    giq_option(4, 299, 148, Node014a, 50);
+-    giq_option(4, 299, 149, Node005, 50);
++    Reply(147);
++    giq_option(4, NAME, 148, Node014a, NEUTRAL_REACTION);
++    giq_option(4, NAME, 149, Node005, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node013
+ begin
+-    set_global_var(196, global_var(196) bwor 1);
++    set_global_var(GVAR_NCR_RANGERS_KNOWN, global_var(GVAR_NCR_RANGERS_KNOWN) bwor 1);
+     if (SVar31 == 0) then begin
+-        set_global_var(243, global_var(243) bwor 4);
+-        gsay_reply(299, 150);
++        set_global_var(GVAR_8_BALL_TOILET_SECRET, global_var(GVAR_8_BALL_TOILET_SECRET) bwor 4);
++        Reply(150);
+     end
+     else begin
+         if (SVar31 == 1) then begin
+-            gsay_reply(299, 151);
++            Reply(151);
+         end
+         else begin
+             if (SVar31 == 2) then begin
+-                gsay_reply(299, 152);
++                Reply(152);
+             end
+             else begin
+-                gsay_reply(299, 153);
++                Reply(153);
+             end
+         end
+     end
+-    giq_option(4, 299, 154, Node013r, 50);
+-    giq_option(4, 299, 155, Node012, 49);
++    giq_option(4, NAME, 154, Node013r, NEUTRAL_REACTION);
++    giq_option(4, NAME, 155, Node012, GOOD_REACTION);
+ end
+ 
+ procedure Node014
+ begin
+-    gsay_reply(299, 156);
+-    giq_option(4, 299, 157, Node015, 50);
+-    giq_option(4, 299, 158, Node003, 50);
+-    giq_option(4, 299, 159, Node999, 50);
++    Reply(156);
++    giq_option(4, NAME, 157, Node015, NEUTRAL_REACTION);
++    giq_option(4, NAME, 158, Node003, NEUTRAL_REACTION);
++    giq_option(4, NAME, 159, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node015
+ begin
+-    gsay_reply(299, 160);
+-    giq_option(4, 299, 161, Node003, 50);
+-    giq_option(4, 299, 162, Node999, 50);
++    Reply(160);
++    giq_option(4, NAME, 161, Node003, NEUTRAL_REACTION);
++    giq_option(4, NAME, 162, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node016
+ begin
+-    gsay_reply(299, 163);
++    Reply(163);
+     if (obj_is_carrying_obj_pid(dude_obj, 343)) then begin
+-        giq_option(4, 299, 164, Node19a, 50);
++        giq_option(4, NAME, 164, Node19a, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 299, 165, Node020, 50);
++    giq_option(4, NAME, 165, Node020, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node017
+@@ -1701,92 +1701,92 @@ begin
+             end
+         end
+     end
+-    gsay_reply(299, 166);
+-    giq_option(4, 299, 167, Node001, 50);
++    Reply(166);
++    giq_option(4, NAME, 167, Node001, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node018
+ begin
+-    gsay_reply(299, 168);
+-    giq_option(4, 299, 169, Node003, 50);
+-    giq_option(4, 299, 170, Node999, 50);
++    Reply(168);
++    giq_option(4, NAME, 169, Node003, NEUTRAL_REACTION);
++    giq_option(4, NAME, 170, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node019
+ begin
+-    set_global_var(195, 2);
+-    gsay_reply(299, 171);
+-    giq_option(4, 299, 172, Node999, 50);
++    set_global_var(GVAR_NCR_VORTIS_QUEST_STATE, 2);
++    Reply(171);
++    giq_option(4, NAME, 172, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node020
+ begin
+-    gsay_reply(299, 173);
+-    giq_option(4, 299, 174, Node999, 50);
++    Reply(173);
++    giq_option(4, NAME, 174, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node021
+ begin
+-    float_msg(self_obj, message_str(299, 175), 2);
++    float_msg(self_obj, mstr(175), FLOAT_MSG_RED);
+     call Node998();
+     call callGuards();
+ end
+ 
+ procedure Node022
+ begin
+-    float_msg(self_obj, message_str(299, 176), 2);
++    float_msg(self_obj, mstr(176), FLOAT_MSG_RED);
+ end
+ 
+ procedure Node023
+ begin
+-    float_msg(self_obj, message_str(299, 177), 2);
++    float_msg(self_obj, mstr(177), FLOAT_MSG_RED);
+ end
+ 
+ procedure Node024
+ begin
+-    if (global_var(11) == 1) then begin
+-        gsay_reply(299, 200);
++    if (global_var(GVAR_REPUTATION_SLAVER) == 1) then begin
++        Reply(200);
+     end
+     else begin
+-        gsay_reply(299, 201);
++        Reply(201);
+     end
+-    giq_option(4, 299, 202, Node025, 50);
+-    giq_option(4, 299, 203, Node026, 50);
++    giq_option(4, NAME, 202, Node025, NEUTRAL_REACTION);
++    giq_option(4, NAME, 203, Node026, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node025
+ begin
+-    gsay_reply(299, 204);
+-    if (has_skill(dude_obj, 14) >= 80) then begin
+-        giq_option(4, 299, 207, Node029, 50);
++    Reply(204);
++    if (has_skill(dude_obj, SKILL_CONVERSANT) >= 80) then begin
++        giq_option(4, NAME, 207, Node029, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 299, 206, Node990, 50);
++    giq_option(4, NAME, 206, Node990, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node026
+ begin
+-    gsay_reply(299, 205);
+-    giq_option(4, 299, 206, Node019a, 50);
++    Reply(205);
++    giq_option(4, NAME, 206, Node019a, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node027
+ begin
+-    gsay_reply(299, 210);
+-    if (global_var(1129) == 3) then begin
+-        giq_option(4, 299, 211, Node028, 50);
++    Reply(210);
++    if (global_var(GVAR_CHAD_EVIDENCE_TIP) == 3) then begin
++        giq_option(4, NAME, 211, Node028, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 299, 212, Node020, 50);
++    giq_option(4, NAME, 212, Node020, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node028
+ begin
+     item_caps_adjust(dude_obj, 1000);
+-    display_msg(message_str(299, 240));
+-    set_global_var(195, 4);
+-    gsay_reply(299, 215);
+-    giq_option(4, 299, 216, Node999, 50);
+-    giq_option(4, 299, 217, Node999, 50);
+-    giq_option(4, 299, 218, Node999, 50);
++    display_mstr(240);
++    set_global_var(GVAR_NCR_VORTIS_QUEST_STATE, 4);
++    Reply(215);
++    giq_option(4, NAME, 216, Node999, NEUTRAL_REACTION);
++    giq_option(4, NAME, 217, Node999, NEUTRAL_REACTION);
++    giq_option(4, NAME, 218, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node029
+@@ -1801,80 +1801,80 @@ end
+ 
+ procedure Node030
+ begin
+-    gsay_reply(299, 225);
+-    giq_option(4, 299, 226, Node991, 50);
+-    giq_option(4, 299, 227, Node992, 50);
+-    giq_option(4, 299, 228, Node992, 50);
+-    giq_option(4, 299, 229, Node026, 50);
++    Reply(225);
++    giq_option(4, NAME, 226, Node991, NEUTRAL_REACTION);
++    giq_option(4, NAME, 227, Node992, NEUTRAL_REACTION);
++    giq_option(4, NAME, 228, Node992, NEUTRAL_REACTION);
++    giq_option(4, NAME, 229, Node026, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node031
+ begin
+-    gsay_reply(299, 220);
+-    giq_option(4, 299, 221, Node990, 50);
+-    giq_option(4, 299, 222, Node026, 50);
+-    giq_option(4, 299, 223, Node998, 51);
++    Reply(220);
++    giq_option(4, NAME, 221, Node990, NEUTRAL_REACTION);
++    giq_option(4, NAME, 222, Node026, NEUTRAL_REACTION);
++    giq_option(4, NAME, 223, Node998, BAD_REACTION);
+ end
+ 
+ procedure Node032
+ begin
+-    gsay_reply(299, 230);
+-    giq_option(4, 299, 231, Node999, 50);
+-    giq_option(4, 299, 232, Node992, 50);
++    Reply(230);
++    giq_option(4, NAME, 231, Node999, NEUTRAL_REACTION);
++    giq_option(4, NAME, 232, Node992, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node033
+ begin
+-    gsay_reply(299, 250);
+-    giq_option(4, 299, 251, Node034, 50);
+-    if ((global_var(445) bwand 1) != 0) then begin
+-        giq_option(4, 299, 252, Node998, 51);
++    Reply(250);
++    giq_option(4, NAME, 251, Node034, NEUTRAL_REACTION);
++    if ((global_var(GVAR_DEN_FLAG_1) bwand 1) != 0) then begin
++        giq_option(4, NAME, 252, Node998, BAD_REACTION);
+     end
+ end
+ 
+ procedure Node034
+ begin
+-    gsay_reply(299, 260);
+-    giq_option(4, 299, 261, Node035, 50);
++    Reply(260);
++    giq_option(4, NAME, 261, Node035, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node035
+ begin
+     variable LVar0 := 0;
+-    if (global_var(0) > 500) then begin
++    if (global_var(GVAR_PLAYER_REPUTATION) > 500) then begin
+         LVar0 := 1;
+     end
+     else begin
+         LVar0 := 0;
+     end
+-    gsay_reply(299, 270 + LVar0);
++    Reply(270 + LVar0);
+     if (LVar0 and (item_caps_total(dude_obj) >= 2000) or (item_caps_total(dude_obj) >= 1000)) then begin
+-        giq_option(4, 299, 272, Node993, 50);
++        giq_option(4, NAME, 272, Node993, NEUTRAL_REACTION);
+     end
+     else begin
+-        giq_option(4, 299, 275, Node999, 50);
++        giq_option(4, NAME, 275, Node999, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 299, 273, Node003, 50);
+-    giq_option(4, 299, 274, Node998, 51);
++    giq_option(4, NAME, 273, Node003, NEUTRAL_REACTION);
++    giq_option(4, NAME, 274, Node998, BAD_REACTION);
+     return 0;
+     LVar0 := 0;
+ end
+ 
+ procedure Node036
+ begin
+-    if (metarule(17, 87) == 0) then begin
++    if (town_known(87) == 0) then begin
+         debug_msg("  mark_on_map(" + 87 + ")");
+         mark_area_known(0, 87, 1);
+     end
+     set_local_var(9, 1);
+-    gsay_reply(299, 280);
+-    giq_option(4, 299, 133, Node003, 50);
+-    giq_option(4, 299, 281, Node999, 50);
++    Reply(280);
++    giq_option(4, NAME, 133, Node003, NEUTRAL_REACTION);
++    giq_option(4, NAME, 281, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node990
+ begin
+-    set_global_var(195, 3);
++    set_global_var(GVAR_NCR_VORTIS_QUEST_STATE, 3);
+     mark_area_known(0, 63, 1);
+     mark_area_known(0, 64, 1);
+     mark_area_known(0, 65, 1);
+@@ -1886,7 +1886,7 @@ begin
+     mark_area_known(0, 64, 1);
+     mark_area_known(0, 65, 1);
+     set_local_var(8, 1);
+-    set_global_var(195, 3);
++    set_global_var(GVAR_NCR_VORTIS_QUEST_STATE, 3);
+ end
+ 
+ procedure Node992
+@@ -1894,7 +1894,7 @@ begin
+     mark_area_known(0, 63, 1);
+     mark_area_known(0, 64, 1);
+     mark_area_known(0, 65, 1);
+-    set_global_var(195, 3);
++    set_global_var(GVAR_NCR_VORTIS_QUEST_STATE, 3);
+     set_local_var(8, 0);
+     load_map(168, 5);
+ end
+@@ -1902,7 +1902,7 @@ end
+ procedure Node993
+ begin
+     variable LVar0 := 0;
+-    if (global_var(0) > 500) then begin
++    if (global_var(GVAR_PLAYER_REPUTATION) > 500) then begin
+         LVar0 := 2000;
+     end
+     else begin
+@@ -1916,7 +1916,7 @@ end
+ 
+ procedure Node019a
+ begin
+-    set_global_var(195, 2);
++    set_global_var(GVAR_NCR_VORTIS_QUEST_STATE, 2);
+ end
+ 
+ procedure doLoadStuff
+@@ -1996,10 +1996,10 @@ end
+ 
+ procedure Node0405a
+ begin
+-    if (global_var(195) == 1) then begin
++    if (global_var(GVAR_NCR_VORTIS_QUEST_STATE) == 1) then begin
+         call Node017();
+     end
+-    if ((local_var(1) <= -3) and not(has_trait(0, dude_obj, 39))) then begin
++    if ((local_var(1) <= -3) and not(has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality))) then begin
+         call Node005();
+     end
+     else begin
+@@ -2015,11 +2015,11 @@ end
+ 
+ procedure Node91018a
+ begin
+-    if (global_var(195) == 2) then begin
++    if (global_var(GVAR_NCR_VORTIS_QUEST_STATE) == 2) then begin
+         call Node018();
+     end
+     else begin
+-        if (global_var(57) > 80) then begin
++        if (global_var(GVAR_TOWN_REP_NCR) > 80) then begin
+             call Node009();
+         end
+         else begin
+@@ -2030,7 +2030,7 @@ end
+ 
+ procedure Node014a
+ begin
+-    set_global_var(195, 1);
++    set_global_var(GVAR_NCR_VORTIS_QUEST_STATE, 1);
+     call Node014();
+ end
+ 
+@@ -2047,7 +2047,7 @@ begin
+     rm_obj_from_inven(dude_obj, LVar0);
+     add_obj_to_inven(self_obj, LVar0);
+     item_caps_adjust(dude_obj, 500);
+-    if ((global_var(11) == 1) or ((global_var(0) <= -250) or has_trait(0, dude_obj, 39))) then begin
++    if ((global_var(GVAR_REPUTATION_SLAVER) == 1) or ((global_var(GVAR_PLAYER_REPUTATION) <= -250) or has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality))) then begin
+         call Node024();
+     end
+     else begin
+@@ -2077,14 +2077,14 @@ end
+ 
+ procedure Node1000
+ begin
+-    gsay_reply(46, 301);
++    gsay_reply(SCRIPT_DCMETZGE, 301);
+     if (obj_is_carrying_obj_pid(dude_obj, 556)) then begin
+-        giq_option(4, 299, 302, Node1001, 50);
++        giq_option(4, NAME, 302, Node1001, NEUTRAL_REACTION);
+     end
+     if (obj_is_carrying_obj_pid(dude_obj, 557)) then begin
+-        giq_option(4, 299, 303, Node1002, 50);
++        giq_option(4, NAME, 303, Node1002, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 299, 304, Node1002, 50);
++    giq_option(4, NAME, 304, Node1002, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1001
+@@ -2092,7 +2092,7 @@ begin
+     item := obj_carrying_pid_obj(dude_obj, 556);
+     rm_obj_from_inven(dude_obj, item);
+     destroy_object(item);
+-    set_global_var(757, global_var(757) + -1);
++    set_global_var(GVAR_ELDRIDGE_TASK, global_var(GVAR_ELDRIDGE_TASK) + -1);
+     item_caps_adjust(dude_obj, 100);
+     set_map_var(999, 0);
+     call Node003();
+@@ -2103,9 +2103,8 @@ begin
+     item := obj_carrying_pid_obj(dude_obj, 557);
+     rm_obj_from_inven(dude_obj, item);
+     destroy_object(item);
+-    set_global_var(757, global_var(757) + -1);
++    set_global_var(GVAR_ELDRIDGE_TASK, global_var(GVAR_ELDRIDGE_TASK) + -1);
+     item_caps_adjust(dude_obj, 100);
+     set_map_var(999, 0);
+     call Node003();
+ end
+-

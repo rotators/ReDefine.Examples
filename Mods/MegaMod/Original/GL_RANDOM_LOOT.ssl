@@ -1,0 +1,2366 @@
+variable item_pid;
+variable money;
+variable random_roll;
+variable add_item_list;
+variable container_to_add_to;
+variable count;
+variable added_items_count;
+variable number_of_items;
+variable script;
+variable map_id;
+
+procedure start;
+procedure create_add_items(variable arg0);
+procedure is_empty(variable arg0);
+procedure pick_item_type(variable arg0);
+procedure random_weapons;
+procedure random_armor;
+procedure random_ammo;
+procedure random_stimpacks;
+procedure random_books;
+procedure vanilla_books;
+procedure random_custom_books;
+procedure random_books_vanilla;
+procedure random_booze;
+procedure random_herbs;
+procedure random_drugs;
+procedure random_upgrades;
+procedure random_explosives_tools;
+procedure random_tools;
+procedure random_lockpicks;
+procedure random_explosives;
+procedure random_medical_tools;
+procedure random_misc;
+procedure random_money;
+procedure Delete_Inventory_Item(variable arg0, variable arg1);
+procedure Tile_Vase(variable arg0);
+procedure one;
+procedure two;
+procedure three;
+procedure remove_from_tile(variable arg0, variable arg1, variable arg2);
+procedure Destroy_Zero;
+procedure get_current_area;
+procedure determine_town_level;
+
+variable town_level;
+variable current_town := "";
+
+procedure Is_Random_Encounter_Map;
+
+
+procedure start
+begin
+    if (game_loaded) then begin
+        set_global_script_repeat(60);
+        set_global_script_type(3);
+        set_sfall_global(4405, get_ini_setting("RandomLoot.ini|LOOT|RandomNumberOfItemsMin"));
+        set_sfall_global(4406, get_ini_setting("RandomLoot.ini|LOOT|RandomNumberOfItemsMax"));
+        set_sfall_global(4407, get_ini_setting("RandomLoot.ini|LOOT|RandomArmorPercent"));
+        set_sfall_global(4408, get_ini_setting("RandomLoot.ini|LOOT|RandomWeaponsPercent"));
+        set_sfall_global(4409, get_ini_setting("RandomLoot.ini|LOOT|RandomAmmoPercent"));
+        set_sfall_global(4410, get_ini_setting("RandomLoot.ini|LOOT|RandomStimpacksPercent"));
+        set_sfall_global(4411, get_ini_setting("RandomLoot.ini|LOOT|RandomBooksPercent"));
+        set_sfall_global(4412, get_ini_setting("RandomLoot.ini|LOOT|RandomBoozePercent"));
+        set_sfall_global(4413, get_ini_setting("RandomLoot.ini|LOOT|RandomHerbsPercent"));
+        set_sfall_global(4414, get_ini_setting("RandomLoot.ini|LOOT|RandomDrugsPercent"));
+        set_sfall_global(4415, get_ini_setting("RandomLoot.ini|LOOT|RandomUpgradesPercent"));
+        set_sfall_global(4416, get_ini_setting("RandomLoot.ini|LOOT|RandomToolsAndExplosivesPercent"));
+        set_sfall_global(4417, get_ini_setting("RandomLoot.ini|LOOT|RandomMiscPercent"));
+        set_sfall_global(4419, get_ini_setting("RandomLoot.ini|LOOT|RandomMoneyPercent"));
+        set_sfall_global(4418, get_ini_setting("RandomLoot.ini|LOOT|RandomNothingPercent"));
+        set_sfall_global(4435, get_ini_setting("RandomLoot.ini|LOOT|CustomBooksInstalled"));
+        set_sfall_global(6170, get_ini_setting("RandomLoot.ini|LOOT|SwapContainerLookSceneryForItemContainer"));
+        set_sfall_global(6175, get_ini_setting("Books.ini|MISC|MerchantsCanSellSmallGunsBook"));
+        set_sfall_global(6176, get_ini_setting("Books.ini|MISC|MerchantsCanSellBigGunsBook"));
+        set_sfall_global(6177, get_ini_setting("Books.ini|MISC|MerchantsCanSellEnergyWeaponsBook"));
+        set_sfall_global(6178, get_ini_setting("Books.ini|MISC|MerchantsCanSellUnarmedCombatBook"));
+        set_sfall_global(6179, get_ini_setting("Books.ini|MISC|MerchantsCanSellMeleeBook"));
+        set_sfall_global(6180, get_ini_setting("Books.ini|MISC|MerchantsCanSellThrowingBook"));
+        set_sfall_global(6181, get_ini_setting("Books.ini|MISC|MerchantsCanSellFirstAidBook"));
+        set_sfall_global(6182, get_ini_setting("Books.ini|MISC|MerchantsCanSellDoctorBook"));
+        set_sfall_global(6183, get_ini_setting("Books.ini|MISC|MerchantsCanSellSneakBook"));
+        set_sfall_global(6184, get_ini_setting("Books.ini|MISC|MerchantsCanSellLockpickBook"));
+        set_sfall_global(6185, get_ini_setting("Books.ini|MISC|MerchantsCanSellStealBook"));
+        set_sfall_global(6186, get_ini_setting("Books.ini|MISC|MerchantsCanSellTrapsBook"));
+        set_sfall_global(6187, get_ini_setting("Books.ini|MISC|MerchantsCanSellScienceBook"));
+        set_sfall_global(6188, get_ini_setting("Books.ini|MISC|MerchantsCanSellRepairBook"));
+        set_sfall_global(6189, get_ini_setting("Books.ini|MISC|MerchantsCanSellSpeechBook"));
+        set_sfall_global(6190, get_ini_setting("Books.ini|MISC|MerchantsCanSellBarterBook"));
+        set_sfall_global(6191, get_ini_setting("Books.ini|MISC|MerchantsCanSellGamblingBook"));
+        set_sfall_global(6192, get_ini_setting("Books.ini|MISC|MerchantsCanSellOutdoorsBook"));
+    end
+    else begin
+        if (not(in_world_map)) then begin
+            if ((get_sfall_global_int(cur_map_index + 35000) == 0) or (Is_Random_Encounter_Map() and (map_id == -1))) then begin
+                set_sfall_global(cur_map_index + 35000, 1);
+                map_id := cur_map_index;
+                call one();
+            end
+            call Destroy_Zero();
+        end
+    end
+    if (in_world_map and (map_id != -1)) then begin
+        map_id := -1;
+    end
+end
+
+procedure create_add_items(variable arg0)
+begin
+    added_items_count := 0;
+    number_of_items := random(get_sfall_global_int(4405), get_sfall_global_int(4406));
+    while (added_items_count < number_of_items) do begin
+        call pick_item_type(arg0);
+        if (not(money)) then begin
+            if (item_pid > 0) then begin
+                add_mult_objs_to_inven(arg0, create_object_sid(item_pid, 0, 0, -1), 1);
+                item_pid := 0;
+            end
+        end
+        added_items_count := added_items_count + 1;
+    end
+    return 0;
+    arg0 := 0;
+end
+
+procedure is_empty(variable arg0)
+begin
+    count := 0;
+    while (count < 1000) do begin
+        count := count + 1;
+        if (obj_carrying_pid_obj(arg0, count)) then begin
+            return 0;
+        end
+        else begin
+            if (count == 1000) then begin
+                return 1;
+            end
+        end
+    end
+    return 0;
+    arg0 := 0;
+end
+
+procedure pick_item_type(variable arg0)
+begin
+    item_pid := 0;
+    money := 0;
+    random_roll := 0;
+    town_level := 0;
+    current_town := "";
+    random_roll := 0;
+    call determine_town_level();
+    random_roll := random(1, get_sfall_global_int(4407) + get_sfall_global_int(4408) + get_sfall_global_int(4409) + get_sfall_global_int(4410) + get_sfall_global_int(4411) + get_sfall_global_int(4412) + get_sfall_global_int(4413) + get_sfall_global_int(4414) + get_sfall_global_int(4415) + get_sfall_global_int(4416) + get_sfall_global_int(4417) + get_sfall_global_int(4418));
+    if (random_roll <= get_sfall_global_int(4407)) then begin
+        call random_armor();
+    end
+    else begin
+        if (random_roll <= (get_sfall_global_int(4407) + get_sfall_global_int(4408))) then begin
+            call random_weapons();
+        end
+        else begin
+            if (random_roll <= (get_sfall_global_int(4407) + get_sfall_global_int(4408) + get_sfall_global_int(4409))) then begin
+                call random_ammo();
+            end
+            else begin
+                if (random_roll <= (get_sfall_global_int(4407) + get_sfall_global_int(4408) + get_sfall_global_int(4409) + get_sfall_global_int(4410))) then begin
+                    call random_stimpacks();
+                end
+                else begin
+                    if (random_roll <= (get_sfall_global_int(4407) + get_sfall_global_int(4408) + get_sfall_global_int(4409) + get_sfall_global_int(4410) + get_sfall_global_int(4411))) then begin
+                        if (get_sfall_global_int(4434) == 1) then begin
+                            call random_books();
+                        end
+                        else begin
+                            if (get_sfall_global_int(4434) == 0) then begin
+                                call random_books_vanilla();
+                            end
+                        end
+                    end
+                    else begin
+                        if (random_roll <= (get_sfall_global_int(4407) + get_sfall_global_int(4408) + get_sfall_global_int(4409) + get_sfall_global_int(4410) + get_sfall_global_int(4411) + get_sfall_global_int(4412))) then begin
+                            call random_booze();
+                        end
+                        else begin
+                            if (random_roll <= (get_sfall_global_int(4407) + get_sfall_global_int(4408) + get_sfall_global_int(4409) + get_sfall_global_int(4410) + get_sfall_global_int(4411) + get_sfall_global_int(4412) + get_sfall_global_int(4413))) then begin
+                                call random_herbs();
+                            end
+                            else begin
+                                if (random_roll <= (get_sfall_global_int(4407) + get_sfall_global_int(4408) + get_sfall_global_int(4409) + get_sfall_global_int(4410) + get_sfall_global_int(4411) + get_sfall_global_int(4412) + get_sfall_global_int(4413) + get_sfall_global_int(4414))) then begin
+                                    call random_drugs();
+                                end
+                                else begin
+                                    if (random_roll <= (get_sfall_global_int(4407) + get_sfall_global_int(4408) + get_sfall_global_int(4409) + get_sfall_global_int(4410) + get_sfall_global_int(4411) + get_sfall_global_int(4412) + get_sfall_global_int(4413) + get_sfall_global_int(4414) + get_sfall_global_int(4415))) then begin
+                                        call random_upgrades();
+                                    end
+                                    else begin
+                                        if (random_roll <= (get_sfall_global_int(4407) + get_sfall_global_int(4408) + get_sfall_global_int(4409) + get_sfall_global_int(4410) + get_sfall_global_int(4411) + get_sfall_global_int(4412) + get_sfall_global_int(4413) + get_sfall_global_int(4414) + get_sfall_global_int(4415) + get_sfall_global_int(4416))) then begin
+                                            call random_explosives_tools();
+                                        end
+                                        else begin
+                                            if (random_roll <= (get_sfall_global_int(4407) + get_sfall_global_int(4408) + get_sfall_global_int(4409) + get_sfall_global_int(4410) + get_sfall_global_int(4411) + get_sfall_global_int(4412) + get_sfall_global_int(4413) + get_sfall_global_int(4414) + get_sfall_global_int(4415) + get_sfall_global_int(4416) + get_sfall_global_int(4417))) then begin
+                                                call random_misc();
+                                            end
+                                            else begin
+                                                if (random_roll <= (get_sfall_global_int(4407) + get_sfall_global_int(4406) + get_sfall_global_int(4408) + get_sfall_global_int(4409) + get_sfall_global_int(4410) + get_sfall_global_int(4411) + get_sfall_global_int(4412) + get_sfall_global_int(4413) + get_sfall_global_int(4414) + get_sfall_global_int(4415) + get_sfall_global_int(4416) + get_sfall_global_int(4419))) then begin
+                                                    call random_money();
+                                                end
+                                                else begin
+                                                    if (random_roll <= (get_sfall_global_int(4407) + get_sfall_global_int(4408) + get_sfall_global_int(4409) + get_sfall_global_int(4410) + get_sfall_global_int(4411) + get_sfall_global_int(4412) + get_sfall_global_int(4413) + get_sfall_global_int(4414) + get_sfall_global_int(4415) + get_sfall_global_int(4416) + get_sfall_global_int(4417) + get_sfall_global_int(4419) + get_sfall_global_int(4418))) then begin
+                                                        return 0;
+                                                    end
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return 0;
+    arg0 := 0;
+end
+
+procedure random_weapons
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    variable LVar3 := 0;
+    variable LVar4 := 0;
+    variable LVar5 := 0;
+    variable LVar6 := 0;
+    random_roll := 0;
+    LVar0 := town_level;
+    if (LVar0 == 1) then begin
+        random_roll := random(1, 13);
+        LVar1 := random_roll;
+        if (LVar1 == 1) then begin
+            item_pid := 383;
+        end
+        else begin
+            if (LVar1 == 2) then begin
+                item_pid := 280;
+            end
+            else begin
+                if (LVar1 == 3) then begin
+                    item_pid := 20;
+                end
+                else begin
+                    if (LVar1 == 4) then begin
+                        item_pid := 21;
+                    end
+                    else begin
+                        if (LVar1 == 5) then begin
+                            item_pid := 4;
+                        end
+                        else begin
+                            if (LVar1 == 6) then begin
+                                item_pid := 5;
+                            end
+                            else begin
+                                if (LVar1 == 7) then begin
+                                    item_pid := 6;
+                                end
+                                else begin
+                                    if (LVar1 == 8) then begin
+                                        item_pid := 7;
+                                    end
+                                    else begin
+                                        if (LVar1 == 9) then begin
+                                            item_pid := 159;
+                                        end
+                                        else begin
+                                            if (LVar1 == 10) then begin
+                                                item_pid := 45;
+                                            end
+                                            else begin
+                                                if (LVar1 == 11) then begin
+                                                    item_pid := 320;
+                                                end
+                                                else begin
+                                                    if (LVar1 == 12) then begin
+                                                        item_pid := 319;
+                                                    end
+                                                    else begin
+                                                        if (LVar1 == 13) then begin
+                                                            item_pid := 299;
+                                                        end
+                                                    end
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    else begin
+        if (LVar0 == 2) then begin
+            random_roll := random(1, 10);
+            LVar4 := random_roll;
+            if (LVar4 == 1) then begin
+                item_pid := 236;
+            end
+            else begin
+                if (LVar4 == 2) then begin
+                    item_pid := 313;
+                end
+                else begin
+                    if (LVar4 == 3) then begin
+                        item_pid := 9;
+                    end
+                    else begin
+                        if (LVar4 == 4) then begin
+                            item_pid := 18;
+                        end
+                        else begin
+                            if (LVar4 == 5) then begin
+                                item_pid := 22;
+                            end
+                            else begin
+                                if (LVar4 == 6) then begin
+                                    item_pid := 23;
+                                end
+                                else begin
+                                    if (LVar4 == 7) then begin
+                                        item_pid := 25;
+                                    end
+                                    else begin
+                                        if (LVar4 == 8) then begin
+                                            item_pid := 143;
+                                        end
+                                        else begin
+                                            if (LVar4 == 9) then begin
+                                                item_pid := 287;
+                                            end
+                                            else begin
+                                                if (LVar4 == 10) then begin
+                                                    item_pid := 25;
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        else begin
+            if (LVar0 == 3) then begin
+                random_roll := random(1, 18);
+                LVar5 := random_roll;
+                if (LVar5 == 1) then begin
+                    item_pid := 161;
+                end
+                else begin
+                    if (LVar5 == 2) then begin
+                        item_pid := 162;
+                    end
+                    else begin
+                        if (LVar5 == 3) then begin
+                            item_pid := 11;
+                        end
+                        else begin
+                            if (LVar5 == 4) then begin
+                                item_pid := 122;
+                            end
+                            else begin
+                                if (LVar5 == 5) then begin
+                                    item_pid := 235;
+                                end
+                                else begin
+                                    if (LVar5 == 6) then begin
+                                        item_pid := 242;
+                                    end
+                                    else begin
+                                        if (LVar5 == 7) then begin
+                                            item_pid := 283;
+                                        end
+                                        else begin
+                                            if (LVar5 == 8) then begin
+                                                item_pid := 332;
+                                            end
+                                            else begin
+                                                if (LVar5 == 9) then begin
+                                                    item_pid := 353;
+                                                end
+                                                else begin
+                                                    if (LVar5 == 10) then begin
+                                                        item_pid := 351;
+                                                    end
+                                                    else begin
+                                                        if (LVar5 == 11) then begin
+                                                            item_pid := 398;
+                                                        end
+                                                        else begin
+                                                            if (LVar5 == 12) then begin
+                                                                item_pid := 350;
+                                                            end
+                                                            else begin
+                                                                if (LVar5 == 13) then begin
+                                                                    item_pid := 355;
+                                                                end
+                                                                else begin
+                                                                    if (LVar5 == 14) then begin
+                                                                        item_pid := 403;
+                                                                    end
+                                                                    else begin
+                                                                        if (LVar5 == 15) then begin
+                                                                            item_pid := 404;
+                                                                        end
+                                                                        else begin
+                                                                            if (LVar5 == 16) then begin
+                                                                                item_pid := 500;
+                                                                            end
+                                                                            else begin
+                                                                                if (LVar5 == 17) then begin
+                                                                                    item_pid := 405;
+                                                                                end
+                                                                                else begin
+                                                                                    if (LVar5 == 18) then begin
+                                                                                        item_pid := 26;
+                                                                                    end
+                                                                                end
+                                                                            end
+                                                                        end
+                                                                    end
+                                                                end
+                                                            end
+                                                        end
+                                                    end
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return item_pid;
+    return 0;
+    LVar0 := 0;
+    LVar1 := 0;
+    LVar2 := 0;
+    LVar3 := 0;
+    LVar4 := 0;
+    LVar5 := 0;
+    LVar6 := 0;
+end
+
+procedure random_armor
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    variable LVar3 := 0;
+    variable LVar4 := 0;
+    variable LVar5 := 0;
+    variable LVar6 := 0;
+    random_roll := 0;
+    LVar0 := town_level;
+    if (LVar0 == 1) then begin
+        random_roll := random(1, 2);
+        LVar1 := random_roll;
+        if (LVar1 == 1) then begin
+            item_pid := 74;
+        end
+        else begin
+            if (LVar1 == 3) then begin
+                item_pid := 3;
+            end
+        end
+    end
+    else begin
+        if (LVar0 == 2) then begin
+            random_roll := random(1, 5);
+            LVar2 := random_roll;
+            if (LVar2 == 1) then begin
+                item_pid := 1;
+            end
+            else begin
+                if (LVar2 == 2) then begin
+                    item_pid := 379;
+                end
+                else begin
+                    if (LVar2 == 3) then begin
+                        item_pid := 265;
+                    end
+                end
+            end
+            if (LVar3 == 4) then begin
+                item_pid := 2;
+            end
+            else begin
+                if (LVar3 == 5) then begin
+                    item_pid := 380;
+                end
+            end
+        end
+        else begin
+            if (LVar0 == 3) then begin
+                random_roll := random(1, 3);
+                LVar4 := random_roll;
+                if (LVar4 == 1) then begin
+                    item_pid := 381;
+                end
+                else begin
+                    if (LVar4 == 2) then begin
+                        item_pid := 240;
+                    end
+                    else begin
+                        if (LVar4 == 3) then begin
+                            item_pid := 17;
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return item_pid;
+    return 0;
+    LVar0 := 0;
+    LVar1 := 0;
+    LVar2 := 0;
+    LVar3 := 0;
+    LVar4 := 0;
+    LVar5 := 0;
+    LVar6 := 0;
+end
+
+procedure random_ammo
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    variable LVar3 := 0;
+    variable LVar4 := 0;
+    variable LVar5 := 0;
+    variable LVar6 := 0;
+    random_roll := 0;
+    LVar0 := town_level;
+    if (LVar0 == 1) then begin
+        random_roll := random(1, 6);
+        LVar1 := random_roll;
+        if (LVar1 == 1) then begin
+            item_pid := 29;
+        end
+        else begin
+            if (LVar1 == 2) then begin
+                item_pid := 30;
+            end
+            else begin
+                if (LVar1 == 3) then begin
+                    item_pid := 95;
+                end
+                else begin
+                    if (LVar1 == 4) then begin
+                        item_pid := 35;
+                    end
+                    else begin
+                        if (LVar1 == 5) then begin
+                            item_pid := 36;
+                        end
+                        else begin
+                            if (LVar1 == 6) then begin
+                                item_pid := 39;
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    else begin
+        if (LVar0 == 2) then begin
+            random_roll := random(1, 14);
+            LVar3 := random_roll;
+            if (LVar3 == 1) then begin
+                item_pid := 29;
+            end
+            else begin
+                if (LVar3 == 2) then begin
+                    item_pid := 30;
+                end
+                else begin
+                    if (LVar3 == 3) then begin
+                        item_pid := 95;
+                    end
+                    else begin
+                        if (LVar3 == 4) then begin
+                            item_pid := 35;
+                        end
+                        else begin
+                            if (LVar3 == 5) then begin
+                                item_pid := 36;
+                            end
+                            else begin
+                                if (LVar3 == 6) then begin
+                                    item_pid := 39;
+                                end
+                                else begin
+                                    if (LVar3 == 7) then begin
+                                        item_pid := 111;
+                                    end
+                                    else begin
+                                        if (LVar3 == 8) then begin
+                                            item_pid := 31;
+                                        end
+                                        else begin
+                                            if (LVar3 == 9) then begin
+                                                item_pid := 34;
+                                            end
+                                            else begin
+                                                if (LVar3 == 10) then begin
+                                                    item_pid := 33;
+                                                end
+                                                else begin
+                                                    if (LVar3 == 11) then begin
+                                                        item_pid := 38;
+                                                    end
+                                                    else begin
+                                                        if (LVar3 == 12) then begin
+                                                            item_pid := 163;
+                                                        end
+                                                        else begin
+                                                            if (LVar3 == 13) then begin
+                                                                item_pid := 357;
+                                                            end
+                                                            else begin
+                                                                if (LVar3 == 14) then begin
+                                                                    item_pid := 360;
+                                                                end
+                                                            end
+                                                        end
+                                                    end
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        else begin
+            if (LVar0 == 3) then begin
+                random_roll := random(1, 22);
+                LVar5 := random_roll;
+                if (LVar5 == 1) then begin
+                    item_pid := 29;
+                end
+                else begin
+                    if (LVar5 == 2) then begin
+                        item_pid := 30;
+                    end
+                    else begin
+                        if (LVar5 == 3) then begin
+                            item_pid := 95;
+                        end
+                        else begin
+                            if (LVar5 == 4) then begin
+                                item_pid := 35;
+                            end
+                            else begin
+                                if (LVar5 == 5) then begin
+                                    item_pid := 36;
+                                end
+                                else begin
+                                    if (LVar5 == 6) then begin
+                                        item_pid := 39;
+                                    end
+                                    else begin
+                                        if (LVar5 == 7) then begin
+                                            item_pid := 111;
+                                        end
+                                        else begin
+                                            if (LVar5 == 8) then begin
+                                                item_pid := 31;
+                                            end
+                                            else begin
+                                                if (LVar5 == 9) then begin
+                                                    item_pid := 34;
+                                                end
+                                                else begin
+                                                    if (LVar5 == 10) then begin
+                                                        item_pid := 33;
+                                                    end
+                                                    else begin
+                                                        if (LVar5 == 11) then begin
+                                                            item_pid := 38;
+                                                        end
+                                                        else begin
+                                                            if (LVar5 == 12) then begin
+                                                                item_pid := 163;
+                                                            end
+                                                            else begin
+                                                                if (LVar5 == 13) then begin
+                                                                    item_pid := 357;
+                                                                end
+                                                                else begin
+                                                                    if (LVar5 == 14) then begin
+                                                                        item_pid := 360;
+                                                                    end
+                                                                    else begin
+                                                                        if (LVar5 == 15) then begin
+                                                                            item_pid := 363;
+                                                                        end
+                                                                        else begin
+                                                                            if (LVar5 == 16) then begin
+                                                                                item_pid := 14;
+                                                                            end
+                                                                            else begin
+                                                                                if (LVar5 == 17) then begin
+                                                                                    item_pid := 32;
+                                                                                end
+                                                                                else begin
+                                                                                    if (LVar5 == 18) then begin
+                                                                                        item_pid := 37;
+                                                                                    end
+                                                                                    else begin
+                                                                                        if (LVar5 == 19) then begin
+                                                                                            item_pid := 361;
+                                                                                        end
+                                                                                        else begin
+                                                                                            if (LVar5 == 20) then begin
+                                                                                                item_pid := 362;
+                                                                                            end
+                                                                                            else begin
+                                                                                                if (LVar5 == 21) then begin
+                                                                                                    item_pid := 360;
+                                                                                                end
+                                                                                                else begin
+                                                                                                    if (LVar5 == 22) then begin
+                                                                                                        item_pid := 363;
+                                                                                                    end
+                                                                                                end
+                                                                                            end
+                                                                                        end
+                                                                                    end
+                                                                                end
+                                                                            end
+                                                                        end
+                                                                    end
+                                                                end
+                                                            end
+                                                        end
+                                                    end
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return item_pid;
+    return 0;
+    LVar0 := 0;
+    LVar1 := 0;
+    LVar2 := 0;
+    LVar3 := 0;
+    LVar4 := 0;
+    LVar5 := 0;
+    LVar6 := 0;
+end
+
+procedure random_stimpacks
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    variable LVar3 := 0;
+    variable LVar4 := 0;
+    variable LVar5 := 0;
+    variable LVar6 := 0;
+    random_roll := 0;
+    LVar0 := town_level;
+    if (LVar0 == 1) then begin
+        random_roll := random(1, 3);
+        LVar1 := random_roll;
+        if (LVar1 == 1) then begin
+            item_pid := 318;
+        end
+        else begin
+            if (LVar1 == 2) then begin
+                item_pid := 103;
+            end
+            else begin
+                if (LVar3 == 3) then begin
+                    item_pid := 81;
+                end
+            end
+        end
+    end
+    else begin
+        if (LVar0 == 2) then begin
+            random_roll := random(1, 2);
+            LVar4 := random_roll;
+            if (LVar4 == 1) then begin
+                item_pid := 71;
+            end
+            else begin
+                if (LVar4 == 2) then begin
+                    item_pid := 40;
+                end
+            end
+        end
+        else begin
+            if (LVar0 == 3) then begin
+                random_roll := random(1, 2);
+                LVar6 := random_roll;
+                if (LVar6 == 1) then begin
+                    item_pid := 40;
+                end
+                else begin
+                    if (LVar6 == 2) then begin
+                        item_pid := 144;
+                    end
+                end
+            end
+        end
+    end
+    return item_pid;
+    return 0;
+    LVar0 := 0;
+    LVar1 := 0;
+    LVar2 := 0;
+    LVar3 := 0;
+    LVar4 := 0;
+    LVar5 := 0;
+    LVar6 := 0;
+end
+
+procedure random_books
+begin
+    variable LVar0 := 0;
+    random_roll := 0;
+    LVar0 := town_level;
+    if (LVar0 == 1) then begin
+        call random_misc();
+    end
+    else begin
+        if (LVar0 == 2) then begin
+            call random_misc();
+        end
+        else begin
+            if (LVar0 == 3) then begin
+                call random_misc();
+            end
+            else begin
+                if (LVar0 == 4) then begin
+                    call random_custom_books();
+                end
+                else begin
+                    if (LVar0 == 5) then begin
+                        call random_custom_books();
+                    end
+                    else begin
+                        if (LVar0 == 6) then begin
+                            call random_custom_books();
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return item_pid;
+    return 0;
+    LVar0 := 0;
+end
+
+procedure vanilla_books
+begin
+    variable LVar0 := 0;
+    random_roll := random(1, 5);
+    LVar0 := random_roll;
+    if (LVar0 == 1) then begin
+        item_pid := 73;
+    end
+    else begin
+        if (LVar0 == 2) then begin
+            item_pid := 76;
+        end
+        else begin
+            if (LVar0 == 3) then begin
+                item_pid := 80;
+            end
+            else begin
+                if (LVar0 == 4) then begin
+                    item_pid := 86;
+                end
+                else begin
+                    if (LVar0 == 5) then begin
+                        item_pid := 102;
+                    end
+                end
+            end
+        end
+    end
+    return item_pid;
+    return 0;
+    LVar0 := 0;
+end
+
+procedure random_custom_books
+begin
+    random_roll := random(1, 18);
+    if ((random_roll == 1) and get_sfall_global_int(6176)) then begin
+        item_pid := 778;
+    end
+    else begin
+        if ((random_roll == 2) and get_sfall_global_int(6177)) then begin
+            item_pid := 779;
+        end
+        else begin
+            if ((random_roll == 3) and get_sfall_global_int(6178)) then begin
+                item_pid := 780;
+            end
+            else begin
+                if ((random_roll == 4) and get_sfall_global_int(6179)) then begin
+                    item_pid := 781;
+                end
+                else begin
+                    if ((random_roll == 5) and get_sfall_global_int(6180)) then begin
+                        item_pid := 782;
+                    end
+                    else begin
+                        if ((random_roll == 6) and get_sfall_global_int(6181)) then begin
+                            item_pid := 783;
+                        end
+                        else begin
+                            if ((random_roll == 7) and get_sfall_global_int(6182)) then begin
+                                item_pid := 784;
+                            end
+                            else begin
+                                if ((random_roll == 8) and get_sfall_global_int(6183)) then begin
+                                    item_pid := 785;
+                                end
+                                else begin
+                                    if ((random_roll == 9) and get_sfall_global_int(6184)) then begin
+                                        item_pid := 786;
+                                    end
+                                    else begin
+                                        if ((random_roll == 10) and get_sfall_global_int(6185)) then begin
+                                            item_pid := 787;
+                                        end
+                                        else begin
+                                            if ((random_roll == 11) and get_sfall_global_int(6186)) then begin
+                                                item_pid := 788;
+                                            end
+                                            else begin
+                                                if ((random_roll == 12) and get_sfall_global_int(6187)) then begin
+                                                    item_pid := 789;
+                                                end
+                                                else begin
+                                                    if ((random_roll == 13) and get_sfall_global_int(6188)) then begin
+                                                        item_pid := 790;
+                                                    end
+                                                    else begin
+                                                        if ((random_roll == 14) and get_sfall_global_int(6189)) then begin
+                                                            item_pid := 791;
+                                                        end
+                                                        else begin
+                                                            if ((random_roll == 15) and get_sfall_global_int(6190)) then begin
+                                                                item_pid := 792;
+                                                            end
+                                                            else begin
+                                                                if ((random_roll == 16) and get_sfall_global_int(6191)) then begin
+                                                                    item_pid := 793;
+                                                                end
+                                                                else begin
+                                                                    if ((random_roll == 17) and get_sfall_global_int(6192)) then begin
+                                                                        item_pid := 794;
+                                                                    end
+                                                                    else begin
+                                                                        if ((random_roll == 18) and get_sfall_global_int(6193)) then begin
+                                                                            item_pid := 795;
+                                                                        end
+                                                                    end
+                                                                end
+                                                            end
+                                                        end
+                                                    end
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return item_pid;
+end
+
+procedure random_books_vanilla
+begin
+    variable LVar0 := 0;
+    random_roll := 0;
+    LVar0 := town_level;
+    if (LVar0 == 1) then begin
+        call random_misc();
+    end
+    else begin
+        if (LVar0 == 2) then begin
+            call random_misc();
+        end
+        else begin
+            if (LVar0 == 3) then begin
+                call random_misc();
+            end
+            else begin
+                if (LVar0 == 4) then begin
+                    call vanilla_books();
+                end
+                else begin
+                    if (LVar0 == 5) then begin
+                        call vanilla_books();
+                    end
+                    else begin
+                        if (LVar0 == 6) then begin
+                            call vanilla_books();
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return item_pid;
+    return 0;
+    LVar0 := 0;
+end
+
+procedure random_booze
+begin
+    variable LVar0 := 0;
+    random_roll := random(1, 5);
+    LVar0 := random_roll;
+    if (LVar0 == 1) then begin
+        item_pid := 124;
+    end
+    else begin
+        if (LVar0 == 2) then begin
+            item_pid := 125;
+        end
+        else begin
+            if (LVar0 == 3) then begin
+                item_pid := 310;
+            end
+            else begin
+                if (LVar0 == 4) then begin
+                    item_pid := 311;
+                end
+                else begin
+                    if (LVar0 == 5) then begin
+                        item_pid := 469;
+                    end
+                end
+            end
+        end
+    end
+    return item_pid;
+    return 0;
+    LVar0 := 0;
+end
+
+procedure random_herbs
+begin
+    variable LVar0 := 0;
+    random_roll := random(1, 10);
+    LVar0 := random_roll;
+    if (LVar0 == 1) then begin
+        item_pid := 544;
+    end
+    else begin
+        if (LVar0 == 2) then begin
+            item_pid := 797;
+        end
+        else begin
+            if (LVar0 == 3) then begin
+                item_pid := 798;
+            end
+            else begin
+                if (LVar0 == 4) then begin
+                    item_pid := 799;
+                end
+                else begin
+                    if (LVar0 == 5) then begin
+                        item_pid := 272;
+                    end
+                    else begin
+                        if (LVar0 == 6) then begin
+                            item_pid := 271;
+                        end
+                        else begin
+                            if (LVar0 == 7) then begin
+                                item_pid := 759;
+                            end
+                            else begin
+                                if (LVar0 == 8) then begin
+                                    item_pid := 796;
+                                end
+                                else begin
+                                    if (LVar0 == 9) then begin
+                                        item_pid := 548;
+                                    end
+                                    else begin
+                                        if (LVar0 == 10) then begin
+                                            item_pid := 755;
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return item_pid;
+    return 0;
+    LVar0 := 0;
+end
+
+procedure random_drugs
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    variable LVar3 := 0;
+    variable LVar4 := 0;
+    variable LVar5 := 0;
+    random_roll := 0;
+    LVar0 := town_level;
+    if (LVar0 == 1) then begin
+        random_roll := random(1, 2);
+        LVar1 := random_roll;
+        if (LVar1 == 1) then begin
+            call random_misc();
+        end
+        else begin
+            if (LVar1 == 2) then begin
+                item_pid := 49;
+            end
+        end
+    end
+    else begin
+        if (LVar0 == 2) then begin
+            random_roll := random(1, 4);
+            LVar3 := random_roll;
+            if (LVar3 == 1) then begin
+                call random_misc();
+            end
+            else begin
+                if (LVar3 == 2) then begin
+                    item_pid := 49;
+                end
+                else begin
+                    if (LVar3 == 3) then begin
+                        item_pid := 259;
+                    end
+                    else begin
+                        if (LVar3 == 4) then begin
+                            item_pid := 110;
+                        end
+                    end
+                end
+            end
+        end
+        else begin
+            if (LVar0 == 3) then begin
+                random_roll := random(1, 7);
+                LVar5 := random_roll;
+                if (LVar5 == 1) then begin
+                    call random_misc();
+                end
+                else begin
+                    if (LVar5 == 2) then begin
+                        item_pid := 49;
+                    end
+                    else begin
+                        if (LVar5 == 3) then begin
+                            item_pid := 259;
+                        end
+                        else begin
+                            if (LVar5 == 4) then begin
+                                item_pid := 110;
+                            end
+                            else begin
+                                if (LVar5 == 5) then begin
+                                    item_pid := 109;
+                                end
+                                else begin
+                                    if (LVar5 == 6) then begin
+                                        item_pid := 48;
+                                    end
+                                    else begin
+                                        if (LVar5 == 7) then begin
+                                            item_pid := 53;
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return item_pid;
+    return 0;
+    LVar0 := 0;
+    LVar1 := 0;
+    LVar2 := 0;
+    LVar3 := 0;
+    LVar4 := 0;
+    LVar5 := 0;
+end
+
+procedure random_upgrades
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    variable LVar3 := 0;
+    variable LVar4 := 0;
+    variable LVar5 := 0;
+    random_roll := 0;
+    LVar0 := town_level;
+    if (LVar0 == 1) then begin
+        random_roll := random(1, 2);
+        LVar1 := random_roll;
+        if (LVar1 == 1) then begin
+            item_pid := 767;
+        end
+        else begin
+            if (LVar1 == 2) then begin
+                item_pid := 769;
+            end
+        end
+    end
+    else begin
+        if (LVar0 == 2) then begin
+            random_roll := random(1, 4);
+            LVar3 := random_roll;
+            if (LVar3 == 1) then begin
+                item_pid := 767;
+            end
+            else begin
+                if (LVar3 == 2) then begin
+                    item_pid := 769;
+                end
+                else begin
+                    if (LVar3 == 3) then begin
+                        item_pid := 768;
+                    end
+                    else begin
+                        if (LVar3 == 4) then begin
+                            item_pid := 770;
+                        end
+                    end
+                end
+            end
+        end
+        else begin
+            if (LVar0 == 3) then begin
+                random_roll := random(1, 8);
+                LVar5 := random_roll;
+                if (LVar5 == 1) then begin
+                    item_pid := 767;
+                end
+                else begin
+                    if (LVar5 == 2) then begin
+                        item_pid := 769;
+                    end
+                    else begin
+                        if (LVar5 == 3) then begin
+                            item_pid := 768;
+                        end
+                        else begin
+                            if (LVar5 == 4) then begin
+                                item_pid := 770;
+                            end
+                            else begin
+                                if (LVar5 == 5) then begin
+                                    item_pid := 772;
+                                end
+                                else begin
+                                    if (LVar5 == 6) then begin
+                                        item_pid := 773;
+                                    end
+                                    else begin
+                                        if (LVar5 == 7) then begin
+                                            item_pid := 774;
+                                        end
+                                        else begin
+                                            if (LVar5 == 8) then begin
+                                                item_pid := 775;
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return item_pid;
+    return 0;
+    LVar0 := 0;
+    LVar1 := 0;
+    LVar2 := 0;
+    LVar3 := 0;
+    LVar4 := 0;
+    LVar5 := 0;
+end
+
+procedure random_explosives_tools
+begin
+    variable LVar0 := 0;
+    random_roll := random(1, 6);
+    LVar0 := random_roll;
+    if (LVar0 == 1) then begin
+        call random_misc();
+    end
+    else begin
+        if (LVar0 == 2) then begin
+            call random_medical_tools();
+        end
+        else begin
+            if (LVar0 == 3) then begin
+                call random_explosives();
+            end
+            else begin
+                if (LVar0 == 4) then begin
+                    call random_lockpicks();
+                end
+                else begin
+                    if (LVar0 == 5) then begin
+                        call random_medical_tools();
+                    end
+                    else begin
+                        if (LVar0 == 6) then begin
+                            call random_tools();
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return item_pid;
+    return 0;
+    LVar0 := 0;
+end
+
+procedure random_tools
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    variable LVar3 := 0;
+    variable LVar4 := 0;
+    random_roll := 0;
+    LVar0 := town_level;
+    if (LVar0 == 1) then begin
+        call random_misc();
+    end
+    else begin
+        if (LVar0 == 2) then begin
+            random_roll := random(1, 3);
+            LVar2 := random_roll;
+            if (LVar2 == 1) then begin
+                call random_misc();
+            end
+            else begin
+                if (LVar2 == 2) then begin
+                    item_pid := 75;
+                end
+                else begin
+                    if (LVar2 == 3) then begin
+                        item_pid := 384;
+                    end
+                end
+            end
+        end
+        else begin
+            if (LVar0 == 3) then begin
+                random_roll := random(1, 5);
+                LVar4 := random_roll;
+                if (LVar4 == 1) then begin
+                    call random_misc();
+                end
+                else begin
+                    if (LVar4 == 2) then begin
+                        item_pid := 75;
+                    end
+                    else begin
+                        if (LVar4 == 3) then begin
+                            item_pid := 384;
+                        end
+                        else begin
+                            if (LVar4 == 4) then begin
+                                item_pid := 52;
+                            end
+                            else begin
+                                if (LVar4 == 5) then begin
+                                    item_pid := 59;
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return item_pid;
+    return 0;
+    LVar0 := 0;
+    LVar1 := 0;
+    LVar2 := 0;
+    LVar3 := 0;
+    LVar4 := 0;
+end
+
+procedure random_lockpicks
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    variable LVar3 := 0;
+    random_roll := 0;
+    LVar0 := town_level;
+    if (LVar0 == 1) then begin
+        call random_misc();
+    end
+    else begin
+        if (LVar0 == 2) then begin
+            random_roll := random(1, 2);
+            LVar1 := random_roll;
+            if (LVar1 == 1) then begin
+                call random_misc();
+            end
+            else begin
+                if (LVar1 == 2) then begin
+                    item_pid := 84;
+                end
+            end
+        end
+        else begin
+            if (LVar0 == 3) then begin
+                random_roll := random(1, 4);
+                LVar3 := random_roll;
+                if (LVar3 == 1) then begin
+                    call random_misc();
+                end
+                else begin
+                    if (LVar3 == 2) then begin
+                        item_pid := 84;
+                    end
+                    else begin
+                        if (LVar3 == 3) then begin
+                            item_pid := 410;
+                        end
+                        else begin
+                            if (LVar3 == 4) then begin
+                                item_pid := 77;
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return item_pid;
+    return 0;
+    LVar0 := 0;
+    LVar1 := 0;
+    LVar2 := 0;
+    LVar3 := 0;
+end
+
+procedure random_explosives
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    random_roll := 0;
+    LVar0 := town_level;
+    if (LVar0 == 1) then begin
+        call random_misc();
+    end
+    else begin
+        if (LVar0 == 2) then begin
+            call random_misc();
+        end
+        else begin
+            if (LVar0 == 3) then begin
+                random_roll := random(1, 2);
+                LVar1 := random_roll;
+                if (LVar1 == 1) then begin
+                    call random_misc();
+                end
+                else begin
+                    if (LVar1 == 2) then begin
+                        item_pid := 51;
+                    end
+                end
+            end
+        end
+    end
+    return item_pid;
+    return 0;
+    LVar0 := 0;
+    LVar1 := 0;
+    LVar2 := 0;
+end
+
+procedure random_medical_tools
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    random_roll := 0;
+    LVar0 := town_level;
+    if (LVar0 == 1) then begin
+        call random_misc();
+    end
+    else begin
+        if (LVar0 == 2) then begin
+            random_roll := random(1, 2);
+            LVar1 := random_roll;
+            if (LVar1 == 1) then begin
+                call random_misc();
+            end
+            else begin
+                if (LVar1 == 2) then begin
+                    item_pid := 47;
+                end
+            end
+        end
+        else begin
+            if (LVar0 == 3) then begin
+                random_roll := random(1, 3);
+                LVar2 := random_roll;
+                if (LVar2 == 1) then begin
+                    call random_misc();
+                end
+                else begin
+                    if (LVar2 == 2) then begin
+                        item_pid := 47;
+                    end
+                    else begin
+                        if (LVar2 == 3) then begin
+                            item_pid := 91;
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return item_pid;
+    return 0;
+    LVar0 := 0;
+    LVar1 := 0;
+    LVar2 := 0;
+end
+
+procedure random_misc
+begin
+    variable LVar0 := 0;
+    random_roll := random(1, 39);
+    LVar0 := random_roll;
+    if (LVar0 == 1) then begin
+        item_pid := 127;
+    end
+    else begin
+        if (LVar0 == 2) then begin
+            item_pid := 78;
+        end
+        else begin
+            if (LVar0 == 3) then begin
+                item_pid := 99;
+            end
+            else begin
+                if (LVar0 == 4) then begin
+                    item_pid := 101;
+                end
+                else begin
+                    if (LVar0 == 5) then begin
+                        item_pid := 106;
+                    end
+                    else begin
+                        if (LVar0 == 6) then begin
+                            item_pid := 117;
+                        end
+                        else begin
+                            if (LVar0 == 7) then begin
+                                item_pid := 119;
+                            end
+                            else begin
+                                if (LVar0 == 8) then begin
+                                    item_pid := 226;
+                                end
+                                else begin
+                                    if (LVar0 == 9) then begin
+                                        item_pid := 227;
+                                    end
+                                    else begin
+                                        if (LVar0 == 10) then begin
+                                            item_pid := 284;
+                                        end
+                                        else begin
+                                            if (LVar0 == 11) then begin
+                                                item_pid := 289;
+                                            end
+                                            else begin
+                                                if (LVar0 == 12) then begin
+                                                    item_pid := 295;
+                                                end
+                                                else begin
+                                                    if (LVar0 == 13) then begin
+                                                        item_pid := 314;
+                                                    end
+                                                    else begin
+                                                        if (LVar0 == 14) then begin
+                                                            item_pid := 315;
+                                                        end
+                                                        else begin
+                                                            if (LVar0 == 15) then begin
+                                                                item_pid := 316;
+                                                            end
+                                                            else begin
+                                                                if (LVar0 == 16) then begin
+                                                                    item_pid := 317;
+                                                                end
+                                                                else begin
+                                                                    if (LVar0 == 17) then begin
+                                                                        item_pid := 325;
+                                                                    end
+                                                                    else begin
+                                                                        if (LVar0 == 18) then begin
+                                                                            item_pid := 326;
+                                                                        end
+                                                                        else begin
+                                                                            if (LVar0 == 19) then begin
+                                                                                item_pid := 423;
+                                                                            end
+                                                                            else begin
+                                                                                if (LVar0 == 20) then begin
+                                                                                    item_pid := 439;
+                                                                                end
+                                                                                else begin
+                                                                                    if (LVar0 == 21) then begin
+                                                                                        item_pid := 540;
+                                                                                    end
+                                                                                    else begin
+                                                                                        if (LVar0 == 22) then begin
+                                                                                            item_pid := 543;
+                                                                                        end
+                                                                                        else begin
+                                                                                            if (LVar0 == 23) then begin
+                                                                                                item_pid := 872;
+                                                                                            end
+                                                                                            else begin
+                                                                                                if (LVar0 == 24) then begin
+                                                                                                    item_pid := 877;
+                                                                                                end
+                                                                                                else begin
+                                                                                                    if (LVar0 == 24) then begin
+                                                                                                        item_pid := 914;
+                                                                                                    end
+                                                                                                    else begin
+                                                                                                        if (LVar0 == 25) then begin
+                                                                                                            item_pid := 915;
+                                                                                                        end
+                                                                                                        else begin
+                                                                                                            if (LVar0 == 26) then begin
+                                                                                                                item_pid := 916;
+                                                                                                            end
+                                                                                                            else begin
+                                                                                                                if (LVar0 == 27) then begin
+                                                                                                                    item_pid := 704;
+                                                                                                                end
+                                                                                                                else begin
+                                                                                                                    if (LVar0 == 28) then begin
+                                                                                                                        item_pid := 640;
+                                                                                                                    end
+                                                                                                                    else begin
+                                                                                                                        if (LVar0 == 29) then begin
+                                                                                                                            item_pid := 642;
+                                                                                                                        end
+                                                                                                                        else begin
+                                                                                                                            if (LVar0 == 30) then begin
+                                                                                                                                item_pid := 611;
+                                                                                                                            end
+                                                                                                                            else begin
+                                                                                                                                if (LVar0 == 31) then begin
+                                                                                                                                    item_pid := 641;
+                                                                                                                                end
+                                                                                                                                else begin
+                                                                                                                                    if (LVar0 == 32) then begin
+                                                                                                                                        item_pid := 810;
+                                                                                                                                    end
+                                                                                                                                    else begin
+                                                                                                                                        if (LVar0 == 33) then begin
+                                                                                                                                            item_pid := 864;
+                                                                                                                                        end
+                                                                                                                                        else begin
+                                                                                                                                            if (LVar0 == 34) then begin
+                                                                                                                                                item_pid := 919;
+                                                                                                                                            end
+                                                                                                                                            else begin
+                                                                                                                                                if (LVar0 == 35) then begin
+                                                                                                                                                    item_pid := 918;
+                                                                                                                                                end
+                                                                                                                                                else begin
+                                                                                                                                                    if (LVar0 == 36) then begin
+                                                                                                                                                        item_pid := 936;
+                                                                                                                                                    end
+                                                                                                                                                    else begin
+                                                                                                                                                        if (LVar0 == 37) then begin
+                                                                                                                                                            item_pid := 937;
+                                                                                                                                                        end
+                                                                                                                                                        else begin
+                                                                                                                                                            if (LVar0 == 38) then begin
+                                                                                                                                                                item_pid := 937;
+                                                                                                                                                            end
+                                                                                                                                                            else begin
+                                                                                                                                                                if (LVar0 == 39) then begin
+                                                                                                                                                                    if (random(1, 100) > (100 - floor(get_critter_stat(dude_obj, 6) / 2))) then begin
+                                                                                                                                                                        item_pid := 378;
+                                                                                                                                                                    end
+                                                                                                                                                                    else begin
+                                                                                                                                                                        call random_money();
+                                                                                                                                                                    end
+                                                                                                                                                                end
+                                                                                                                                                            end
+                                                                                                                                                        end
+                                                                                                                                                    end
+                                                                                                                                                end
+                                                                                                                                            end
+                                                                                                                                        end
+                                                                                                                                    end
+                                                                                                                                end
+                                                                                                                            end
+                                                                                                                        end
+                                                                                                                    end
+                                                                                                                end
+                                                                                                            end
+                                                                                                        end
+                                                                                                    end
+                                                                                                end
+                                                                                            end
+                                                                                        end
+                                                                                    end
+                                                                                end
+                                                                            end
+                                                                        end
+                                                                    end
+                                                                end
+                                                            end
+                                                        end
+                                                    end
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return item_pid;
+    return 0;
+    LVar0 := 0;
+end
+
+procedure random_money
+begin
+    variable LVar0 := 0;
+    money := 1;
+    LVar0 := town_level;
+    if (LVar0 == 1) then begin
+        item_caps_adjust(container_to_add_to, random(15, 45));
+    end
+    else begin
+        if (LVar0 == 2) then begin
+            item_caps_adjust(container_to_add_to, random(30, 80));
+        end
+        else begin
+            if (LVar0 == 3) then begin
+                item_caps_adjust(container_to_add_to, random(45, 100));
+            end
+        end
+    end
+    return 0;
+    LVar0 := 0;
+end
+
+procedure Delete_Inventory_Item(variable arg0, variable arg1)
+begin
+    variable LVar2 := 0;
+    if (obj_is_carrying_obj_pid(arg0, arg1) > 0) then begin
+        while (obj_is_carrying_obj_pid(arg0, arg1) > 0) do begin
+            LVar2 := obj_carrying_pid_obj(arg0, arg1);
+            rm_obj_from_inven(arg0, LVar2);
+            if (tile_contains_obj_pid(1, 0, arg1)) then begin
+                LVar2 := tile_contains_pid_obj(1, 0, arg1);
+                destroy_object(LVar2);
+            end
+        end
+    end
+    return 0;
+    arg0 := 0;
+    arg1 := 0;
+    LVar2 := 0;
+end
+
+procedure Tile_Vase(variable arg0)
+begin
+    call remove_from_tile(arg0, 33554804, 248);
+    call remove_from_tile(arg0, 33554797, 249);
+    call remove_from_tile(arg0, 33554610, 197);
+    call remove_from_tile(arg0, 33554611, 198);
+    call remove_from_tile(arg0, 33554612, 199);
+    call remove_from_tile(arg0, 33554625, 200);
+    call remove_from_tile(arg0, 33554856, 201);
+    call remove_from_tile(arg0, 33554857, 202);
+    call remove_from_tile(arg0, 33554858, 203);
+    call remove_from_tile(arg0, 33554859, 204);
+    return 0;
+    arg0 := 0;
+end
+
+procedure one
+begin
+    add_item_list := list_begin(2);
+    while (add_item_list != 0) do begin
+        container_to_add_to := list_next(add_item_list);
+        if (container_to_add_to) then begin
+            if (get_sfall_global_int(6170)) then begin
+                call Tile_Vase(container_to_add_to);
+            end
+        end
+        else begin
+            list_end(add_item_list);
+            add_item_list := 0;
+            call two();
+        end
+    end
+end
+
+procedure two
+begin
+    add_item_list := list_begin(1);
+    while (add_item_list != 0) do begin
+        container_to_add_to := list_next(add_item_list);
+        if (container_to_add_to) then begin
+            if (get_sfall_global_int("nirran_1") == 1) then begin
+                call Delete_Inventory_Item(container_to_add_to, 19);
+                call Delete_Inventory_Item(container_to_add_to, 92);
+            end
+        end
+        else begin
+            list_end(add_item_list);
+            add_item_list := 0;
+            call three();
+        end
+    end
+end
+
+procedure three
+begin
+    add_item_list := list_begin(1);
+    while (add_item_list != 0) do begin
+        container_to_add_to := list_next(add_item_list);
+        if (container_to_add_to) then begin
+            if ((obj_item_subtype(container_to_add_to) == 1) and (party_member_obj(obj_pid(container_to_add_to)) == 0) and (obj_pid(container_to_add_to) != 831) and (obj_pid(container_to_add_to) != 549)) then begin
+                if (get_proto_data(obj_pid(container_to_add_to), 36) > 0) then begin
+                    if (is_empty(container_to_add_to)) then begin
+                        call create_add_items(container_to_add_to);
+                    end
+                end
+            end
+        end
+        else begin
+            list_end(add_item_list);
+            add_item_list := 0;
+        end
+    end
+end
+
+procedure remove_from_tile(variable arg0, variable arg1, variable arg2)
+begin
+    variable LVar3 := 0;
+    variable LVar4 := 0;
+    variable LVar5 := 0;
+    if (obj_pid(arg0) == arg1) then begin
+        LVar3 := tile_num(arg0);
+        LVar4 := elevation(arg0);
+        LVar5 := tile_contains_pid_obj(tile_num(arg0), elevation(arg0), arg1);
+        if (get_script(LVar5) < 1) then begin
+            destroy_object(LVar5);
+            create_object_sid(arg2, LVar3, LVar4, -1);
+        end
+    end
+    return 0;
+    arg0 := 0;
+    arg1 := 0;
+    arg2 := 0;
+    LVar3 := 0;
+    LVar4 := 0;
+    LVar5 := 0;
+end
+
+procedure Destroy_Zero
+begin
+    variable LVar0 := 0;
+    if (obj_is_carrying_obj_pid(dude_obj, 0) > 0) then begin
+        while (obj_is_carrying_obj_pid(dude_obj, 0) > 0) do begin
+            LVar0 := obj_carrying_pid_obj(dude_obj, 0);
+            rm_obj_from_inven(dude_obj, LVar0);
+            if (tile_contains_obj_pid(1, 0, 0)) then begin
+                LVar0 := tile_contains_pid_obj(1, 0, 0);
+                destroy_object(LVar0);
+            end
+        end
+    end
+    return 0;
+    LVar0 := 0;
+end
+
+procedure get_current_area
+begin
+    current_town := "";
+    if ((cur_map_index == 3) or (cur_map_index == 4) or (cur_map_index == 35) or (cur_map_index == 5)) then begin
+        current_town := "Arroyo";
+    end
+    else begin
+        if ((cur_map_index == 9) or (cur_map_index == 10) or (cur_map_index == 11) or (cur_map_index == 13) or (cur_map_index == 14) or (cur_map_index == 48) or (cur_map_index == 161)) then begin
+            current_town := "Klamath";
+        end
+        else begin
+            if (cur_map_index == 12) then begin
+                current_town := "Klamath Toxic Caves";
+            end
+            else begin
+                if (cur_map_index == 158) then begin
+                    current_town := "Mad Dog Area";
+                end
+                else begin
+                    if ((cur_map_index == 6) or (cur_map_index == 7) or (cur_map_index == 8)) then begin
+                        current_town := "Den";
+                    end
+                    else begin
+                        if ((cur_map_index == 231) or (cur_map_index == 253) or (cur_map_index == 254) or (cur_map_index == 255)) then begin
+                            current_town := "Primitive Tribes";
+                        end
+                        else begin
+                            if (cur_map_index == 163) then begin
+                                current_town := "Primitive Tribe";
+                            end
+                            else begin
+                                if (cur_map_index == 52) then begin
+                                    current_town := "Den Slave Run";
+                                end
+                                else begin
+                                    if (cur_map_index == 160) then begin
+                                        current_town := "Jennings Farm Area";
+                                    end
+                                    else begin
+                                        if (cur_map_index == 156) then begin
+                                            current_town := "Truck";
+                                        end
+                                        else begin
+                                            if (cur_map_index == 162) then begin
+                                                current_town := "Scraptown";
+                                            end
+                                            else begin
+                                                if ((cur_map_index == 18) or (cur_map_index == 19) or (cur_map_index == 20) or (cur_map_index == 21) or (cur_map_index == 22) or (cur_map_index == 23)) then begin
+                                                    current_town := "Modoc";
+                                                end
+                                                else begin
+                                                    if (cur_map_index == 202) then begin
+                                                        current_town := "Vault 23";
+                                                    end
+                                                    else begin
+                                                        if ((cur_map_index == 24) or (cur_map_index == 25) or (cur_map_index == 26)) then begin
+                                                            current_town := "Ghost Farm";
+                                                        end
+                                                        else begin
+                                                            if (cur_map_index == 223) then begin
+                                                                current_town := "Modoc Thieves Guild";
+                                                            end
+                                                            else begin
+                                                                if (cur_map_index == 224) then begin
+                                                                    current_town := "Salvatore's Gun Stash";
+                                                                end
+                                                                else begin
+                                                                    if (cur_map_index == 225) then begin
+                                                                        current_town := "Special Salvatore";
+                                                                    end
+                                                                    else begin
+                                                                        if (cur_map_index == 226) then begin
+                                                                            current_town := "Salvatore Meeting";
+                                                                        end
+                                                                        else begin
+                                                                            if ((cur_map_index == 31) or (cur_map_index == 32) or (cur_map_index == 33) or (cur_map_index == 34)) then begin
+                                                                                current_town := "Gecko";
+                                                                            end
+                                                                            else begin
+                                                                                if ((cur_map_index == 15) or (cur_map_index == 16) or (cur_map_index == 17) or (cur_map_index == 30)) then begin
+                                                                                    current_town := "Vault City";
+                                                                                end
+                                                                                else begin
+                                                                                    if ((cur_map_index == 92) or (cur_map_index == 93)) then begin
+                                                                                        current_town := "Raiders";
+                                                                                    end
+                                                                                    else begin
+                                                                                        if ((cur_map_index == 78) or (cur_map_index == 79)) then begin
+                                                                                            current_town := "Broken Hills";
+                                                                                        end
+                                                                                        else begin
+                                                                                            if ((cur_map_index == 64) or (cur_map_index == 62) or (cur_map_index == 63) or (cur_map_index == 65) or (cur_map_index == 66) or (cur_map_index == 67)) then begin
+                                                                                                current_town := "Redding";
+                                                                                            end
+                                                                                            else begin
+                                                                                                if ((cur_map_index == 54) or (cur_map_index == 55) or (cur_map_index == 56) or (cur_map_index == 57) or (cur_map_index == 58) or (cur_map_index == 61) or (cur_map_index == 147)) then begin
+                                                                                                    current_town := "New Reno";
+                                                                                                end
+                                                                                                else begin
+                                                                                                    if ((cur_map_index == 195) or (cur_map_index == 197) or (cur_map_index == 235) or (cur_map_index == 196)) then begin
+                                                                                                        current_town := "Lars-City";
+                                                                                                    end
+                                                                                                    else begin
+                                                                                                        if (cur_map_index == 232) then begin
+                                                                                                            current_town := "Lars-City Carson";
+                                                                                                        end
+                                                                                                        else begin
+                                                                                                            if (cur_map_index == 155) then begin
+                                                                                                                current_town := "Abbey";
+                                                                                                            end
+                                                                                                            else begin
+                                                                                                                if ((cur_map_index == 153) or (cur_map_index == 154)) then begin
+                                                                                                                    current_town := "EPA";
+                                                                                                                end
+                                                                                                                else begin
+                                                                                                                    if ((cur_map_index == 220) or (cur_map_index == 221)) then begin
+                                                                                                                        current_town := "Collyweb";
+                                                                                                                    end
+                                                                                                                    else begin
+                                                                                                                        if (cur_map_index == 59) then begin
+                                                                                                                            current_town := "Golgotha";
+                                                                                                                        end
+                                                                                                                        else begin
+                                                                                                                            if (cur_map_index == 60) then begin
+                                                                                                                                current_town := "Reno Stables";
+                                                                                                                            end
+                                                                                                                            else begin
+                                                                                                                                if ((cur_map_index == 27) or (cur_map_index == 28) or (cur_map_index == 29)) then begin
+                                                                                                                                    current_town := "Sierra Army Base";
+                                                                                                                                end
+                                                                                                                                else begin
+                                                                                                                                    if ((cur_map_index == 46) or (cur_map_index == 43) or (cur_map_index == 42) or (cur_map_index == 44) or (cur_map_index == 45)) then begin
+                                                                                                                                        current_town := "NCR";
+                                                                                                                                    end
+                                                                                                                                    else begin
+                                                                                                                                        if (cur_map_index == 157) then begin
+                                                                                                                                            current_town := "B21";
+                                                                                                                                        end
+                                                                                                                                        else begin
+                                                                                                                                            if ((cur_map_index == 37) or (cur_map_index == 38) or (cur_map_index == 36) or (cur_map_index == 39)) then begin
+                                                                                                                                                current_town := "Vault 15";
+                                                                                                                                            end
+                                                                                                                                            else begin
+                                                                                                                                                if ((cur_map_index == 40) or (cur_map_index == 41)) then begin
+                                                                                                                                                    current_town := "Vault 13";
+                                                                                                                                                end
+                                                                                                                                                else begin
+                                                                                                                                                    if ((cur_map_index == 49) or (cur_map_index == 50) or (cur_map_index == 51)) then begin
+                                                                                                                                                        current_town := "Military Base";
+                                                                                                                                                    end
+                                                                                                                                                    else begin
+                                                                                                                                                        if ((cur_map_index == 137) or (cur_map_index == 136) or (cur_map_index == 135) or (cur_map_index == 138) or (cur_map_index == 139) or (cur_map_index == 140) or (cur_map_index == 148)) then begin
+                                                                                                                                                            current_town := "San Francisco";
+                                                                                                                                                        end
+                                                                                                                                                        else begin
+                                                                                                                                                            if ((cur_map_index == 213) or (cur_map_index == 214) or (cur_map_index == 215) or (cur_map_index == 188)) then begin
+                                                                                                                                                                current_town := "Brohdent";
+                                                                                                                                                            end
+                                                                                                                                                            else begin
+                                                                                                                                                                if ((cur_map_index == 218) or (cur_map_index == 217) or (cur_map_index == 219)) then begin
+                                                                                                                                                                    current_town := "Vault 14";
+                                                                                                                                                                end
+                                                                                                                                                                else begin
+                                                                                                                                                                    if (cur_map_index == 109) then begin
+                                                                                                                                                                        current_town := "Navarro";
+                                                                                                                                                                    end
+                                                                                                                                                                    else begin
+                                                                                                                                                                        if ((cur_map_index == 129) or (cur_map_index == 128) or (cur_map_index == 130) or (cur_map_index == 131) or (cur_map_index == 132) or (cur_map_index == 133) or (cur_map_index == 134) or (cur_map_index == 243) or (cur_map_index == 244)) then begin
+                                                                                                                                                                            current_town := "Enclave";
+                                                                                                                                                                        end
+                                                                                                                                                                        else begin
+                                                                                                                                                                            if ((cur_map_index == 238) or (cur_map_index == 229) or (cur_map_index == 240)) then begin
+                                                                                                                                                                                current_town := "BoS Bunker";
+                                                                                                                                                                            end
+                                                                                                                                                                            else begin
+                                                                                                                                                                                if (cur_map_index == 241) then begin
+                                                                                                                                                                                    current_town := "BoS Help";
+                                                                                                                                                                                end
+                                                                                                                                                                                else begin
+                                                                                                                                                                                    if ((cur_map_index == 242) or (cur_map_index == 151)) then begin
+                                                                                                                                                                                        current_town := "BOS Facility";
+                                                                                                                                                                                    end
+                                                                                                                                                                                    else begin
+                                                                                                                                                                                        if (cur_map_index == 96) then begin
+                                                                                                                                                                                            current_town := "Special Whale";
+                                                                                                                                                                                        end
+                                                                                                                                                                                        else begin
+                                                                                                                                                                                            if (cur_map_index == 97) then begin
+                                                                                                                                                                                                current_town := "Special Woodsman";
+                                                                                                                                                                                            end
+                                                                                                                                                                                            else begin
+                                                                                                                                                                                                if (cur_map_index == 98) then begin
+                                                                                                                                                                                                    current_town := "Special Head";
+                                                                                                                                                                                                end
+                                                                                                                                                                                                else begin
+                                                                                                                                                                                                    if (cur_map_index == 99) then begin
+                                                                                                                                                                                                        current_town := "Special Shuttle";
+                                                                                                                                                                                                    end
+                                                                                                                                                                                                    else begin
+                                                                                                                                                                                                        if (cur_map_index == 100) then begin
+                                                                                                                                                                                                            current_town := "Special Unwashed";
+                                                                                                                                                                                                        end
+                                                                                                                                                                                                        else begin
+                                                                                                                                                                                                            if (cur_map_index == 101) then begin
+                                                                                                                                                                                                                current_town := "Special Bridge";
+                                                                                                                                                                                                            end
+                                                                                                                                                                                                            else begin
+                                                                                                                                                                                                                if (cur_map_index == 102) then begin
+                                                                                                                                                                                                                    current_town := "Special Cafe";
+                                                                                                                                                                                                                end
+                                                                                                                                                                                                                else begin
+                                                                                                                                                                                                                    if (cur_map_index == 103) then begin
+                                                                                                                                                                                                                        current_town := "Special Holy 1";
+                                                                                                                                                                                                                    end
+                                                                                                                                                                                                                    else begin
+                                                                                                                                                                                                                        if (cur_map_index == 104) then begin
+                                                                                                                                                                                                                            current_town := "Special Holy 2";
+                                                                                                                                                                                                                        end
+                                                                                                                                                                                                                        else begin
+                                                                                                                                                                                                                            if (cur_map_index == 105) then begin
+                                                                                                                                                                                                                                current_town := "Special Guardian";
+                                                                                                                                                                                                                            end
+                                                                                                                                                                                                                            else begin
+                                                                                                                                                                                                                                if (cur_map_index == 106) then begin
+                                                                                                                                                                                                                                    current_town := "Special Toxic";
+                                                                                                                                                                                                                                end
+                                                                                                                                                                                                                                else begin
+                                                                                                                                                                                                                                    if (cur_map_index == 107) then begin
+                                                                                                                                                                                                                                        current_town := "Special Pariah";
+                                                                                                                                                                                                                                    end
+                                                                                                                                                                                                                                    else begin
+                                                                                                                                                                                                                                        if (cur_map_index == 108) then begin
+                                                                                                                                                                                                                                            current_town := "Special Brahmin";
+                                                                                                                                                                                                                                        end
+                                                                                                                                                                                                                                        else begin
+                                                                                                                                                                                                                                            if (cur_map_index == 164) then begin
+                                                                                                                                                                                                                                                current_town := "Special Postman";
+                                                                                                                                                                                                                                            end
+                                                                                                                                                                                                                                            else begin
+                                                                                                                                                                                                                                                if (cur_map_index == 225) then begin
+                                                                                                                                                                                                                                                    current_town := "Special Salvator";
+                                                                                                                                                                                                                                                end
+                                                                                                                                                                                                                                                else begin
+                                                                                                                                                                                                                                                    if (cur_map_index == 216) then begin
+                                                                                                                                                                                                                                                        current_town := "Dead Soldiers of Master Army";
+                                                                                                                                                                                                                                                    end
+                                                                                                                                                                                                                                                    else begin
+                                                                                                                                                                                                                                                        if ((cur_map_index == 95) or (cur_map_index == 94)) then begin
+                                                                                                                                                                                                                                                            current_town := "Caravan Encounters";
+                                                                                                                                                                                                                                                        end
+                                                                                                                                                                                                                                                        else begin
+                                                                                                                                                                                                                                                            if (cur_map_index == 149) then begin
+                                                                                                                                                                                                                                                                current_town := "In Game Movie";
+                                                                                                                                                                                                                                                            end
+                                                                                                                                                                                                                                                            else begin
+                                                                                                                                                                                                                                                                if (cur_map_index == 150) then begin
+                                                                                                                                                                                                                                                                    current_town := "Bess Dead";
+                                                                                                                                                                                                                                                                end
+                                                                                                                                                                                                                                                                else begin
+                                                                                                                                                                                                                                                                    if ((cur_map_index == 152) or (cur_map_index == 159)) then begin
+                                                                                                                                                                                                                                                                        current_town := "DeathClaw Encounters";
+                                                                                                                                                                                                                                                                    end
+                                                                                                                                                                                                                                                                    else begin
+                                                                                                                                                                                                                                                                        if ((cur_map_index == 0) or (cur_map_index == 1) or (cur_map_index == 2) or (cur_map_index == 81) or (cur_map_index == 82) or (cur_map_index == 83) or (cur_map_index == 84) or (cur_map_index == 113) or (cur_map_index == 114) or (cur_map_index == 115) or (cur_map_index == 116) or (cur_map_index == 117)) then begin
+                                                                                                                                                                                                                                                                            current_town := "Random Encounter Desert";
+                                                                                                                                                                                                                                                                        end
+                                                                                                                                                                                                                                                                        else begin
+                                                                                                                                                                                                                                                                            if ((cur_map_index == 74) or (cur_map_index == 75) or (cur_map_index == 121) or (cur_map_index == 122) or (cur_map_index == 123) or (cur_map_index == 124)) then begin
+                                                                                                                                                                                                                                                                                current_town := "Random Encounter Mountain";
+                                                                                                                                                                                                                                                                            end
+                                                                                                                                                                                                                                                                            else begin
+                                                                                                                                                                                                                                                                                if ((cur_map_index == 68) or (cur_map_index == 125) or (cur_map_index == 141) or (cur_map_index == 142) or (cur_map_index == 143) or (cur_map_index == 144) or (cur_map_index == 145) or (cur_map_index == 146)) then begin
+                                                                                                                                                                                                                                                                                    current_town := "Random Encounter City";
+                                                                                                                                                                                                                                                                                end
+                                                                                                                                                                                                                                                                                else begin
+                                                                                                                                                                                                                                                                                    if ((cur_map_index == 76) or (cur_map_index == 77) or (cur_map_index == 85) or (cur_map_index == 86) or (cur_map_index == 87) or (cur_map_index == 88) or (cur_map_index == 89) or (cur_map_index == 90) or (cur_map_index == 91) or (cur_map_index == 110) or (cur_map_index == 111) or (cur_map_index == 112)) then begin
+                                                                                                                                                                                                                                                                                        current_town := "Random Encounter Coast";
+                                                                                                                                                                                                                                                                                    end
+                                                                                                                                                                                                                                                                                    else begin
+                                                                                                                                                                                                                                                                                        if ((cur_map_index == 69) or (cur_map_index == 70) or (cur_map_index == 71) or (cur_map_index == 72) or (cur_map_index == 73) or (cur_map_index == 80) or (cur_map_index == 119) or (cur_map_index == 120)) then begin
+                                                                                                                                                                                                                                                                                            current_town := "Random Encounter Cavern";
+                                                                                                                                                                                                                                                                                        end
+                                                                                                                                                                                                                                                                                        else begin
+                                                                                                                                                                                                                                                                                            if ((cur_map_index == 252) or (cur_map_index == 251) or (cur_map_index == 250)) then begin
+                                                                                                                                                                                                                                                                                                current_town := "Abandoned Mine";
+                                                                                                                                                                                                                                                                                            end
+                                                                                                                                                                                                                                                                                        end
+                                                                                                                                                                                                                                                                                    end
+                                                                                                                                                                                                                                                                                end
+                                                                                                                                                                                                                                                                            end
+                                                                                                                                                                                                                                                                        end
+                                                                                                                                                                                                                                                                    end
+                                                                                                                                                                                                                                                                end
+                                                                                                                                                                                                                                                            end
+                                                                                                                                                                                                                                                        end
+                                                                                                                                                                                                                                                    end
+                                                                                                                                                                                                                                                end
+                                                                                                                                                                                                                                            end
+                                                                                                                                                                                                                                        end
+                                                                                                                                                                                                                                    end
+                                                                                                                                                                                                                                end
+                                                                                                                                                                                                                            end
+                                                                                                                                                                                                                        end
+                                                                                                                                                                                                                    end
+                                                                                                                                                                                                                end
+                                                                                                                                                                                                            end
+                                                                                                                                                                                                        end
+                                                                                                                                                                                                    end
+                                                                                                                                                                                                end
+                                                                                                                                                                                            end
+                                                                                                                                                                                        end
+                                                                                                                                                                                    end
+                                                                                                                                                                                end
+                                                                                                                                                                            end
+                                                                                                                                                                        end
+                                                                                                                                                                    end
+                                                                                                                                                                end
+                                                                                                                                                            end
+                                                                                                                                                        end
+                                                                                                                                                    end
+                                                                                                                                                end
+                                                                                                                                            end
+                                                                                                                                        end
+                                                                                                                                    end
+                                                                                                                                end
+                                                                                                                            end
+                                                                                                                        end
+                                                                                                                    end
+                                                                                                                end
+                                                                                                            end
+                                                                                                        end
+                                                                                                    end
+                                                                                                end
+                                                                                            end
+                                                                                        end
+                                                                                    end
+                                                                                end
+                                                                            end
+                                                                        end
+                                                                    end
+                                                                end
+                                                            end
+                                                        end
+                                                    end
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return current_town;
+end
+
+procedure determine_town_level
+begin
+    town_level := 0;
+    call get_current_area();
+    if ((current_town == "Arroyo") or (current_town == "Klamath") or (current_town == "Klamath Toxic Caves") or (current_town == "Mad Dog Area")) then begin
+        town_level := 1;
+    end
+    else begin
+        if ((current_town == "Den") or (current_town == "Den Slave Run") or (current_town == "Modoc") or (current_town == "Jennings Farm Area") or (current_town == "Truck") or (current_town == "Scraptown") or (current_town == "Modoc Thieves Guild") or (current_town == "Salvatore's Gun Stash") or (current_town == "Special Salvatore") or (current_town == "Salvatore Meeting") or (current_town == "Collyweb") or (current_town == "Primitive Tribe") or (current_town == "Ghost Farm")) then begin
+            town_level := 1;
+        end
+        else begin
+            if ((current_town == "Gecko") or (current_town == "Vault City") or (current_town == "Raiders") or (current_town == "Special Whale") or (current_town == "Special Woodsman") or (current_town == "Special Head") or (current_town == "Special Shuttle") or (current_town == "Special Unwashed") or (current_town == "Special Bridge") or (current_town == "Special Cafe") or (current_town == "Special Holy 1") or (current_town == "Special Holy 2") or (current_town == "Special Guardian") or (current_town == "Special Toxic") or (current_town == "Special Pariah") or (current_town == "Special Brahmin") or (current_town == "Special Postman") or (current_town == "Special Salvator") or (current_town == "Dead Soldiers of Master Army") or (current_town == "Caravan Encounters") or (current_town == "DeathClaw Encounters") or (current_town == "Random Encounter Desert") or (current_town == "Random Encounter Mountain") or (current_town == "Random Encounter City") or (current_town == "Random Encounter Coast") or (current_town == "Random Encounter Cavern") or (current_town == "Bess Dead") or (current_town == "In Game Movie")) then begin
+                town_level := 2;
+            end
+            else begin
+                if ((current_town == "Broken Hills") or (current_town == "New Reno") or (current_town == "Salvatore's Gun Stash") or (current_town == "Special Salvatore") or (current_town == "Salvatore Meeting") or (current_town == "Golgotha") or (current_town == "Reno Stables") or (current_town == "Redding") or (current_town == "Abbey") or (current_town == "Lars-City Carson") or (current_town == "Lars-City") or (current_town == "EPA") or (current_town == "Sierra Army Base")) then begin
+                    town_level := 2;
+                end
+                else begin
+                    if ((current_town == "NCR") or (current_town == "Vault 15") or (current_town == "B21") or (current_town == "Vault 13")) then begin
+                        town_level := 3;
+                    end
+                    else begin
+                        if ((current_town == "Military Base") or (current_town == "Navarro") or (current_town == "San Francisco") or (current_town == "Vault 23") or (current_town == "Vault 14") or (current_town == "Brohdent") or (current_town == "BOS Facility") or (current_town == "BoS Help") or (current_town == "BoS Bunker") or (current_town == "Abandoned Mine") or (current_town == "Enclave")) then begin
+                            town_level := 3;
+                        end
+                        else begin
+                            if (current_town == "") then begin
+                                town_level := 2;
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return town_level;
+end
+
+procedure Is_Random_Encounter_Map
+begin
+    if ((cur_map_index == 95) or (cur_map_index == 94) or (cur_map_index == 152) or (cur_map_index == 159) or (cur_map_index == 0) or (cur_map_index == 1) or (cur_map_index == 2) or (cur_map_index == 81) or (cur_map_index == 82) or (cur_map_index == 83) or (cur_map_index == 84) or (cur_map_index == 113) or (cur_map_index == 114) or (cur_map_index == 115) or (cur_map_index == 116) or (cur_map_index == 117) or (cur_map_index == 74) or (cur_map_index == 75) or (cur_map_index == 121) or (cur_map_index == 122) or (cur_map_index == 123) or (cur_map_index == 124) or (cur_map_index == 68) or (cur_map_index == 125) or (cur_map_index == 141) or (cur_map_index == 142) or (cur_map_index == 143) or (cur_map_index == 144) or (cur_map_index == 145) or (cur_map_index == 146) or (cur_map_index == 76) or (cur_map_index == 77) or (cur_map_index == 85) or (cur_map_index == 86) or (cur_map_index == 87) or (cur_map_index == 88) or (cur_map_index == 89) or (cur_map_index == 90) or (cur_map_index == 91) or (cur_map_index == 110) or (cur_map_index == 111) or (cur_map_index == 112) or (cur_map_index == 69) or (cur_map_index == 70) or (cur_map_index == 71) or (cur_map_index == 72) or (cur_map_index == 73) or (cur_map_index == 80) or (cur_map_index == 119) or (cur_map_index == 120)) then begin
+        return 1;
+    end
+    return 0;
+end
+

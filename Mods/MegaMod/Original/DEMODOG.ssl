@@ -1,0 +1,302 @@
+variable do_once;
+
+procedure start;
+procedure pickup_p_proc;
+procedure look_at_p_proc;
+procedure description_p_proc;
+procedure map_enter_p_proc;
+procedure timed_event_p_proc;
+procedure critter_p_proc;
+procedure talk_p_proc;
+procedure use_obj_on_p_proc;
+procedure destroy_p_proc;
+procedure growl;
+procedure do_dialogue;
+procedure follow_player;
+procedure push_p_proc;
+procedure Node001;
+
+import variable dog_is_angry;
+
+variable Phil_approaches;
+
+import variable growling;
+import variable smartass2;
+
+
+procedure start
+begin
+end
+
+procedure pickup_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_local_var(5, 2);
+    end
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    if (not(dog_is_angry)) then begin
+        display_msg(message_str(1491, 100));
+    end
+    else begin
+        display_msg(message_str(1491, 101));
+    end
+end
+
+procedure description_p_proc
+begin
+    script_overrides;
+    if (not(dog_is_angry)) then begin
+        display_msg(message_str(1491, 100));
+    end
+    else begin
+        display_msg(message_str(1491, 101));
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    critter_add_trait(self_obj, 1, 5, 186);
+    if (global_var(801) == 0) then begin
+        dog_is_angry := 1;
+        set_map_var(14, 1);
+        critter_add_trait(self_obj, 1, 6, 51);
+        add_timer_event(self_obj, game_ticks(25), 1);
+    end
+    else begin
+        if (global_var(801) == 1) then begin
+            critter_add_trait(self_obj, 1, 6, 0);
+            call follow_player();
+        end
+    end
+end
+
+procedure timed_event_p_proc
+begin
+    if ((fixed_param == 1) and map_var(14)) then begin
+        if (dog_is_angry) then begin
+            call growl();
+            add_timer_event(self_obj, game_ticks(25), 1);
+        end
+    end
+    else begin
+        if (fixed_param == 2) then begin
+            call follow_player();
+        end
+    end
+end
+
+procedure critter_p_proc
+begin
+    dog_is_angry := map_var(14);
+    if (not(dog_is_angry)) then begin
+        if (tile_distance_objs(self_obj, dude_obj) > 4) then begin
+            animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(dude_obj), random(0, 5), 1), 1);
+        end
+        else begin
+            animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(dude_obj), random(0, 5), 3), 0);
+        end
+    end
+end
+
+procedure talk_p_proc
+begin
+    call do_dialogue();
+end
+
+procedure use_obj_on_p_proc
+begin
+    script_overrides;
+    if ((obj_pid(obj_being_used_with) == 103) or (obj_pid(obj_being_used_with) == 81) or (obj_pid(obj_being_used_with) == 284)) then begin
+        set_global_var(801, 1);
+        display_msg(message_str(1491, 109));
+        give_exp_points(550);
+        critter_add_trait(self_obj, 1, 6, 0);
+        dog_is_angry := 0;
+        set_map_var(14, 0);
+        add_timer_event(self_obj, game_ticks(1), 2);
+    end
+    else begin
+        display_msg(message_str(1491, 111));
+    end
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        if (((global_var(4) + global_var(5)) >= 25) and ((global_var(4) > (3 * global_var(5))) or (global_var(2) == 1)) and (global_var(1) == 0)) then begin
+            set_global_var(2, 1);
+            set_global_var(3, 0);
+        end
+        if (metarule(51, self_obj) == 2) then begin
+            if (source_obj == dude_obj) then begin
+                set_global_var(2, 0);
+                set_global_var(1, global_var(1) + 1);
+                set_global_var(0, global_var(0) + -10);
+                debug_msg("Player gains " + -10 + " Karma Points.");
+                set_global_var(37, 0);
+                set_global_var(38, 0);
+                set_global_var(39, 0);
+                set_global_var(40, 0);
+                set_global_var(41, 0);
+                set_global_var(42, 0);
+                set_global_var(43, 0);
+                set_global_var(44, 0);
+                set_global_var(45, 0);
+                if (global_var(0) >= 1000) then begin
+                    set_global_var(37, 1);
+                end
+                else begin
+                    if (global_var(0) >= 750) then begin
+                        set_global_var(38, 1);
+                    end
+                    else begin
+                        if (global_var(0) >= 500) then begin
+                            set_global_var(39, 1);
+                        end
+                        else begin
+                            if (global_var(0) >= 250) then begin
+                                set_global_var(40, 1);
+                            end
+                            else begin
+                                if (global_var(0) > -250) then begin
+                                    set_global_var(41, 1);
+                                end
+                                else begin
+                                    if (global_var(0) > -500) then begin
+                                        set_global_var(42, 1);
+                                    end
+                                    else begin
+                                        if (global_var(0) > -750) then begin
+                                            set_global_var(43, 1);
+                                        end
+                                        else begin
+                                            if (global_var(0) > -1000) then begin
+                                                set_global_var(44, 1);
+                                            end
+                                            else begin
+                                                set_global_var(45, 1);
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+                set_global_var(55, global_var(808) + 5);
+                debug_msg("Added " + 5 + " to Town Rep");
+            end
+        end
+        if (((global_var(4) + global_var(5)) >= 25) and ((global_var(5) > (2 * global_var(4))) or (global_var(3) == 1))) then begin
+            set_global_var(3, 1);
+            set_global_var(2, 0);
+        end
+        set_global_var(0, global_var(0) + -1);
+        debug_msg("Player gains " + -1 + " Karma Points.");
+        set_global_var(37, 0);
+        set_global_var(38, 0);
+        set_global_var(39, 0);
+        set_global_var(40, 0);
+        set_global_var(41, 0);
+        set_global_var(42, 0);
+        set_global_var(43, 0);
+        set_global_var(44, 0);
+        set_global_var(45, 0);
+        if (global_var(0) >= 1000) then begin
+            set_global_var(37, 1);
+        end
+        else begin
+            if (global_var(0) >= 750) then begin
+                set_global_var(38, 1);
+            end
+            else begin
+                if (global_var(0) >= 500) then begin
+                    set_global_var(39, 1);
+                end
+                else begin
+                    if (global_var(0) >= 250) then begin
+                        set_global_var(40, 1);
+                    end
+                    else begin
+                        if (global_var(0) > -250) then begin
+                            set_global_var(41, 1);
+                        end
+                        else begin
+                            if (global_var(0) > -500) then begin
+                                set_global_var(42, 1);
+                            end
+                            else begin
+                                if (global_var(0) > -750) then begin
+                                    set_global_var(43, 1);
+                                end
+                                else begin
+                                    if (global_var(0) > -1000) then begin
+                                        set_global_var(44, 1);
+                                    end
+                                    else begin
+                                        set_global_var(45, 1);
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    if (global_var(801) == 0) then begin
+        display_msg(message_str(1491, 110));
+        give_exp_points(200);
+        dog_is_angry := 0;
+        set_map_var(14, 0);
+        rm_timer_event(self_obj);
+    end
+end
+
+procedure growl
+begin
+    float_msg(self_obj, message_str(1491, 103), 0);
+    growling := 1;
+    smartass2 := 1;
+end
+
+procedure do_dialogue
+begin
+    float_msg(self_obj, message_str(1491, 102), 0);
+end
+
+procedure follow_player
+begin
+    variable LVar0 := 0;
+    LVar0 := tile_num_in_direction(tile_num(dude_obj), random(0, 5), 1);
+    if (tile_distance_objs(self_obj, dude_obj) < 8) then begin
+        animate_move_obj_to_tile(self_obj, LVar0, 0 bwor 16);
+    end
+    else begin
+        animate_move_obj_to_tile(self_obj, LVar0, 1 bwor 16);
+    end
+    add_timer_event(self_obj, game_ticks(2), 2);
+    critter_add_trait(self_obj, 1, 6, 0);
+    return 0;
+    LVar0 := 0;
+end
+
+procedure push_p_proc
+begin
+    if (global_var(801) == 1) then begin
+        call Node001();
+    end
+    else begin
+        script_overrides;
+    end
+end
+
+procedure Node001
+begin
+    float_msg(self_obj, message_str(1491, random(102, 107)), 8);
+end
+
