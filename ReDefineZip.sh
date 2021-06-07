@@ -342,16 +342,21 @@ find "$mod_namepath/" -type f -iname '*.int' | sort | while read int; do
      echo "- Decompile $int"
 
      set +e
+echo "$int2ssl $int2ssl_1 -s4 -- $int $ssl > $err"
      "$int2ssl" $int2ssl_1 -s4 -- "$int" "$ssl" > "$err"
+echo "OK"
      set -e
 
      if [ -s "$ssl" ]; then
         ssl_ok=1
+echo "dos2unix"
         dos2unix --quiet "$ssl"
+echo "cp"
         cp "$ssl" $dir_after
        #chmod -f 0444 "$ssl"
+echo "mv"
         mv "$ssl" $dir_before
-
+echo "md"
         md="| [Original/$ssl_base]($(basename "$dir_before")/$ssl_base) | [ReDefine/$ssl_base]($(basename "$dir_after")/$ssl_base) | diff | - |"
      else
         ssl_ok=0
@@ -382,6 +387,7 @@ find "$mod_namepath/" -type f -iname '*.int' | sort | while read int; do
 
         md="| - | - | - | [$see_err]($see_err) |"
      fi
+echo "md 2"
      echo "$md" >> "$mod_namepath/README.index"
      rm -f "$int" "$ssl" "$err" "$dmp"
 

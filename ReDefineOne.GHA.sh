@@ -22,7 +22,7 @@ if [[ $ok -eq 0 ]]; then
    echo "[WARNING] ReDefine script error"
    if [[ -d "$dir" ]]; then
       echo "[WARNING] Directory <$dir> reset"
-      git checkout -- "$dir"
+      git checkout -- "$dir" || true
    fi
    exit
 fi
