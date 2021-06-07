@@ -506,7 +506,7 @@ echo "? README.index"
 if [[ -f "$mod_namepath/README.index" ]]; then
    sed -i "1 i | Original | ReDefine | Diff | Error |" "$mod_namepath/README.index"
 echo "column"
-   column -t -e -L "$mod_namepath/README.index" > "$mod_namepath/README.md"
+   column -t "$mod_namepath/README.index" > "$mod_namepath/README.md"
    separator="$(head -n 1 "$mod_namepath/README.md" | sed -e 's/[^\|]/-/g')"
 echo "sed 2i"
    sed -i "2i $separator" "$mod_namepath/README.md"
