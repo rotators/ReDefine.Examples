@@ -1,0 +1,62 @@
+name: ReDefine
+
+on:
+ schedule:
+ - cron: 0 3 1 * *
+ push:
+  paths:
+  - '.github/workflows/ReDefine.yml'
+  - 'ReDefine.cfg'
+  - 'Tools/*'
+  - '*/*.zip'
+  - '*.sh'
+ workflow_dispatch:
+
+defaults:
+ run:
+  shell: bash
+
+jobs:
+ Run:
+  runs-on: ubuntu-latest
+  env:
+   GHA_COMMIT=.git/gha.commit
+  steps:
+  - name: Clone
+    uses: actions/checkout@v2
+
+  - name: Tools
+    run:  ./Tools.sh
+
+  - name: Mods/Demo1in2
+    run:  ./ReDefineOne.GHA.sh Mods/Demo1in2.zip
+
+  - name: Validation
+    run:  |
+          :
+          if [[ -f "$GHA_COMMIT" ]]; then
+             sed -i '1s!^ReDefine run\n!' $GHA_COMMIT
+             dos2unix $GHA_COMMIT
+             cat $GHA_COMMIT
+             echo GHA_PUSH=true >> $GITHUB_ENV
+          fi
+
+  - name: Push
+    if:   env.GHA_PUSH == 'true'
+    run:  |
+          :
+          echo ::group::git commit
+          sed -i '/^#/d' $GHA_COMMIT
+          git config --global user.name  "${{ secrets.ANTALASKAYA_NAME }}"
+          git config --global user.email "${{ secrets.ANTALASKAYA_NAME }}"
+          git commit --file="$GHA_COMMIT" 2>&1
+          rm -f $GHA_COMMIT
+          echo ::endgroup::
+
+          echo ::group::git log
+          git log -p -n 1 2>&1
+          echo ::endgroup::
+
+          echo ::group::git push
+         #git push 2>&1
+          echo ::endgroup::
