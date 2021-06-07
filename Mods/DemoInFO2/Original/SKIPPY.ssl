@@ -1,0 +1,515 @@
+variable global_temp;
+variable in_dialog;
+
+procedure start;
+procedure critter_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure destroy_p_proc;
+procedure look_at_p_proc;
+procedure description_p_proc;
+procedure use_skill_on_p_proc;
+procedure damage_p_proc;
+procedure map_enter_p_proc;
+procedure timed_event_p_proc;
+procedure Node998;
+procedure Node999;
+procedure Node000;
+procedure Node001;
+procedure Node002;
+procedure Node003;
+procedure Node004;
+procedure Node04a;
+procedure Node005;
+procedure Node006;
+procedure Node007;
+procedure Node008;
+procedure Node009;
+procedure Node011;
+
+variable I_Am_A_Crypt;
+variable I_Am_A_Fool;
+variable This_Once;
+
+import variable Fool_Pointer;
+import variable Crypt_Pointer;
+import variable Phrax_Pointer;
+import variable Rock_Pointer;
+import variable Fool_Taunt;
+import variable Crypt_Taunt;
+import variable Skippy_Talk;
+
+
+procedure start
+begin
+    I_Am_A_Fool := 1;
+end
+
+procedure critter_p_proc
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    if (map_var(0)) then begin
+        critter_add_trait(self_obj, 1, 6, 0);
+    end
+    else begin
+        critter_add_trait(self_obj, 1, 6, 212);
+    end
+    if ((local_var(5) > 1) and obj_can_see_obj(self_obj, dude_obj)) then begin
+        set_local_var(5, 1);
+        if (critter_is_fleeing(self_obj)) then begin
+            if (anim_busy(self_obj) == 0) then begin
+                if ((tile_distance_objs(self_obj, dude_obj) < 8) or obj_can_see_obj(self_obj, dude_obj)) then begin
+                    if (anim_busy(self_obj) == 0) then begin
+                        global_temp := rotation_to_tile(tile_num(dude_obj), tile_num(self_obj));
+                        animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                        global_temp := (global_temp + 1) % 6;
+                        while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)))) do begin
+                            debug_msg("flee loop: rot == " + global_temp);
+                            animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                            global_temp := (global_temp + 1) % 6;
+                        end
+                    end
+                end
+            end
+        end
+        else begin
+            attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
+        end
+    end
+    if (Skippy_Talk == 1) then begin
+        call Node011();
+    end
+    LVar0 := (self_obj == Fool_Pointer) or (self_obj == Crypt_Pointer) or (self_obj == Phrax_Pointer) or (self_obj == Rock_Pointer);
+    if (I_Am_A_Fool and Crypt_Taunt) then begin
+        Crypt_Taunt := 0;
+        if (random(1, 5) == 1) then begin
+            float_msg(self_obj, message_str(1304, random(100, 113)), -1);
+        end
+    end
+    else begin
+        if (I_Am_A_Crypt and Fool_Taunt) then begin
+            Fool_Taunt := 0;
+            if (random(1, 5) == 1) then begin
+                float_msg(self_obj, message_str(1304, random(200, 218)), -1);
+            end
+        end
+        else begin
+            if ((global_var(697) == 1) and (tile_num(self_obj) != 20725)) then begin
+                animate_move_obj_to_tile(self_obj, 20725, 0);
+            end
+            else begin
+                if ((global_var(697) == 1) and (tile_num(self_obj) == 20725)) then begin
+                    set_global_var(697, 0);
+                    add_timer_event(self_obj, game_ticks(2), 1);
+                end
+                else begin
+                    if (map_var(2) and (tile_num(self_obj) != 27504)) then begin
+                        if ((self_obj == Phrax_Pointer) and (This_Once == 0)) then begin
+                            This_Once := 1;
+                            float_msg(self_obj, message_str(1304, 300), 2);
+                        end
+                        set_global_var(697, 2);
+                        animate_move_obj_to_tile(self_obj, 27504, 0);
+                    end
+                    else begin
+                        if ((tile_num(self_obj) == 27504) and (global_var(697) == 2)) then begin
+                            set_obj_visibility(self_obj, 1);
+                            if (I_Am_A_Fool) then begin
+                                set_map_var(10, map_var(10) - 1);
+                            end
+                            else begin
+                                set_map_var(11, map_var(11) - 1);
+                            end
+                        end
+                        else begin
+                            if (LVar0 != 0) then begin
+                                if (random(0, 21) == 1) then begin
+                                    LVar1 := tile_num_in_direction(tile_num(self_obj), random(0, 5), 2);
+                                    animate_move_obj_to_tile(self_obj, LVar1, 0);
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure pickup_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_local_var(5, 2);
+    end
+    float_msg(self_obj, message_str(1323, 122), 0);
+end
+
+procedure talk_p_proc
+begin
+    if (map_var(1)) then begin
+        if (in_dialog == 0) then begin
+            in_dialog := 1;
+            start_gdialog(1323, self_obj, 4, -1, -1);
+            gsay_start;
+            call Node007();
+            gsay_end;
+            end_dialogue;
+            in_dialog := 0;
+        end
+        else begin
+            call Node007();
+        end
+    end
+    else begin
+        if (map_var(0)) then begin
+            if (in_dialog == 0) then begin
+                in_dialog := 1;
+                start_gdialog(1323, self_obj, 4, -1, -1);
+                gsay_start;
+                call Node008();
+                gsay_end;
+                end_dialogue;
+                in_dialog := 0;
+            end
+            else begin
+                call Node008();
+            end
+        end
+        else begin
+            if (obj_is_carrying_obj_pid(self_obj, 75)) then begin
+                if (in_dialog == 0) then begin
+                    in_dialog := 1;
+                    start_gdialog(1323, self_obj, 4, -1, -1);
+                    gsay_start;
+                    call Node000();
+                    gsay_end;
+                    end_dialogue;
+                    in_dialog := 0;
+                end
+                else begin
+                    call Node000();
+                end
+            end
+            else begin
+                if (in_dialog == 0) then begin
+                    in_dialog := 1;
+                    start_gdialog(1323, self_obj, 4, -1, -1);
+                    gsay_start;
+                    call Node009();
+                    gsay_end;
+                    end_dialogue;
+                    in_dialog := 0;
+                end
+                else begin
+                    call Node009();
+                end
+            end
+        end
+    end
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_global_var(4, global_var(4) + 1);
+        if (metarule(51, self_obj) == 2) then begin
+            if (source_obj == dude_obj) then begin
+                set_global_var(2, 0);
+                set_global_var(1, global_var(1) + 1);
+                set_global_var(0, global_var(0) + -15);
+                debug_msg("Player gains " + -15 + " Karma Points.");
+                set_global_var(37, 0);
+                set_global_var(38, 0);
+                set_global_var(39, 0);
+                set_global_var(40, 0);
+                set_global_var(41, 0);
+                set_global_var(42, 0);
+                set_global_var(43, 0);
+                set_global_var(44, 0);
+                set_global_var(45, 0);
+                if (global_var(0) >= 1000) then begin
+                    set_global_var(37, 1);
+                end
+                else begin
+                    if (global_var(0) >= 750) then begin
+                        set_global_var(38, 1);
+                    end
+                    else begin
+                        if (global_var(0) >= 500) then begin
+                            set_global_var(39, 1);
+                        end
+                        else begin
+                            if (global_var(0) >= 250) then begin
+                                set_global_var(40, 1);
+                            end
+                            else begin
+                                if (global_var(0) > -250) then begin
+                                    set_global_var(41, 1);
+                                end
+                                else begin
+                                    if (global_var(0) > -500) then begin
+                                        set_global_var(42, 1);
+                                    end
+                                    else begin
+                                        if (global_var(0) > -750) then begin
+                                            set_global_var(43, 1);
+                                        end
+                                        else begin
+                                            if (global_var(0) > -1000) then begin
+                                                set_global_var(44, 1);
+                                            end
+                                            else begin
+                                                set_global_var(45, 1);
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+                set_global_var(696, global_var(696) + -8);
+                debug_msg("Added " + -8 + " to Town Rep");
+            end
+        end
+        if (((global_var(4) + global_var(5)) >= 25) and ((global_var(5) > (2 * global_var(4))) or (global_var(3) == 1))) then begin
+            set_global_var(3, 1);
+            set_global_var(2, 0);
+        end
+        if (((global_var(4) + global_var(5)) >= 25) and ((global_var(4) > (3 * global_var(5))) or (global_var(2) == 1)) and (global_var(1) == 0)) then begin
+            set_global_var(2, 1);
+            set_global_var(3, 0);
+        end
+        set_global_var(0, global_var(0) + 5);
+        debug_msg("Player gains " + 5 + " Karma Points.");
+        set_global_var(37, 0);
+        set_global_var(38, 0);
+        set_global_var(39, 0);
+        set_global_var(40, 0);
+        set_global_var(41, 0);
+        set_global_var(42, 0);
+        set_global_var(43, 0);
+        set_global_var(44, 0);
+        set_global_var(45, 0);
+        if (global_var(0) >= 1000) then begin
+            set_global_var(37, 1);
+        end
+        else begin
+            if (global_var(0) >= 750) then begin
+                set_global_var(38, 1);
+            end
+            else begin
+                if (global_var(0) >= 500) then begin
+                    set_global_var(39, 1);
+                end
+                else begin
+                    if (global_var(0) >= 250) then begin
+                        set_global_var(40, 1);
+                    end
+                    else begin
+                        if (global_var(0) > -250) then begin
+                            set_global_var(41, 1);
+                        end
+                        else begin
+                            if (global_var(0) > -500) then begin
+                                set_global_var(42, 1);
+                            end
+                            else begin
+                                if (global_var(0) > -750) then begin
+                                    set_global_var(43, 1);
+                                end
+                                else begin
+                                    if (global_var(0) > -1000) then begin
+                                        set_global_var(44, 1);
+                                    end
+                                    else begin
+                                        set_global_var(45, 1);
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        set_global_var(696, global_var(696) + 2);
+        debug_msg("Added " + 2 + " to Town Rep");
+    end
+    set_map_var(10, map_var(10) - 1);
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    if (local_var(4) == 1) then begin
+        display_msg(message_str(1323, 100));
+    end
+    else begin
+        display_msg(message_str(1323, 101));
+    end
+    if (obj_is_carrying_obj_pid(self_obj, 75)) then begin
+        display_msg(message_str(1323, 102));
+    end
+end
+
+procedure description_p_proc
+begin
+    script_overrides;
+    if (local_var(4) == 1) then begin
+        display_msg(message_str(1323, 100));
+    end
+    else begin
+        display_msg(message_str(1323, 101));
+    end
+    if (obj_is_carrying_obj_pid(self_obj, 75)) then begin
+        display_msg(message_str(1323, 102));
+    end
+end
+
+procedure use_skill_on_p_proc
+begin
+end
+
+procedure damage_p_proc
+begin
+    if (party_member_obj(obj_pid(source_obj)) != 0) then begin
+        set_local_var(6, 1);
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    variable LVar0 := 0;
+    if (metarule(22, 0) == 0) then begin
+        if (metarule(14, 0)) then begin
+            critter_add_trait(self_obj, 1, 6, 212);
+            critter_add_trait(self_obj, 1, 5, 187);
+            LVar0 := create_object_sid(75, 0, 0, -1);
+            add_mult_objs_to_inven(self_obj, LVar0, 1);
+        end
+    end
+end
+
+procedure timed_event_p_proc
+begin
+    if (fixed_param == 1) then begin
+        set_global_var(697, 0);
+        if (I_Am_A_Fool) then begin
+            Fool_Taunt := 1;
+            float_msg(self_obj, message_str(1304, random(100, 115)), -1);
+        end
+        else begin
+            if (I_Am_A_Crypt) then begin
+                Crypt_Taunt := 1;
+                float_msg(self_obj, message_str(1304, random(200, 218)), -1);
+            end
+        end
+        add_timer_event(self_obj, 50, 2);
+    end
+    if (fixed_param == 2) then begin
+        if (I_Am_A_Fool) then begin
+            attack_complex(Crypt_Pointer, 0, 1, 0, 0, 30000, 0, 0);
+        end
+        else begin
+            attack_complex(Fool_Pointer, 0, 1, 0, 0, 30000, 0, 0);
+        end
+    end
+end
+
+procedure Node998
+begin
+    set_local_var(5, 2);
+end
+
+procedure Node999
+begin
+end
+
+procedure Node000
+begin
+    gsay_reply(1323, 105);
+    giq_option(4, 1323, 106, Node001, 50);
+    giq_option(4, 1323, 107, Node006, 50);
+    giq_option(4, 1323, 108, Node004, 50);
+end
+
+procedure Node001
+begin
+    gsay_reply(1323, 109);
+    giq_option(4, 1323, 110, Node002, 50);
+    giq_option(4, 1323, 111, Node003, 50);
+end
+
+procedure Node002
+begin
+    gsay_reply(1323, 112);
+    giq_option(4, 1323, 104, Node998, 50);
+end
+
+procedure Node003
+begin
+    gsay_reply(1323, 113);
+    giq_option(4, 1323, 114, Node004, 50);
+end
+
+procedure Node004
+begin
+    gsay_reply(1323, 115);
+    giq_option(4, 1323, 116, Node04a, 50);
+end
+
+procedure Node04a
+begin
+    if (is_success(do_check(dude_obj, 3, 0))) then begin
+        call Node005();
+    end
+    else begin
+        call Node006();
+    end
+end
+
+procedure Node005
+begin
+    variable LVar0 := 0;
+    if (obj_is_carrying_obj_pid(self_obj, 75)) then begin
+        LVar0 := obj_carrying_pid_obj(self_obj, 75);
+        rm_obj_from_inven(self_obj, LVar0);
+        add_obj_to_inven(dude_obj, LVar0);
+        gsay_reply(1323, 117);
+    end
+    giq_option(4, 1323, 104, Node999, 50);
+end
+
+procedure Node006
+begin
+    gsay_reply(1323, 118);
+    giq_option(4, 1323, 104, Node998, 50);
+end
+
+procedure Node007
+begin
+    gsay_reply(1323, 119);
+    giq_option(4, 1323, 104, Node999, 50);
+end
+
+procedure Node008
+begin
+    gsay_reply(1323, 120);
+    giq_option(4, 1323, 104, Node999, 50);
+end
+
+procedure Node009
+begin
+    gsay_reply(1323, 121);
+    giq_option(4, 1323, 104, Node999, 50);
+end
+
+procedure Node011
+begin
+    Skippy_Talk := 0;
+    float_msg(self_obj, message_str(1323, 125), 0);
+    animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(dude_obj), 0, 1), 0);
+    set_local_var(5, 2);
+end
+
