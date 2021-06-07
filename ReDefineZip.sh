@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eux
+set -eu
 
 readonly home=$(pwd)
 
@@ -342,21 +342,15 @@ find "$mod_namepath/" -type f -iname '*.int' | sort | while read int; do
      echo "- Decompile $int"
 
      set +e
-echo "$int2ssl $int2ssl_1 -s4 -- $int $ssl > $err"
      "$int2ssl" $int2ssl_1 -s4 -- "$int" "$ssl" > "$err"
-echo "OK"
      set -e
 
      if [ -s "$ssl" ]; then
         ssl_ok=1
-echo "dos2unix"
         dos2unix --quiet "$ssl"
-echo "cp"
         cp "$ssl" $dir_after
        #chmod -f 0444 "$ssl"
-echo "mv"
         mv "$ssl" $dir_before
-echo "md"
         md="| [Original/$ssl_base]($(basename "$dir_before")/$ssl_base) | [ReDefine/$ssl_base]($(basename "$dir_after")/$ssl_base) | diff | - |"
      else
         ssl_ok=0
@@ -387,7 +381,6 @@ echo "md"
 
         md="| - | - | - | [$see_err]($see_err) |"
      fi
-echo "md 2"
      echo "$md" >> "$mod_namepath/README.index"
      rm -f "$int" "$ssl" "$err" "$dmp"
 
@@ -486,12 +479,9 @@ find $dir_before/ -type f -iname '*.ssl' | sort | while read ssl; do
      ssl_base="$(basename "$ssl")"
      ssl_base_re="${ssl_base//\./\\.}"
      set +e
-echo "git diff --no-index -- $dir_before/$ssl_base $dir_after/$ssl_base > $mod_namepath/$ssl_base.diff"
      git diff --no-index -- "$dir_before/$ssl_base" "$dir_after/$ssl_base" > "$mod_namepath/$ssl_base.diff"
-echo "OK"
      set -e
 
-echo "? ssl_base.diff"
      if [[ -s "$mod_namepath/$ssl_base.diff" ]]; then
         sed -ri "s/^\| (\[Original\/$ssl_base_re\].+) \| diff \| (.+) \|$/| \1 | [$ssl_base.diff]($ssl_base.diff) | \2 |/" "$mod_namepath/README.index"
      else
@@ -499,16 +489,12 @@ echo "? ssl_base.diff"
         sed -ri "s/^\| (\[Original\/$ssl_base_re\].+) \| diff \| (.+) \|$/| \1 | - | \2 |/" "$mod_namepath/README.index"
         rm -f "$mod_namepath/$ssl_base.diff"
      fi
-echo "! ssl_base.diff"
 done
 
-echo "? README.index"
 if [[ -f "$mod_namepath/README.index" ]]; then
    sed -i "1 i | Original | ReDefine | Diff | Error |" "$mod_namepath/README.index"
-echo "column"
    column -t "$mod_namepath/README.index" > "$mod_namepath/README.md"
    separator="$(head -n 1 "$mod_namepath/README.md" | sed -e 's/[^\|]/-/g')"
-echo "sed 2i"
    sed -i "2i $separator" "$mod_namepath/README.md"
   #sed -i '1s/^/\n/' "$mod_namepath/README.md"
    rm -f "$mod_namepath/README.index"
