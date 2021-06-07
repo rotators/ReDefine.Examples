@@ -486,9 +486,12 @@ find $dir_before/ -type f -iname '*.ssl' | sort | while read ssl; do
      ssl_base="$(basename "$ssl")"
      ssl_base_re="${ssl_base//\./\\.}"
      set +e
+echo "git diff --no-index -- $dir_before/$ssl_base $dir_after/$ssl_base > $mod_namepath/$ssl_base.diff"
      git diff --no-index -- "$dir_before/$ssl_base" "$dir_after/$ssl_base" > "$mod_namepath/$ssl_base.diff"
+echo "OK"
      set -e
 
+echo "? ssl_base.diff"
      if [[ -s "$mod_namepath/$ssl_base.diff" ]]; then
         sed -ri "s/^\| (\[Original\/$ssl_base_re\].+) \| diff \| (.+) \|$/| \1 | [$ssl_base.diff]($ssl_base.diff) | \2 |/" "$mod_namepath/README.index"
      else
@@ -496,12 +499,16 @@ find $dir_before/ -type f -iname '*.ssl' | sort | while read ssl; do
         sed -ri "s/^\| (\[Original\/$ssl_base_re\].+) \| diff \| (.+) \|$/| \1 | - | \2 |/" "$mod_namepath/README.index"
         rm -f "$mod_namepath/$ssl_base.diff"
      fi
+echo "! ssl_base.diff"
 done
 
+echo "? README.index"
 if [[ -f "$mod_namepath/README.index" ]]; then
    sed -i "1 i | Original | ReDefine | Diff | Error |" "$mod_namepath/README.index"
+echo "column"
    column -t -e -L "$mod_namepath/README.index" > "$mod_namepath/README.md"
    separator="$(head -n 1 "$mod_namepath/README.md" | sed -e 's/[^\|]/-/g')"
+echo "sed 2i"
    sed -i "2i $separator" "$mod_namepath/README.md"
   #sed -i '1s/^/\n/' "$mod_namepath/README.md"
    rm -f "$mod_namepath/README.index"
