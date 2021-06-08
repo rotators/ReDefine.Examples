@@ -8,7 +8,7 @@ function GetToolCMake()
     local repo=$2
     local src=$3
 
-    local dir=Tools/$name.work
+    local dir=_Tools/$name.work
 
     rm -fr $dir
     git clone $repo $dir/Repo
@@ -24,7 +24,7 @@ function GetToolRaw()
     local repo=$2
     local src=$3
 
-    local dir=Tools/$name.work
+    local dir=_Tools/$name.work
 
     rm -fr $dir
     git clone $repo $dir/Repo
@@ -32,10 +32,10 @@ function GetToolRaw()
     rm -fr $dir
 }
 
-if [ ! -f Tools/int2ssl ]; then
+if [ ! -f _Tools/int2ssl ]; then
    GetToolCMake int2ssl https://github.com/FakelsHub/int-sslc int2ssl
 fi
 
-if [ ! -f Tools/ReDefine ]; then
+if [ ! -f _Tools/ReDefine ]; then
    GetToolCMake ReDefine https://github.com/rotators/ReDefine Source
 fi

@@ -357,8 +357,9 @@ find "$mod_namepath/" -type f -iname '*.int' | sort | while read int; do
         cp "$ssl" $dir_after
        #chmod -f 0444 "$ssl"
         mv "$ssl" $dir_before
-        ssl_base_md=${ssl_base//\ /\*}
-        md="| [Original/$ssl_base_md]($(basename "$dir_before")/$ssl_base_md) | [ReDefine/$ssl_base_md]($(basename "$dir_after")/$ssl_base_md) | diff | - |"
+        ssl_base_md="${ssl_base//\ /\*}"
+        ssl_base_20="${ssl_base//\ /%20}"
+        md="| [Original/$ssl_base_md]($(basename "$dir_before")/$ssl_base_20) | [ReDefine/$ssl_base_md]($(basename "$dir_after")/$ssl_base_20) | diff | - |"
      else
         ssl_ok=0
 
@@ -383,13 +384,15 @@ find "$mod_namepath/" -type f -iname '*.int' | sort | while read int; do
 
         # create dummy file to avoid confusion
         see_err="$(basename "$dir_errors")/$(basename "$err")"
-        echo "See: [$see_err](../$see_err)" > "$dir_before/${ssl_base%.*}.md"
-        echo "See: [$see_err](../$see_err)" > "$dir_after/${ssl_base%.*}.md"
-
+        see_err_20="${see_err//\ //%20}"
         see_err_md="${see_err//\ /\*}"
-        md="| - | - | - | [$see_err_md]($see_err_md) |"
+
+        echo "See: [$see_err](../$see_err_20)" > "$dir_before/${ssl_base%.*}.md"
+        echo "See: [$see_err](../$see_err_20)" > "$dir_after/${ssl_base%.*}.md"
+
+        md="| - | - | - | [$see_err_md]($see_err_20) |"
      fi
-     echo "$md" >> "$mod_namepath/README.index"
+     echo "$md" >> "$mod_namepath/.INDEX"
      rm -f "$int" "$ssl" "$err" "$dmp"
 
 #
@@ -490,27 +493,30 @@ find $dir_before/ -type f -iname '*.ssl' | sort | while read ssl; do
      ssl_base="$(basename "$ssl")"
      ssl_base_re="${ssl_base//\./\\.}"
      ssl_base_re="${ssl_base_re//\ /\\*}"
+     ssl_base_re="${ssl_base_re//\(/\\(}"
+     ssl_base_re="${ssl_base_re//\)/\\)}"
      set +e
      git diff --no-index -- "$dir_before/$ssl_base" "$dir_after/$ssl_base" > "$mod_namepath/$ssl_base.diff"
      set -e
 
      if [[ -s "$mod_namepath/$ssl_base.diff" ]]; then
-        sed -ri "s/^\| (\[Original\/$ssl_base_re\].+) \| diff \| (.+) \|$/| \1 | [$ssl_base_re.diff]($ssl_base_re.diff) | \2 |/" "$mod_namepath/README.index"
+        ssl_base_re_20="${ssl_base_re//\*/%20}"
+        sed -ri "s/^\| (\[Original\/$ssl_base_re\].+) \| diff \| (.+) \|$/| \1 | [$ssl_base_re.diff]($ssl_base_re_20.diff) | \2 |/" "$mod_namepath/.INDEX"
      else
-        echo "- Skip $ssl_base.diff"
-        sed -ri "s/^\| (\[Original\/$ssl_base_re\].+) \| diff \| (.+) \|$/| \1 | - | \2 |/" "$mod_namepath/README.index"
+        echo "- Skip $mod_namepath/$ssl_base.diff"
+        sed -ri "s/^\| (\[Original\/$ssl_base_re\].+) \| diff \| (.+) \|$/| \1 | - | \2 |/" "$mod_namepath/.INDEX"
         rm -f "$mod_namepath/$ssl_base.diff"
      fi
 done
 
-if [[ -f "$mod_namepath/README.index" ]]; then
-   sed -i '1 i | Original | ReDefine | Diff | Error |' "$mod_namepath/README.index"
-   column -t "$mod_namepath/README.index" > "$mod_namepath/README.md"
-   separator="$(head -n 1 "$mod_namepath/README.md" | sed -e 's/[^\|]/-/g')"
-   sed -i "2i $separator" "$mod_namepath/README.md"
-   sed -i 's!\*!\ !g' "$mod_namepath/README.md"
-  #sed -i '1s/^/\n/' "$mod_namepath/README.md"
-   rm -f "$mod_namepath/README.index"
+if [[ -f "$mod_namepath/.INDEX" ]]; then
+   sed -i '1 i | Original | ReDefine | Diff | Error |' "$mod_namepath/.INDEX"
+   column -t "$mod_namepath/.INDEX" > "$mod_namepath/.INDEX.md"
+   separator="$(head -n 1 "$mod_namepath/.INDEX.md" | sed -e 's/[^\|]/-/g')"
+   sed -i "2i $separator" "$mod_namepath/.INDEX.md"
+   sed -i 's!\*!\ !g' "$mod_namepath/.INDEX.md"
+  #sed -i '1s/^/\n/' "$mod_namepath/.INDEX.md"
+   rm -f "$mod_namepath/.INDEX"
 fi
 
 #

@@ -1,4 +1,4 @@
-#### define_lite.h ####
-- TRAIT_PERK, TRAIT_OBJECT, TRAIT_TRAIT moved to define_trait.h
-- DEFINE_METARULE_SET_CAR_CARRY_AMOUNT renamed to METARULE_SET_CAR_CARRY_AMOUNT
-- DEFINE_METARULE_GET_CAR_CARRY_AMOUNT to METAARULE_GET_CAR_CARRY_AMOUNT
+Headers
+=======
+
+Files in this directory are copied from sfall repository; any and all tweaks are listed in .diff files.

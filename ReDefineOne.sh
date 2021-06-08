@@ -15,7 +15,7 @@ base=$(basename $zip)
 echo "${base%.*}"                    >  $log
 echo "${base%.*}" | sed -e 's!.!-!g' >> $log
 
-{ time ./ReDefineZip.sh --int2ssl=Tools/int2ssl --redefine=Tools/ReDefine --mod=$zip ; } 2>>$log
+{ time ./ReDefineZip.sh --int2ssl=_Tools/int2ssl --redefine=_Tools/ReDefine --mod=$zip ; } 2>>$log
 
 if [[ -d $dir ]]; then
    echo                  >> $log

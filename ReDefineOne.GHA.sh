@@ -32,7 +32,7 @@ if [[ ! -d "$dir" ]]; then
    exit
 fi
 
-if [[ -z "${GHA_COMMIT+x}"2 ]]; then
+if [[ -z "${GHA_COMMIT+x}" ]]; then
    gha="ReDefine.GHA.txt"
    echo "[WARNING] GHA_COMMIT variable missing"
    echo "[WARNING] Using default value <$gha>"
@@ -40,7 +40,6 @@ else
    gha="$GHA_COMMIT"
 fi
 
-echo
 if [[ -n "$(git status --short --untracked-files=all "$dir")" ]]; then
    git add "$dir"
    echo "$dir : updated"
@@ -48,3 +47,4 @@ if [[ -n "$(git status --short --untracked-files=all "$dir")" ]]; then
 else
    echo "$dir : no changes"
 fi
+echo
