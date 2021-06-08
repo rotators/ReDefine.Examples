@@ -163,8 +163,6 @@
 // ----------------------------------------------------------------------- //
 // ----------------------------------------------------------------------- //
 
-// Trait defines //
-// ReDefine : TRAIT_PERK, TRAIT_OBJECT, TRAIT_TRAIT : moved to define_trait.h
 
 // Perk Trait Types
 #define PERK_bonus_awareness      (0)
@@ -329,7 +327,6 @@
 #define STAT_max_hp          (7)
 // luck MUST be the last basic stat
 // derived stats
-#define STAT_max_hit_points        (7)
 #define STAT_max_move_points       (8)
 #define STAT_ac                    (9)
 #define STAT_unused                (10) // used in sfall for critter inventory size (see CritterInvSizeLimitMode)
@@ -393,7 +390,7 @@
 #define SKILL_TRAPS                         (11)
 #define SKILL_SCIENCE                       (12)
 #define SKILL_REPAIR                        (13)
-#define SKILL_CONVERSANT                    (14)
+#define SKILL_SPEECH                        (14)
 #define SKILL_BARTER                        (15)
 #define SKILL_GAMBLING                      (16)
 #define SKILL_OUTDOORSMAN                   (17)
@@ -578,7 +575,6 @@
 
 /* Script MetaRules */
 #define METARULE_SIGNAL_END_GAME  13
-#define METARULE_TEST_FIRSTRUN    14
 #define signal_end_game   metarule(METARULE_SIGNAL_END_GAME, 0)
 #define METARULE_ELEVATOR         15
 #define elevator(X)       metarule(METARULE_ELEVATOR, X)

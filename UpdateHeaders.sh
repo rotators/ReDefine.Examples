@@ -53,9 +53,14 @@ git clone --quiet https://github.com/phobos2077/sfall.git $dir_sfall
 
 GetHeader define_lite.h
 SedHeader define_lite.h 's/DEFINE_METARULE_/METARULE_/g'
-SedHeader define_lite.h 's/.+define\ TRAIT_PERK.+/\/\/ ReDefine : TRAIT_PERK, TRAIT_OBJECT, TRAIT_TRAIT : moved to define_trait.h/'
+SedHeader define_lite.h '/Trait defines/d'
+SedHeader define_lite.h '/define TRAIT_PERK/d'
 SedHeader define_lite.h '/define TRAIT_OBJECT/d'
 SedHeader define_lite.h '/define TRAIT_TRAIT/d'
+SedHeader define_lite.h 's/define SKILL_CONVERSANT/define SKILL_SPEECH    /g'
+SedHeader define_lite.h 's/SKILL_CONVERSANT/SKILL_SPEECH/g'
+SedHeader define_lite.h '/STAT_max_hit_points/d'
+SedHeader define_lite.h '578d'
 PutHeader define_lite.h
 
 GetHeader define_extra.h
