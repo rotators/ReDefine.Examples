@@ -298,7 +298,7 @@ else
 fi
 
 #
-# Decompile
+# Decompile setup
 #
 
 mkdir -p $dir_before $dir_after
@@ -318,20 +318,26 @@ if [ -f "$mod_namepath/1" ]; then
 fi
 
 mkdir -p "$mod_namepath.tmp"
+
+#
+# Normalize filenames: uppercase name, lowercase extension
+#
+
 find "$mod_namepath/" -type f -iname '*.int' | sort | while read int; do
-     #
-     # uppercase file name, lowercase file extension
-     #
      int_base="$(basename "$int")"
      int_name="${int_base%.*}"
      int_uclc="$(dirname "$int")/${int_name^^}.int"
 
      if [[ "$int" != "$int_uclc" ]]; then
-       #echo "+ $int -> $int_uclc"
         mv "$int" "$int_uclc"
-        int="$int_uclc"
      fi
+done
 
+#
+# Decompile
+#
+
+find "$mod_namepath/" -type f -iname '*.int' | sort | while read int; do
      ssl="${int%.*}.ssl"
      err="${int%.*}.txt"
      dmp="${int%.*}.dmp"
@@ -351,7 +357,8 @@ find "$mod_namepath/" -type f -iname '*.int' | sort | while read int; do
         cp "$ssl" $dir_after
        #chmod -f 0444 "$ssl"
         mv "$ssl" $dir_before
-        md="| [Original/$ssl_base]($(basename "$dir_before")/$ssl_base) | [ReDefine/$ssl_base]($(basename "$dir_after")/$ssl_base) | diff | - |"
+        ssl_base_md=${ssl_base//\ /\*}
+        md="| [Original/$ssl_base_md]($(basename "$dir_before")/$ssl_base_md) | [ReDefine/$ssl_base_md]($(basename "$dir_after")/$ssl_base_md) | diff | - |"
      else
         ssl_ok=0
 
@@ -379,7 +386,8 @@ find "$mod_namepath/" -type f -iname '*.int' | sort | while read int; do
         echo "See: [$see_err](../$see_err)" > "$dir_before/${ssl_base%.*}.md"
         echo "See: [$see_err](../$see_err)" > "$dir_after/${ssl_base%.*}.md"
 
-        md="| - | - | - | [$see_err]($see_err) |"
+        see_err_md="${see_err//\ /\*}"
+        md="| - | - | - | [$see_err_md]($see_err_md) |"
      fi
      echo "$md" >> "$mod_namepath/README.index"
      rm -f "$int" "$ssl" "$err" "$dmp"
@@ -409,10 +417,13 @@ find "$mod_namepath/" -type f -iname '*.int' | sort | while read int; do
 [ReDefine]
 HeadersDir=$src_headers
 ScriptsDir=$mod_namepath.tmp
-$(egrep '^FormatFunctions ' ReDefine.cfg)
+
 LogFile    = $dir_after/$ssl_base.log
 LogDebug   = $dir_after/$ssl_base.DEBUG.log
 LogWarning = $dir_after/$ssl_base.WARNING.log
+
+$(egrep '^FormatFunctions ' ReDefine.cfg)
+$(egrep '^UnixNewlines ' ReDefine.cfg)
 
 [Defines]
 DUMMY = dummy.h DUMMY
@@ -478,12 +489,13 @@ echo "- Create .diff files"
 find $dir_before/ -type f -iname '*.ssl' | sort | while read ssl; do
      ssl_base="$(basename "$ssl")"
      ssl_base_re="${ssl_base//\./\\.}"
+     ssl_base_re="${ssl_base_re//\ /\\*}"
      set +e
      git diff --no-index -- "$dir_before/$ssl_base" "$dir_after/$ssl_base" > "$mod_namepath/$ssl_base.diff"
      set -e
 
      if [[ -s "$mod_namepath/$ssl_base.diff" ]]; then
-        sed -ri "s/^\| (\[Original\/$ssl_base_re\].+) \| diff \| (.+) \|$/| \1 | [$ssl_base.diff]($ssl_base.diff) | \2 |/" "$mod_namepath/README.index"
+        sed -ri "s/^\| (\[Original\/$ssl_base_re\].+) \| diff \| (.+) \|$/| \1 | [$ssl_base_re.diff]($ssl_base_re.diff) | \2 |/" "$mod_namepath/README.index"
      else
         echo "- Skip $ssl_base.diff"
         sed -ri "s/^\| (\[Original\/$ssl_base_re\].+) \| diff \| (.+) \|$/| \1 | - | \2 |/" "$mod_namepath/README.index"
@@ -492,10 +504,11 @@ find $dir_before/ -type f -iname '*.ssl' | sort | while read ssl; do
 done
 
 if [[ -f "$mod_namepath/README.index" ]]; then
-   sed -i "1 i | Original | ReDefine | Diff | Error |" "$mod_namepath/README.index"
+   sed -i '1 i | Original | ReDefine | Diff | Error |' "$mod_namepath/README.index"
    column -t "$mod_namepath/README.index" > "$mod_namepath/README.md"
    separator="$(head -n 1 "$mod_namepath/README.md" | sed -e 's/[^\|]/-/g')"
    sed -i "2i $separator" "$mod_namepath/README.md"
+   sed -i 's!\*!\ !g' "$mod_namepath/README.md"
   #sed -i '1s/^/\n/' "$mod_namepath/README.md"
    rm -f "$mod_namepath/README.index"
 fi
