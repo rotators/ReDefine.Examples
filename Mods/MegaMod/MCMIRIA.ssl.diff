@@ -1,5 +1,5 @@
 diff --git a/Mods/MegaMod/Original/MCMIRIA.ssl b/Mods/MegaMod/ReDefine/MCMIRIA.ssl
-index 4a219a9..83ad156 100644
+index 4a219a9..ba7e68a 100644
 --- a/Mods/MegaMod/Original/MCMIRIA.ssl
 +++ b/Mods/MegaMod/ReDefine/MCMIRIA.ssl
 @@ -208,14 +208,14 @@ end
@@ -69,7 +69,7 @@ index 4a219a9..83ad156 100644
 +            if ((global_var(GVAR_MODOC_STAGE_STATE) % 100) == 5) then begin
                  reg_anim_func(2, self_obj);
 -                move_to(self_obj, (21710 * ((global_var(291) - (global_var(291) % 100)) == 200)) + (21505 * ((global_var(291) - (global_var(291) % 100)) == 300)), elevation(dude_obj));
-+                move_to(self_obj, (21710 * ((global_var(GVAR_MODOC_STAGE_STATE) - (global_var(GVAR_MODOC_STAGE_STATE) % 100)) == 200)) + (21505 * ((global_var(GVAR_MODOC_STAGE_STATE) - (global_var(GVAR_MODOC_STAGE_STATE) % 100)) == 300)), elevation(dude_obj));
++                move_to(self_obj, (21710 * ((global_var(GVAR_MODOC_STAGE_STATE) - (global_var(GVAR_MODOC_STAGE_STATE) % 100)) == 200)) + (21505 * ((global_var(GVAR_MODOC_STAGE_STATE) - (global_var(GVAR_MODOC_STAGE_STATE) % 100)) == 300)), dude_elevation);
                  anim(self_obj, 1000, rotation_to_tile(tile_num(self_obj), tile_num(modoc_jo_obj)));
              end
              else begin
@@ -259,7 +259,7 @@ index 4a219a9..83ad156 100644
                                      end
                                      if (anim_busy(self_obj) == 0) then begin
 -                                        if (metarule3(106, tile_num_in_direction(tile_num(self_obj), has_trait(1, self_obj, 10), 1), elevation(self_obj), 0) != 0) then begin
-+                                        if (metarule3(106, tile_num_in_direction(tile_num(self_obj), obj_get_rot(self_obj), 1), elevation(self_obj), 0) != 0) then begin
++                                        if (tile_get_next_critter(tile_num_in_direction(tile_num(self_obj), obj_get_rot(self_obj), 1), elevation(self_obj), 0) != 0) then begin
                                              if (anim_busy(self_obj) == 0) then begin
 -                                                global_temp := rotation_to_tile(tile_num_in_direction(tile_num(self_obj), rotation_to_tile(tile_num_in_direction(tile_num(self_obj), has_trait(1, self_obj, 10), 1), tile_num(self_obj)), 1), tile_num(self_obj));
 +                                                global_temp := rotation_to_tile(tile_num_in_direction(tile_num(self_obj), rotation_to_tile(tile_num_in_direction(tile_num(self_obj), obj_get_rot(self_obj), 1), tile_num(self_obj)), 1), tile_num(self_obj));
@@ -390,7 +390,7 @@ index 4a219a9..83ad156 100644
 +            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
          end
 -        if (metarule(51, self_obj) == 2) then begin
-+        if (critter_kill_type(self_obj) == 2) then begin
++        if (critter_kill_type(self_obj) == KILL_TYPE_children_kills) then begin
              if (source_obj == dude_obj) then begin
 -                set_global_var(2, 0);
 -                set_global_var(1, global_var(1) + 1);
@@ -656,20 +656,25 @@ index 4a219a9..83ad156 100644
              end
          end
      end
-@@ -748,11 +748,11 @@ end
+@@ -748,13 +748,13 @@ end
  
  procedure map_enter_p_proc
  begin
 -    if (metarule(14, 0)) then begin
 +    if (map_first_run) then begin
          set_local_var(13, tile_num(self_obj));
-         critter_attempt_placement(self_obj, local_var(13), elevation(dude_obj));
+-        critter_attempt_placement(self_obj, local_var(13), elevation(dude_obj));
++        critter_attempt_placement(self_obj, local_var(13), dude_elevation);
      end
 -    if ((cur_map_index == 19) or (cur_map_index == 37) or (cur_map_index == 38)) then begin
+-        if ((elevation(self_obj) != elevation(dude_obj)) and (local_var(9) != 0)) then begin
+-            move_to(self_obj, tile_num(self_obj), elevation(dude_obj));
 +    if ((CUR_MAP_MODINN) or (CUR_MAP_V15ENT) or (CUR_MAP_V15ENTB)) then begin
-         if ((elevation(self_obj) != elevation(dude_obj)) and (local_var(9) != 0)) then begin
-             move_to(self_obj, tile_num(self_obj), elevation(dude_obj));
++        if ((elevation(self_obj) != dude_elevation) and (local_var(9) != 0)) then begin
++            move_to(self_obj, tile_num(self_obj), dude_elevation);
          end
+     end
+     Perform_Party_Add := 0;
 @@ -766,7 +766,7 @@ begin
          Perform_Critter_Float := 0;
      end
@@ -679,11 +684,13 @@ index 4a219a9..83ad156 100644
      rm_timer_event(self_obj);
      add_timer_event(self_obj, game_ticks(random(40, 50)), 1);
  end
-@@ -777,7 +777,7 @@ begin
+@@ -776,8 +776,8 @@ begin
+     if (combat_is_initialized == 0) then begin
          if (anim_busy(self_obj) == 0) then begin
              if (party_member_obj(obj_pid(self_obj)) != 0) then begin
-                 if (metarule3(109, self_obj, 0, 0) == 1) then begin
+-                if (metarule3(109, self_obj, 0, 0) == 1) then begin
 -                    if ((100 * get_critter_stat(self_obj, 35) / get_critter_stat(self_obj, 7)) <= 60) then begin
++                if (chem_use_level(self_obj) == 1) then begin
 +                    if ((100 * get_critter_stat(self_obj, STAT_current_hp) / get_critter_stat(self_obj, STAT_max_hp)) <= 60) then begin
                          global_temp := 1;
                          if (obj_is_carrying_obj_pid(self_obj, 144)) then begin
@@ -733,11 +740,13 @@ index 4a219a9..83ad156 100644
                                          end
                                      end
                                  end
-@@ -847,7 +847,7 @@ begin
+@@ -846,8 +846,8 @@ begin
+                     end
                  end
                  else begin
-                     if (metarule3(109, self_obj, 0, 0) == 2) then begin
+-                    if (metarule3(109, self_obj, 0, 0) == 2) then begin
 -                        if ((100 * get_critter_stat(self_obj, 35) / get_critter_stat(self_obj, 7)) <= 30) then begin
++                    if (chem_use_level(self_obj) == 2) then begin
 +                        if ((100 * get_critter_stat(self_obj, STAT_current_hp) / get_critter_stat(self_obj, STAT_max_hp)) <= 30) then begin
                              global_temp := 1;
                              if (obj_is_carrying_obj_pid(self_obj, 144)) then begin
@@ -787,11 +796,13 @@ index 4a219a9..83ad156 100644
                                              end
                                          end
                                      end
-@@ -917,7 +917,7 @@ begin
+@@ -916,8 +916,8 @@ begin
+                         end
                      end
                      else begin
-                         if (metarule3(109, self_obj, 0, 0) == 3) then begin
+-                        if (metarule3(109, self_obj, 0, 0) == 3) then begin
 -                            if ((100 * get_critter_stat(self_obj, 35) / get_critter_stat(self_obj, 7)) <= 50) then begin
++                        if (chem_use_level(self_obj) == 3) then begin
 +                            if ((100 * get_critter_stat(self_obj, STAT_current_hp) / get_critter_stat(self_obj, STAT_max_hp)) <= 50) then begin
                                  global_temp := 1;
                                  if (obj_is_carrying_obj_pid(self_obj, 144)) then begin
@@ -841,11 +852,13 @@ index 4a219a9..83ad156 100644
                                                  end
                                              end
                                          end
-@@ -987,7 +987,7 @@ begin
+@@ -986,8 +986,8 @@ begin
+                             end
                          end
                          else begin
-                             if (metarule3(109, self_obj, 0, 0) == 4) then begin
+-                            if (metarule3(109, self_obj, 0, 0) == 4) then begin
 -                                if ((100 * get_critter_stat(self_obj, 35) / get_critter_stat(self_obj, 7)) <= 50) then begin
++                            if (chem_use_level(self_obj) == 4) then begin
 +                                if ((100 * get_critter_stat(self_obj, STAT_current_hp) / get_critter_stat(self_obj, STAT_max_hp)) <= 50) then begin
                                      global_temp := 1;
                                      if (obj_is_carrying_obj_pid(self_obj, 144)) then begin
@@ -1684,57 +1697,76 @@ index 4a219a9..83ad156 100644
          rm_timer_event(self_obj);
          add_timer_event(self_obj, game_ticks(random(40, 50)), 1);
      end
-@@ -2339,42 +2339,42 @@ begin
+@@ -2338,51 +2338,51 @@ begin
+     if (critter_inven_obj(self_obj, 0) != ArmourVal) then begin
          ArmourVal := obj_pid(critter_inven_obj(self_obj, 0));
          if (obj_pid(critter_inven_obj(self_obj, 0)) == 0) then begin
-             metarule3(107, self_obj, 16777279, 0);
+-            metarule3(107, self_obj, 16777279, 0);
 -            float_msg(self_obj, message_str(106, random(6000, 6001)), 8);
++            art_change_fid_num(self_obj, 16777279);
 +            float_msg(self_obj, mstr(random(6000, 6001)), FLOAT_MSG_YELLOW);
          end
          else begin
              if ((obj_pid(critter_inven_obj(self_obj, 0)) == 1) or (obj_pid(critter_inven_obj(self_obj, 0)) == 379)) then begin
-                 metarule3(107, self_obj, 16777221, 0);
+-                metarule3(107, self_obj, 16777221, 0);
 -                float_msg(self_obj, message_str(106, random(6005, 6006)), 8);
++                art_change_fid_num(self_obj, 16777221);
 +                float_msg(self_obj, mstr(random(6005, 6006)), FLOAT_MSG_YELLOW);
              end
              else begin
                  if ((obj_pid(critter_inven_obj(self_obj, 0)) == 74) or (obj_pid(critter_inven_obj(self_obj, 0)) == 265)) then begin
-                     metarule3(107, self_obj, 16777222, 0);
+-                    metarule3(107, self_obj, 16777222, 0);
 -                    float_msg(self_obj, message_str(106, random(6010, 6011)), 8);
++                    art_change_fid_num(self_obj, 16777222);
 +                    float_msg(self_obj, mstr(random(6010, 6011)), FLOAT_MSG_YELLOW);
                  end
                  else begin
                      if ((obj_pid(critter_inven_obj(self_obj, 0)) == 2) or (obj_pid(critter_inven_obj(self_obj, 0)) == 380) or (obj_pid(critter_inven_obj(self_obj, 0)) == 240)) then begin
-                         metarule3(107, self_obj, 16777223, 0);
+-                        metarule3(107, self_obj, 16777223, 0);
 -                        float_msg(self_obj, message_str(106, random(6015, 6016)), 8);
++                        art_change_fid_num(self_obj, 16777223);
 +                        float_msg(self_obj, mstr(random(6015, 6016)), FLOAT_MSG_YELLOW);
                      end
                      else begin
                          if ((obj_pid(critter_inven_obj(self_obj, 0)) == 17) or (obj_pid(critter_inven_obj(self_obj, 0)) == 381) or (obj_pid(critter_inven_obj(self_obj, 0)) == 239)) then begin
-                             metarule3(107, self_obj, 16777219, 0);
+-                            metarule3(107, self_obj, 16777219, 0);
 -                            float_msg(self_obj, message_str(106, random(6020, 6021)), 8);
++                            art_change_fid_num(self_obj, 16777219);
 +                            float_msg(self_obj, mstr(random(6020, 6021)), FLOAT_MSG_YELLOW);
                          end
                          else begin
                              if ((obj_pid(critter_inven_obj(self_obj, 0)) == 3) or (obj_pid(critter_inven_obj(self_obj, 0)) == 232)) then begin
-                                 metarule3(107, self_obj, 16777217, 0);
+-                                metarule3(107, self_obj, 16777217, 0);
 -                                float_msg(self_obj, message_str(106, random(6025, 6026)), 8);
++                                art_change_fid_num(self_obj, 16777217);
 +                                float_msg(self_obj, mstr(random(6025, 6026)), FLOAT_MSG_YELLOW);
                              end
                              else begin
                                  if ((obj_pid(critter_inven_obj(self_obj, 0)) == 348) or (obj_pid(critter_inven_obj(self_obj, 0)) == 349)) then begin
-                                     metarule3(107, self_obj, 16777287, 0);
+-                                    metarule3(107, self_obj, 16777287, 0);
 -                                    float_msg(self_obj, message_str(106, random(6030, 6031)), 8);
++                                    art_change_fid_num(self_obj, 16777287);
 +                                    float_msg(self_obj, mstr(random(6030, 6031)), FLOAT_MSG_YELLOW);
                                  end
                                  else begin
                                      if ((obj_pid(critter_inven_obj(self_obj, 0)) == 524) or (obj_pid(critter_inven_obj(self_obj, 0)) == 113)) then begin
-                                         metarule3(107, self_obj, 16777218, 0);
+-                                        metarule3(107, self_obj, 16777218, 0);
 -                                        float_msg(self_obj, message_str(106, random(6035, 6036)), 8);
++                                        art_change_fid_num(self_obj, 16777218);
 +                                        float_msg(self_obj, mstr(random(6035, 6036)), FLOAT_MSG_YELLOW);
                                      end
                                      else begin
                                          if (obj_pid(critter_inven_obj(self_obj, 0)) == 554) then begin
+-                                            metarule3(107, self_obj, 16777301, 0);
++                                            art_change_fid_num(self_obj, 16777301);
+                                         end
+                                         else begin
+                                             if (obj_pid(critter_inven_obj(self_obj, 0)) == 580) then begin
+-                                                metarule3(107, self_obj, 16777328, 0);
++                                                art_change_fid_num(self_obj, 16777328);
+                                             end
+                                         end
+                                     end
 @@ -2402,221 +2402,221 @@ end
  
  procedure Node000
@@ -2754,6 +2786,15 @@ index 4a219a9..83ad156 100644
                                  end
                              end
                          end
+@@ -3160,7 +3160,7 @@ begin
+             end
+         end
+     end
+-    critter_attempt_placement(dude_obj, 27501, elevation(dude_obj));
++    critter_attempt_placement(dude_obj, 27501, dude_elevation);
+     if (obj_item_subtype(critter_inven_obj(dude_obj, 0)) == 0) then begin
+         restock_obj := critter_inven_obj(dude_obj, 0);
+         debug_msg("armour pid == " + obj_pid(restock_obj));
 @@ -3172,51 +3172,50 @@ end
  
  procedure Node995
@@ -2799,22 +2840,24 @@ index 4a219a9..83ad156 100644
      if (106 == 106) then begin
 -        set_global_var(291, 200 + (global_var(291) % 100));
 -        debug_msg("\n SET_STAGE_EVENT == " + global_var(291) + " in script " + obj_name(self_obj));
+-        critter_attempt_placement(dude_obj, 27703, elevation(dude_obj));
 +        set_global_var(GVAR_MODOC_STAGE_STATE, 200 + (global_var(GVAR_MODOC_STAGE_STATE) % 100));
 +        debug_msg("\n SET_STAGE_EVENT == " + global_var(GVAR_MODOC_STAGE_STATE) + " in script " + self_name);
-         critter_attempt_placement(dude_obj, 27703, elevation(dude_obj));
++        critter_attempt_placement(dude_obj, 27703, dude_elevation);
      end
      else begin
 -        set_global_var(291, 300 + (global_var(291) % 100));
 -        debug_msg("\n SET_STAGE_EVENT == " + global_var(291) + " in script " + obj_name(self_obj));
+-        critter_attempt_placement(dude_obj, 27697, elevation(dude_obj));
 +        set_global_var(GVAR_MODOC_STAGE_STATE, 300 + (global_var(GVAR_MODOC_STAGE_STATE) % 100));
 +        debug_msg("\n SET_STAGE_EVENT == " + global_var(GVAR_MODOC_STAGE_STATE) + " in script " + self_name);
-         critter_attempt_placement(dude_obj, 27697, elevation(dude_obj));
++        critter_attempt_placement(dude_obj, 27697, dude_elevation);
      end
      if (tile_distance(tile_num(self_obj), local_var(13)) > 1) then begin
          critter_attempt_placement(self_obj, local_var(13), 0);
      end
 -    critter_attempt_placement(dude_obj, (27501 * ((global_var(291) - (global_var(291) % 100)) == 200)) + (27295 * ((global_var(291) - (global_var(291) % 100)) == 300)), elevation(dude_obj));
-+    critter_attempt_placement(dude_obj, (27501 * ((global_var(GVAR_MODOC_STAGE_STATE) - (global_var(GVAR_MODOC_STAGE_STATE) % 100)) == 200)) + (27295 * ((global_var(GVAR_MODOC_STAGE_STATE) - (global_var(GVAR_MODOC_STAGE_STATE) % 100)) == 300)), elevation(dude_obj));
++    critter_attempt_placement(dude_obj, (27501 * ((global_var(GVAR_MODOC_STAGE_STATE) - (global_var(GVAR_MODOC_STAGE_STATE) % 100)) == 200)) + (27295 * ((global_var(GVAR_MODOC_STAGE_STATE) - (global_var(GVAR_MODOC_STAGE_STATE) % 100)) == 300)), dude_elevation);
      if (obj_item_subtype(critter_inven_obj(dude_obj, 0)) == 0) then begin
          restock_obj := critter_inven_obj(dude_obj, 0);
          debug_msg("armour pid == " + obj_pid(restock_obj));
