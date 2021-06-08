@@ -11,6 +11,7 @@
 |  [Original/DEMOGEN.ssl](Original/DEMOGEN.ssl)            |  [ReDefine/DEMOGEN.ssl](ReDefine/DEMOGEN.ssl)            |  [DEMOGEN.ssl.diff](DEMOGEN.ssl.diff)            |  -      |
 |  [Original/DEMOPEAS.ssl](Original/DEMOPEAS.ssl)          |  [ReDefine/DEMOPEAS.ssl](ReDefine/DEMOPEAS.ssl)          |  [DEMOPEAS.ssl.diff](DEMOPEAS.ssl.diff)          |  -      |
 |  [Original/DEMOPHIL.ssl](Original/DEMOPHIL.ssl)          |  [ReDefine/DEMOPHIL.ssl](ReDefine/DEMOPHIL.ssl)          |  [DEMOPHIL.ssl.diff](DEMOPHIL.ssl.diff)          |  -      |
+|  [Original/GL_NIGHTP2.ssl](Original/GL_NIGHTP2.ssl)      |  [ReDefine/GL_NIGHTP2.ssl](ReDefine/GL_NIGHTP2.ssl)      |  [GL_NIGHTP2.ssl.diff](GL_NIGHTP2.ssl.diff)      |  -      |
 |  [Original/JUNKDEMO.ssl](Original/JUNKDEMO.ssl)          |  [ReDefine/JUNKDEMO.ssl](ReDefine/JUNKDEMO.ssl)          |  [JUNKDEMO.ssl.diff](JUNKDEMO.ssl.diff)          |  -      |
 |  [Original/JUNKDEMO_OLD.ssl](Original/JUNKDEMO_OLD.ssl)  |  [ReDefine/JUNKDEMO_OLD.ssl](ReDefine/JUNKDEMO_OLD.ssl)  |  [JUNKDEMO_OLD.ssl.diff](JUNKDEMO_OLD.ssl.diff)  |  -      |
 |  [Original/LENNY.ssl](Original/LENNY.ssl)                |  [ReDefine/LENNY.ssl](ReDefine/LENNY.ssl)                |  [LENNY.ssl.diff](LENNY.ssl.diff)                |  -      |
@@ -25,4 +26,3 @@
 |  [Original/SCOUTF.ssl](Original/SCOUTF.ssl)              |  [ReDefine/SCOUTF.ssl](ReDefine/SCOUTF.ssl)              |  [SCOUTF.ssl.diff](SCOUTF.ssl.diff)              |  -      |
 |  [Original/SKIPPY.ssl](Original/SKIPPY.ssl)              |  [ReDefine/SKIPPY.ssl](ReDefine/SKIPPY.ssl)              |  [SKIPPY.ssl.diff](SKIPPY.ssl.diff)              |  -      |
 |  [Original/SKIZZER.ssl](Original/SKIZZER.ssl)            |  [ReDefine/SKIZZER.ssl](ReDefine/SKIZZER.ssl)            |  [SKIZZER.ssl.diff](SKIZZER.ssl.diff)            |  -      |
-|  [Original/GL_NIGHTP2.ssl](Original/GL_NIGHTP2.ssl)      |  [ReDefine/GL_NIGHTP2.ssl](ReDefine/GL_NIGHTP2.ssl)      |  [GL_NIGHTP2.ssl.diff](GL_NIGHTP2.ssl.diff)      |  -      |
