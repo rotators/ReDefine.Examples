@@ -14,7 +14,7 @@ function GetToolCMake()
     git clone $repo $dir/Repo
     cmake -S $dir/Repo/$src -B $dir/Build
     cmake --build $dir/Build --config Release
-    cp $dir/Build/$name Tools/$name
+    cp $dir/Build/$name _Tools/$name
     rm -fr $dir
 }
 
@@ -28,7 +28,7 @@ function GetToolRaw()
 
     rm -fr $dir
     git clone $repo $dir/Repo
-    cp $dir/Repo/$src Tools/$name
+    cp $dir/Repo/$src _Tools/$name
     rm -fr $dir
 }
 
