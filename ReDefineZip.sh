@@ -2,6 +2,9 @@
 
 set -eu
 
+LANG=C
+LC_ALL=C
+
 readonly home=$(pwd)
 
 set +e
@@ -101,16 +104,16 @@ vault13_gam=$(find $mod_namepath/ -type f -iname 'vault13.gam')
 redefine_cfg=$(find $mod_namepath/ -type f -iname 'redefine.cfg')
 redefine_merge_cfg=$(find $mod_namepath/ -type f -iname 'redefine.cfg')
 
-for header in command_lite.h define_trait.h; do
-    if [ ! -f $src_headers/$header ]; then
-       continue
-    fi
-
-   column -t -e $src_headers/$header > $src_headers/$header.tmp
-   mv $src_headers/$header.tmp $src_headers/$header
-
-   sed -ri 's/^#(ifndef|define)  /#\1 /' $src_headers/$header
-done
+#for header in command_lite.h define_trait.h; do
+#    if [ ! -f $src_headers/$header ]; then
+#       continue
+#    fi
+#
+#   column -t -e $src_headers/$header > $src_headers/$header.tmp
+#   mv $src_headers/$header.tmp $src_headers/$header
+#
+#   sed -ri 's/^#(ifndef|define)  /#\1 /' $src_headers/$header
+#done
 
 # if mod is packed with its own headers directory,
 # use it as-is without generating any header
@@ -261,7 +264,7 @@ if [ $ignore_datafiles -eq 0 ] && [ -n "$scripts_lst" ]; then
 
    # create defines
    # happily consume kinda invalid entries as well (NAME.ssl instead of NAME.int)
-   LANG=C sed -ri 's/^([0-9]+)[\t ]+([A-Za-z0-9_]+)\.([Ii][Nn][Tt]|[Ss][Ss][Ll])[\t\ ]*.*/#define SCRIPT_\U\2 (\1)/' $header
+   sed -ri 's/^([0-9]+)[\t ]+([A-Za-z0-9_]+)\.([Ii][Nn][Tt]|[Ss][Ss][Ll])[\t\ ]*.*/#define SCRIPT_\U\2 (\1)/' $header
 
    PrettyHeader $header "$scripts_lst" __SCRIPTS__
 else
@@ -281,7 +284,7 @@ if [ $ignore_datafiles -eq 0 ] && [ -n "$vault13_gam" ] && [ -f "$vault13_gam" ]
    sed -ri '/^[\t\ ]*[A-Za-z0-9_]+[\t\ ]*:=[\t\ ]*[-]?[0-9]+/!d' $header
 
    # remove everything except gvar name
-   LANG=C sed -uri 's/[\t\ ]*\:.+//g' $header
+   sed -uri 's/[\t\ ]*\:.+//g' $header
 
    # create defines
    id=-1
@@ -323,7 +326,7 @@ mkdir -p "$mod_namepath.tmp"
 # Normalize filenames: uppercase name, lowercase extension
 #
 
-find "$mod_namepath/" -type f -iname '*.int' | sort | while read int; do
+find "$mod_namepath/" -type f -iname '*.int' | while read int; do
      int_base="$(basename "$int")"
      int_name="${int_base%.*}"
      int_uclc="$(dirname "$int")/${int_name^^}.int"
