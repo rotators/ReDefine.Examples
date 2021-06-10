@@ -1,0 +1,182 @@
+procedure start;
+procedure trap_stuff;
+procedure see_stuff;
+procedure find_trap;
+procedure find_iq;
+procedure disarm_trap;
+procedure disarm_mech;
+procedure failure;
+procedure explode;
+procedure close_cooler;
+procedure open_cooler;
+
+variable damage;
+variable test;
+variable use_skill;
+
+
+procedure start
+begin
+    if ((script_action == description_proc) or (script_action == look_at_proc)) then begin
+        call see_stuff();
+    end
+    else begin
+        if (script_action == use_skill_on_proc) then begin
+            call trap_stuff();
+        end
+        else begin
+            if (script_action == use_proc) then begin
+                if (local_var(1) == 0) then begin
+                    call find_iq();
+                end
+                else begin
+                    if (local_var(2)) then begin
+                        call close_cooler();
+                    end
+                    else begin
+                        call open_cooler();
+                    end
+                end
+            end
+            else begin
+                if (script_action == pickup_proc) then begin
+                    if (local_var(2) == 0) then begin
+                        script_overrides;
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure trap_stuff
+begin
+    script_overrides;
+    use_skill := action_being_used;
+    if (local_var(0)) then begin
+        if (local_var(1) == 0) then begin
+            if (use_skill == 11) then begin
+                call disarm_trap();
+            end
+            else begin
+                if (use_skill == 13) then begin
+                    call disarm_mech();
+                end
+                else begin
+                    display_mstr(100);
+                end
+            end
+        end
+    end
+    else begin
+        call find_trap();
+    end
+end
+
+procedure see_stuff
+begin
+    script_overrides;
+    display_mstr(109);
+end
+
+procedure find_trap
+begin
+    if (dude_skill(SKILL_TRAPS)) then begin
+        test := roll_vs_skill(dude_obj, 11, -10);
+        if (is_success(test)) then begin
+            display_mstr(101);
+            set_local_var(0, 1);
+        end
+        else begin
+            display_mstr(102);
+            call explode();
+        end
+    end
+end
+
+procedure find_iq
+begin
+    script_overrides;
+    if (local_var(0)) then begin
+        call failure();
+    end
+    else begin
+        test := do_check(dude_obj, 4, 0);
+        if (is_success(test)) then begin
+            display_mstr(101);
+            set_local_var(0, 1);
+        end
+        else begin
+            display_mstr(102);
+            call explode();
+        end
+    end
+end
+
+procedure disarm_trap
+begin
+    script_overrides;
+    test := roll_vs_skill(dude_obj, 11, 10);
+    if (is_success(test)) then begin
+        display_mstr(103);
+        set_local_var(1, 1);
+    end
+    else begin
+        if (is_critical(test)) then begin
+            display_mstr(105);
+            call explode();
+        end
+        else begin
+            display_mstr(104);
+        end
+    end
+end
+
+procedure disarm_mech
+begin
+    script_overrides;
+    test := roll_vs_skill(dude_obj, 13, 30);
+    if (is_success(test)) then begin
+        display_mstr(103);
+        set_local_var(1, 1);
+    end
+    else begin
+        if (is_critical(test)) then begin
+            display_mstr(105);
+            call explode();
+        end
+        else begin
+            display_mstr(104);
+        end
+    end
+end
+
+procedure failure
+begin
+    script_overrides;
+    display_mstr(106);
+    call explode();
+end
+
+procedure explode
+begin
+    explosion(tile_num(self_obj), elevation(self_obj), 0);
+    damage := random(1, 6) + random(1, 6) + random(1, 6);
+    critter_damage(dude_obj, damage);
+    set_local_var(1, 1);
+    set_local_var(0, 1);
+end
+
+procedure close_cooler
+begin
+    script_overrides;
+    animate_stand_reverse_obj(self_obj);
+    set_local_var(2, 0);
+end
+
+procedure open_cooler
+begin
+    script_overrides;
+    animate_stand_obj(self_obj);
+    set_local_var(2, 1);
+end

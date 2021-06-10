@@ -1,0 +1,129 @@
+procedure start;
+procedure critter_p_proc;
+procedure destroy_p_proc;
+procedure description_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+
+variable initialized;
+variable hostile;
+variable line103flag;
+
+import variable Gizmo_ptr;
+import variable Gizmo_is_angry;
+import variable show_to_door;
+import variable payment;
+
+
+procedure start
+begin
+    if (not(initialized)) then begin
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 13);
+        if (global_var(GVAR_CAPTURE_GIZMO) == 2) then begin
+            kill_critter(self_obj, 62);
+        end
+        initialized := 1;
+    end
+    else begin
+        if (script_action == critter_proc) then begin
+            call critter_p_proc();
+        end
+        else begin
+            if (script_action == description_proc) then begin
+                call description_p_proc();
+            end
+            else begin
+                if (script_action == destroy_proc) then begin
+                    call destroy_p_proc();
+                end
+                else begin
+                    if (script_action == talk_proc) then begin
+                        call talk_p_proc();
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure critter_p_proc
+begin
+    if (hostile) then begin
+        hostile := 0;
+        attack(dude_obj);
+    end
+    else begin
+        if (Gizmo_is_angry) then begin
+            Gizmo_is_angry := 0;
+            hostile := 1;
+        end
+        else begin
+            if (show_to_door) then begin
+                if (tile_distance_objs(dude_obj, Gizmo_ptr) > 8) then begin
+                    if (tile_num(self_obj) != 16520) then begin
+                        animate_move_obj_to_tile(self_obj, 16520, 0);
+                    end
+                    else begin
+                        anim(self_obj, 1000, 2);
+                        line103flag := 0;
+                        show_to_door := 0;
+                    end
+                end
+                else begin
+                    if (tile_num(self_obj) != 18720) then begin
+                        animate_move_obj_to_tile(self_obj, 18720, 0);
+                    end
+                    else begin
+                        if (not(line103flag)) then begin
+                            line103flag := 1;
+                            display_mstr(103);
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
+            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
+            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+        end
+        set_global_var(GVAR_BAD_MONSTER, global_var(GVAR_BAD_MONSTER) + 1);
+        if ((global_var(GVAR_BAD_MONSTER) % 6) == 0) then begin
+            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) + 1);
+        end
+    end
+end
+
+procedure description_p_proc
+begin
+    if (is_success(do_check(dude_obj, 1, has_trait(TRAIT_PERK, dude_obj, PERK_bonus_awareness)))) then begin
+        display_mstr(100);
+    end
+end
+
+procedure pickup_p_proc
+begin
+    hostile := 1;
+end
+
+procedure talk_p_proc
+begin
+    variable LVar0 := 0;
+    display_mstr(101);
+    if (payment > 0) then begin
+        use_obj(dude_obj);
+        LVar0 := create_object(41, 0, 0);
+        add_mult_objs_to_inven(dude_obj, LVar0, payment);
+        display_mstr(102);
+        payment := 0;
+    end
+end

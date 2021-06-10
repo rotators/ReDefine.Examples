@@ -1,0 +1,590 @@
+diff --git a/Games/Fallout1.Steam/Original/TALIUS.ssl b/Games/Fallout1.Steam/ReDefine/TALIUS.ssl
+index 080ddc7..d6bf865 100644
+--- a/Games/Fallout1.Steam/Original/TALIUS.ssl
++++ b/Games/Fallout1.Steam/ReDefine/TALIUS.ssl
+@@ -58,10 +58,10 @@ variable initialized;
+ procedure start
+ begin
+     if (not(initialized)) then begin
+-        critter_add_trait(self_obj, 1, 6, 46);
+-        critter_add_trait(self_obj, 1, 5, 33);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 46);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_FOLLOWER_GUARD);
+         initialized := 1;
+-        if (global_var(129) == 2) then begin
++        if (global_var(GVAR_DESTROY_FOLLOWERS) == 2) then begin
+             if (random(0, 1)) then begin
+                 kill_critter(self_obj, 59);
+             end
+@@ -71,27 +71,27 @@ begin
+         end
+     end
+     else begin
+-        if (script_action == 12) then begin
++        if (script_action == critter_proc) then begin
+             call critter_p_proc();
+         end
+         else begin
+-            if (script_action == 3) then begin
++            if (script_action == description_proc) then begin
+                 call description_p_proc();
+             end
+             else begin
+-                if (script_action == 18) then begin
++                if (script_action == destroy_proc) then begin
+                     call destroy_p_proc();
+                 end
+                 else begin
+-                    if (script_action == 21) then begin
++                    if (script_action == look_at_proc) then begin
+                         call look_at_p_proc();
+                     end
+                     else begin
+-                        if (script_action == 4) then begin
++                        if (script_action == pickup_proc) then begin
+                             call pickup_p_proc();
+                         end
+                         else begin
+-                            if (script_action == 11) then begin
++                            if (script_action == talk_proc) then begin
+                                 call talk_p_proc();
+                             end
+                         end
+@@ -106,31 +106,31 @@ procedure critter_p_proc
+ begin
+     if (hostile) then begin
+         hostile := 0;
+-        attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++        attack(dude_obj);
+     end
+ end
+ 
+ procedure description_p_proc
+ begin
+-    if (is_success(do_check(dude_obj, 1, has_trait(0, dude_obj, 0)))) then begin
+-        display_msg(message_str(274, 231));
++    if (is_success(do_check(dude_obj, 1, has_trait(TRAIT_PERK, dude_obj, PERK_bonus_awareness)))) then begin
++        display_mstr(231);
+     end
+ end
+ 
+ procedure destroy_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-            set_global_var(156, 1);
+-            set_global_var(157, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+-            set_global_var(157, 1);
+-            set_global_var(156, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+         end
+-        set_global_var(159, global_var(159) + 1);
+-        if ((global_var(159) % 2) == 0) then begin
+-            set_global_var(155, global_var(155) - 1);
++        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
++        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
++            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+         end
+     end
+ end
+@@ -139,10 +139,10 @@ procedure look_at_p_proc
+ begin
+     script_overrides;
+     if (local_var(4)) then begin
+-        display_msg(message_str(274, 100));
++        display_mstr(100);
+     end
+     else begin
+-        display_msg(message_str(274, 230));
++        display_mstr(230);
+     end
+ end
+ 
+@@ -154,11 +154,11 @@ end
+ procedure talk_p_proc
+ begin
+     script_overrides;
+-    if (global_var(133) == 2) then begin
++    if (global_var(GVAR_FIND_AGENT) == 2) then begin
+         call Talius41();
+     end
+     else begin
+-        if (global_var(133) == 1) then begin
++        if (global_var(GVAR_FIND_AGENT) == 1) then begin
+             call Talius40();
+         end
+         else begin
+@@ -178,181 +178,181 @@ end
+ 
+ procedure Talius00
+ begin
+-    float_msg(self_obj, message_str(274, 101), 0);
++    float_msg(self_obj, mstr(101), FLOAT_MSG_NORMAL);
+ end
+ 
+ procedure Talius01
+ begin
+-    if (get_critter_stat(dude_obj, 34) == 1) then begin
+-        gsay_reply(274, 102);
++    if (dude_gender == 1) then begin
++        Reply(102);
+     end
+     else begin
+-        gsay_reply(274, 103);
++        Reply(103);
+     end
+-    giq_option(-3, 274, 104, Talius02, 50);
+-    giq_option(-3, 274, message_str(274, 105) + proto_data(obj_pid(dude_obj), 1) + message_str(274, 106) + proto_data(obj_pid(dude_obj), 1) + message_str(274, 107), Talius05, 50);
+-    giq_option(4, 274, message_str(274, 108) + proto_data(obj_pid(dude_obj), 1) + message_str(274, 109), Talius06, 50);
+-    giq_option(4, 274, 110, combat, 50);
+-    giq_option(4, 274, 111, Talius36, 50);
+-    giq_option(6, 274, message_str(274, 112) + proto_data(obj_pid(dude_obj), 1) + message_str(274, 113), Talius37, 50);
+-    giq_option(8, 274, 114, Talius37, 50);
++    giq_option(-3, NAME, 104, Talius02, NEUTRAL_REACTION);
++    giq_option(-3, NAME, mstr(105) + proto_data(obj_pid(dude_obj), 1) + mstr(106) + proto_data(obj_pid(dude_obj), 1) + mstr(107), Talius05, NEUTRAL_REACTION);
++    giq_option(4, NAME, mstr(108) + proto_data(obj_pid(dude_obj), 1) + mstr(109), Talius06, NEUTRAL_REACTION);
++    giq_option(4, NAME, 110, combat, NEUTRAL_REACTION);
++    giq_option(4, NAME, 111, Talius36, NEUTRAL_REACTION);
++    giq_option(6, NAME, mstr(112) + proto_data(obj_pid(dude_obj), 1) + mstr(113), Talius37, NEUTRAL_REACTION);
++    giq_option(8, NAME, 114, Talius37, NEUTRAL_REACTION);
+ end
+ 
+ procedure Talius02
+ begin
+-    gsay_reply(274, 115);
+-    giq_option(-3, 274, 116, Talius03, 50);
+-    giq_option(-3, 274, 117, combat, 50);
++    Reply(115);
++    giq_option(-3, NAME, 116, Talius03, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 117, combat, NEUTRAL_REACTION);
+ end
+ 
+ procedure Talius03
+ begin
+-    gsay_reply(274, 118);
+-    giq_option(-3, 274, 119, combat, 50);
+-    giq_option(-3, 274, 120, Talius04, 50);
++    Reply(118);
++    giq_option(-3, NAME, 119, combat, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 120, Talius04, NEUTRAL_REACTION);
+ end
+ 
+ procedure Talius04
+ begin
+     variable LVar0 := 0;
+     if (local_var(5) == 0) then begin
+-        LVar0 := create_object_sid(53, 0, 0, -1);
++        LVar0 := create_object(53, 0, 0);
+         add_mult_objs_to_inven(dude_obj, LVar0, 3);
+         set_local_var(5, 1);
+-        gsay_message(274, 121, 50);
++        gsay_message(NAME, 121, NEUTRAL_REACTION);
+     end
+     else begin
+-        gsay_message(274, 232, 50);
++        gsay_message(NAME, 232, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure Talius05
+ begin
+-    gsay_reply(274, message_str(274, 122) + proto_data(obj_pid(dude_obj), 1) + message_str(274, 123));
+-    giq_option(-3, 274, 124, Talius02, 50);
+-    giq_option(-3, 274, 125, combat, 50);
++    Reply(mstr(122) + proto_data(obj_pid(dude_obj), 1) + mstr(123));
++    giq_option(-3, NAME, 124, Talius02, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 125, combat, NEUTRAL_REACTION);
+ end
+ 
+ procedure Talius06
+ begin
+-    gsay_reply(274, 126);
+-    giq_option(4, 274, 127, Talius07, 50);
+-    giq_option(4, 274, 128, Talius31, 50);
+-    giq_option(4, 274, 129, Talius32, 50);
++    Reply(126);
++    giq_option(4, NAME, 127, Talius07, NEUTRAL_REACTION);
++    giq_option(4, NAME, 128, Talius31, NEUTRAL_REACTION);
++    giq_option(4, NAME, 129, Talius32, NEUTRAL_REACTION);
+ end
+ 
+ procedure Talius07
+ begin
+-    gsay_reply(274, 130);
+-    giq_option(4, 274, 131, Talius08, 50);
+-    giq_option(4, 274, 132, Talius29, 50);
+-    giq_option(4, 274, 133, Talius30, 50);
+-    giq_option(4, 274, 134, combat, 50);
++    Reply(130);
++    giq_option(4, NAME, 131, Talius08, NEUTRAL_REACTION);
++    giq_option(4, NAME, 132, Talius29, NEUTRAL_REACTION);
++    giq_option(4, NAME, 133, Talius30, NEUTRAL_REACTION);
++    giq_option(4, NAME, 134, combat, NEUTRAL_REACTION);
+ end
+ 
+ procedure Talius08
+ begin
+-    gsay_reply(274, 135);
+-    giq_option(4, 274, 136, TaliusEnd, 50);
+-    giq_option(4, 274, 137, Talius09, 50);
+-    giq_option(4, 274, 138, Talius09, 50);
+-    giq_option(4, 274, 139, combat, 50);
++    Reply(135);
++    giq_option(4, NAME, 136, TaliusEnd, NEUTRAL_REACTION);
++    giq_option(4, NAME, 137, Talius09, NEUTRAL_REACTION);
++    giq_option(4, NAME, 138, Talius09, NEUTRAL_REACTION);
++    giq_option(4, NAME, 139, combat, NEUTRAL_REACTION);
+ end
+ 
+ procedure Talius09
+ begin
+-    gsay_reply(274, 140);
+-    giq_option(4, 274, 141, Talius10, 50);
+-    giq_option(4, 274, 142, Talius15, 50);
+-    giq_option(5, 274, 143, Talius16, 50);
+-    giq_option(5, 274, 144, Talius17, 50);
++    Reply(140);
++    giq_option(4, NAME, 141, Talius10, NEUTRAL_REACTION);
++    giq_option(4, NAME, 142, Talius15, NEUTRAL_REACTION);
++    giq_option(5, NAME, 143, Talius16, NEUTRAL_REACTION);
++    giq_option(5, NAME, 144, Talius17, NEUTRAL_REACTION);
+ end
+ 
+ procedure Talius10
+ begin
+-    gsay_reply(274, 145);
+-    giq_option(4, 274, 146, Talius11, 50);
+-    giq_option(4, 274, 147, TaliusEnd, 50);
+-    giq_option(4, 274, 148, Talius15, 50);
+-    giq_option(4, 274, 149, Talius16, 50);
+-    giq_option(4, 274, 150, Talius17, 50);
++    Reply(145);
++    giq_option(4, NAME, 146, Talius11, NEUTRAL_REACTION);
++    giq_option(4, NAME, 147, TaliusEnd, NEUTRAL_REACTION);
++    giq_option(4, NAME, 148, Talius15, NEUTRAL_REACTION);
++    giq_option(4, NAME, 149, Talius16, NEUTRAL_REACTION);
++    giq_option(4, NAME, 150, Talius17, NEUTRAL_REACTION);
+ end
+ 
+ procedure Talius11
+ begin
+-    gsay_reply(274, 151);
+-    giq_option(4, 274, 152, Talius12, 50);
++    Reply(151);
++    giq_option(4, NAME, 152, Talius12, NEUTRAL_REACTION);
+ end
+ 
+ procedure Talius12
+ begin
+-    gsay_reply(274, 153);
++    Reply(153);
+     if (local_var(6) == 0) then begin
+-        giq_option(4, 274, 154, Talius13, 50);
++        giq_option(4, NAME, 154, Talius13, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 274, 155, Talius14, 50);
++    giq_option(4, NAME, 155, Talius14, NEUTRAL_REACTION);
+ end
+ 
+ procedure Talius13
+ begin
+     variable LVar0 := 0;
+     set_local_var(6, 1);
+-    gsay_message(274, 156, 50);
+-    LVar0 := create_object_sid(32, 0, 0, -1);
++    gsay_message(NAME, 156, NEUTRAL_REACTION);
++    LVar0 := create_object(32, 0, 0);
+     add_obj_to_inven(dude_obj, LVar0);
+-    LVar0 := create_object_sid(32, 0, 0, -1);
++    LVar0 := create_object(32, 0, 0);
+     add_obj_to_inven(dude_obj, LVar0);
+-    LVar0 := create_object_sid(11, 0, 0, -1);
++    LVar0 := create_object(11, 0, 0);
+     add_obj_to_inven(dude_obj, LVar0);
+ end
+ 
+ procedure Talius14
+ begin
+-    gsay_message(274, 157, 50);
++    gsay_message(NAME, 157, NEUTRAL_REACTION);
+ end
+ 
+ procedure Talius15
+ begin
+-    gsay_reply(274, 158);
+-    giq_option(4, 274, 159, Talius16, 50);
+-    giq_option(4, 274, 160, Talius17, 50);
+-    giq_option(4, 274, 161, Talius22, 50);
+-    giq_option(4, 274, 162, TaliusEnd, 50);
++    Reply(158);
++    giq_option(4, NAME, 159, Talius16, NEUTRAL_REACTION);
++    giq_option(4, NAME, 160, Talius17, NEUTRAL_REACTION);
++    giq_option(4, NAME, 161, Talius22, NEUTRAL_REACTION);
++    giq_option(4, NAME, 162, TaliusEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Talius16
+ begin
+-    gsay_reply(274, message_str(274, 163) + " " + message_str(274, 164));
+-    giq_option(4, 274, 165, Talius17, 50);
+-    giq_option(4, 274, 166, Talius22, 50);
+-    giq_option(4, 274, 167, TaliusEnd, 50);
++    Reply(mstr(163) + " " + mstr(164));
++    giq_option(4, NAME, 165, Talius17, NEUTRAL_REACTION);
++    giq_option(4, NAME, 166, Talius22, NEUTRAL_REACTION);
++    giq_option(4, NAME, 167, TaliusEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Talius17
+ begin
+-    gsay_message(274, 168, 50);
+-    gsay_reply(274, 169);
+-    giq_option(4, 274, 170, Talius18, 50);
+-    giq_option(4, 274, 171, Talius19, 50);
+-    giq_option(4, 274, 172, Talius21, 50);
++    gsay_message(NAME, 168, NEUTRAL_REACTION);
++    Reply(169);
++    giq_option(4, NAME, 170, Talius18, NEUTRAL_REACTION);
++    giq_option(4, NAME, 171, Talius19, NEUTRAL_REACTION);
++    giq_option(4, NAME, 172, Talius21, NEUTRAL_REACTION);
+ end
+ 
+ procedure Talius18
+ begin
+-    gsay_message(274, 173, 50);
+-    gsay_reply(274, 174);
+-    giq_option(4, 274, 175, TaliusEnd, 50);
+-    giq_option(4, 274, 176, TaliusEnd, 50);
+-    giq_option(4, 274, 177, Talius12, 50);
++    gsay_message(NAME, 173, NEUTRAL_REACTION);
++    Reply(174);
++    giq_option(4, NAME, 175, TaliusEnd, NEUTRAL_REACTION);
++    giq_option(4, NAME, 176, TaliusEnd, NEUTRAL_REACTION);
++    giq_option(4, NAME, 177, Talius12, NEUTRAL_REACTION);
+ end
+ 
+ procedure Talius19
+ begin
+-    gsay_message(274, 178, 50);
+-    gsay_reply(274, 179);
+-    giq_option(4, 274, 180, TaliusEnd, 50);
+-    if ((global_var(29) == 2) and (local_var(6) == 0)) then begin
+-        giq_option(4, 274, 181, Talius20, 50);
++    gsay_message(NAME, 178, NEUTRAL_REACTION);
++    Reply(179);
++    giq_option(4, NAME, 180, TaliusEnd, NEUTRAL_REACTION);
++    if ((global_var(GVAR_NECROP_MUTANTS_KILLED) == 2) and (local_var(6) == 0)) then begin
++        giq_option(4, NAME, 181, Talius20, NEUTRAL_REACTION);
+     end
+ end
+ 
+@@ -360,147 +360,147 @@ procedure Talius20
+ begin
+     variable LVar0 := 0;
+     set_local_var(6, 1);
+-    gsay_message(274, 182, 50);
+-    LVar0 := create_object_sid(11, 0, 0, -1);
++    gsay_message(NAME, 182, NEUTRAL_REACTION);
++    LVar0 := create_object(11, 0, 0);
+     add_obj_to_inven(dude_obj, LVar0);
+ end
+ 
+ procedure Talius21
+ begin
+-    gsay_message(274, 183, 50);
++    gsay_message(NAME, 183, NEUTRAL_REACTION);
+ end
+ 
+ procedure Talius22
+ begin
+-    gsay_reply(274, 184);
+-    giq_option(4, 274, 185, Talius23, 50);
+-    giq_option(4, 274, 186, Talius26, 50);
+-    giq_option(4, 274, 187, Talius27, 50);
++    Reply(184);
++    giq_option(4, NAME, 185, Talius23, NEUTRAL_REACTION);
++    giq_option(4, NAME, 186, Talius26, NEUTRAL_REACTION);
++    giq_option(4, NAME, 187, Talius27, NEUTRAL_REACTION);
+ end
+ 
+ procedure Talius23
+ begin
+-    gsay_reply(274, 188);
+-    giq_option(4, 274, 189, Talius24, 50);
+-    giq_option(4, 274, 190, Talius24, 50);
+-    giq_option(4, 274, 191, Talius25, 50);
++    Reply(188);
++    giq_option(4, NAME, 189, Talius24, NEUTRAL_REACTION);
++    giq_option(4, NAME, 190, Talius24, NEUTRAL_REACTION);
++    giq_option(4, NAME, 191, Talius25, NEUTRAL_REACTION);
+ end
+ 
+ procedure Talius24
+ begin
+-    gsay_message(274, 192, 50);
++    gsay_message(NAME, 192, NEUTRAL_REACTION);
+ end
+ 
+ procedure Talius25
+ begin
+-    gsay_message(274, 193, 50);
++    gsay_message(NAME, 193, NEUTRAL_REACTION);
+ end
+ 
+ procedure Talius26
+ begin
+-    gsay_message(274, 194, 50);
++    gsay_message(NAME, 194, NEUTRAL_REACTION);
+ end
+ 
+ procedure Talius27
+ begin
+-    gsay_reply(274, 195);
+-    giq_option(4, 274, 196, combat, 50);
+-    giq_option(4, 274, 197, Talius28, 50);
++    Reply(195);
++    giq_option(4, NAME, 196, combat, NEUTRAL_REACTION);
++    giq_option(4, NAME, 197, Talius28, NEUTRAL_REACTION);
+ end
+ 
+ procedure Talius28
+ begin
+-    gsay_message(274, 198, 50);
++    gsay_message(NAME, 198, NEUTRAL_REACTION);
+     call combat();
+ end
+ 
+ procedure Talius29
+ begin
+-    gsay_reply(274, 199);
+-    giq_option(4, 274, 200, Talius29a, 50);
+-    giq_option(4, 274, 201, combat, 50);
++    Reply(199);
++    giq_option(4, NAME, 200, Talius29a, NEUTRAL_REACTION);
++    giq_option(4, NAME, 201, combat, NEUTRAL_REACTION);
+ end
+ 
+ procedure Talius29a
+ begin
+-    set_global_var(133, 1);
++    set_global_var(GVAR_FIND_AGENT, 1);
+ end
+ 
+ procedure Talius30
+ begin
+-    gsay_message(274, 202, 50);
++    gsay_message(NAME, 202, NEUTRAL_REACTION);
+     call combat();
+ end
+ 
+ procedure Talius31
+ begin
+-    gsay_message(274, 203, 50);
+-    gsay_reply(274, 204);
+-    giq_option(4, 274, 205, TaliusEnd, 50);
+-    giq_option(4, 274, 206, Talius09, 50);
+-    giq_option(4, 274, 207, Talius09, 50);
+-    giq_option(4, 274, 208, combat, 50);
++    gsay_message(NAME, 203, NEUTRAL_REACTION);
++    Reply(204);
++    giq_option(4, NAME, 205, TaliusEnd, NEUTRAL_REACTION);
++    giq_option(4, NAME, 206, Talius09, NEUTRAL_REACTION);
++    giq_option(4, NAME, 207, Talius09, NEUTRAL_REACTION);
++    giq_option(4, NAME, 208, combat, NEUTRAL_REACTION);
+ end
+ 
+ procedure Talius32
+ begin
+-    gsay_reply(274, 209);
+-    giq_option(4, 274, 210, TaliusEnd, 50);
+-    giq_option(4, 274, 211, Talius33, 50);
++    Reply(209);
++    giq_option(4, NAME, 210, TaliusEnd, NEUTRAL_REACTION);
++    giq_option(4, NAME, 211, Talius33, NEUTRAL_REACTION);
+ end
+ 
+ procedure Talius33
+ begin
+-    gsay_reply(274, 212);
+-    giq_option(4, 274, 213, TaliusEnd, 50);
+-    giq_option(6, 274, 214, Talius34, 50);
++    Reply(212);
++    giq_option(4, NAME, 213, TaliusEnd, NEUTRAL_REACTION);
++    giq_option(6, NAME, 214, Talius34, NEUTRAL_REACTION);
+ end
+ 
+ procedure Talius34
+ begin
+-    gsay_reply(274, 215);
+-    giq_option(6, 274, 216, TaliusEnd, 50);
+-    giq_option(8, 274, 217, Talius35, 50);
++    Reply(215);
++    giq_option(6, NAME, 216, TaliusEnd, NEUTRAL_REACTION);
++    giq_option(8, NAME, 217, Talius35, NEUTRAL_REACTION);
+ end
+ 
+ procedure Talius35
+ begin
+-    gsay_reply(274, 218);
+-    giq_option(8, 274, 219, TaliusEnd, 50);
++    Reply(218);
++    giq_option(8, NAME, 219, TaliusEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Talius36
+ begin
+-    gsay_message(274, 220, 50);
++    gsay_message(NAME, 220, NEUTRAL_REACTION);
+ end
+ 
+ procedure Talius37
+ begin
+-    gsay_reply(274, 221);
+-    giq_option(6, 274, 222, Talius38, 50);
++    Reply(221);
++    giq_option(6, NAME, 222, Talius38, NEUTRAL_REACTION);
+ end
+ 
+ procedure Talius38
+ begin
+-    gsay_reply(274, 223);
+-    giq_option(6, 274, 224, Talius39, 50);
++    Reply(223);
++    giq_option(6, NAME, 224, Talius39, NEUTRAL_REACTION);
+ end
+ 
+ procedure Talius39
+ begin
+-    gsay_reply(274, 225);
+-    giq_option(6, 274, 226, TaliusEnd, 50);
+-    giq_option(6, 274, 227, TaliusEnd, 50);
++    Reply(225);
++    giq_option(6, NAME, 226, TaliusEnd, NEUTRAL_REACTION);
++    giq_option(6, NAME, 227, TaliusEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Talius40
+ begin
+-    float_msg(self_obj, message_str(274, 228), 0);
++    float_msg(self_obj, mstr(228), FLOAT_MSG_NORMAL);
+ end
+ 
+ procedure Talius41
+ begin
+-    float_msg(self_obj, message_str(274, 229), 0);
++    float_msg(self_obj, mstr(229), FLOAT_MSG_NORMAL);
+ end
+ 
+ procedure TaliusEnd
+@@ -511,4 +511,3 @@ procedure combat
+ begin
+     hostile := 1;
+ end
+-

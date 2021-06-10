@@ -1,0 +1,162 @@
+procedure start;
+procedure critter_p_proc;
+procedure destroy_p_proc;
+procedure look_at_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure Hunter01;
+procedure Hunter02;
+procedure Hunter03;
+procedure Hunter04;
+procedure Hunter05;
+
+variable mad;
+variable hostile;
+variable initialized;
+variable my_script_mode;
+variable pre_fight;
+
+import variable removal_ptr;
+
+
+procedure start
+begin
+    if (not(initialized)) then begin
+        critter_add_trait(self_obj, 1, 6, 29);
+        if (cur_map_index != 29) then begin
+            call Hunter05();
+            attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
+            my_script_mode := 1;
+        end
+        else begin
+            if (global_var(123) == 3) then begin
+                move_to(self_obj, 7000, 0);
+                removal_ptr := self_obj;
+            end
+        end
+        initialized := 1;
+    end
+    else begin
+        if (not(my_script_mode)) then begin
+            if (script_action == 12) then begin
+                call critter_p_proc();
+            end
+            else begin
+                if (script_action == 18) then begin
+                    call destroy_p_proc();
+                end
+                else begin
+                    if (script_action == 21) then begin
+                        call look_at_p_proc();
+                    end
+                    else begin
+                        if (script_action == 4) then begin
+                            call pickup_p_proc();
+                        end
+                        else begin
+                            if (script_action == 11) then begin
+                                call talk_p_proc();
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        else begin
+            if (script_action == 18) then begin
+                call destroy_p_proc();
+            end
+        end
+    end
+end
+
+procedure critter_p_proc
+begin
+    if (hostile) then begin
+        hostile := 0;
+        attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
+    end
+    else begin
+        if (obj_can_see_obj(self_obj, dude_obj) and not(my_script_mode) and not(pre_fight) and (global_var(158) > 2)) then begin
+            call Hunter05();
+            pre_fight := 1;
+        end
+    end
+end
+
+procedure destroy_p_proc
+begin
+    set_global_var(123, 3);
+    if (source_obj == dude_obj) then begin
+        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+            set_global_var(156, 1);
+            set_global_var(157, 0);
+        end
+        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+            set_global_var(157, 1);
+            set_global_var(156, 0);
+        end
+        set_global_var(159, global_var(159) + 1);
+        if ((global_var(159) % 2) == 0) then begin
+            set_global_var(155, global_var(155) - 1);
+        end
+    end
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    display_msg(message_str(241, 100));
+end
+
+procedure pickup_p_proc
+begin
+    hostile := 1;
+end
+
+procedure talk_p_proc
+begin
+    start_gdialog(241, self_obj, 4, -1, -1);
+    gsay_start;
+    call Hunter01();
+    gsay_end;
+    end_dialogue;
+end
+
+procedure Hunter01
+begin
+    gsay_reply(241, 101);
+    giq_option(3, 241, 102, Hunter02, 50);
+    giq_option(3, 241, 103, Hunter03, 50);
+    giq_option(3, 241, 104, Hunter04, 50);
+    giq_option(0, 241, 105, Hunter04, 50);
+end
+
+procedure Hunter02
+begin
+    if (not(mad)) then begin
+        gsay_message(241, 106, 50);
+        mad := 1;
+    end
+    else begin
+        gsay_message(241, 107, 50);
+        hostile := 1;
+    end
+end
+
+procedure Hunter03
+begin
+    gsay_message(241, 108, 50);
+end
+
+procedure Hunter04
+begin
+    gsay_message(241, 109, 50);
+end
+
+procedure Hunter05
+begin
+    float_msg(self_obj, message_str(241, 110), 0);
+    hostile := 1;
+end
+

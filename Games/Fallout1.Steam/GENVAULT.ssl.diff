@@ -1,0 +1,407 @@
+diff --git a/Games/Fallout1.Steam/Original/GENVAULT.ssl b/Games/Fallout1.Steam/ReDefine/GENVAULT.ssl
+index b79dcc4..9278fd7 100644
+--- a/Games/Fallout1.Steam/Original/GENVAULT.ssl
++++ b/Games/Fallout1.Steam/ReDefine/GENVAULT.ssl
+@@ -61,31 +61,31 @@ variable exit_line;
+ 
+ procedure start
+ begin
+-    if (script_action == 12) then begin
++    if (script_action == critter_proc) then begin
+         call critter_p_proc();
+     end
+     else begin
+-        if (script_action == 14) then begin
++        if (script_action == damage_proc) then begin
+             call damage_p_proc();
+         end
+         else begin
+-            if (script_action == 18) then begin
++            if (script_action == destroy_proc) then begin
+                 call destroy_p_proc();
+             end
+             else begin
+-                if (script_action == 15) then begin
++                if (script_action == map_enter_proc) then begin
+                     call map_enter_p_proc();
+                 end
+                 else begin
+-                    if (script_action == 4) then begin
++                    if (script_action == pickup_proc) then begin
+                         call pickup_p_proc();
+                     end
+                     else begin
+-                        if (script_action == 11) then begin
++                        if (script_action == talk_proc) then begin
+                             call talk_p_proc();
+                         end
+                         else begin
+-                            if (script_action == 22) then begin
++                            if (script_action == timed_event_proc) then begin
+                                 call timed_event_p_proc();
+                             end
+                         end
+@@ -100,15 +100,15 @@ procedure critter_p_proc
+ begin
+     if (hostile) then begin
+         hostile := 0;
+-        attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++        attack(dude_obj);
+     end
+     else begin
+         if (local_var(7) and (tile_distance_objs(self_obj, dude_obj) < 8)) then begin
+             call flee_dude();
+         end
+-        if (global_var(101) == 0) then begin
++        if (global_var(GVAR_FIND_WATER_CHIP) == 0) then begin
+             if (local_var(5) == 0) then begin
+-                if ((elevation(self_obj) == elevation(WtrGrd_ptr)) and (elevation(self_obj) == elevation(dude_obj))) then begin
++                if ((elevation(self_obj) == elevation(WtrGrd_ptr)) and (elevation(self_obj) == dude_elevation)) then begin
+                     if ((game_time_hour > 700) and (game_time_hour < 900)) then begin
+                         call get_rations();
+                     end
+@@ -135,21 +135,21 @@ end
+ procedure destroy_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-            set_global_var(156, 1);
+-            set_global_var(157, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+-            set_global_var(157, 1);
+-            set_global_var(156, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+         end
+-        set_global_var(159, global_var(159) + 1);
+-        if ((global_var(159) % 2) == 0) then begin
+-            set_global_var(155, global_var(155) - 1);
++        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
++        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
++            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+         end
+     end
+     if (source_obj == dude_obj) then begin
+-        set_global_var(261, 1);
++        set_global_var(GVAR_WATER_CHIP_4, 1);
+     end
+ end
+ 
+@@ -159,7 +159,7 @@ begin
+         set_local_var(4, tile_num(self_obj));
+     end
+     home_tile := local_var(4);
+-    critter_add_trait(self_obj, 1, 6, 1);
++    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 1);
+     call set_ration_tile();
+     call set_sleep_tile();
+     sleep_time := random(1900, 1930);
+@@ -176,18 +176,18 @@ begin
+     call get_reaction();
+     if (local_var(6)) then begin
+         if (random(0, 1)) then begin
+-            float_msg(self_obj, message_str(185, 166), 0);
++            float_msg(self_obj, mstr(166), FLOAT_MSG_NORMAL);
+         end
+         else begin
+-            display_msg(message_str(185, 167));
++            display_mstr(167);
+         end
+     end
+     else begin
+-        if (local_var(7) or global_var(261)) then begin
++        if (local_var(7) or global_var(GVAR_WATER_CHIP_4)) then begin
+             call Vault00();
+         end
+         else begin
+-            if ((global_var(101) != 0) and (global_var(101) != 1)) then begin
++            if ((global_var(GVAR_FIND_WATER_CHIP) != 0) and (global_var(GVAR_FIND_WATER_CHIP) != 1)) then begin
+                 call Vault01();
+             end
+             else begin
+@@ -195,11 +195,11 @@ begin
+                     call Vault02();
+                 end
+                 else begin
+-                    if (global_var(10) < 80) then begin
++                    if (global_var(GVAR_VAULT_WATER) < 80) then begin
+                         call Vault00b();
+                     end
+                     else begin
+-                        if (global_var(10) < 40) then begin
++                        if (global_var(GVAR_VAULT_WATER) < 40) then begin
+                             call Vault00c();
+                         end
+                         else begin
+@@ -222,7 +222,7 @@ begin
+         if (fixed_param == 2) then begin
+             getting_ration := 1;
+             if (random(0, 1)) then begin
+-                float_msg(self_obj, message_str(185, 165), 0);
++                float_msg(self_obj, mstr(165), FLOAT_MSG_NORMAL);
+             end
+             add_timer_event(self_obj, game_ticks(3), 3);
+         end
+@@ -237,7 +237,7 @@ end
+ 
+ procedure Vault00
+ begin
+-    float_msg(self_obj, message_str(185, random(101, 104)), 0);
++    float_msg(self_obj, mstr(random(101, 104)), FLOAT_MSG_NORMAL);
+ end
+ 
+ procedure Vault00a
+@@ -289,32 +289,32 @@ procedure Vault01
+ begin
+     PICK := random(1, 5);
+     if (PICK == 1) then begin
+-        float_msg(self_obj, message_str(185, 109), 0);
++        float_msg(self_obj, mstr(109), FLOAT_MSG_NORMAL);
+     end
+     else begin
+         if (PICK == 2) then begin
+-            float_msg(self_obj, message_str(185, 110), 0);
++            float_msg(self_obj, mstr(110), FLOAT_MSG_NORMAL);
+         end
+         else begin
+             if (PICK == 3) then begin
+-                float_msg(self_obj, message_str(185, 111), 0);
++                float_msg(self_obj, mstr(111), FLOAT_MSG_NORMAL);
+             end
+             else begin
+                 if (PICK == 4) then begin
+-                    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-                        float_msg(self_obj, message_str(185, 112), 0);
++                    if (dude_gender == 0) then begin
++                        float_msg(self_obj, mstr(112), FLOAT_MSG_NORMAL);
+                     end
+                     else begin
+-                        float_msg(self_obj, message_str(185, 113), 0);
++                        float_msg(self_obj, mstr(113), FLOAT_MSG_NORMAL);
+                     end
+                 end
+                 else begin
+                     if (PICK == 5) then begin
+-                        if (get_critter_stat(dude_obj, 34) == 0) then begin
+-                            float_msg(self_obj, message_str(185, 114), 0);
++                        if (dude_gender == 0) then begin
++                            float_msg(self_obj, mstr(114), FLOAT_MSG_NORMAL);
+                         end
+                         else begin
+-                            float_msg(self_obj, message_str(185, 115), 0);
++                            float_msg(self_obj, mstr(115), FLOAT_MSG_NORMAL);
+                         end
+                     end
+                 end
+@@ -326,26 +326,26 @@ end
+ procedure Vault02
+ begin
+     call DownReact();
+-    float_msg(self_obj, message_str(185, random(116, 119)), 0);
++    float_msg(self_obj, mstr(random(116, 119)), FLOAT_MSG_NORMAL);
+ end
+ 
+ procedure Vault03
+ begin
+     PICK := random(1, 4);
+     if (PICK == 1) then begin
+-        float_msg(self_obj, message_str(185, 120), 0);
++        float_msg(self_obj, mstr(120), FLOAT_MSG_NORMAL);
+     end
+     else begin
+         if (PICK == 2) then begin
+-            float_msg(self_obj, message_str(185, 121), 0);
++            float_msg(self_obj, mstr(121), FLOAT_MSG_NORMAL);
+         end
+         else begin
+             if (PICK == 3) then begin
+-                float_msg(self_obj, message_str(185, 122), 0);
++                float_msg(self_obj, mstr(122), FLOAT_MSG_NORMAL);
+             end
+             else begin
+                 if (PICK == 4) then begin
+-                    float_msg(self_obj, message_str(185, 123) + proto_data(obj_pid(dude_obj), 1) + message_str(0, 124), 0);
++                    float_msg(self_obj, mstr(123) + proto_data(obj_pid(dude_obj), 1) + message_str(0, 124), FLOAT_MSG_NORMAL);
+                 end
+             end
+         end
+@@ -354,35 +354,35 @@ end
+ 
+ procedure Vault04
+ begin
+-    float_msg(self_obj, message_str(185, random(125, 128)), 0);
++    float_msg(self_obj, mstr(random(125, 128)), FLOAT_MSG_NORMAL);
+ end
+ 
+ procedure Vault05
+ begin
+-    float_msg(self_obj, message_str(185, random(129, 133)), 0);
++    float_msg(self_obj, mstr(random(129, 133)), FLOAT_MSG_NORMAL);
+ end
+ 
+ procedure Vault06
+ begin
+     PICK := random(1, 5);
+     if (PICK == 1) then begin
+-        float_msg(self_obj, message_str(185, 134), 0);
++        float_msg(self_obj, mstr(134), FLOAT_MSG_NORMAL);
+     end
+     else begin
+         if (PICK == 2) then begin
+-            float_msg(self_obj, message_str(185, 135) + proto_data(obj_pid(dude_obj), 1) + message_str(185, 136), 0);
++            float_msg(self_obj, mstr(135) + proto_data(obj_pid(dude_obj), 1) + mstr(136), FLOAT_MSG_NORMAL);
+         end
+         else begin
+             if (PICK == 3) then begin
+-                float_msg(self_obj, message_str(185, 137), 0);
++                float_msg(self_obj, mstr(137), FLOAT_MSG_NORMAL);
+             end
+             else begin
+                 if (PICK == 4) then begin
+-                    float_msg(self_obj, message_str(185, 138), 0);
++                    float_msg(self_obj, mstr(138), FLOAT_MSG_NORMAL);
+                 end
+                 else begin
+                     if (PICK == 5) then begin
+-                        float_msg(self_obj, message_str(185, 139), 0);
++                        float_msg(self_obj, mstr(139), FLOAT_MSG_NORMAL);
+                     end
+                 end
+             end
+@@ -392,26 +392,26 @@ end
+ 
+ procedure Vault07
+ begin
+-    float_msg(self_obj, message_str(185, random(140, 144)), 0);
++    float_msg(self_obj, mstr(random(140, 144)), FLOAT_MSG_NORMAL);
+ end
+ 
+ procedure Vault08
+ begin
+-    float_msg(self_obj, message_str(185, random(145, 149)), 0);
++    float_msg(self_obj, mstr(random(145, 149)), FLOAT_MSG_NORMAL);
+ end
+ 
+ procedure Vault09
+ begin
+     PICK := random(1, 5);
+     if (PICK == 1) then begin
+-        float_msg(self_obj, message_str(185, 150) + proto_data(obj_pid(dude_obj), 1) + message_str(185, 151), 0);
++        float_msg(self_obj, mstr(150) + proto_data(obj_pid(dude_obj), 1) + mstr(151), FLOAT_MSG_NORMAL);
+     end
+     else begin
+         if (PICK >= 4) then begin
+-            display_msg(message_str(185, 150 + PICK));
++            display_mstr(150 + PICK);
+         end
+         else begin
+-            float_msg(self_obj, message_str(185, 150 + PICK), 0);
++            float_msg(self_obj, mstr(150 + PICK), FLOAT_MSG_NORMAL);
+         end
+     end
+ end
+@@ -420,10 +420,10 @@ procedure Vault10
+ begin
+     PICK := random(1, 5);
+     if (PICK == 5) then begin
+-        display_msg(message_str(185, 160));
++        display_mstr(160);
+     end
+     else begin
+-        float_msg(self_obj, message_str(185, 155 + PICK), 0);
++        float_msg(self_obj, mstr(155 + PICK), FLOAT_MSG_NORMAL);
+     end
+ end
+ 
+@@ -431,19 +431,19 @@ procedure Vault11
+ begin
+     PICK := random(1, 5);
+     if (PICK == 1) then begin
+-        float_msg(self_obj, message_str(185, 161), 0);
++        float_msg(self_obj, mstr(161), FLOAT_MSG_NORMAL);
+     end
+     else begin
+         if (PICK == 2) then begin
+-            float_msg(self_obj, message_str(185, 162), 0);
++            float_msg(self_obj, mstr(162), FLOAT_MSG_NORMAL);
+         end
+         else begin
+             if (PICK == 3) then begin
+-                display_msg(message_str(185, 163));
++                display_mstr(163);
+             end
+             else begin
+                 if (PICK == 4) then begin
+-                    display_msg(message_str(185, 164));
++                    display_mstr(164);
+                 end
+             end
+         end
+@@ -456,9 +456,9 @@ begin
+     variable LVar1 := 0;
+     variable LVar2 := 0;
+     while (LVar1 < 5) do begin
+-        if (tile_distance(tile_num(dude_obj), tile_num_in_direction(tile_num(self_obj), LVar1, 3)) > LVar2) then begin
++        if (tile_distance(dude_tile, tile_num_in_direction(tile_num(self_obj), LVar1, 3)) > LVar2) then begin
+             LVar0 := tile_num_in_direction(tile_num(self_obj), LVar1, 3);
+-            LVar2 := tile_distance(tile_num(dude_obj), LVar0);
++            LVar2 := tile_distance(dude_tile, LVar0);
+         end
+         LVar1 := LVar1 + 1;
+     end
+@@ -568,31 +568,31 @@ begin
+         set_local_var(0, 50);
+         set_local_var(1, 2);
+         set_local_var(2, 1);
+-        set_local_var(0, local_var(0) + (5 * get_critter_stat(dude_obj, 3)) - 25);
+-        set_local_var(0, local_var(0) + (10 * has_trait(0, dude_obj, 10)));
+-        if (has_trait(0, dude_obj, 39)) then begin
+-            if (global_var(155) > 0) then begin
+-                set_local_var(0, local_var(0) + global_var(155));
++        set_local_var(0, local_var(0) + (5 * dude_charisma) - 25);
++        set_local_var(0, local_var(0) + (10 * has_trait(TRAIT_PERK, dude_obj, PERK_presence)));
++        if (has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality)) then begin
++            if (global_var(GVAR_PLAYER_REPUATION) > 0) then begin
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+         else begin
+             if (local_var(3) == 1) then begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) + global_var(155));
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+-        if (global_var(158) > 2) then begin
++        if (global_var(GVAR_CHILDKILLER_REPUATION) > 2) then begin
+             set_local_var(0, local_var(0) - 30);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) + 20);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) - 20);
+         end
+         call ReactToLevel();
+@@ -685,6 +685,5 @@ end
+ 
+ procedure Goodbyes
+ begin
+-    exit_line := message_str(634, random(100, 105));
++    exit_line := message_str(SCRIPT_MODREACT, random(100, 105));
+ end
+-

@@ -1,0 +1,688 @@
+procedure start;
+procedure combat;
+procedure critter_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure destroy_p_proc;
+procedure look_at_p_proc;
+procedure dialog_end;
+procedure madsci00;
+procedure madsci00a;
+procedure madsci00b;
+procedure madsci01;
+procedure madsci01a;
+procedure madsci02;
+procedure madsci02a;
+procedure madsci02b;
+procedure madsci03;
+procedure madsci03a;
+procedure madsci03b;
+procedure madsci04;
+procedure madsci04a;
+procedure madsci05;
+procedure madsci06;
+procedure madsci07;
+procedure madsci08;
+procedure madsci09;
+procedure madsci09a;
+procedure madsci09b;
+procedure madsci09c;
+procedure madsci10;
+procedure madsci10a;
+procedure madsci10b;
+procedure madsci11;
+procedure madsci12;
+procedure madsci12a;
+procedure madsci12b;
+procedure madsci12c;
+procedure madsci13;
+procedure madsci13a;
+procedure madsci13b;
+procedure madsci14;
+procedure madsci14a;
+
+variable hostile;
+variable Only_Once := 1;
+variable home_tile;
+variable sleep_tile;
+
+procedure get_reaction;
+procedure ReactToLevel;
+procedure LevelToReact;
+procedure UpReact;
+procedure DownReact;
+procedure BottomReact;
+procedure TopReact;
+procedure BigUpReact;
+procedure BigDownReact;
+procedure UpReactLevel;
+procedure DownReactLevel;
+procedure Goodbyes;
+
+variable exit_line;
+
+procedure madscinull;
+
+
+procedure start
+begin
+    if (Only_Once) then begin
+        Only_Once := 0;
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 34);
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_CHILDREN_TRUE);
+        home_tile := tile_num(self_obj);
+        if (home_tile == 22093) then begin
+            sleep_tile := 21881;
+        end
+        else begin
+            if (home_tile == 22704) then begin
+                sleep_tile := 22281;
+            end
+            else begin
+                sleep_tile := 22083;
+            end
+        end
+    end
+    if (script_action == look_at_proc) then begin
+        call look_at_p_proc();
+    end
+    else begin
+        if (script_action == pickup_proc) then begin
+            call pickup_p_proc();
+        end
+        else begin
+            if (script_action == talk_proc) then begin
+                call talk_p_proc();
+            end
+            else begin
+                if (script_action == critter_proc) then begin
+                    call critter_p_proc();
+                end
+                else begin
+                    if (script_action == destroy_proc) then begin
+                        call destroy_p_proc();
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure combat
+begin
+    hostile := 1;
+end
+
+procedure critter_p_proc
+begin
+    if (hostile) then begin
+        hostile := 0;
+        attack(dude_obj);
+    end
+    else begin
+        if ((game_time_hour >= 700) and (game_time_hour < 1800)) then begin
+            if (local_var(6)) then begin
+                set_local_var(6, 0);
+                animate_move_obj_to_tile(self_obj, home_tile, 0);
+            end
+            else begin
+                if (tile_num(self_obj) != home_tile) then begin
+                    animate_move_obj_to_tile(self_obj, home_tile, 0);
+                end
+            end
+        end
+        else begin
+            if (local_var(6)) then begin
+                if (tile_num(self_obj) != sleep_tile) then begin
+                    animate_move_obj_to_tile(self_obj, sleep_tile, 0);
+                end
+            end
+            else begin
+                set_local_var(6, 1);
+                animate_move_obj_to_tile(self_obj, sleep_tile, 0);
+            end
+        end
+    end
+end
+
+procedure pickup_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        hostile := 1;
+    end
+end
+
+procedure talk_p_proc
+begin
+    if (tile_num(self_obj) == sleep_tile) then begin
+        float_msg(self_obj, mstr(303), FLOAT_MSG_RED);
+    end
+    else begin
+        call get_reaction();
+        start_gdialog(679, self_obj, 4, -1, -1);
+        gsay_start;
+        if (obj_pid(critter_inven_obj(dude_obj, 0)) == 113) then begin
+            if (local_var(5) == 1) then begin
+                call madsci01();
+            end
+            else begin
+                call madsci00();
+            end
+            set_local_var(5, 1);
+        end
+        else begin
+            if (local_var(4) == 1) then begin
+                call madsci01();
+            end
+            else begin
+                call madsci12();
+            end
+            set_local_var(4, 1);
+        end
+        gsay_end;
+        end_dialogue;
+    end
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
+            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
+            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+        end
+        set_global_var(GVAR_BAD_MONSTER, global_var(GVAR_BAD_MONSTER) + 1);
+        if ((global_var(GVAR_BAD_MONSTER) % 6) == 0) then begin
+            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) + 1);
+        end
+    end
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    if (tile_num(self_obj) == sleep_tile) then begin
+        display_mstr(300);
+    end
+    else begin
+        display_mstr(100);
+    end
+end
+
+procedure dialog_end
+begin
+end
+
+procedure madsci00
+begin
+    if (dude_gender == 0) then begin
+        Reply(101);
+    end
+    else begin
+        Reply(102);
+    end
+    giq_option(7, NAME, 103, madsci00a, NEUTRAL_REACTION);
+    giq_option(4, NAME, 104, madsci04, NEUTRAL_REACTION);
+    if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+        giq_option(4, NAME, 105, madsci00b, NEUTRAL_REACTION);
+    end
+    giq_option(-3, NAME, 106, madsci06, NEUTRAL_REACTION);
+end
+
+procedure madsci00a
+begin
+    if (is_success(roll_vs_skill(dude_obj, 14, 0))) then begin
+        call madsci02();
+    end
+    else begin
+        call madsci09();
+    end
+end
+
+procedure madsci00b
+begin
+    if (is_success(roll_vs_skill(dude_obj, 14, -10))) then begin
+        call madsci03();
+    end
+    else begin
+        call madsci08();
+    end
+end
+
+procedure madsci01
+begin
+    Reply(107);
+    giq_option(4, NAME, 108, madsci01a, NEUTRAL_REACTION);
+    giq_option(4, NAME, 109, madsci02, NEUTRAL_REACTION);
+    if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+        giq_option(4, NAME, 110, combat, BAD_REACTION);
+    end
+    giq_option(-3, NAME, 111, madsci06, NEUTRAL_REACTION);
+end
+
+procedure madsci01a
+begin
+    if (is_success(roll_vs_skill(dude_obj, 14, -10))) then begin
+        call madsci03();
+    end
+    else begin
+        call madsci09();
+    end
+end
+
+procedure madsci02
+begin
+    Reply(112);
+    giq_option(7, NAME, 113, madsci07, NEUTRAL_REACTION);
+    giq_option(4, NAME, 114, madsci02a, NEUTRAL_REACTION);
+    giq_option(4, NAME, 115, madsci02b, NEUTRAL_REACTION);
+    giq_option(4, NAME, 116, madsci14, NEUTRAL_REACTION);
+end
+
+procedure madsci02a
+begin
+    if (is_success(roll_vs_skill(dude_obj, 14, 0))) then begin
+        call madsci07();
+    end
+    else begin
+        call madsci09();
+    end
+end
+
+procedure madsci02b
+begin
+    if (is_success(roll_vs_skill(dude_obj, 14, 0))) then begin
+        call madsci04();
+    end
+    else begin
+        call madsci06();
+    end
+end
+
+procedure madsci03
+begin
+    if (dude_gender == 0) then begin
+        Reply(117);
+    end
+    else begin
+        Reply(118);
+    end
+    giq_option(4, NAME, 103, madsci03a, NEUTRAL_REACTION);
+    giq_option(4, NAME, 104, madsci04, NEUTRAL_REACTION);
+    if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+        giq_option(4, NAME, 119, madsci03b, NEUTRAL_REACTION);
+    end
+end
+
+procedure madsci03a
+begin
+    if (is_success(roll_vs_skill(dude_obj, 14, 0))) then begin
+        call madsci02();
+    end
+    else begin
+        call madsci06();
+    end
+end
+
+procedure madsci03b
+begin
+    if (is_success(roll_vs_skill(dude_obj, 14, -10))) then begin
+        call madsci09();
+    end
+    else begin
+        call madsci08();
+    end
+end
+
+procedure madsci04
+begin
+    Reply(120);
+    giq_option(4, NAME, 121, madsci04a, NEUTRAL_REACTION);
+    giq_option(4, NAME, 122, madsci05, NEUTRAL_REACTION);
+    if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+        giq_option(4, NAME, 123, combat, BAD_REACTION);
+    end
+end
+
+procedure madsci04a
+begin
+    if (is_success(roll_vs_skill(dude_obj, 14, 0))) then begin
+        call madsci09();
+    end
+    else begin
+        call madsci08();
+    end
+end
+
+procedure madsci05
+begin
+    Reply(124);
+    giq_option(4, NAME, 125, dialog_end, NEUTRAL_REACTION);
+    giq_option(4, NAME, 126, madsci09, NEUTRAL_REACTION);
+    if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+        giq_option(4, NAME, 127, combat, BAD_REACTION);
+    end
+end
+
+procedure madsci06
+begin
+    gsay_message(NAME, 128, NEUTRAL_REACTION);
+end
+
+procedure madsci07
+begin
+    Reply(129);
+    giq_option(4, NAME, 130, madsci05, NEUTRAL_REACTION);
+    giq_option(4, NAME, 131, dialog_end, NEUTRAL_REACTION);
+    if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+        giq_option(4, NAME, 132, combat, BAD_REACTION);
+    end
+end
+
+procedure madsci08
+begin
+    gsay_message(NAME, 133, NEUTRAL_REACTION);
+end
+
+procedure madsci09
+begin
+    Reply(134);
+    giq_option(4, NAME, 135, madsci09a, NEUTRAL_REACTION);
+    giq_option(4, NAME, 136, madsci09b, BAD_REACTION);
+    giq_option(4, NAME, 137, madsci09c, BAD_REACTION);
+    if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+        giq_option(4, NAME, 138, combat, BAD_REACTION);
+    end
+end
+
+procedure madsci09a
+begin
+    if (is_success(roll_vs_skill(dude_obj, 14, -5))) then begin
+        call madsci06();
+    end
+    else begin
+        call madsci08();
+    end
+end
+
+procedure madsci09b
+begin
+    if (is_success(roll_vs_skill(dude_obj, 14, -20))) then begin
+        call madsci10();
+    end
+    else begin
+        call madsci11();
+    end
+end
+
+procedure madsci09c
+begin
+    if (is_success(roll_vs_skill(dude_obj, 14, -10))) then begin
+        call madsci10();
+    end
+    else begin
+        call madsci11();
+    end
+end
+
+procedure madsci10
+begin
+    if (dude_gender == 0) then begin
+        Reply(117);
+    end
+    else begin
+        Reply(118);
+    end
+    giq_option(4, NAME, 139, madsci10a, NEUTRAL_REACTION);
+    giq_option(4, NAME, 140, dialog_end, NEUTRAL_REACTION);
+    if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+        giq_option(4, NAME, 119, madsci10b, NEUTRAL_REACTION);
+    end
+end
+
+procedure madsci10a
+begin
+    if (is_success(roll_vs_skill(dude_obj, 14, 0))) then begin
+        call madsci02();
+    end
+    else begin
+        call madsci06();
+    end
+end
+
+procedure madsci10b
+begin
+    if (is_success(roll_vs_skill(dude_obj, 14, -20))) then begin
+        call madsci06();
+    end
+    else begin
+        call madsci08();
+    end
+end
+
+procedure madsci11
+begin
+    gsay_message(NAME, 141, BAD_REACTION);
+    call combat();
+end
+
+procedure madsci12
+begin
+    Reply(142);
+    giq_option(4, NAME, 143, madsci12a, NEUTRAL_REACTION);
+    giq_option(4, NAME, 144, madsci12b, BAD_REACTION);
+    giq_option(4, NAME, 145, madsci12c, NEUTRAL_REACTION);
+    giq_option(4, NAME, 146, combat, NEUTRAL_REACTION);
+end
+
+procedure madsci12a
+begin
+    if (is_success(roll_vs_skill(dude_obj, 14, -20))) then begin
+        call madsci03();
+    end
+    else begin
+        call madsci09();
+    end
+end
+
+procedure madsci12b
+begin
+    if (is_success(roll_vs_skill(dude_obj, 14, -25))) then begin
+        call madsci10();
+    end
+    else begin
+        call madsci11();
+    end
+end
+
+procedure madsci12c
+begin
+    if (is_success(roll_vs_skill(dude_obj, 14, -15))) then begin
+        call madsci13();
+    end
+    else begin
+        call madsci08();
+    end
+end
+
+procedure madsci13
+begin
+    Reply(147);
+    giq_option(4, NAME, 148, madsci02, NEUTRAL_REACTION);
+    giq_option(4, NAME, 144, madsci13a, BAD_REACTION);
+    giq_option(4, NAME, 149, madsci13b, NEUTRAL_REACTION);
+end
+
+procedure madsci13a
+begin
+    if (is_success(roll_vs_skill(dude_obj, 14, -25))) then begin
+        call madsci10();
+    end
+    else begin
+        call madsci11();
+    end
+end
+
+procedure madsci13b
+begin
+    if (is_success(roll_vs_skill(dude_obj, 14, -20))) then begin
+        call madsci10();
+    end
+    else begin
+        call madsci08();
+    end
+end
+
+procedure madsci14
+begin
+    Reply(150);
+    giq_option(4, NAME, 151, madsci14a, NEUTRAL_REACTION);
+    giq_option(4, NAME, 122, madsci05, NEUTRAL_REACTION);
+    if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+        giq_option(4, NAME, 123, combat, NEUTRAL_REACTION);
+    end
+end
+
+procedure madsci14a
+begin
+    if (is_success(roll_vs_skill(dude_obj, 14, 0))) then begin
+        call madsci09();
+    end
+    else begin
+        call madsci08();
+    end
+end
+
+procedure get_reaction
+begin
+    if (local_var(2) == 0) then begin
+        set_local_var(0, 50);
+        set_local_var(1, 2);
+        set_local_var(2, 1);
+        set_local_var(0, local_var(0) + (5 * dude_charisma) - 25);
+        set_local_var(0, local_var(0) + (10 * has_trait(TRAIT_PERK, dude_obj, PERK_presence)));
+        if (has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality)) then begin
+            if (global_var(GVAR_PLAYER_REPUATION) > 0) then begin
+                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+            end
+            else begin
+                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+            end
+        end
+        else begin
+            if (local_var(3) == 1) then begin
+                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+            end
+            else begin
+                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+            end
+        end
+        if (global_var(GVAR_CHILDKILLER_REPUATION) > 2) then begin
+            set_local_var(0, local_var(0) - 30);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+            set_local_var(0, local_var(0) + 20);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+            set_local_var(0, local_var(0) - 20);
+        end
+        call ReactToLevel();
+    end
+end
+
+procedure ReactToLevel
+begin
+    if (local_var(0) <= 25) then begin
+        set_local_var(1, 1);
+    end
+    else begin
+        if (local_var(0) <= 75) then begin
+            set_local_var(1, 2);
+        end
+        else begin
+            set_local_var(1, 3);
+        end
+    end
+end
+
+procedure LevelToReact
+begin
+    if (local_var(1) == 1) then begin
+        set_local_var(0, random(1, 25));
+    end
+    else begin
+        if (local_var(1) == 2) then begin
+            set_local_var(0, random(26, 75));
+        end
+        else begin
+            set_local_var(0, random(76, 100));
+        end
+    end
+end
+
+procedure UpReact
+begin
+    set_local_var(0, local_var(0) + 10);
+    call ReactToLevel();
+end
+
+procedure DownReact
+begin
+    set_local_var(0, local_var(0) - 10);
+    call ReactToLevel();
+end
+
+procedure BottomReact
+begin
+    set_local_var(1, 1);
+    set_local_var(0, 1);
+end
+
+procedure TopReact
+begin
+    set_local_var(0, 100);
+    set_local_var(1, 3);
+end
+
+procedure BigUpReact
+begin
+    set_local_var(0, local_var(0) + 25);
+    call ReactToLevel();
+end
+
+procedure BigDownReact
+begin
+    set_local_var(0, local_var(0) - 25);
+    call ReactToLevel();
+end
+
+procedure UpReactLevel
+begin
+    set_local_var(1, local_var(1) + 1);
+    if (local_var(1) > 3) then begin
+        set_local_var(1, 3);
+    end
+    call LevelToReact();
+end
+
+procedure DownReactLevel
+begin
+    set_local_var(1, local_var(1) - 1);
+    if (local_var(1) < 1) then begin
+        set_local_var(1, 1);
+    end
+    call LevelToReact();
+end
+
+procedure Goodbyes
+begin
+    exit_line := message_str(SCRIPT_MODREACT, random(100, 105));
+end
+
+procedure madscinull
+begin
+end

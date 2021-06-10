@@ -1,0 +1,201 @@
+procedure start;
+procedure do_dialogue;
+procedure jeremend;
+procedure jeremcbt;
+procedure jeremret;
+
+variable HOSTILE;
+variable only_once := 1;
+variable Weapons;
+variable DISGUISED;
+variable moving := 1;
+variable my_hex;
+variable home_tile;
+
+
+procedure start
+begin
+    if (local_var(0) == 0) then begin
+        set_local_var(0, 1);
+        set_local_var(1, 0);
+        set_local_var(2, 4);
+        set_local_var(3, 16912);
+    end
+    if (only_once) then begin
+        only_once := 0;
+        home_tile := 16912;
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 34);
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_CHILDREN_TRUE);
+        if (global_var(GVAR_MASTER_FILLER_6) == 1) then begin
+            set_obj_visibility(self_obj, 1);
+            moving := 0;
+        end
+        else begin
+            if (global_var(GVAR_MASTER_FILLER_5) == 0) then begin
+                set_obj_visibility(self_obj, 1);
+                moving := 0;
+                add_timer_event(self_obj, game_ticks(300), 1);
+            end
+        end
+    end
+    else begin
+        if (global_var(GVAR_MASTER_FILLER_6) != 1) then begin
+            if (script_action == talk_proc) then begin
+                call do_dialogue();
+            end
+            else begin
+                if (script_action == timed_event_proc) then begin
+                    if (fixed_param == 1) then begin
+                        moving := 1;
+                        set_global_var(GVAR_MASTER_FILLER_5, 1);
+                        move_to(self_obj, home_tile, 0);
+                        set_local_var(1, 0);
+                        set_local_var(2, 4);
+                        set_local_var(3, 16912);
+                        set_obj_visibility(self_obj, 0);
+                    end
+                    else begin
+                        if (fixed_param == 2) then begin
+                            moving := 1;
+                        end
+                    end
+                end
+                else begin
+                    if (script_action == pickup_proc) then begin
+                        HOSTILE := 1;
+                    end
+                end
+            end
+            if (script_action == critter_proc) then begin
+                if (HOSTILE) then begin
+                    HOSTILE := 0;
+                    attack(dude_obj);
+                end
+                if (moving) then begin
+                    my_hex := tile_num(self_obj);
+                    if (my_hex == local_var(3)) then begin
+                        if (local_var(1)) then begin
+                            set_local_var(2, local_var(2) + 1);
+                        end
+                        else begin
+                            set_local_var(2, local_var(2) - 1);
+                        end
+                        if (local_var(2) > 4) then begin
+                            moving := 0;
+                            set_local_var(1, 0);
+                            set_local_var(2, 4);
+                            set_obj_visibility(self_obj, 1);
+                            set_global_var(GVAR_MASTER_FILLER_5, 0);
+                            add_timer_event(self_obj, game_ticks(300), 1);
+                        end
+                        else begin
+                            if (local_var(2) < 0) then begin
+                                moving := 0;
+                                set_local_var(1, 1);
+                                set_local_var(2, 0);
+                                add_timer_event(self_obj, game_ticks(300), 2);
+                            end
+                        end
+                        if (local_var(2) == 0) then begin
+                            set_local_var(3, 23689);
+                        end
+                        else begin
+                            if (local_var(2) == 1) then begin
+                                set_local_var(3, 22900);
+                            end
+                            else begin
+                                if (local_var(2) == 2) then begin
+                                    set_local_var(3, 22312);
+                                end
+                                else begin
+                                    if (local_var(2) == 3) then begin
+                                        set_local_var(3, 19512);
+                                    end
+                                    else begin
+                                        if (local_var(2) == 4) then begin
+                                            set_local_var(3, 16912);
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    else begin
+                        animate_move_obj_to_tile(self_obj, local_var(3), 0);
+                    end
+                    if (obj_can_see_obj(self_obj, dude_obj)) then begin
+                        DISGUISED := 0;
+                        if (obj_pid(critter_inven_obj(dude_obj, 0)) == 113) then begin
+                            if (party_member_count(0) > 1) then begin
+                                DISGUISED := 0;
+                            end
+                            else begin
+                                DISGUISED := 1;
+                            end
+                        end
+                        if (DISGUISED == 0) then begin
+                            dialogue_system_enter;
+                        end
+                    end
+                end
+            end
+            else begin
+                if (script_action == look_at_proc) then begin
+                    script_overrides;
+                    display_msg(message_str(SCRIPT_JEREM, 100));
+                end
+                else begin
+                    if (script_action == destroy_proc) then begin
+                        set_global_var(GVAR_MASTER_FILLER_6, 1);
+                        if (source_obj == dude_obj) then begin
+                            if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+                                set_global_var(GVAR_BERSERKER_REPUTATION, 1);
+                                set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+                            end
+                            if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+                                set_global_var(GVAR_CHAMPION_REPUTATION, 1);
+                                set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+                            end
+                            set_global_var(GVAR_BAD_MONSTER, global_var(GVAR_BAD_MONSTER) + 1);
+                            if ((global_var(GVAR_BAD_MONSTER) % 6) == 0) then begin
+                                set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) + 1);
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure do_dialogue
+begin
+    if (obj_pid(critter_inven_obj(dude_obj, 0)) == 113) then begin
+        if (party_member_count(0) > 1) then begin
+            DISGUISED := 0;
+        end
+        else begin
+            DISGUISED := 1;
+        end
+    end
+    if (global_var(GVAR_MASTER_FILLER_4) == 1) then begin
+        float_msg(self_obj, message_str(SCRIPT_JEREM, 187), FLOAT_MSG_RED);
+    end
+    else begin
+        float_msg(self_obj, message_str(SCRIPT_JEREM, 120), FLOAT_MSG_RED);
+    end
+    call jeremcbt();
+end
+
+procedure jeremend
+begin
+end
+
+procedure jeremcbt
+begin
+    HOSTILE := 1;
+end
+
+procedure jeremret
+begin
+end

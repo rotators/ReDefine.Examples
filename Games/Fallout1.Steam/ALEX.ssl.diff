@@ -1,0 +1,170 @@
+diff --git a/Games/Fallout1.Steam/Original/ALEX.ssl b/Games/Fallout1.Steam/ReDefine/ALEX.ssl
+index ad20617..69c526d 100644
+--- a/Games/Fallout1.Steam/Original/ALEX.ssl
++++ b/Games/Fallout1.Steam/ReDefine/ALEX.ssl
+@@ -24,7 +24,7 @@ variable initialized;
+ procedure start
+ begin
+     if (not(initialized)) then begin
+-        critter_add_trait(self_obj, 1, 6, 49);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 49);
+         sleep_tile := 14275;
+         home_tile := 11300;
+         wake_time := 2030;
+@@ -36,19 +36,19 @@ begin
+         initialized := 1;
+     end
+     else begin
+-        if (script_action == 12) then begin
++        if (script_action == critter_proc) then begin
+             call critter_p_proc();
+         end
+         else begin
+-            if (script_action == 18) then begin
++            if (script_action == destroy_proc) then begin
+                 call destroy_p_proc();
+             end
+             else begin
+-                if (script_action == 21) then begin
++                if (script_action == look_at_proc) then begin
+                     call look_at_p_proc();
+                 end
+                 else begin
+-                    if (script_action == 11) then begin
++                    if (script_action == talk_proc) then begin
+                         call talk_p_proc();
+                     end
+                 end
+@@ -62,7 +62,7 @@ begin
+     if (obj_can_see_obj(self_obj, dude_obj)) then begin
+         if (hostile) then begin
+             hostile := 0;
+-            attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++            attack(dude_obj);
+         end
+         else begin
+             if (local_var(0) == 0) then begin
+@@ -70,8 +70,8 @@ begin
+                     dialogue_system_enter;
+                 end
+             end
+-            if (tile_distance(tile_num(dude_obj), 10700) > tile_distance(tile_num(dude_obj), 11900)) then begin
+-                if (global_var(128) < 2) then begin
++            if (tile_distance(dude_tile, 10700) > tile_distance(dude_tile, 11900)) then begin
++                if (global_var(GVAR_GANG_WAR) < 2) then begin
+                     hostile := 1;
+                 end
+             end
+@@ -85,17 +85,17 @@ end
+ procedure destroy_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-            set_global_var(156, 1);
+-            set_global_var(157, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+-            set_global_var(157, 1);
+-            set_global_var(156, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+         end
+-        set_global_var(159, global_var(159) + 1);
+-        if ((global_var(159) % 2) == 0) then begin
+-            set_global_var(155, global_var(155) - 1);
++        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
++        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
++            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+         end
+     end
+ end
+@@ -104,14 +104,14 @@ procedure look_at_p_proc
+ begin
+     if (local_var(0)) then begin
+         script_overrides;
+-        display_msg(message_str(670, 100));
++        display_mstr(100);
+     end
+ end
+ 
+ procedure talk_p_proc
+ begin
+-    if (global_var(128) == 2) then begin
+-        float_msg(self_obj, message_str(670, 101) + proto_data(obj_pid(dude_obj), 1), 0);
++    if (global_var(GVAR_GANG_WAR) == 2) then begin
++        float_msg(self_obj, mstr(101) + proto_data(obj_pid(dude_obj), 1), FLOAT_MSG_NORMAL);
+     end
+     else begin
+         if (local_var(0)) then begin
+@@ -129,47 +129,47 @@ end
+ 
+ procedure Alex01
+ begin
+-    float_msg(self_obj, message_str(670, 102), 0);
++    float_msg(self_obj, mstr(102), FLOAT_MSG_NORMAL);
+ end
+ 
+ procedure Alex02
+ begin
+     set_local_var(0, 1);
+-    gsay_reply(670, 103);
+-    giq_option(4, 670, 104, Alex03, 50);
+-    giq_option(4, 670, 105, Alex05, 51);
+-    giq_option(4, 670, 106, Alex06, 50);
+-    giq_option(-3, 670, 114, Alex06, 50);
++    Reply(103);
++    giq_option(4, NAME, 104, Alex03, NEUTRAL_REACTION);
++    giq_option(4, NAME, 105, Alex05, BAD_REACTION);
++    giq_option(4, NAME, 106, Alex06, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 114, Alex06, NEUTRAL_REACTION);
+ end
+ 
+ procedure Alex03
+ begin
+-    gsay_reply(670, 107);
+-    giq_option(4, 670, 108, Alex04, 50);
+-    giq_option(4, 670, 106, Alex06, 50);
++    Reply(107);
++    giq_option(4, NAME, 108, Alex04, NEUTRAL_REACTION);
++    giq_option(4, NAME, 106, Alex06, NEUTRAL_REACTION);
+ end
+ 
+ procedure Alex04
+ begin
+-    gsay_message(670, 109, 50);
++    gsay_message(NAME, 109, NEUTRAL_REACTION);
+ end
+ 
+ procedure Alex05
+ begin
+-    gsay_reply(670, 110);
+-    giq_option(4, 670, 106, Alex06, 50);
+-    giq_option(4, 670, 111, Alex07, 50);
++    Reply(110);
++    giq_option(4, NAME, 106, Alex06, NEUTRAL_REACTION);
++    giq_option(4, NAME, 111, Alex07, NEUTRAL_REACTION);
+ end
+ 
+ procedure Alex06
+ begin
+-    gsay_message(670, 112, 50);
++    gsay_message(NAME, 112, NEUTRAL_REACTION);
+ end
+ 
+ procedure Alex07
+ begin
+     hostile := 1;
+-    gsay_message(670, 113, 51);
++    gsay_message(NAME, 113, BAD_REACTION);
+ end
+ 
+ procedure sleeping
+@@ -213,4 +213,3 @@ begin
+         end
+     end
+ end
+-

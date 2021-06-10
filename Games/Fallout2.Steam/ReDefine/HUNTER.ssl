@@ -1,0 +1,161 @@
+procedure start;
+procedure critter_p_proc;
+procedure destroy_p_proc;
+procedure look_at_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure Hunter01;
+procedure Hunter02;
+procedure Hunter03;
+procedure Hunter04;
+procedure Hunter05;
+
+variable mad;
+variable hostile;
+variable initialized;
+variable my_script_mode;
+variable pre_fight;
+
+import variable removal_ptr;
+
+
+procedure start
+begin
+    if (not(initialized)) then begin
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 29);
+        if (cur_map_index != MAP_DEPOLVB) then begin
+            call Hunter05();
+            attack(dude_obj);
+            my_script_mode := 1;
+        end
+        else begin
+            if (global_var(GVAR_MODOC_ROSE_FLAG) == 3) then begin
+                move_to(self_obj, 7000, 0);
+                removal_ptr := self_obj;
+            end
+        end
+        initialized := 1;
+    end
+    else begin
+        if (not(my_script_mode)) then begin
+            if (script_action == critter_proc) then begin
+                call critter_p_proc();
+            end
+            else begin
+                if (script_action == destroy_proc) then begin
+                    call destroy_p_proc();
+                end
+                else begin
+                    if (script_action == look_at_proc) then begin
+                        call look_at_p_proc();
+                    end
+                    else begin
+                        if (script_action == pickup_proc) then begin
+                            call pickup_p_proc();
+                        end
+                        else begin
+                            if (script_action == talk_proc) then begin
+                                call talk_p_proc();
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        else begin
+            if (script_action == destroy_proc) then begin
+                call destroy_p_proc();
+            end
+        end
+    end
+end
+
+procedure critter_p_proc
+begin
+    if (hostile) then begin
+        hostile := 0;
+        attack(dude_obj);
+    end
+    else begin
+        if (obj_can_see_obj(self_obj, dude_obj) and not(my_script_mode) and not(pre_fight) and (global_var(GVAR_GECKO_ECON_DISK) > 2)) then begin
+            call Hunter05();
+            pre_fight := 1;
+        end
+    end
+end
+
+procedure destroy_p_proc
+begin
+    set_global_var(GVAR_MODOC_ROSE_FLAG, 3);
+    if (source_obj == dude_obj) then begin
+        if (((global_var(GVAR_GECKO_SKEETER_PART) + global_var(GVAR_GECKO_REQ_FORM)) >= 25) and ((global_var(GVAR_GECKO_REQ_FORM) > (2 * global_var(GVAR_GECKO_SKEETER_PART))) or (global_var(GVAR_SIERRA_LOCKOUT) == 1))) then begin
+            set_global_var(GVAR_SIERRA_LOCKOUT, 1);
+            set_global_var(GVAR_SIERRA_PASSWORD, 0);
+        end
+        if (((global_var(GVAR_GECKO_SKEETER_PART) + global_var(GVAR_GECKO_REQ_FORM)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GECKO_REQ_FORM))) or (global_var(GVAR_SIERRA_PASSWORD) == 1))) then begin
+            set_global_var(GVAR_SIERRA_PASSWORD, 1);
+            set_global_var(GVAR_SIERRA_LOCKOUT, 0);
+        end
+        set_global_var(GVAR_GECKO_REQ_FORM, global_var(GVAR_GECKO_REQ_FORM) + 1);
+        if ((global_var(GVAR_GECKO_REQ_FORM) % 2) == 0) then begin
+            set_global_var(GVAR_BRAIN_BOT_BRAIN, global_var(GVAR_BRAIN_BOT_BRAIN) - 1);
+        end
+    end
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    display_msg(message_str(SCRIPT_WSFELD1B, 100));
+end
+
+procedure pickup_p_proc
+begin
+    hostile := 1;
+end
+
+procedure talk_p_proc
+begin
+    start_gdialog(241, self_obj, 4, -1, -1);
+    gsay_start;
+    call Hunter01();
+    gsay_end;
+    end_dialogue;
+end
+
+procedure Hunter01
+begin
+    gsay_reply(SCRIPT_WSFELD1B, 101);
+    giq_option(3, SCRIPT_WSFELD1B, 102, Hunter02, NEUTRAL_REACTION);
+    giq_option(3, SCRIPT_WSFELD1B, 103, Hunter03, NEUTRAL_REACTION);
+    giq_option(3, SCRIPT_WSFELD1B, 104, Hunter04, NEUTRAL_REACTION);
+    giq_option(0, SCRIPT_WSFELD1B, 105, Hunter04, NEUTRAL_REACTION);
+end
+
+procedure Hunter02
+begin
+    if (not(mad)) then begin
+        gsay_message(SCRIPT_WSFELD1B, 106, NEUTRAL_REACTION);
+        mad := 1;
+    end
+    else begin
+        gsay_message(SCRIPT_WSFELD1B, 107, NEUTRAL_REACTION);
+        hostile := 1;
+    end
+end
+
+procedure Hunter03
+begin
+    gsay_message(SCRIPT_WSFELD1B, 108, NEUTRAL_REACTION);
+end
+
+procedure Hunter04
+begin
+    gsay_message(SCRIPT_WSFELD1B, 109, NEUTRAL_REACTION);
+end
+
+procedure Hunter05
+begin
+    float_msg(self_obj, message_str(SCRIPT_WSFELD1B, 110), FLOAT_MSG_NORMAL);
+    hostile := 1;
+end

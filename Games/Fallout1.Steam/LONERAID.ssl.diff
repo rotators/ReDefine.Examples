@@ -1,0 +1,333 @@
+diff --git a/Games/Fallout1.Steam/Original/LONERAID.ssl b/Games/Fallout1.Steam/ReDefine/LONERAID.ssl
+index d57e34b..6e7bebd 100644
+--- a/Games/Fallout1.Steam/Original/LONERAID.ssl
++++ b/Games/Fallout1.Steam/ReDefine/LONERAID.ssl
+@@ -42,24 +42,24 @@ variable broken;
+ procedure start
+ begin
+     if (not(initialized)) then begin
+-        critter_add_trait(self_obj, 1, 6, 6);
+-        critter_add_trait(self_obj, 1, 5, 20);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 6);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_GENERIC_RAIDER);
+         initialized := 1;
+     end
+     else begin
+-        if (script_action == 12) then begin
++        if (script_action == critter_proc) then begin
+             call critter_p_proc();
+         end
+         else begin
+-            if (script_action == 18) then begin
++            if (script_action == destroy_proc) then begin
+                 call destroy_p_proc();
+             end
+             else begin
+-                if (script_action == 4) then begin
++                if (script_action == pickup_proc) then begin
+                     call pickup_p_proc();
+                 end
+                 else begin
+-                    if (script_action == 11) then begin
++                    if (script_action == talk_proc) then begin
+                         call talk_p_proc();
+                     end
+                 end
+@@ -72,7 +72,7 @@ procedure critter_p_proc
+ begin
+     if (hostile) then begin
+         hostile := 0;
+-        attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++        attack(dude_obj);
+     end
+     else begin
+         if ((tile_distance_objs(self_obj, dude_obj) > 8) and (tile_distance_objs(self_obj, dude_obj) < 24)) then begin
+@@ -84,17 +84,17 @@ end
+ procedure destroy_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-            set_global_var(156, 1);
+-            set_global_var(157, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+-            set_global_var(157, 1);
+-            set_global_var(156, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+         end
+-        set_global_var(160, global_var(160) + 1);
+-        if ((global_var(160) % 6) == 0) then begin
+-            set_global_var(155, global_var(155) + 1);
++        set_global_var(GVAR_BAD_MONSTER, global_var(GVAR_BAD_MONSTER) + 1);
++        if ((global_var(GVAR_BAD_MONSTER) % 6) == 0) then begin
++            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) + 1);
+         end
+     end
+ end
+@@ -121,15 +121,15 @@ begin
+                 start_gdialog(700, self_obj, 4, -1, -1);
+                 gsay_start;
+                 known := 1;
+-                if (global_var(12)) then begin
++                if (global_var(GVAR_SHADY_SANDS_INVADED)) then begin
+                     call LoneRaid06();
+                 end
+                 else begin
+-                    if ((global_var(26) == 2) or global_var(254)) then begin
++                    if ((global_var(GVAR_TANDI_STATUS) == 2) or global_var(GVAR_ENEMY_RAIDERS)) then begin
+                         call LoneRaid05();
+                     end
+                     else begin
+-                        if (global_var(611)) then begin
++                        if (global_var(GVAR_GARLS_FRIEND)) then begin
+                             call LoneRaid04();
+                         end
+                         else begin
+@@ -146,33 +146,33 @@ end
+ 
+ procedure LoneRaid00
+ begin
+-    float_msg(self_obj, message_str(700, 100), 0);
++    float_msg(self_obj, mstr(100), FLOAT_MSG_NORMAL);
+ end
+ 
+ procedure LoneRaid01
+ begin
+-    float_msg(self_obj, message_str(700, 101), 0);
++    float_msg(self_obj, mstr(101), FLOAT_MSG_NORMAL);
+ end
+ 
+ procedure LoneRaid02
+ begin
+-    float_msg(self_obj, message_str(700, 102), 0);
++    float_msg(self_obj, mstr(102), FLOAT_MSG_NORMAL);
+ end
+ 
+ procedure LoneRaid03
+ begin
+-    gsay_reply(700, 103);
+-    giq_option(7, 700, 104, LoneRaid07, 50);
+-    giq_option(4, 700, 105, LoneRaid03a, 51);
+-    giq_option(4, 700, 106, LoneRaid09, 50);
+-    giq_option(4, 700, 107, LoneRaid10, 51);
+-    giq_option(-3, 700, 108, LoneRaid11, 51);
+-    giq_option(-3, 700, 109, LoneRaid12, 50);
++    Reply(103);
++    giq_option(7, NAME, 104, LoneRaid07, NEUTRAL_REACTION);
++    giq_option(4, NAME, 105, LoneRaid03a, BAD_REACTION);
++    giq_option(4, NAME, 106, LoneRaid09, NEUTRAL_REACTION);
++    giq_option(4, NAME, 107, LoneRaid10, BAD_REACTION);
++    giq_option(-3, NAME, 108, LoneRaid11, BAD_REACTION);
++    giq_option(-3, NAME, 109, LoneRaid12, NEUTRAL_REACTION);
+ end
+ 
+ procedure LoneRaid03a
+ begin
+-    if ((get_critter_stat(dude_obj, 0) + get_critter_stat(dude_obj, 2)) > 13) then begin
++    if ((dude_strength + dude_endurance) > 13) then begin
+         call LoneRaid08();
+     end
+     else begin
+@@ -182,17 +182,17 @@ end
+ 
+ procedure LoneRaid04
+ begin
+-    gsay_reply(700, 110 + (get_critter_stat(dude_obj, 34) == 1));
+-    giq_option(7, 700, 112, LoneRaid13, 49);
+-    giq_option(4, 700, 113, LoneRaid04a, 50);
+-    giq_option(4, 700, 114, LoneRaid16, 50);
+-    giq_option(4, 700, 115, LoneRaid17, 50);
+-    giq_option(-3, 700, 109, LoneRaid12, 50);
++    Reply(110 + (dude_gender == 1));
++    giq_option(7, NAME, 112, LoneRaid13, GOOD_REACTION);
++    giq_option(4, NAME, 113, LoneRaid04a, NEUTRAL_REACTION);
++    giq_option(4, NAME, 114, LoneRaid16, NEUTRAL_REACTION);
++    giq_option(4, NAME, 115, LoneRaid17, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 109, LoneRaid12, NEUTRAL_REACTION);
+ end
+ 
+ procedure LoneRaid04a
+ begin
+-    if (get_critter_stat(dude_obj, 6) < 5) then begin
++    if (dude_luck < 5) then begin
+         call LoneRaid14();
+     end
+     else begin
+@@ -202,112 +202,112 @@ end
+ 
+ procedure LoneRaid05
+ begin
+-    gsay_reply(700, 116);
+-    if ((global_var(103) == 1) and (global_var(26) == 1)) then begin
+-        giq_option(7, 700, 117, LoneRaid18, 50);
++    Reply(116);
++    if ((global_var(GVAR_RESCUE_TANDI) == 1) and (global_var(GVAR_TANDI_STATUS) == 1)) then begin
++        giq_option(7, NAME, 117, LoneRaid18, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 700, 118, LoneRaid03a, 51);
+-    giq_option(4, 700, 119, LoneRaid09, 50);
+-    giq_option(4, 700, 120, LoneRaid10, 51);
+-    giq_option(-3, 700, 108, LoneRaid11, 51);
+-    giq_option(-3, 700, 109, LoneRaid12, 50);
++    giq_option(4, NAME, 118, LoneRaid03a, BAD_REACTION);
++    giq_option(4, NAME, 119, LoneRaid09, NEUTRAL_REACTION);
++    giq_option(4, NAME, 120, LoneRaid10, BAD_REACTION);
++    giq_option(-3, NAME, 108, LoneRaid11, BAD_REACTION);
++    giq_option(-3, NAME, 109, LoneRaid12, NEUTRAL_REACTION);
+ end
+ 
+ procedure LoneRaid06
+ begin
+-    gsay_reply(700, 121);
+-    giq_option(7, 700, 122, LoneRaid18, 50);
+-    giq_option(4, 700, 123, LoneRaid19, 51);
+-    giq_option(4, 700, 124, LoneRaid20, 50);
+-    giq_option(4, 700, 125, LoneRaid21, 50);
+-    giq_option(-3, 700, 109, LoneRaid12, 50);
++    Reply(121);
++    giq_option(7, NAME, 122, LoneRaid18, NEUTRAL_REACTION);
++    giq_option(4, NAME, 123, LoneRaid19, BAD_REACTION);
++    giq_option(4, NAME, 124, LoneRaid20, NEUTRAL_REACTION);
++    giq_option(4, NAME, 125, LoneRaid21, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 109, LoneRaid12, NEUTRAL_REACTION);
+ end
+ 
+ procedure LoneRaid07
+ begin
+-    gsay_reply(700, 126);
+-    giq_option(4, 700, 127, LoneRaid03a, 50);
+-    giq_option(4, 700, 128, LoneRaid09, 50);
+-    giq_option(4, 700, 129, LoneRaid22, 51);
++    Reply(126);
++    giq_option(4, NAME, 127, LoneRaid03a, NEUTRAL_REACTION);
++    giq_option(4, NAME, 128, LoneRaid09, NEUTRAL_REACTION);
++    giq_option(4, NAME, 129, LoneRaid22, BAD_REACTION);
+ end
+ 
+ procedure LoneRaid08
+ begin
+     broken := 1;
+-    gsay_reply(700, 130);
+-    giq_option(0, 634, 106, LoneRaidLoot, 50);
++    Reply(130);
++    giq_option(0, SCRIPT_MODREACT, 106, LoneRaidLoot, NEUTRAL_REACTION);
+ end
+ 
+ procedure LoneRaid09
+ begin
+-    gsay_message(700, 131, 50);
++    gsay_message(NAME, 131, NEUTRAL_REACTION);
+ end
+ 
+ procedure LoneRaid10
+ begin
+-    gsay_message(700, 132, 51);
++    gsay_message(NAME, 132, BAD_REACTION);
+ end
+ 
+ procedure LoneRaid11
+ begin
+-    gsay_message(700, 133, 51);
++    gsay_message(NAME, 133, BAD_REACTION);
+ end
+ 
+ procedure LoneRaid12
+ begin
+-    gsay_message(700, 135, 50);
++    gsay_message(NAME, 135, NEUTRAL_REACTION);
+ end
+ 
+ procedure LoneRaid13
+ begin
+-    gsay_message(700, 135 + (get_critter_stat(dude_obj, 34) == 1), 49);
++    gsay_message(NAME, 135 + (dude_gender == 1), GOOD_REACTION);
+ end
+ 
+ procedure LoneRaid14
+ begin
+-    gsay_message(700, 137, 51);
++    gsay_message(NAME, 137, BAD_REACTION);
+     hostile := 1;
+ end
+ 
+ procedure LoneRaid15
+ begin
+-    gsay_message(700, 138 + (get_critter_stat(dude_obj, 34) == 1), 50);
++    gsay_message(NAME, 138 + (dude_gender == 1), NEUTRAL_REACTION);
+ end
+ 
+ procedure LoneRaid16
+ begin
+-    gsay_message(700, 140, 50);
++    gsay_message(NAME, 140, NEUTRAL_REACTION);
+ end
+ 
+ procedure LoneRaid17
+ begin
+-    gsay_message(700, 141 + (get_critter_stat(dude_obj, 34) == 1), 49);
++    gsay_message(NAME, 141 + (dude_gender == 1), GOOD_REACTION);
+ end
+ 
+ procedure LoneRaid18
+ begin
+-    gsay_message(700, 143, 50);
++    gsay_message(NAME, 143, NEUTRAL_REACTION);
+ end
+ 
+ procedure LoneRaid19
+ begin
+-    gsay_message(700, 144, 51);
++    gsay_message(NAME, 144, BAD_REACTION);
+     hostile := 1;
+ end
+ 
+ procedure LoneRaid20
+ begin
+-    gsay_message(700, 145, 50);
++    gsay_message(NAME, 145, NEUTRAL_REACTION);
+ end
+ 
+ procedure LoneRaid21
+ begin
+-    gsay_message(700, 146, 49);
++    gsay_message(NAME, 146, GOOD_REACTION);
+ end
+ 
+ procedure LoneRaid22
+ begin
+-    gsay_message(700, 147, 51);
++    gsay_message(NAME, 147, BAD_REACTION);
+     hostile := 1;
+ end
+ 
+@@ -322,8 +322,8 @@ end
+ 
+ procedure LoneRaidLoot
+ begin
+-    gdialog_mod_barter(0);
+-    giq_option(0, 634, 103, LoneRaidEnd, 51);
++    gdialog_barter;
++    giq_option(0, SCRIPT_MODREACT, 103, LoneRaidEnd, BAD_REACTION);
+ end
+ 
+ procedure flee_dude
+@@ -332,12 +332,11 @@ begin
+     variable LVar1 := 0;
+     variable LVar2 := 0;
+     while (LVar1 < 5) do begin
+-        if (tile_distance(tile_num(dude_obj), tile_num_in_direction(tile_num(self_obj), LVar1, 3)) > LVar2) then begin
++        if (tile_distance(dude_tile, tile_num_in_direction(tile_num(self_obj), LVar1, 3)) > LVar2) then begin
+             LVar0 := tile_num_in_direction(tile_num(self_obj), LVar1, 3);
+-            LVar2 := tile_distance(tile_num(dude_obj), LVar0);
++            LVar2 := tile_distance(dude_tile, LVar0);
+         end
+         LVar1 := LVar1 + 1;
+     end
+     animate_move_obj_to_tile(self_obj, LVar0, 0);
+ end
+-

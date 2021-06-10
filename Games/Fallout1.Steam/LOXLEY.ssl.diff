@@ -1,0 +1,921 @@
+diff --git a/Games/Fallout1.Steam/Original/LOXLEY.ssl b/Games/Fallout1.Steam/ReDefine/LOXLEY.ssl
+index 42a937f..73cc45f 100644
+--- a/Games/Fallout1.Steam/Original/LOXLEY.ssl
++++ b/Games/Fallout1.Steam/ReDefine/LOXLEY.ssl
+@@ -151,39 +151,39 @@ procedure loxley00;
+ procedure start
+ begin
+     variable LVar0 := 0;
+-    if (script_action == 11) then begin
++    if (script_action == talk_proc) then begin
+         call do_dialogue();
+     end
+     else begin
+-        if ((script_action == 21) or (script_action == 3)) then begin
++        if ((script_action == look_at_proc) or (script_action == description_proc)) then begin
+             script_overrides;
+-            display_msg(message_str(49, 100));
++            display_mstr(100);
+         end
+         else begin
+-            if (script_action == 4) then begin
++            if (script_action == pickup_proc) then begin
+                 call combat();
+             end
+             else begin
+-                if (script_action == 12) then begin
++                if (script_action == critter_proc) then begin
+                     if (HOSTILE) then begin
+                         HOSTILE := 0;
+-                        attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++                        attack(dude_obj);
+                     end
+                 end
+                 else begin
+-                    if (script_action == 18) then begin
++                    if (script_action == destroy_proc) then begin
+                         if (source_obj == dude_obj) then begin
+-                            if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-                                set_global_var(156, 1);
+-                                set_global_var(157, 0);
++                            if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++                                set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++                                set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+                             end
+-                            if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+-                                set_global_var(157, 1);
+-                                set_global_var(156, 0);
++                            if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
++                                set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++                                set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+                             end
+-                            set_global_var(159, global_var(159) + 1);
+-                            if ((global_var(159) % 2) == 0) then begin
+-                                set_global_var(155, global_var(155) - 1);
++                            set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
++                            if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
++                                set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+                             end
+                         end
+                     end
+@@ -196,8 +196,8 @@ end
+ procedure do_dialogue
+ begin
+     call get_reaction();
+-    set_global_var(207, 1);
+-    MALE := get_critter_stat(dude_obj, 34) == 0;
++    set_global_var(GVAR_Loxley_known, 1);
++    MALE := dude_gender == 0;
+     if (ILLEGAL) then begin
+         if (ILLEGBEFORE) then begin
+             start_gdialog(49, self_obj, 4, 17, 3);
+@@ -225,7 +225,7 @@ begin
+     end
+     else begin
+         if (local_var(4) == 1) then begin
+-            if (global_var(107) == 1) then begin
++            if (global_var(GVAR_STEAL_NECKLACE) == 1) then begin
+                 start_gdialog(49, self_obj, 4, 17, 3);
+                 gsay_start;
+                 call loxley27();
+@@ -233,7 +233,7 @@ begin
+                 end_dialogue;
+             end
+             else begin
+-                if (global_var(107) == 0) then begin
++                if (global_var(GVAR_STEAL_NECKLACE) == 0) then begin
+                     if (local_var(1) > 1) then begin
+                         start_gdialog(49, self_obj, 4, 17, 3);
+                         gsay_start;
+@@ -250,7 +250,7 @@ begin
+                     end
+                 end
+                 else begin
+-                    display_msg(message_str(49, 267));
++                    display_mstr(267);
+                 end
+             end
+         end
+@@ -274,40 +274,40 @@ begin
+     end
+     if (floatReward == 1) then begin
+         floatReward := 0;
+-        float_msg(self_obj, message_str(49, 268), 2);
++        float_msg(self_obj, mstr(268), FLOAT_MSG_RED);
+     end
+ end
+ 
+ procedure loxley00a
+ begin
+-    gsay_reply(49, 104);
+-    giq_option(4, 49, message_str(49, 105) + proto_data(obj_pid(dude_obj), 1) + message_str(49, 106), loxley02, 50);
+-    giq_option(4, 49, 107, loxley00a1, 51);
+-    giq_option(4, 49, 108, loxley22, 50);
++    Reply(104);
++    giq_option(4, NAME, mstr(105) + proto_data(obj_pid(dude_obj), 1) + mstr(106), loxley02, NEUTRAL_REACTION);
++    giq_option(4, NAME, 107, loxley00a1, BAD_REACTION);
++    giq_option(4, NAME, 108, loxley22, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley01
+ begin
+     if (MALE) then begin
+-        gsay_reply(49, 109);
++        Reply(109);
+     end
+     else begin
+-        gsay_reply(49, 110);
++        Reply(110);
+     end
+-    giq_option(4, 49, message_str(49, 111) + proto_data(obj_pid(dude_obj), 1) + message_str(49, 112), loxley02, 50);
+-    giq_option(4, 49, 113, loxley01a, 51);
+-    giq_option(4, 49, 114, loxley22, 50);
+-    giq_option(5, 49, 115, loxley01b, 49);
+-    giq_option(4, 49, 116, loxley01c, 51);
+-    giq_option(-3, 49, 117, loxley90, 50);
++    giq_option(4, NAME, mstr(111) + proto_data(obj_pid(dude_obj), 1) + mstr(112), loxley02, NEUTRAL_REACTION);
++    giq_option(4, NAME, 113, loxley01a, BAD_REACTION);
++    giq_option(4, NAME, 114, loxley22, NEUTRAL_REACTION);
++    giq_option(5, NAME, 115, loxley01b, GOOD_REACTION);
++    giq_option(4, NAME, 116, loxley01c, BAD_REACTION);
++    giq_option(-3, NAME, 117, loxley90, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley02
+ begin
+-    gsay_reply(49, 118);
+-    giq_option(4, 49, 119, loxley03, 49);
+-    giq_option(4, 49, 120, loxley02_1, 50);
+-    giq_option(4, 49, 121, loxley18, 51);
++    Reply(118);
++    giq_option(4, NAME, 119, loxley03, GOOD_REACTION);
++    giq_option(4, NAME, 120, loxley02_1, NEUTRAL_REACTION);
++    giq_option(4, NAME, 121, loxley18, BAD_REACTION);
+ end
+ 
+ procedure loxley02_1
+@@ -322,185 +322,185 @@ end
+ 
+ procedure loxley03
+ begin
+-    gsay_reply(49, 122);
+-    giq_option(4, 49, 123, loxley04, 50);
+-    giq_option(4, 49, 124, loxley03a, 51);
+-    giq_option(4, 49, 125, loxley17, 50);
++    Reply(122);
++    giq_option(4, NAME, 123, loxley04, NEUTRAL_REACTION);
++    giq_option(4, NAME, 124, loxley03a, BAD_REACTION);
++    giq_option(4, NAME, 125, loxley17, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley04
+ begin
+-    gsay_reply(49, 126);
+-    giq_option(4, 49, 127, loxley05, 50);
+-    giq_option(4, 49, 128, loxley04a, 51);
+-    giq_option(4, 49, 129, loxley10, 50);
++    Reply(126);
++    giq_option(4, NAME, 127, loxley05, NEUTRAL_REACTION);
++    giq_option(4, NAME, 128, loxley04a, BAD_REACTION);
++    giq_option(4, NAME, 129, loxley10, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley05
+ begin
+-    gsay_reply(49, 130);
+-    giq_option(4, 49, 131, loxley06, 50);
+-    giq_option(4, 49, 132, loxley07, 50);
++    Reply(130);
++    giq_option(4, NAME, 131, loxley06, NEUTRAL_REACTION);
++    giq_option(4, NAME, 132, loxley07, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley06
+ begin
+     if (MALE) then begin
+-        gsay_message(49, 133, 50);
++        gsay_message(NAME, 133, NEUTRAL_REACTION);
+     end
+     else begin
+-        gsay_message(49, 134, 50);
++        gsay_message(NAME, 134, NEUTRAL_REACTION);
+     end
+     give_exp_points(900);
+-    display_msg(message_str(766, 103) + 900 + message_str(766, 104));
+-    set_global_var(107, 1);
++    display_msg(message_str(SCRIPT_GENCHAT, 103) + 900 + message_str(SCRIPT_GENCHAT, 104));
++    set_global_var(GVAR_STEAL_NECKLACE, 1);
+     call loxley06b();
+ end
+ 
+ procedure loxley06b
+ begin
+-    gsay_message(49, 135, 50);
++    gsay_message(NAME, 135, NEUTRAL_REACTION);
+     call loxleyx();
+ end
+ 
+ procedure loxley07
+ begin
+-    gsay_reply(49, 136);
+-    giq_option(4, 49, 137, loxley02_1, 50);
+-    giq_option(4, 49, 138, loxley07a, 51);
+-    giq_option(4, 49, 139, loxley03, 50);
++    Reply(136);
++    giq_option(4, NAME, 137, loxley02_1, NEUTRAL_REACTION);
++    giq_option(4, NAME, 138, loxley07a, BAD_REACTION);
++    giq_option(4, NAME, 139, loxley03, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley08
+ begin
+-    gsay_message(49, 140, 50);
++    gsay_message(NAME, 140, NEUTRAL_REACTION);
+     call loxley34();
+ end
+ 
+ procedure loxley09
+ begin
+     call BigDownReact();
+-    gsay_message(49, 141, 51);
++    gsay_message(NAME, 141, BAD_REACTION);
+     call loxleyx1();
+ end
+ 
+ procedure loxley10
+ begin
+-    gsay_reply(49, 142);
+-    giq_option(4, 49, 143, loxley11, 51);
+-    giq_option(4, 49, 144, loxley12, 49);
++    Reply(142);
++    giq_option(4, NAME, 143, loxley11, BAD_REACTION);
++    giq_option(4, NAME, 144, loxley12, GOOD_REACTION);
+ end
+ 
+ procedure loxley11
+ begin
+     call BigDownReact();
+-    gsay_message(49, 145, 51);
++    gsay_message(NAME, 145, BAD_REACTION);
+     call loxleyx1();
+ end
+ 
+ procedure loxley12
+ begin
+-    gsay_reply(49, 146);
+-    giq_option(4, 49, 147, loxley12b, 50);
+-    giq_option(4, 49, 148, loxley13, 51);
++    Reply(146);
++    giq_option(4, NAME, 147, loxley12b, NEUTRAL_REACTION);
++    giq_option(4, NAME, 148, loxley13, BAD_REACTION);
+ end
+ 
+ procedure loxley12b
+ begin
+-    gsay_message(49, 149, 50);
++    gsay_message(NAME, 149, NEUTRAL_REACTION);
+     call loxley06();
+ end
+ 
+ procedure loxley13
+ begin
+     call BigDownReact();
+-    gsay_message(49, 150, 50);
++    gsay_message(NAME, 150, NEUTRAL_REACTION);
+     call loxleyx1();
+ end
+ 
+ procedure loxley14
+ begin
+-    set_global_var(219, 1);
+-    gsay_reply(49, 151);
+-    giq_option(4, 49, 152, loxley05, 50);
+-    giq_option(4, 49, 153, loxley07, 51);
++    set_global_var(GVAR_DECKER_KNOWN, 1);
++    Reply(151);
++    giq_option(4, NAME, 152, loxley05, NEUTRAL_REACTION);
++    giq_option(4, NAME, 153, loxley07, BAD_REACTION);
+ end
+ 
+ procedure loxley16
+ begin
+     call BigDownReact();
+-    gsay_message(49, 154, 50);
++    gsay_message(NAME, 154, NEUTRAL_REACTION);
+     call loxleyx1();
+ end
+ 
+ procedure loxley17
+ begin
+-    gsay_reply(49, 155);
+-    giq_option(4, 49, 156, loxley06, 50);
+-    giq_option(4, 49, 157, loxley05, 50);
+-    giq_option(4, 49, 158, loxley02_1, 50);
++    Reply(155);
++    giq_option(4, NAME, 156, loxley06, NEUTRAL_REACTION);
++    giq_option(4, NAME, 157, loxley05, NEUTRAL_REACTION);
++    giq_option(4, NAME, 158, loxley02_1, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley18
+ begin
+-    gsay_reply(49, 159);
+-    giq_option(4, 49, 160, loxley18a, 51);
+-    giq_option(4, 49, 161, loxley12, 50);
++    Reply(159);
++    giq_option(4, NAME, 160, loxley18a, BAD_REACTION);
++    giq_option(4, NAME, 161, loxley12, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley21
+ begin
+-    gsay_reply(49, 162);
+-    giq_option(4, 49, message_str(49, 163) + proto_data(obj_pid(dude_obj), 1) + message_str(49, 164), loxley02, 50);
+-    giq_option(4, 49, 165, loxley10, 51);
++    Reply(162);
++    giq_option(4, NAME, mstr(163) + proto_data(obj_pid(dude_obj), 1) + mstr(164), loxley02, NEUTRAL_REACTION);
++    giq_option(4, NAME, 165, loxley10, BAD_REACTION);
+ end
+ 
+ procedure loxley22
+ begin
+-    gsay_reply(49, 166);
+-    giq_option(4, 49, 167, loxley04, 50);
+-    giq_option(4, 49, 168, loxley02_1, 50);
+-    giq_option(4, 49, 169, loxley10, 51);
++    Reply(166);
++    giq_option(4, NAME, 167, loxley04, NEUTRAL_REACTION);
++    giq_option(4, NAME, 168, loxley02_1, NEUTRAL_REACTION);
++    giq_option(4, NAME, 169, loxley10, BAD_REACTION);
+ end
+ 
+ procedure loxley23
+ begin
+-    gsay_reply(49, 170);
+-    giq_option(4, 49, message_str(49, 171) + proto_data(obj_pid(dude_obj), 1) + message_str(49, 172), loxley02, 50);
+-    giq_option(4, 49, 173, loxley23a, 51);
+-    giq_option(4, 49, 174, loxley22, 50);
+-    giq_option(5, 49, 175, loxley23b, 49);
+-    giq_option(4, 49, 176, loxley23c, 51);
++    Reply(170);
++    giq_option(4, NAME, mstr(171) + proto_data(obj_pid(dude_obj), 1) + mstr(172), loxley02, NEUTRAL_REACTION);
++    giq_option(4, NAME, 173, loxley23a, BAD_REACTION);
++    giq_option(4, NAME, 174, loxley22, NEUTRAL_REACTION);
++    giq_option(5, NAME, 175, loxley23b, GOOD_REACTION);
++    giq_option(4, NAME, 176, loxley23c, BAD_REACTION);
+ end
+ 
+ procedure loxley24
+ begin
+-    gsay_reply(49, 177);
+-    giq_option(4, 49, 178, loxley25, 51);
+-    giq_option(4, 49, 179, loxley26, 50);
+-    giq_option(4, 49, 180, loxley24a, 49);
++    Reply(177);
++    giq_option(4, NAME, 178, loxley25, BAD_REACTION);
++    giq_option(4, NAME, 179, loxley26, NEUTRAL_REACTION);
++    giq_option(4, NAME, 180, loxley24a, GOOD_REACTION);
+ end
+ 
+ procedure loxley25
+ begin
+-    gsay_reply(49, 181);
+-    giq_option(4, 49, 182, loxley25a, 49);
+-    giq_option(4, 49, 183, loxley26, 51);
++    Reply(181);
++    giq_option(4, NAME, 182, loxley25a, GOOD_REACTION);
++    giq_option(4, NAME, 183, loxley26, BAD_REACTION);
+ end
+ 
+ procedure loxley26
+ begin
+     call BigDownReact();
+-    gsay_message(49, 184, 50);
++    gsay_message(NAME, 184, NEUTRAL_REACTION);
+     call loxleyx1();
+ end
+ 
+ procedure loxley27
+ begin
+-    gsay_reply(49, 185);
+-    giq_option(4, 49, 186, loxley32, 51);
+-    giq_option(4, 49, 187, loxley33, 50);
+-    giq_option(4, 49, 188, loxley27a, 50);
++    Reply(185);
++    giq_option(4, NAME, 186, loxley32, BAD_REACTION);
++    giq_option(4, NAME, 187, loxley33, NEUTRAL_REACTION);
++    giq_option(4, NAME, 188, loxley27a, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley29
+@@ -513,52 +513,52 @@ begin
+         add_obj_to_inven(self_obj, LVar0);
+     end
+     give_exp_points(500);
+-    display_msg(message_str(766, 103) + 500 + message_str(766, 104));
+-    set_global_var(107, 2);
+-    gsay_message(49, 189, 49);
++    display_msg(message_str(SCRIPT_GENCHAT, 103) + 500 + message_str(SCRIPT_GENCHAT, 104));
++    set_global_var(GVAR_STEAL_NECKLACE, 2);
++    gsay_message(NAME, 189, GOOD_REACTION);
+     call loxleyx3();
+ end
+ 
+ procedure loxley30
+ begin
+-    gsay_message(49, 190, 50);
++    gsay_message(NAME, 190, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley31
+ begin
+-    gsay_message(49, 191, 51);
++    gsay_message(NAME, 191, BAD_REACTION);
+     call loxleyx1();
+ end
+ 
+ procedure loxley32
+ begin
+-    gsay_message(49, 192, 50);
+-    set_global_var(107, 2);
++    gsay_message(NAME, 192, NEUTRAL_REACTION);
++    set_global_var(GVAR_STEAL_NECKLACE, 2);
+     call loxleyx1();
+ end
+ 
+ procedure loxley33
+ begin
+-    gsay_message(49, 193, 51);
++    gsay_message(NAME, 193, BAD_REACTION);
+     call loxleyx4();
+ end
+ 
+ procedure loxley34
+ begin
+     gsay_reply(0, 0);
+-    giq_option(4, 49, 194, loxley34_1, 50);
+-    giq_option(4, 49, 195, loxley43, 50);
+-    giq_option(4, 49, 196, loxley51, 50);
+-    giq_option(4, 49, 197, loxley34_2, 50);
+-    if (global_var(106) == 1) then begin
+-        giq_option(4, 49, 198, loxley55, 50);
++    giq_option(4, NAME, 194, loxley34_1, NEUTRAL_REACTION);
++    giq_option(4, NAME, 195, loxley43, NEUTRAL_REACTION);
++    giq_option(4, NAME, 196, loxley51, NEUTRAL_REACTION);
++    giq_option(4, NAME, 197, loxley34_2, NEUTRAL_REACTION);
++    if (global_var(GVAR_MISSING_CARAVAN) == 1) then begin
++        giq_option(4, NAME, 198, loxley55, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 667, 114, loxleyx1, 50);
++    giq_option(4, SCRIPT_PATRICK, 114, loxleyx1, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley34_1
+ begin
+-    if (global_var(51) == 1) then begin
++    if (global_var(GVAR_VATS_STATUS) == 1) then begin
+         if (local_var(1) > 1) then begin
+             call loxley35();
+         end
+@@ -583,9 +583,9 @@ end
+ 
+ procedure loxley35
+ begin
+-    gsay_reply(49, 199);
+-    giq_option(4, 49, 200, loxley36, 50);
+-    giq_option(4, 49, 201, loxley35_1, 50);
++    Reply(199);
++    giq_option(4, NAME, 200, loxley36, NEUTRAL_REACTION);
++    giq_option(4, NAME, 201, loxley35_1, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley35_1
+@@ -600,157 +600,157 @@ end
+ 
+ procedure loxley36
+ begin
+-    gsay_reply(49, 202);
+-    giq_option(4, 49, 203, loxley37, 50);
+-    giq_option(4, 49, 204, loxley35_1, 50);
++    Reply(202);
++    giq_option(4, NAME, 203, loxley37, NEUTRAL_REACTION);
++    giq_option(4, NAME, 204, loxley35_1, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley37
+ begin
+-    gsay_reply(49, 205);
+-    giq_option(4, 49, 206, loxley35_1, 50);
++    Reply(205);
++    giq_option(4, NAME, 206, loxley35_1, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley38
+ begin
+     set_local_var(6, local_var(6) + 1);
+     if (local_var(6) == 1) then begin
+-        gsay_message(49, 207, 50);
++        gsay_message(NAME, 207, NEUTRAL_REACTION);
+     end
+     if (local_var(6) == 2) then begin
+-        gsay_message(49, 208, 50);
++        gsay_message(NAME, 208, NEUTRAL_REACTION);
+     end
+     if (local_var(6) > 2) then begin
+-        gsay_message(49, 209, 50);
++        gsay_message(NAME, 209, NEUTRAL_REACTION);
+     end
+     call loxley34();
+ end
+ 
+ procedure loxley39
+ begin
+-    gsay_message(49, 210, 50);
++    gsay_message(NAME, 210, NEUTRAL_REACTION);
+     call loxleyend();
+ end
+ 
+ procedure loxley40
+ begin
+-    gsay_reply(49, 211);
+-    giq_option(4, 49, 212, loxley41, 50);
+-    giq_option(4, 49, 213, loxley39, 50);
++    Reply(211);
++    giq_option(4, NAME, 212, loxley41, NEUTRAL_REACTION);
++    giq_option(4, NAME, 213, loxley39, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley41
+ begin
+-    gsay_reply(49, 214);
+-    giq_option(4, 49, 215, loxley39, 50);
++    Reply(214);
++    giq_option(4, NAME, 215, loxley39, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley42
+ begin
+-    set_global_var(219, 1);
+-    gsay_message(49, 216, 50);
++    set_global_var(GVAR_DECKER_KNOWN, 1);
++    gsay_message(NAME, 216, NEUTRAL_REACTION);
+     call loxley34();
+ end
+ 
+ procedure loxley43
+ begin
+-    set_global_var(219, 1);
+-    gsay_reply(49, 217);
+-    giq_option(4, 49, 218, loxley44, 50);
+-    giq_option(4, 49, 219, loxley43a, 50);
++    set_global_var(GVAR_DECKER_KNOWN, 1);
++    Reply(217);
++    giq_option(4, NAME, 218, loxley44, NEUTRAL_REACTION);
++    giq_option(4, NAME, 219, loxley43a, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley43a
+ begin
+-    gsay_message(49, 220, 50);
++    gsay_message(NAME, 220, NEUTRAL_REACTION);
+     call loxley34();
+ end
+ 
+ procedure loxley44
+ begin
+-    gsay_reply(49, 221);
+-    giq_option(4, 49, 222, loxley44a, 51);
+-    giq_option(4, 49, 223, loxley44b, 49);
++    Reply(221);
++    giq_option(4, NAME, 222, loxley44a, BAD_REACTION);
++    giq_option(4, NAME, 223, loxley44b, GOOD_REACTION);
+ end
+ 
+ procedure loxley47
+ begin
+-    gsay_message(49, 224, 51);
++    gsay_message(NAME, 224, BAD_REACTION);
+     call loxleyx1();
+ end
+ 
+ procedure loxley48
+ begin
+-    gsay_message(49, 225, 50);
++    gsay_message(NAME, 225, NEUTRAL_REACTION);
+     call loxley34();
+ end
+ 
+ procedure loxley51
+ begin
+-    gsay_message(49, 226, 50);
++    gsay_message(NAME, 226, NEUTRAL_REACTION);
+     call loxley34();
+ end
+ 
+ procedure loxley53
+ begin
+-    gsay_message(49, 227, 50);
++    gsay_message(NAME, 227, NEUTRAL_REACTION);
+     call loxley34();
+ end
+ 
+ procedure loxley54
+ begin
+-    gsay_message(49, 228, 50);
++    gsay_message(NAME, 228, NEUTRAL_REACTION);
+     call loxley34();
+ end
+ 
+ procedure loxley55
+ begin
+     if (local_var(1) > 1) then begin
+-        gsay_message(49, 229, 50);
++        gsay_message(NAME, 229, NEUTRAL_REACTION);
+     end
+     else begin
+-        gsay_message(49, 230, 51);
++        gsay_message(NAME, 230, BAD_REACTION);
+     end
+ end
+ 
+ procedure loxley56
+ begin
+-    gsay_message(49, 231, 50);
++    gsay_message(NAME, 231, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley57
+ begin
+-    gsay_message(49, 232, 50);
++    gsay_message(NAME, 232, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley58
+ begin
+-    gsay_message(49, 233, 50);
++    gsay_message(NAME, 233, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley59
+ begin
+-    gsay_message(49, 234, 50);
++    gsay_message(NAME, 234, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley60
+ begin
+-    gsay_message(49, 235, 50);
++    gsay_message(NAME, 235, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley61
+ begin
+-    gsay_message(49, 236, 50);
++    gsay_message(NAME, 236, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley62
+ begin
+-    gsay_message(49, 237, 50);
++    gsay_message(NAME, 237, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley90
+ begin
+-    gsay_message(49, 265, 50);
++    gsay_message(NAME, 265, NEUTRAL_REACTION);
+     call loxleyx1();
+ end
+ 
+@@ -900,142 +900,142 @@ end
+ 
+ procedure loxley63
+ begin
+-    gsay_message(49, 238, 50);
++    gsay_message(NAME, 238, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley64
+ begin
+-    gsay_message(49, 239, 50);
++    gsay_message(NAME, 239, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley65
+ begin
+-    gsay_message(49, 240, 50);
++    gsay_message(NAME, 240, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley66
+ begin
+-    gsay_message(49, 241, 50);
++    gsay_message(NAME, 241, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley67
+ begin
+-    gsay_message(49, 242, 50);
++    gsay_message(NAME, 242, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley68
+ begin
+-    gsay_message(49, 243, 50);
++    gsay_message(NAME, 243, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley69
+ begin
+-    gsay_message(49, 244, 50);
++    gsay_message(NAME, 244, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley70
+ begin
+-    gsay_message(49, 245, 50);
++    gsay_message(NAME, 245, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley71
+ begin
+-    gsay_message(49, 246, 50);
++    gsay_message(NAME, 246, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley72
+ begin
+-    gsay_message(49, 247, 50);
++    gsay_message(NAME, 247, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley73
+ begin
+-    gsay_message(49, 248, 50);
++    gsay_message(NAME, 248, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley74
+ begin
+-    gsay_message(49, 249, 50);
++    gsay_message(NAME, 249, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley75
+ begin
+-    gsay_message(49, 250, 50);
++    gsay_message(NAME, 250, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley76
+ begin
+-    gsay_message(49, 251, 50);
++    gsay_message(NAME, 251, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley77
+ begin
+-    gsay_message(49, 252, 50);
++    gsay_message(NAME, 252, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley78
+ begin
+-    gsay_message(49, 253, 50);
++    gsay_message(NAME, 253, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley79
+ begin
+-    gsay_message(49, 254, 50);
++    gsay_message(NAME, 254, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley80
+ begin
+-    gsay_message(49, 255, 50);
++    gsay_message(NAME, 255, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley81
+ begin
+-    gsay_message(49, 256, 50);
++    gsay_message(NAME, 256, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley82
+ begin
+-    gsay_message(49, 257, 50);
++    gsay_message(NAME, 257, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley83
+ begin
+-    gsay_message(49, 258, 50);
++    gsay_message(NAME, 258, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley84
+ begin
+-    gsay_message(49, 259, 50);
++    gsay_message(NAME, 259, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley85
+ begin
+-    gsay_message(49, 260, 50);
++    gsay_message(NAME, 260, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley86
+ begin
+-    gsay_message(49, 261, 50);
++    gsay_message(NAME, 261, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley87
+ begin
+-    gsay_message(49, 262, 50);
++    gsay_message(NAME, 262, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley88
+ begin
+-    gsay_message(49, 263, 50);
++    gsay_message(NAME, 263, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley89
+ begin
+-    gsay_message(49, 264, 50);
++    gsay_message(NAME, 264, NEUTRAL_REACTION);
+ end
+ 
+ procedure loxley91
+ begin
+-    gsay_message(49, 266, 50);
++    gsay_message(NAME, 266, NEUTRAL_REACTION);
+ end
+ 
+ procedure combat
+@@ -1049,31 +1049,31 @@ begin
+         set_local_var(0, 50);
+         set_local_var(1, 2);
+         set_local_var(2, 1);
+-        set_local_var(0, local_var(0) + (5 * get_critter_stat(dude_obj, 3)) - 25);
+-        set_local_var(0, local_var(0) + (10 * has_trait(0, dude_obj, 10)));
+-        if (has_trait(0, dude_obj, 39)) then begin
+-            if (global_var(155) > 0) then begin
+-                set_local_var(0, local_var(0) + global_var(155));
++        set_local_var(0, local_var(0) + (5 * dude_charisma) - 25);
++        set_local_var(0, local_var(0) + (10 * has_trait(TRAIT_PERK, dude_obj, PERK_presence)));
++        if (has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality)) then begin
++            if (global_var(GVAR_PLAYER_REPUATION) > 0) then begin
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+         else begin
+             if (local_var(3) == 1) then begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) + global_var(155));
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+-        if (global_var(158) > 2) then begin
++        if (global_var(GVAR_CHILDKILLER_REPUATION) > 2) then begin
+             set_local_var(0, local_var(0) - 30);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) + 20);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) - 20);
+         end
+         call ReactToLevel();
+@@ -1166,13 +1166,12 @@ end
+ 
+ procedure Goodbyes
+ begin
+-    exit_line := message_str(634, random(100, 105));
++    exit_line := message_str(SCRIPT_MODREACT, random(100, 105));
+ end
+ 
+ procedure loxley00
+ begin
+-    gsay_reply(49, 101);
+-    giq_option(4, 49, 102, loxley00aa, 49);
+-    giq_option(4, 49, 103, loxley00ab, 51);
++    Reply(101);
++    giq_option(4, NAME, 102, loxley00aa, GOOD_REACTION);
++    giq_option(4, NAME, 103, loxley00ab, BAD_REACTION);
+ end
+-

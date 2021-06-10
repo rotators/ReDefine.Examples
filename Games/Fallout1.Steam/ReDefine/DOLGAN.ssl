@@ -1,0 +1,231 @@
+procedure start;
+procedure critter_p_proc;
+procedure destroy_p_proc;
+procedure look_at_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure show_true_name;
+procedure show_false_name;
+procedure Dolgan00;
+procedure Dolgan01;
+procedure Dolgan02;
+procedure Dolgan03;
+procedure Dolgan04;
+procedure Dolgan05;
+procedure Dolgan06;
+procedure Dolgan07;
+procedure Train;
+procedure DolganEnd;
+
+variable hostile;
+variable initialized;
+
+procedure DolganCombat;
+
+
+procedure start
+begin
+    if (not(initialized)) then begin
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 47);
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_BLADES);
+        initialized := 1;
+    end
+    else begin
+        if (script_action == critter_proc) then begin
+            call critter_p_proc();
+        end
+        else begin
+            if (script_action == destroy_proc) then begin
+                call destroy_p_proc();
+            end
+            else begin
+                if (script_action == look_at_proc) then begin
+                    call look_at_p_proc();
+                end
+                else begin
+                    if (script_action == pickup_proc) then begin
+                        call pickup_p_proc();
+                    end
+                    else begin
+                        if (script_action == talk_proc) then begin
+                            call talk_p_proc();
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure critter_p_proc
+begin
+    if (obj_can_see_obj(self_obj, dude_obj) and (global_var(GVAR_BLADES_LEFT) < 41)) then begin
+        hostile := 1;
+    end
+    if (hostile) then begin
+        hostile := 0;
+        attack(dude_obj);
+    end
+end
+
+procedure destroy_p_proc
+begin
+    set_global_var(GVAR_BLADES_LEFT, global_var(GVAR_BLADES_LEFT) - 1);
+    if (source_obj == dude_obj) then begin
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
+            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
+            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+        end
+        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
+        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
+            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+        end
+    end
+end
+
+procedure look_at_p_proc
+begin
+    if ((global_var(GVAR_BECOME_BLADE) == 2) or (dude_luck > 6)) then begin
+        call show_true_name();
+    end
+    else begin
+        if (dude_luck < 4) then begin
+            call show_false_name();
+        end
+        else begin
+            if (dude_iq < 5) then begin
+                call show_false_name();
+            end
+            else begin
+                if (random(0, 1)) then begin
+                    call show_false_name();
+                end
+                else begin
+                    call show_true_name();
+                end
+            end
+        end
+    end
+end
+
+procedure pickup_p_proc
+begin
+    hostile := 1;
+end
+
+procedure talk_p_proc
+begin
+    start_gdialog(282, self_obj, 4, -1, -1);
+    gsay_start;
+    set_local_var(0, 1);
+    if (global_var(GVAR_BECOME_BLADE) == 2) then begin
+        call Dolgan03();
+    end
+    else begin
+        if ((global_var(GVAR_BECOME_BLADE) == 1) and (local_var(1) == 0)) then begin
+            call Dolgan01();
+        end
+        else begin
+            call Dolgan00();
+        end
+    end
+    gsay_end;
+    end_dialogue;
+end
+
+procedure show_true_name
+begin
+    script_overrides;
+    if (local_var(0)) then begin
+        if ((game_time_hour >= 1900) or (game_time_hour < 600)) then begin
+            display_mstr(100);
+        end
+        else begin
+            display_mstr(101);
+        end
+    end
+    else begin
+        display_mstr(104);
+    end
+end
+
+procedure show_false_name
+begin
+    script_overrides;
+    display_mstr(random(105, 111));
+end
+
+procedure Dolgan00
+begin
+    float_msg(self_obj, mstr(112), FLOAT_MSG_RED);
+end
+
+procedure Dolgan01
+begin
+    float_msg(self_obj, mstr(113), FLOAT_MSG_RED);
+    set_local_var(1, 1);
+    critter_mod_skill(dude_obj, SKILL_MELEE, 7);
+    game_time_advance(game_ticks(14400));
+    call Dolgan02();
+end
+
+procedure Dolgan02
+begin
+    gsay_message(NAME, 114, NEUTRAL_REACTION);
+end
+
+procedure Dolgan03
+begin
+    Reply(115);
+    if (local_var(1) != 2) then begin
+        giq_option(5, NAME, 116, Dolgan04, NEUTRAL_REACTION);
+    end
+    giq_option(5, NAME, 117, Dolgan07, NEUTRAL_REACTION);
+    giq_option(5, NAME, 118, DolganEnd, NEUTRAL_REACTION);
+end
+
+procedure Dolgan04
+begin
+    Reply(119);
+    if (local_var(1) != 2) then begin
+        giq_option(4, NAME, 120, Train, NEUTRAL_REACTION);
+    end
+    giq_option(4, NAME, 121, DolganEnd, NEUTRAL_REACTION);
+end
+
+procedure Dolgan05
+begin
+    gsay_message(NAME, 122, NEUTRAL_REACTION);
+end
+
+procedure Dolgan06
+begin
+    gsay_message(NAME, 123, NEUTRAL_REACTION);
+end
+
+procedure Dolgan07
+begin
+    Reply(124);
+    giq_option(5, NAME, 125, DolganEnd, NEUTRAL_REACTION);
+end
+
+procedure Train
+begin
+    game_time_advance(game_ticks(21600));
+    set_local_var(1, 2);
+    critter_mod_skill(dude_obj, SKILL_MELEE, 7);
+    call Dolgan05();
+end
+
+procedure DolganEnd
+begin
+end
+
+procedure DolganCombat
+begin
+    hostile := 1;
+end

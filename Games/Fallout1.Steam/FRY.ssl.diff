@@ -1,0 +1,443 @@
+diff --git a/Games/Fallout1.Steam/Original/FRY.ssl b/Games/Fallout1.Steam/ReDefine/FRY.ssl
+index 54a73d3..77b8de6 100644
+--- a/Games/Fallout1.Steam/Original/FRY.ssl
++++ b/Games/Fallout1.Steam/ReDefine/FRY.ssl
+@@ -58,29 +58,29 @@ procedure start
+ begin
+     if (Only_Once) then begin
+         Only_Once := 0;
+-        if (global_var(469) == 1) then begin
++        if (global_var(GVAR_FRY_DEAD) == 1) then begin
+             set_obj_visibility(self_obj, 1);
+         end
+-        critter_add_trait(self_obj, 1, 6, 40);
+-        critter_add_trait(self_obj, 1, 5, 86);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 40);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_HUB_POLICE);
+     end
+-    if (script_action == 21) then begin
++    if (script_action == look_at_proc) then begin
+         call look_at_p_proc();
+     end
+     else begin
+-        if (script_action == 4) then begin
++        if (script_action == pickup_proc) then begin
+             call pickup_p_proc();
+         end
+         else begin
+-            if (script_action == 11) then begin
++            if (script_action == talk_proc) then begin
+                 call talk_p_proc();
+             end
+             else begin
+-                if (script_action == 12) then begin
++                if (script_action == critter_proc) then begin
+                     call critter_p_proc();
+                 end
+                 else begin
+-                    if (script_action == 18) then begin
++                    if (script_action == destroy_proc) then begin
+                         call destroy_p_proc();
+                     end
+                 end
+@@ -98,7 +98,7 @@ procedure critter_p_proc
+ begin
+     if (hostile) then begin
+         hostile := 0;
+-        attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++        attack(dude_obj);
+     end
+     if ((game_time_hour >= 600) and (game_time_hour < 700) or ((game_time_hour >= 700) and (game_time_hour < 1800))) then begin
+         if (tile_num(self_obj) != 21508) then begin
+@@ -133,26 +133,26 @@ end
+ procedure destroy_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-            set_global_var(156, 1);
+-            set_global_var(157, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+-            set_global_var(157, 1);
+-            set_global_var(156, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+         end
+-        set_global_var(159, global_var(159) + 1);
+-        if ((global_var(159) % 2) == 0) then begin
+-            set_global_var(155, global_var(155) - 1);
++        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
++        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
++            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+         end
+     end
+-    set_global_var(469, 1);
++    set_global_var(GVAR_FRY_DEAD, 1);
+ end
+ 
+ procedure look_at_p_proc
+ begin
+     script_overrides;
+-    display_msg(message_str(567, 100));
++    display_mstr(100);
+ end
+ 
+ procedure damage_p_proc
+@@ -160,27 +160,27 @@ begin
+     variable LVar0 := 0;
+     LVar0 := obj_pid(source_obj);
+     if (party_member_obj(LVar0) != 0) then begin
+-        set_global_var(248, 1);
++        set_global_var(GVAR_ENEMY_HUB, 1);
+     end
+ end
+ 
+ procedure FryDialog
+ begin
+     if ((game_time_hour >= 1800) and (game_time_hour < 1900) or ((game_time_hour >= 1900) or (game_time_hour < 600))) then begin
+-        float_msg(self_obj, message_str(567, 146), 3);
++        float_msg(self_obj, mstr(146), FLOAT_MSG_GREEN);
+     end
+     else begin
+         start_gdialog(567, self_obj, 4, -1, -1);
+         gsay_start;
+-        if (global_var(220) > 2) then begin
++        if (global_var(GVAR_WANTED_FOR_MURDER) > 2) then begin
+             call Fry11();
+         end
+         else begin
+-            if (global_var(221) == 1) then begin
++            if (global_var(GVAR_GREENE_DEAD) == 1) then begin
+                 call Fry12();
+             end
+             else begin
+-                if (global_var(222) > 2) then begin
++                if (global_var(GVAR_WANTED_THEFT) > 2) then begin
+                     call Fry13();
+                 end
+                 else begin
+@@ -189,7 +189,7 @@ begin
+                         set_local_var(4, 1);
+                     end
+                     else begin
+-                        if (global_var(158) > 2) then begin
++                        if (global_var(GVAR_CHILDKILLER_REPUATION) > 2) then begin
+                             call Fry10();
+                         end
+                         else begin
+@@ -225,197 +225,197 @@ end
+ 
+ procedure Fry00
+ begin
+-    if (global_var(158) > 2) then begin
+-        gsay_reply(567, 101);
++    if (global_var(GVAR_CHILDKILLER_REPUATION) > 2) then begin
++        Reply(101);
+     end
+     else begin
+-        gsay_reply(567, 102);
++        Reply(102);
+     end
+-    giq_option(4, 567, 103, Fry01, 50);
+-    giq_option(4, 567, 104, FryEnd, 50);
+-    giq_option(-3, 567, 105, Fry09, 50);
+-    giq_option(-3, 567, 106, Fry09, 50);
++    giq_option(4, NAME, 103, Fry01, NEUTRAL_REACTION);
++    giq_option(4, NAME, 104, FryEnd, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 105, Fry09, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 106, Fry09, NEUTRAL_REACTION);
+ end
+ 
+ procedure Fry01
+ begin
+-    gsay_reply(567, 107);
+-    giq_option(4, 567, 108, Fry02, 50);
+-    giq_option(4, 567, 109, Fry03, 50);
++    Reply(107);
++    giq_option(4, NAME, 108, Fry02, NEUTRAL_REACTION);
++    giq_option(4, NAME, 109, Fry03, NEUTRAL_REACTION);
+ end
+ 
+ procedure Fry02
+ begin
+-    set_global_var(219, 1);
+-    gsay_reply(567, 110);
+-    if (global_var(106) != 2) then begin
+-        set_global_var(106, 1);
++    set_global_var(GVAR_DECKER_KNOWN, 1);
++    Reply(110);
++    if (global_var(GVAR_MISSING_CARAVAN) != 2) then begin
++        set_global_var(GVAR_MISSING_CARAVAN, 1);
+     end
+     call Fry05();
+ end
+ 
+ procedure Fry03
+ begin
+-    set_global_var(219, 1);
+-    gsay_reply(567, 111);
+-    if (global_var(106) != 2) then begin
+-        set_global_var(106, 1);
++    set_global_var(GVAR_DECKER_KNOWN, 1);
++    Reply(111);
++    if (global_var(GVAR_MISSING_CARAVAN) != 2) then begin
++        set_global_var(GVAR_MISSING_CARAVAN, 1);
+     end
+-    giq_option(4, 567, 112, Fry07, 50);
+-    giq_option(4, 567, 113, Fry04, 50);
+-    giq_option(4, 567, 114, Fry06, 50);
+-    giq_option(4, 567, 115, Fry21, 50);
+-    if (global_var(101) != 2) then begin
+-        giq_option(4, 567, 147, Fry23, 50);
++    giq_option(4, NAME, 112, Fry07, NEUTRAL_REACTION);
++    giq_option(4, NAME, 113, Fry04, NEUTRAL_REACTION);
++    giq_option(4, NAME, 114, Fry06, NEUTRAL_REACTION);
++    giq_option(4, NAME, 115, Fry21, NEUTRAL_REACTION);
++    if (global_var(GVAR_FIND_WATER_CHIP) != 2) then begin
++        giq_option(4, NAME, 147, Fry23, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 567, 116, Fry08, 50);
++    giq_option(4, NAME, 116, Fry08, NEUTRAL_REACTION);
+ end
+ 
+ procedure Fry04
+ begin
+-    gsay_reply(567, 117);
++    Reply(117);
+     call Fry05();
+ end
+ 
+ procedure Fry05
+ begin
+-    if (global_var(219) == 1) then begin
+-        giq_option(4, 567, 112, Fry07, 50);
++    if (global_var(GVAR_DECKER_KNOWN) == 1) then begin
++        giq_option(4, NAME, 112, Fry07, NEUTRAL_REACTION);
+     end
+-    if (global_var(106) == 1) then begin
+-        giq_option(4, 567, 114, Fry06, 50);
++    if (global_var(GVAR_MISSING_CARAVAN) == 1) then begin
++        giq_option(4, NAME, 114, Fry06, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 567, 115, Fry21, 50);
+-    if (global_var(101) != 2) then begin
+-        giq_option(4, 567, 147, Fry23, 50);
++    giq_option(4, NAME, 115, Fry21, NEUTRAL_REACTION);
++    if (global_var(GVAR_FIND_WATER_CHIP) != 2) then begin
++        giq_option(4, NAME, 147, Fry23, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 567, 116, Fry08, 50);
++    giq_option(4, NAME, 116, Fry08, NEUTRAL_REACTION);
+ end
+ 
+ procedure Fry06
+ begin
+-    gsay_reply(567, 118);
++    Reply(118);
+     call Fry05();
+ end
+ 
+ procedure Fry07
+ begin
+-    gsay_reply(567, 119);
++    Reply(119);
+     call Fry05();
+ end
+ 
+ procedure Fry08
+ begin
+-    gsay_message(567, 120, 50);
++    gsay_message(NAME, 120, NEUTRAL_REACTION);
+     call FryEnd();
+ end
+ 
+ procedure Fry09
+ begin
+-    gsay_message(567, 121, 50);
++    gsay_message(NAME, 121, NEUTRAL_REACTION);
+     call FryEnd();
+ end
+ 
+ procedure Fry10
+ begin
+-    gsay_message(567, 122, 50);
++    gsay_message(NAME, 122, NEUTRAL_REACTION);
+     call FryEnd();
+ end
+ 
+ procedure Fry11
+ begin
+-    gsay_message(567, 123, 50);
++    gsay_message(NAME, 123, NEUTRAL_REACTION);
+     call FryCombat();
+ end
+ 
+ procedure Fry12
+ begin
+-    gsay_message(567, 124, 50);
++    gsay_message(NAME, 124, NEUTRAL_REACTION);
+     call FryEnd();
+ end
+ 
+ procedure Fry13
+ begin
+-    gsay_reply(567, 125);
++    Reply(125);
+     call FryCombat();
+ end
+ 
+ procedure Fry14
+ begin
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        gsay_reply(567, 130);
++    if (dude_gender == 0) then begin
++        Reply(130);
+     end
+     else begin
+-        gsay_reply(567, 131);
++        Reply(131);
+     end
+     call Fry17();
+ end
+ 
+ procedure Fry15
+ begin
+-    gsay_reply(567, 132);
++    Reply(132);
+     call Fry17();
+ end
+ 
+ procedure Fry16
+ begin
+-    gsay_reply(567, 133);
++    Reply(133);
+     call Fry17();
+ end
+ 
+ procedure Fry17
+ begin
+-    if (global_var(101) != 2) then begin
+-        giq_option(4, 567, 147, Fry24, 50);
++    if (global_var(GVAR_FIND_WATER_CHIP) != 2) then begin
++        giq_option(4, NAME, 147, Fry24, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 567, 134, Fry18, 49);
+-    giq_option(4, 567, 135, Fry19, 50);
+-    giq_option(4, 567, 136, Fry20, 50);
+-    giq_option(4, 567, 137, Fry21, 49);
+-    giq_option(4, 567, 138, FryEnd, 50);
+-    giq_option(-3, 567, 139, Fry09, 50);
+-    giq_option(-3, 567, 140, Fry09, 50);
++    giq_option(4, NAME, 134, Fry18, GOOD_REACTION);
++    giq_option(4, NAME, 135, Fry19, NEUTRAL_REACTION);
++    giq_option(4, NAME, 136, Fry20, NEUTRAL_REACTION);
++    giq_option(4, NAME, 137, Fry21, GOOD_REACTION);
++    giq_option(4, NAME, 138, FryEnd, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 139, Fry09, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 140, Fry09, NEUTRAL_REACTION);
+ end
+ 
+ procedure Fry18
+ begin
+-    gsay_reply(567, 141);
++    Reply(141);
+     call Fry17();
+ end
+ 
+ procedure Fry19
+ begin
+-    gsay_reply(567, 142);
++    Reply(142);
+     call Fry17();
+ end
+ 
+ procedure Fry20
+ begin
+-    gsay_reply(567, 143);
++    Reply(143);
+     call Fry17();
+ end
+ 
+ procedure Fry21
+ begin
+-    gsay_reply(567, 144);
++    Reply(144);
+     call Fry17();
+ end
+ 
+ procedure Fry22
+ begin
+-    gsay_message(567, 145, 50);
++    gsay_message(NAME, 145, NEUTRAL_REACTION);
+     call FryEnd();
+ end
+ 
+ procedure Fry23
+ begin
+-    gsay_reply(567, 148);
++    Reply(148);
+     call Fry05();
+ end
+ 
+ procedure Fry24
+ begin
+-    gsay_reply(567, 148);
++    Reply(148);
+     call Fry17();
+ end
+ 
+@@ -425,31 +425,31 @@ begin
+         set_local_var(0, 50);
+         set_local_var(1, 2);
+         set_local_var(2, 1);
+-        set_local_var(0, local_var(0) + (5 * get_critter_stat(dude_obj, 3)) - 25);
+-        set_local_var(0, local_var(0) + (10 * has_trait(0, dude_obj, 10)));
+-        if (has_trait(0, dude_obj, 39)) then begin
+-            if (global_var(155) > 0) then begin
+-                set_local_var(0, local_var(0) + global_var(155));
++        set_local_var(0, local_var(0) + (5 * dude_charisma) - 25);
++        set_local_var(0, local_var(0) + (10 * has_trait(TRAIT_PERK, dude_obj, PERK_presence)));
++        if (has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality)) then begin
++            if (global_var(GVAR_PLAYER_REPUATION) > 0) then begin
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+         else begin
+             if (local_var(3) == 1) then begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) + global_var(155));
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+-        if (global_var(158) > 2) then begin
++        if (global_var(GVAR_CHILDKILLER_REPUATION) > 2) then begin
+             set_local_var(0, local_var(0) - 30);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) + 20);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) - 20);
+         end
+         call ReactToLevel();
+@@ -542,6 +542,5 @@ end
+ 
+ procedure Goodbyes
+ begin
+-    exit_line := message_str(634, random(100, 105));
++    exit_line := message_str(SCRIPT_MODREACT, random(100, 105));
+ end
+-

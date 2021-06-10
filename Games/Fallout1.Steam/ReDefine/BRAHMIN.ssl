@@ -1,0 +1,120 @@
+procedure start;
+procedure critter_p_proc;
+procedure description_p_proc;
+procedure talk_p_proc;
+procedure timed_event_p_proc;
+procedure use_obj_on_p_proc;
+procedure use_skill_on_p_proc;
+procedure damage_p_proc;
+procedure destroy_p_proc;
+
+variable critter_tile;
+variable initialized;
+
+
+procedure start
+begin
+    if (script_action == critter_proc) then begin
+        call critter_p_proc();
+    end
+    else begin
+        if (script_action == description_proc) then begin
+            call description_p_proc();
+        end
+        else begin
+            if (script_action == talk_proc) then begin
+                call talk_p_proc();
+            end
+            else begin
+                if (script_action == timed_event_proc) then begin
+                    call timed_event_p_proc();
+                end
+                else begin
+                    if (script_action == use_obj_on_proc) then begin
+                        call use_obj_on_p_proc();
+                    end
+                    else begin
+                        if (script_action == use_skill_on_proc) then begin
+                            call use_skill_on_p_proc();
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure critter_p_proc
+begin
+    if (not(initialized)) then begin
+        add_timer_event(self_obj, game_ticks(random(1, 5)), 1);
+        initialized := 1;
+    end
+end
+
+procedure description_p_proc
+begin
+    display_mstr(100);
+end
+
+procedure talk_p_proc
+begin
+    float_msg(self_obj, mstr(103), FLOAT_MSG_NORMAL);
+end
+
+procedure timed_event_p_proc
+begin
+    if (((critter_state(self_obj) bwand 2) == 0) and not(combat_is_initialized)) then begin
+        critter_tile := tile_num_in_direction(tile_num(self_obj), random(0, 5), 3);
+        reg_anim_func(2, self_obj);
+        reg_anim_func(1, 1);
+        reg_anim_obj_move_to_tile(self_obj, critter_tile, -1);
+        reg_anim_func(3, 0);
+    end
+    add_timer_event(self_obj, game_ticks(random(3, 5)), 1);
+end
+
+procedure use_obj_on_p_proc
+begin
+    variable LVar0 := 0;
+    if ((obj_pid(obj_being_used_with) == 124) or (obj_pid(obj_being_used_with) == 125)) then begin
+        script_overrides;
+        LVar0 := obj_being_used_with;
+        rm_obj_from_inven(source_obj, obj_being_used_with);
+        destroy_object(LVar0);
+        reg_anim_func(2, self_obj);
+        reg_anim_func(1, 1);
+        reg_anim_animate(self_obj, 14, -1);
+        reg_anim_animate(self_obj, 20, 5);
+        reg_anim_animate(self_obj, 48, -1);
+        reg_anim_func(3, 0);
+        critter_injure(self_obj, 2);
+    end
+end
+
+procedure use_skill_on_p_proc
+begin
+    if (action_being_used == 12) then begin
+        script_overrides;
+        if (is_success(roll_vs_skill(dude_obj, action_being_used, 0))) then begin
+            display_mstr(101);
+        end
+        else begin
+            display_mstr(102);
+        end
+    end
+end
+
+procedure damage_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_global_var(GVAR_ENEMY_JUNKTOWN, 1);
+    end
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_global_var(GVAR_ENEMY_JUNKTOWN, 1);
+    end
+end

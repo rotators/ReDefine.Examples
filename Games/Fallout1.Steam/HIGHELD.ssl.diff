@@ -1,0 +1,424 @@
+diff --git a/Games/Fallout1.Steam/Original/HIGHELD.ssl b/Games/Fallout1.Steam/ReDefine/HIGHELD.ssl
+index 63a72a8..ea9dec3 100644
+--- a/Games/Fallout1.Steam/Original/HIGHELD.ssl
++++ b/Games/Fallout1.Steam/ReDefine/HIGHELD.ssl
+@@ -60,26 +60,26 @@ procedure start
+ begin
+     if (Only_Once) then begin
+         Only_Once := 0;
+-        critter_add_trait(self_obj, 1, 6, 44);
+-        critter_add_trait(self_obj, 1, 5, 80);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 44);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_BOS_ELDERS);
+     end
+-    if (script_action == 21) then begin
++    if (script_action == look_at_proc) then begin
+         call look_at_p_proc();
+     end
+     else begin
+-        if (script_action == 4) then begin
++        if (script_action == pickup_proc) then begin
+             call pickup_p_proc();
+         end
+         else begin
+-            if (script_action == 11) then begin
++            if (script_action == talk_proc) then begin
+                 call talk_p_proc();
+             end
+             else begin
+-                if (script_action == 12) then begin
++                if (script_action == critter_proc) then begin
+                     call critter_p_proc();
+                 end
+                 else begin
+-                    if (script_action == 18) then begin
++                    if (script_action == destroy_proc) then begin
+                         call destroy_p_proc();
+                     end
+                 end
+@@ -100,16 +100,16 @@ begin
+             dialogue_system_enter;
+         end
+     end
+-    if (global_var(250)) then begin
++    if (global_var(GVAR_ENEMY_BROTHERHOOD)) then begin
+         hostile := 1;
+     end
+     if (tile_distance_objs(self_obj, dude_obj) > 12) then begin
+         hostile := 0;
+     end
+     if (hostile) then begin
+-        set_global_var(250, 1);
++        set_global_var(GVAR_ENEMY_BROTHERHOOD, 1);
+         hostile := 0;
+-        attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++        attack(dude_obj);
+     end
+ end
+ 
+@@ -123,7 +123,7 @@ end
+ procedure talk_p_proc
+ begin
+     call get_reaction();
+-    if (global_var(17) == 1) then begin
++    if (global_var(GVAR_VATS_BLOWN) == 1) then begin
+         start_gdialog(942, self_obj, 4, -1, -1);
+         gsay_start;
+         call Elder10();
+@@ -136,7 +136,7 @@ begin
+         end
+         else begin
+             if (local_var(5) == 1) then begin
+-                float_msg(self_obj, message_str(942, 165), 2);
++                float_msg(self_obj, mstr(165), FLOAT_MSG_RED);
+             end
+             else begin
+                 if ((map_var(19) == 1) and (local_var(5) == 0)) then begin
+@@ -171,7 +171,7 @@ begin
+         if (local_var(6) == 0) then begin
+             set_local_var(6, 1);
+             temp := 1500;
+-            display_msg(message_str(942, 166) + temp + message_str(942, 167));
++            display_msg(mstr(166) + temp + mstr(167));
+             give_exp_points(temp);
+         end
+     end
+@@ -180,17 +180,17 @@ end
+ procedure destroy_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-            set_global_var(156, 1);
+-            set_global_var(157, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+-            set_global_var(157, 1);
+-            set_global_var(156, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+         end
+-        set_global_var(159, global_var(159) + 1);
+-        if ((global_var(159) % 2) == 0) then begin
+-            set_global_var(155, global_var(155) - 1);
++        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
++        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
++            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+         end
+     end
+ end
+@@ -198,26 +198,26 @@ end
+ procedure look_at_p_proc
+ begin
+     script_overrides;
+-    display_msg(message_str(942, 100));
++    display_mstr(100);
+ end
+ 
+ procedure Meeting01
+ begin
+-    gsay_reply(942, message_str(942, 134) + proto_data(obj_pid(dude_obj), 1) + message_str(942, 135) + proto_data(obj_pid(dude_obj), 1) + message_str(942, 136));
+-    giq_option(4, 942, 137, Meeting02, 50);
+-    giq_option(-3, 942, 138, Meeting13, 51);
++    Reply(mstr(134) + proto_data(obj_pid(dude_obj), 1) + mstr(135) + proto_data(obj_pid(dude_obj), 1) + mstr(136));
++    giq_option(4, NAME, 137, Meeting02, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 138, Meeting13, BAD_REACTION);
+ end
+ 
+ procedure Meeting02
+ begin
+-    gsay_reply(942, 139);
+-    giq_option(6, 942, 140, Meeting02a, 50);
+-    giq_option(4, 942, 141, Meeting04, 50);
++    Reply(139);
++    giq_option(6, NAME, 140, Meeting02a, NEUTRAL_REACTION);
++    giq_option(4, NAME, 141, Meeting04, NEUTRAL_REACTION);
+ end
+ 
+ procedure Meeting02a
+ begin
+-    if (global_var(166) == 1) then begin
++    if (global_var(GVAR_VREE_DISK) == 1) then begin
+         call Meeting03();
+     end
+     else begin
+@@ -227,24 +227,24 @@ end
+ 
+ procedure Meeting03
+ begin
+-    gsay_reply(942, 142);
+-    giq_option(6, 942, 143, Meeting04, 50);
++    Reply(142);
++    giq_option(6, NAME, 143, Meeting04, NEUTRAL_REACTION);
+ end
+ 
+ procedure Meeting04
+ begin
+-    gsay_reply(942, 144);
+-    giq_option(4, 942, 145, Meeting05, 50);
+-    giq_option(-3, 942, 138, Meeting13, 51);
++    Reply(144);
++    giq_option(4, NAME, 145, Meeting05, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 138, Meeting13, BAD_REACTION);
+ end
+ 
+ procedure Meeting05
+ begin
+-    gsay_reply(942, 146);
+-    if ((global_var(149) < (game_time / (10 * 60 * 60 * 24))) and (global_var(72) == 2)) then begin
+-        giq_option(4, 942, 147, Meeting06, 50);
++    Reply(146);
++    if ((global_var(GVAR_NECROPOLIS_INVADED_DATE) < (game_time / (10 * 60 * 60 * 24))) and (global_var(GVAR_NECROPOLIS) == 2)) then begin
++        giq_option(4, NAME, 147, Meeting06, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 942, 148, Meeting05a, 50);
++    giq_option(4, NAME, 148, Meeting05a, NEUTRAL_REACTION);
+ end
+ 
+ procedure Meeting05a
+@@ -259,107 +259,107 @@ end
+ 
+ procedure Meeting06
+ begin
+-    gsay_reply(942, 149);
+-    giq_option(4, 942, 150, Meeting08, 50);
++    Reply(149);
++    giq_option(4, NAME, 150, Meeting08, NEUTRAL_REACTION);
+ end
+ 
+ procedure Meeting07
+ begin
+-    gsay_reply(942, 151);
+-    giq_option(4, 942, message_str(942, 152) + message_str(942, 153), Meeting08, 50);
++    Reply(151);
++    giq_option(4, NAME, mstr(152) + mstr(153), Meeting08, NEUTRAL_REACTION);
+ end
+ 
+ procedure Meeting08
+ begin
+-    gsay_reply(942, 154);
+-    giq_option(4, 942, 155, Meeting09, 50);
+-    if (global_var(50) == 1) then begin
+-        giq_option(4, 942, 156, Meeting10, 50);
++    Reply(154);
++    giq_option(4, NAME, 155, Meeting09, NEUTRAL_REACTION);
++    if (global_var(GVAR_CATHEDRAL) == 1) then begin
++        giq_option(4, NAME, 156, Meeting10, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure Meeting09
+ begin
+     awardex := 1;
+-    set_global_var(223, 2);
+-    gsay_message(942, 157, 50);
++    set_global_var(GVAR_BROTHERHOOD_INVASION, 2);
++    gsay_message(NAME, 157, NEUTRAL_REACTION);
+ end
+ 
+ procedure Meeting10
+ begin
+-    gsay_reply(942, message_str(942, 158) + message_str(942, 159));
+-    giq_option(4, 942, 160, Meeting09, 50);
+-    giq_option(4, 942, 161, Meeting11, 50);
+-    giq_option(-3, 942, 138, Meeting13, 51);
++    Reply(mstr(158) + mstr(159));
++    giq_option(4, NAME, 160, Meeting09, NEUTRAL_REACTION);
++    giq_option(4, NAME, 161, Meeting11, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 138, Meeting13, BAD_REACTION);
+ end
+ 
+ procedure Meeting11
+ begin
+-    set_global_var(223, 1);
+-    gsay_message(942, 162, 50);
++    set_global_var(GVAR_BROTHERHOOD_INVASION, 1);
++    gsay_message(NAME, 162, NEUTRAL_REACTION);
+ end
+ 
+ procedure Meeting12
+ begin
+-    set_global_var(223, 2);
++    set_global_var(GVAR_BROTHERHOOD_INVASION, 2);
+ end
+ 
+ procedure Meeting13
+ begin
+-    gsay_message(942, 164, 51);
++    gsay_message(NAME, 164, BAD_REACTION);
+ end
+ 
+ procedure Elder01
+ begin
+-    gsay_reply(942, 101);
+-    giq_option(4, 942, 102, Elder02, 50);
+-    giq_option(4, 942, 103, Elder08, 50);
+-    giq_option(-3, 942, 104, Elder11, 51);
++    Reply(101);
++    giq_option(4, NAME, 102, Elder02, NEUTRAL_REACTION);
++    giq_option(4, NAME, 103, Elder08, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 104, Elder11, BAD_REACTION);
+ end
+ 
+ procedure Elder02
+ begin
+-    gsay_reply(942, message_str(942, 105) + message_str(942, 106) + message_str(942, 107));
+-    giq_option(4, 942, 108, Elder03, 50);
+-    giq_option(4, 942, 109, Elder09, 50);
+-    if (global_var(78) == 2) then begin
+-        giq_option(4, 942, 110, Elder07, 50);
++    Reply(mstr(105) + mstr(106) + mstr(107));
++    giq_option(4, NAME, 108, Elder03, NEUTRAL_REACTION);
++    giq_option(4, NAME, 109, Elder09, NEUTRAL_REACTION);
++    if (global_var(GVAR_THE_VATS) == 2) then begin
++        giq_option(4, NAME, 110, Elder07, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure Elder03
+ begin
+-    gsay_reply(942, 111);
+-    giq_option(4, 942, 112, ElderEnd, 50);
++    Reply(111);
++    giq_option(4, NAME, 112, ElderEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Elder04
+ begin
+-    gsay_reply(942, 113);
+-    if (global_var(78) == 2) then begin
+-        giq_option(4, 942, 114, Elder05, 50);
++    Reply(113);
++    if (global_var(GVAR_THE_VATS) == 2) then begin
++        giq_option(4, NAME, 114, Elder05, NEUTRAL_REACTION);
+     end
+     else begin
+-        giq_option(4, 942, 115, Elder06, 50);
++        giq_option(4, NAME, 115, Elder06, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure Elder05
+ begin
+-    gsay_reply(942, 116);
+-    giq_option(4, 942, 117, Elder07, 50);
++    Reply(116);
++    giq_option(4, NAME, 117, Elder07, NEUTRAL_REACTION);
+ end
+ 
+ procedure Elder06
+ begin
+-    gsay_reply(942, 118);
+-    giq_option(4, 942, 119, ElderEnd, 50);
++    Reply(118);
++    giq_option(4, NAME, 119, ElderEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Elder07
+ begin
+-    gsay_reply(942, 120);
+-    giq_option(4, 942, 121, ElderEnd, 50);
++    Reply(120);
++    giq_option(4, NAME, 121, ElderEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Elder07a
+@@ -369,33 +369,33 @@ end
+ 
+ procedure Elder08
+ begin
+-    gsay_reply(942, 122);
+-    giq_option(4, 942, 123, Elder02, 50);
+-    giq_option(4, 942, 124, Elder07a, 51);
+-    giq_option(4, 942, 125, Elder07a, 51);
++    Reply(122);
++    giq_option(4, NAME, 123, Elder02, NEUTRAL_REACTION);
++    giq_option(4, NAME, 124, Elder07a, BAD_REACTION);
++    giq_option(4, NAME, 125, Elder07a, BAD_REACTION);
+ end
+ 
+ procedure Elder09
+ begin
+-    gsay_reply(942, 126);
+-    giq_option(4, 942, 127, ElderEnd, 50);
++    Reply(126);
++    giq_option(4, NAME, 127, ElderEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Elder10
+ begin
+-    gsay_reply(942, 128);
+-    giq_option(4, 942, 129, ElderEnd, 50);
+-    giq_option(-3, 942, 104, Elder11, 51);
++    Reply(128);
++    giq_option(4, NAME, 129, ElderEnd, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 104, Elder11, BAD_REACTION);
+ end
+ 
+ procedure Elder11
+ begin
+-    gsay_message(942, 130, 51);
++    gsay_message(NAME, 130, BAD_REACTION);
+ end
+ 
+ procedure Elder12
+ begin
+-    float_msg(self_obj, message_str(942, random(131, 133)), 2);
++    float_msg(self_obj, mstr(random(131, 133)), FLOAT_MSG_RED);
+ end
+ 
+ procedure ElderEnd
+@@ -408,31 +408,31 @@ begin
+         set_local_var(0, 50);
+         set_local_var(1, 2);
+         set_local_var(2, 1);
+-        set_local_var(0, local_var(0) + (5 * get_critter_stat(dude_obj, 3)) - 25);
+-        set_local_var(0, local_var(0) + (10 * has_trait(0, dude_obj, 10)));
+-        if (has_trait(0, dude_obj, 39)) then begin
+-            if (global_var(155) > 0) then begin
+-                set_local_var(0, local_var(0) + global_var(155));
++        set_local_var(0, local_var(0) + (5 * dude_charisma) - 25);
++        set_local_var(0, local_var(0) + (10 * has_trait(TRAIT_PERK, dude_obj, PERK_presence)));
++        if (has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality)) then begin
++            if (global_var(GVAR_PLAYER_REPUATION) > 0) then begin
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+         else begin
+             if (local_var(3) == 1) then begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) + global_var(155));
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+-        if (global_var(158) > 2) then begin
++        if (global_var(GVAR_CHILDKILLER_REPUATION) > 2) then begin
+             set_local_var(0, local_var(0) - 30);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) + 20);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) - 20);
+         end
+         call ReactToLevel();
+@@ -525,6 +525,5 @@ end
+ 
+ procedure Goodbyes
+ begin
+-    exit_line := message_str(634, random(100, 105));
++    exit_line := message_str(SCRIPT_MODREACT, random(100, 105));
+ end
+-

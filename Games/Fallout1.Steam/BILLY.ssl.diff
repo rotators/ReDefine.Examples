@@ -1,0 +1,446 @@
+diff --git a/Games/Fallout1.Steam/Original/BILLY.ssl b/Games/Fallout1.Steam/ReDefine/BILLY.ssl
+index a4f6608..73fbb80 100644
+--- a/Games/Fallout1.Steam/Original/BILLY.ssl
++++ b/Games/Fallout1.Steam/ReDefine/BILLY.ssl
+@@ -72,35 +72,35 @@ procedure start
+ begin
+     if (Only_Once) then begin
+         Only_Once := 0;
+-        critter_add_trait(self_obj, 1, 6, 62);
+-        critter_add_trait(self_obj, 1, 5, 51);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 62);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_HUB_PEASANTS);
+         Billy_ptr := self_obj;
+     end
+-    if (script_action == 21) then begin
++    if (script_action == look_at_proc) then begin
+         call look_at_p_proc();
+     end
+     else begin
+-        if (script_action == 4) then begin
++        if (script_action == pickup_proc) then begin
+             call pickup_p_proc();
+         end
+         else begin
+-            if (script_action == 11) then begin
++            if (script_action == talk_proc) then begin
+                 call talk_p_proc();
+             end
+             else begin
+-                if (script_action == 12) then begin
++                if (script_action == critter_proc) then begin
+                     call critter_p_proc();
+                 end
+                 else begin
+-                    if (script_action == 18) then begin
++                    if (script_action == destroy_proc) then begin
+                         call destroy_p_proc();
+                     end
+                     else begin
+-                        if (script_action == 13) then begin
++                        if (script_action == combat_proc) then begin
+                             call combat_p_proc();
+                         end
+                         else begin
+-                            if (script_action == 22) then begin
++                            if (script_action == timed_event_proc) then begin
+                                 call timed_event_p_proc();
+                             end
+                         end
+@@ -120,10 +120,10 @@ procedure critter_p_proc
+ begin
+     if (hostile) then begin
+         hostile := 0;
+-        attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++        attack(dude_obj);
+     end
+     if (Runaway == 0) then begin
+-        if (global_var(280) == 1) then begin
++        if (global_var(GVAR_DESTROY_VATS_8) == 1) then begin
+             call BillyRunAway();
+         end
+         if ((game_time_hour >= 600) and (game_time_hour < 700)) then begin
+@@ -176,21 +176,21 @@ end
+ procedure destroy_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        set_global_var(158, global_var(158) + 1);
+-        set_global_var(155, global_var(155) - 1);
++        set_global_var(GVAR_CHILDKILLER_REPUATION, global_var(GVAR_CHILDKILLER_REPUATION) + 1);
++        set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+     end
+     if (source_obj == dude_obj) then begin
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-            set_global_var(156, 1);
+-            set_global_var(157, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+-            set_global_var(157, 1);
+-            set_global_var(156, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+         end
+-        set_global_var(159, global_var(159) + 1);
+-        if ((global_var(159) % 2) == 0) then begin
+-            set_global_var(155, global_var(155) - 1);
++        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
++        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
++            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+         end
+     end
+ end
+@@ -200,14 +200,14 @@ begin
+     variable LVar0 := 0;
+     LVar0 := obj_pid(source_obj);
+     if (party_member_obj(LVar0) != 0) then begin
+-        set_global_var(248, 1);
++        set_global_var(GVAR_ENEMY_HUB, 1);
+     end
+ end
+ 
+ procedure look_at_p_proc
+ begin
+     script_overrides;
+-    display_msg(message_str(556, 100));
++    display_mstr(100);
+ end
+ 
+ procedure combat_p_proc
+@@ -253,12 +253,12 @@ begin
+     set_local_var(4, 1);
+     start_gdialog(556, self_obj, 4, -1, -1);
+     gsay_start;
+-    gsay_reply(556, 101);
+-    giq_option(4, 556, 102, Billy04, 50);
+-    giq_option(4, 556, 103, Billy01, 50);
+-    giq_option(4, 556, 104, BillyEnd, 50);
+-    giq_option(-3, 556, 105, Billy06, 50);
+-    giq_option(-3, 556, 106, Billy06, 50);
++    Reply(101);
++    giq_option(4, NAME, 102, Billy04, NEUTRAL_REACTION);
++    giq_option(4, NAME, 103, Billy01, NEUTRAL_REACTION);
++    giq_option(4, NAME, 104, BillyEnd, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 105, Billy06, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 106, Billy06, NEUTRAL_REACTION);
+     gsay_end;
+     end_dialogue;
+ end
+@@ -266,68 +266,68 @@ end
+ procedure Billy01
+ begin
+     set_local_var(11, 1);
+-    gsay_reply(556, 107);
+-    giq_option(4, 556, 108, Billy02, 50);
+-    giq_option(4, 556, 109, Billy03, 50);
++    Reply(107);
++    giq_option(4, NAME, 108, Billy02, NEUTRAL_REACTION);
++    giq_option(4, NAME, 109, Billy03, NEUTRAL_REACTION);
+ end
+ 
+ procedure Billy02
+ begin
+-    set_global_var(106, 1);
+-    gsay_message(556, 110, 50);
++    set_global_var(GVAR_MISSING_CARAVAN, 1);
++    gsay_message(NAME, 110, NEUTRAL_REACTION);
+ end
+ 
+ procedure Billy03
+ begin
+-    gsay_message(556, 111, 50);
++    gsay_message(NAME, 111, NEUTRAL_REACTION);
+ end
+ 
+ procedure Billy04
+ begin
+     set_local_var(10, 1);
+-    gsay_reply(556, 112);
+-    giq_option(4, 556, 113, Billy12, 50);
+-    giq_option(4, 556, 114, Billy05, 50);
++    Reply(112);
++    giq_option(4, NAME, 113, Billy12, NEUTRAL_REACTION);
++    giq_option(4, NAME, 114, Billy05, NEUTRAL_REACTION);
+ end
+ 
+ procedure Billy05
+ begin
+-    gsay_reply(556, 115);
+-    giq_option(4, 556, 116, Billy08, 50);
+-    giq_option(4, 556, 117, Billy07, 49);
+-    giq_option(4, 556, 118, BillyEnd, 50);
++    Reply(115);
++    giq_option(4, NAME, 116, Billy08, NEUTRAL_REACTION);
++    giq_option(4, NAME, 117, Billy07, GOOD_REACTION);
++    giq_option(4, NAME, 118, BillyEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Billy06
+ begin
+-    gsay_message(556, 119, 50);
++    gsay_message(NAME, 119, NEUTRAL_REACTION);
+ end
+ 
+ procedure Billy07
+ begin
+-    gsay_message(556, 120, 49);
++    gsay_message(NAME, 120, GOOD_REACTION);
+ end
+ 
+ procedure Billy08
+ begin
+-    gsay_reply(556, 121);
+-    giq_option(4, 556, 122, BillyEnd, 50);
+-    giq_option(4, 556, 123, Billy09, 49);
++    Reply(121);
++    giq_option(4, NAME, 122, BillyEnd, NEUTRAL_REACTION);
++    giq_option(4, NAME, 123, Billy09, GOOD_REACTION);
+ end
+ 
+ procedure Billy09
+ begin
+-    gsay_message(556, 124, 49);
++    gsay_message(NAME, 124, GOOD_REACTION);
+ end
+ 
+ procedure Billy10
+ begin
+     if (Once_Which_One == 0) then begin
+         Once_Which_One := 1;
+-        float_msg(self_obj, message_str(556, 125), 8);
++        float_msg(self_obj, mstr(125), FLOAT_MSG_YELLOW);
+     end
+     else begin
+-        float_msg(self_obj, message_str(556, random(126, 129)), 8);
++        float_msg(self_obj, mstr(random(126, 129)), FLOAT_MSG_YELLOW);
+     end
+     animate_move_obj_to_tile(self_obj, 15890, 1);
+ end
+@@ -336,40 +336,40 @@ procedure Billy11
+ begin
+     if (local_var(5) == 0) then begin
+         set_local_var(5, 1);
+-        float_msg(self_obj, message_str(556, 130), 8);
++        float_msg(self_obj, mstr(130), FLOAT_MSG_YELLOW);
+     end
+     else begin
+-        float_msg(self_obj, message_str(556, 131), 8);
++        float_msg(self_obj, mstr(131), FLOAT_MSG_YELLOW);
+     end
+ end
+ 
+ procedure Billy12
+ begin
+-    gsay_reply(556, 132);
+-    giq_option(4, 556, 133, Billy13, 50);
+-    giq_option(4, 556, 134, BillyEnd, 50);
++    Reply(132);
++    giq_option(4, NAME, 133, Billy13, NEUTRAL_REACTION);
++    giq_option(4, NAME, 134, BillyEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Billy13
+ begin
+-    gsay_message(556, 135, 50);
++    gsay_message(NAME, 135, NEUTRAL_REACTION);
+ end
+ 
+ procedure Billy14
+ begin
+     if (local_var(7) == 1) then begin
+-        float_msg(self_obj, message_str(556, 142), 8);
++        float_msg(self_obj, mstr(142), FLOAT_MSG_YELLOW);
+     end
+     else begin
+         set_local_var(7, 1);
+         start_gdialog(556, self_obj, 4, -1, -1);
+         gsay_start;
+-        gsay_reply(556, 136);
+-        giq_option(4, 556, 137, Billy15, 50);
+-        giq_option(4, 556, 138, Billy14a, 50);
+-        giq_option(4, 556, 139, BillyEnd, 50);
+-        giq_option(-3, 556, 140, Billy06, 50);
+-        giq_option(-3, 556, 141, Billy06, 50);
++        Reply(136);
++        giq_option(4, NAME, 137, Billy15, NEUTRAL_REACTION);
++        giq_option(4, NAME, 138, Billy14a, NEUTRAL_REACTION);
++        giq_option(4, NAME, 139, BillyEnd, NEUTRAL_REACTION);
++        giq_option(-3, NAME, 140, Billy06, NEUTRAL_REACTION);
++        giq_option(-3, NAME, 141, Billy06, NEUTRAL_REACTION);
+         gsay_end;
+         end_dialogue;
+     end
+@@ -389,10 +389,10 @@ end
+ 
+ procedure Billy15
+ begin
+-    gsay_reply(556, 143);
+-    giq_option(4, 556, 144, Billy15a, 50);
+-    giq_option(4, 556, 145, Billy18, 51);
+-    giq_option(4, 556, 146, BillyEnd, 50);
++    Reply(143);
++    giq_option(4, NAME, 144, Billy15a, NEUTRAL_REACTION);
++    giq_option(4, NAME, 145, Billy18, BAD_REACTION);
++    giq_option(4, NAME, 146, BillyEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Billy15a
+@@ -407,53 +407,53 @@ end
+ 
+ procedure Billy16
+ begin
+-    gsay_message(556, 147, 50);
++    gsay_message(NAME, 147, NEUTRAL_REACTION);
+ end
+ 
+ procedure Billy17
+ begin
+-    gsay_message(556, 148, 51);
++    gsay_message(NAME, 148, BAD_REACTION);
+ end
+ 
+ procedure Billy18
+ begin
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        gsay_message(556, 149, 51);
++    if (dude_gender == 0) then begin
++        gsay_message(NAME, 149, BAD_REACTION);
+     end
+     else begin
+-        gsay_message(556, 150, 51);
++        gsay_message(NAME, 150, BAD_REACTION);
+     end
+ end
+ 
+ procedure Billy19
+ begin
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        gsay_message(556, 151, 49);
++    if (dude_gender == 0) then begin
++        gsay_message(NAME, 151, GOOD_REACTION);
+     end
+     else begin
+-        gsay_message(556, 152, 49);
++        gsay_message(NAME, 152, GOOD_REACTION);
+     end
+     call BillyRunAway();
+ end
+ 
+ procedure Billy20
+ begin
+-    gsay_message(556, 153, 49);
++    gsay_message(NAME, 153, GOOD_REACTION);
+ end
+ 
+ procedure Billy21
+ begin
+     if (local_var(8) == 1) then begin
+-        float_msg(self_obj, message_str(556, random(158, 164)), 8);
++        float_msg(self_obj, mstr(random(158, 164)), FLOAT_MSG_YELLOW);
+     end
+     else begin
+         set_local_var(8, 1);
+         start_gdialog(556, self_obj, 4, -1, -1);
+         gsay_start;
+-        gsay_reply(556, 154);
+-        giq_option(4, 556, 155, Billy22, 50);
+-        giq_option(4, 556, 156, BillyEnd, 50);
+-        giq_option(-3, 556, 157, Billy06, 50);
++        Reply(154);
++        giq_option(4, NAME, 155, Billy22, NEUTRAL_REACTION);
++        giq_option(4, NAME, 156, BillyEnd, NEUTRAL_REACTION);
++        giq_option(-3, NAME, 157, Billy06, NEUTRAL_REACTION);
+         gsay_end;
+         end_dialogue;
+     end
+@@ -461,28 +461,28 @@ end
+ 
+ procedure Billy22
+ begin
+-    gsay_message(556, 165, 50);
++    gsay_message(NAME, 165, NEUTRAL_REACTION);
+ end
+ 
+ procedure Billy23
+ begin
+     if (local_var(9) == 1) then begin
+-        float_msg(self_obj, message_str(556, random(172, 178)), 8);
++        float_msg(self_obj, mstr(random(172, 178)), FLOAT_MSG_YELLOW);
+     end
+     else begin
+         set_local_var(9, 1);
+         start_gdialog(556, self_obj, 4, -1, -1);
+         gsay_start;
+-        gsay_reply(556, 166);
++        Reply(166);
+         if (local_var(10) == 0) then begin
+-            giq_option(4, 556, 167, Billy04, 50);
++            giq_option(4, NAME, 167, Billy04, NEUTRAL_REACTION);
+         end
+         if (local_var(11) == 4) then begin
+-            giq_option(4, 556, 168, Billy01, 50);
++            giq_option(4, NAME, 168, Billy01, NEUTRAL_REACTION);
+         end
+-        giq_option(4, 556, 169, BillyEnd, 50);
+-        giq_option(-3, 556, 170, Billy06, 50);
+-        giq_option(-3, 556, 171, Billy06, 50);
++        giq_option(4, NAME, 169, BillyEnd, NEUTRAL_REACTION);
++        giq_option(-3, NAME, 170, Billy06, NEUTRAL_REACTION);
++        giq_option(-3, NAME, 171, Billy06, NEUTRAL_REACTION);
+         gsay_end;
+         end_dialogue;
+     end
+@@ -572,31 +572,31 @@ begin
+         set_local_var(0, 50);
+         set_local_var(1, 2);
+         set_local_var(2, 1);
+-        set_local_var(0, local_var(0) + (5 * get_critter_stat(dude_obj, 3)) - 25);
+-        set_local_var(0, local_var(0) + (10 * has_trait(0, dude_obj, 10)));
+-        if (has_trait(0, dude_obj, 39)) then begin
+-            if (global_var(155) > 0) then begin
+-                set_local_var(0, local_var(0) + global_var(155));
++        set_local_var(0, local_var(0) + (5 * dude_charisma) - 25);
++        set_local_var(0, local_var(0) + (10 * has_trait(TRAIT_PERK, dude_obj, PERK_presence)));
++        if (has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality)) then begin
++            if (global_var(GVAR_PLAYER_REPUATION) > 0) then begin
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+         else begin
+             if (local_var(3) == 1) then begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) + global_var(155));
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+-        if (global_var(158) > 2) then begin
++        if (global_var(GVAR_CHILDKILLER_REPUATION) > 2) then begin
+             set_local_var(0, local_var(0) - 30);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) + 20);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) - 20);
+         end
+         call ReactToLevel();
+@@ -689,6 +689,5 @@ end
+ 
+ procedure Goodbyes
+ begin
+-    exit_line := message_str(634, random(100, 105));
++    exit_line := message_str(SCRIPT_MODREACT, random(100, 105));
+ end
+-

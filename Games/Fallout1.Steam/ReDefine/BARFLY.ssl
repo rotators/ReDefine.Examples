@@ -1,0 +1,154 @@
+procedure start;
+procedure critter_p_proc;
+procedure map_enter_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure damage_p_proc;
+procedure destroy_p_proc;
+procedure sleeping;
+
+variable night_person;
+variable wake_time;
+variable sleep_time;
+variable home_tile;
+variable sleep_tile;
+variable hostile;
+
+
+procedure start
+begin
+    if (script_action == critter_proc) then begin
+        call critter_p_proc();
+    end
+    else begin
+        if (script_action == map_enter_proc) then begin
+            call map_enter_p_proc();
+        end
+        else begin
+            if (script_action == pickup_proc) then begin
+                call pickup_p_proc();
+            end
+            else begin
+                if (script_action == talk_proc) then begin
+                    call talk_p_proc();
+                end
+            end
+        end
+    end
+end
+
+procedure critter_p_proc
+begin
+    if (hostile) then begin
+        hostile := 0;
+        attack(dude_obj);
+    end
+    call sleeping();
+    if ((game_time_hour > (wake_time + 20)) or (game_time_hour < sleep_time)) then begin
+        if (tile_num(self_obj) != home_tile) then begin
+            animate_move_obj_to_tile(self_obj, home_tile, 0);
+        end
+    end
+    if (global_var(GVAR_ENEMY_JUNKTOWN) == 1) then begin
+        if (obj_can_see_obj(self_obj, dude_obj)) then begin
+            attack(dude_obj);
+        end
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    if (global_var(GVAR_JUNKTOWN_INVADED) == 1) then begin
+        destroy_object(self_obj);
+    end
+    night_person := 1;
+    wake_time := random(1610, 1640);
+    sleep_time := random(310, 340);
+    sleep_tile := 7000;
+    home_tile := 20675;
+    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 26);
+    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_LOSER);
+    if (map_var(2) == 1) then begin
+        destroy_object(self_obj);
+    end
+end
+
+procedure pickup_p_proc
+begin
+    hostile := 1;
+end
+
+procedure talk_p_proc
+begin
+    float_msg(self_obj, mstr(random(100, 106)), FLOAT_MSG_NORMAL);
+end
+
+procedure damage_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_global_var(GVAR_ENEMY_JUNKTOWN, 1);
+    end
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_global_var(GVAR_ENEMY_JUNKTOWN, 1);
+        if (source_obj == dude_obj) then begin
+            if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+                set_global_var(GVAR_BERSERKER_REPUTATION, 1);
+                set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+            end
+            if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+                set_global_var(GVAR_CHAMPION_REPUTATION, 1);
+                set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+            end
+            set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
+            if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
+                set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+            end
+        end
+    end
+end
+
+procedure sleeping
+begin
+    if (local_var(0) == 1) then begin
+        if (not(night_person) and (game_time_hour >= wake_time) and (game_time_hour < sleep_time) or (night_person and ((game_time_hour >= wake_time) or (game_time_hour < sleep_time)))) then begin
+            if (((game_time_hour - wake_time) < 10) and ((game_time_hour - wake_time) > 0)) then begin
+                if (tile_num(self_obj) != home_tile) then begin
+                    animate_move_obj_to_tile(self_obj, home_tile, 0);
+                end
+                else begin
+                    set_local_var(0, 0);
+                end
+            end
+            else begin
+                move_to(self_obj, home_tile, elevation(self_obj));
+                if (tile_num(self_obj) == home_tile) then begin
+                    set_local_var(0, 0);
+                end
+            end
+        end
+    end
+    else begin
+        if (night_person and (game_time_hour >= sleep_time) and (game_time_hour < wake_time) or (not(night_person) and ((game_time_hour >= sleep_time) or (game_time_hour < wake_time)))) then begin
+            if (((game_time_hour - sleep_time) < 10) and ((game_time_hour - sleep_time) > 0)) then begin
+                if (tile_num(self_obj) != sleep_tile) then begin
+                    animate_move_obj_to_tile(self_obj, self_obj, 0);
+                end
+                else begin
+                    set_local_var(0, 1);
+                end
+            end
+            else begin
+                if (tile_num(self_obj) != sleep_tile) then begin
+                    move_to(self_obj, sleep_tile, elevation(self_obj));
+                end
+                else begin
+                    set_local_var(0, 1);
+                end
+            end
+        end
+    end
+end

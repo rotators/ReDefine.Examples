@@ -1,0 +1,512 @@
+procedure start;
+procedure critter_p_proc;
+procedure damage_p_proc;
+procedure destroy_p_proc;
+procedure look_at_p_proc;
+procedure map_enter_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure timed_event_p_proc;
+procedure Rebel01;
+procedure Rebel02;
+procedure Rebel03;
+procedure Rebel04;
+procedure Rebel05;
+procedure Rebel06;
+procedure Rebel07;
+procedure Rebel08;
+procedure Rebel09;
+procedure RebelEnd;
+procedure RebelCombat;
+procedure rebel_meeting;
+procedure sleeping;
+
+variable night_person;
+variable wake_time;
+variable sleep_time;
+variable home_tile;
+variable sleep_tile;
+variable dest_tile;
+variable hostile;
+variable gword1;
+variable gword2;
+variable not_at_meeting := 1;
+
+procedure get_reaction;
+procedure ReactToLevel;
+procedure LevelToReact;
+procedure UpReact;
+procedure DownReact;
+procedure BottomReact;
+procedure TopReact;
+procedure BigUpReact;
+procedure BigDownReact;
+procedure UpReactLevel;
+procedure DownReactLevel;
+procedure Goodbyes;
+
+variable exit_line;
+
+
+procedure start
+begin
+    if (script_action == critter_proc) then begin
+        call critter_p_proc();
+    end
+    else begin
+        if (script_action == damage_proc) then begin
+            call damage_p_proc();
+        end
+        else begin
+            if (script_action == destroy_proc) then begin
+                call destroy_p_proc();
+            end
+            else begin
+                if (script_action == look_at_proc) then begin
+                    call look_at_p_proc();
+                end
+                else begin
+                    if (script_action == map_enter_proc) then begin
+                        call map_enter_p_proc();
+                    end
+                    else begin
+                        if (script_action == pickup_proc) then begin
+                            call pickup_p_proc();
+                        end
+                        else begin
+                            if (script_action == talk_proc) then begin
+                                call talk_p_proc();
+                            end
+                            else begin
+                                if (script_action == timed_event_proc) then begin
+                                    call timed_event_p_proc();
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure critter_p_proc
+begin
+    if (hostile) then begin
+        hostile := 0;
+        attack(dude_obj);
+    end
+    else begin
+        if (((game_time / (10 * 60 * 60 * 24)) > map_var(5)) and (global_var(GVAR_CALM_REBELS) != 2)) then begin
+            destroy_object(self_obj);
+        end
+        if ((game_time_hour > 1700) and (game_time_hour < 1710)) then begin
+            if (global_var(GVAR_CALM_REBELS) != 2) then begin
+                if (not_at_meeting) then begin
+                    call rebel_meeting();
+                end
+            end
+            else begin
+                animate_move_obj_to_tile(self_obj, home_tile, 0);
+            end
+        end
+        else begin
+            call sleeping();
+        end
+    end
+end
+
+procedure damage_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_local_var(6, 1);
+    end
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
+            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
+            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+        end
+        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
+        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
+            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+        end
+    end
+end
+
+procedure look_at_p_proc
+begin
+    if (global_var(GVAR_CALM_REBELS) != 2) then begin
+        display_mstr(101);
+    end
+    else begin
+        display_mstr(100);
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    if (local_var(5) == 0) then begin
+        set_local_var(5, tile_num(self_obj));
+    end
+    home_tile := local_var(5);
+    sleep_tile := home_tile;
+    sleep_time := random(1900, 1930);
+    wake_time := random(700, 715);
+    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 87);
+end
+
+procedure pickup_p_proc
+begin
+    hostile := 1;
+end
+
+procedure talk_p_proc
+begin
+    call get_reaction();
+    if (local_var(4) == 1) then begin
+        float_msg(self_obj, message_str(SCRIPT_GENVAULT, 166), FLOAT_MSG_NORMAL);
+    end
+    else begin
+        if (local_var(6)) then begin
+            float_msg(self_obj, message_str(SCRIPT_ENEMY, random(100, 105)), FLOAT_MSG_RED);
+        end
+        else begin
+            if (global_var(GVAR_WATER_CHIP_4)) then begin
+                float_msg(self_obj, mstr(139), FLOAT_MSG_RED);
+            end
+            else begin
+                if (global_var(GVAR_FIND_WATER_CHIP) != 0) then begin
+                    call Rebel01();
+                end
+                else begin
+                    if ((obj_item_subtype(critter_inven_obj(dude_obj, 1)) == 3) or (obj_item_subtype(critter_inven_obj(dude_obj, 2)) == 3)) then begin
+                        call Rebel02();
+                    end
+                    else begin
+                        if (local_var(1) >= 2) then begin
+                            start_gdialog(379, self_obj, 4, -1, -1);
+                            gsay_start;
+                            call Rebel03();
+                            gsay_end;
+                            end_dialogue;
+                        end
+                        else begin
+                            start_gdialog(379, self_obj, 4, -1, -1);
+                            gsay_start;
+                            call Rebel09();
+                            gsay_end;
+                            end_dialogue;
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure timed_event_p_proc
+begin
+    animate_move_obj_to_tile(self_obj, home_tile, 0);
+    not_at_meeting := 1;
+end
+
+procedure Rebel01
+begin
+    variable LVar0 := 0;
+    LVar0 := random(1, 5);
+    if (LVar0 == 1) then begin
+        LVar0 := mstr(105);
+    end
+    else begin
+        if (LVar0 == 2) then begin
+            LVar0 := mstr(106);
+        end
+        else begin
+            if (LVar0 == 3) then begin
+                LVar0 := mstr(107);
+            end
+            else begin
+                if (LVar0 == 4) then begin
+                    if (dude_gender == 0) then begin
+                        LVar0 := mstr(108);
+                    end
+                    else begin
+                        LVar0 := mstr(109);
+                    end
+                end
+                else begin
+                    if (LVar0 == 5) then begin
+                        if (dude_gender == 0) then begin
+                            LVar0 := mstr(110);
+                        end
+                        else begin
+                            LVar0 := mstr(111);
+                        end
+                    end
+                end
+            end
+        end
+    end
+    float_msg(self_obj, LVar0, FLOAT_MSG_NORMAL);
+end
+
+procedure Rebel02
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    call DownReact();
+    LVar1 := mstr(random(112, 115));
+    float_msg(self_obj, LVar1, FLOAT_MSG_RED);
+end
+
+procedure Rebel03
+begin
+    Reply(116);
+    giq_option(4, NAME, 117, Rebel04, 0);
+    giq_option(4, NAME, 118, Rebel05, 0);
+    giq_option(-3, NAME, 119, Rebel08, 0);
+end
+
+procedure Rebel04
+begin
+    Reply(120);
+    giq_option(4, NAME, 121, RebelEnd, 0);
+end
+
+procedure Rebel05
+begin
+    if (global_var(GVAR_CALM_REBELS) != 2) then begin
+        Reply(122);
+        giq_option(4, NAME, 123, Rebel06, 0);
+        giq_option(4, NAME, 124, Rebel07, 0);
+    end
+    else begin
+        Reply(125);
+    end
+    giq_option(4, NAME, 126, RebelEnd, 0);
+end
+
+procedure Rebel06
+begin
+    Reply(127);
+    giq_option(4, NAME, 128, RebelEnd, 0);
+    giq_option(4, NAME, 129, RebelEnd, 0);
+end
+
+procedure Rebel07
+begin
+    Reply(130);
+    giq_option(4, NAME, 131, RebelEnd, 0);
+    giq_option(4, NAME, 132, Rebel06, 0);
+end
+
+procedure Rebel08
+begin
+    Reply(133);
+    giq_option(-3, NAME, 134, RebelEnd, 0);
+end
+
+procedure Rebel09
+begin
+    Reply(135);
+    giq_option(4, NAME, 136, RebelCombat, 0);
+    giq_option(4, NAME, 137, RebelEnd, 0);
+    giq_option(-3, NAME, 138, RebelEnd, 0);
+end
+
+procedure RebelEnd
+begin
+end
+
+procedure RebelCombat
+begin
+    hostile := 1;
+end
+
+procedure rebel_meeting
+begin
+    if (dest_tile == 0) then begin
+        dest_tile := tile_num_in_direction(18310, random(0, 5), 1);
+    end
+    animate_move_obj_to_tile(self_obj, dest_tile, 0);
+    add_timer_event(self_obj, game_ticks(240), 0);
+    if (tile_num(self_obj) == dest_tile) then begin
+        not_at_meeting := 0;
+    end
+end
+
+procedure sleeping
+begin
+    if (local_var(4) == 1) then begin
+        if (not(night_person) and (game_time_hour >= wake_time) and (game_time_hour < sleep_time) or (night_person and ((game_time_hour >= wake_time) or (game_time_hour < sleep_time)))) then begin
+            if (((game_time_hour - wake_time) < 10) and ((game_time_hour - wake_time) > 0)) then begin
+                if (tile_num(self_obj) != home_tile) then begin
+                    animate_move_obj_to_tile(self_obj, home_tile, 0);
+                end
+                else begin
+                    set_local_var(4, 0);
+                end
+            end
+            else begin
+                move_to(self_obj, home_tile, elevation(self_obj));
+                if (tile_num(self_obj) == home_tile) then begin
+                    set_local_var(4, 0);
+                end
+            end
+        end
+    end
+    else begin
+        if (night_person and (game_time_hour >= sleep_time) and (game_time_hour < wake_time) or (not(night_person) and ((game_time_hour >= sleep_time) or (game_time_hour < wake_time)))) then begin
+            if (((game_time_hour - sleep_time) < 10) and ((game_time_hour - sleep_time) > 0)) then begin
+                if (tile_num(self_obj) != sleep_tile) then begin
+                    animate_move_obj_to_tile(self_obj, self_obj, 0);
+                end
+                else begin
+                    set_local_var(4, 1);
+                end
+            end
+            else begin
+                if (tile_num(self_obj) != sleep_tile) then begin
+                    move_to(self_obj, sleep_tile, elevation(self_obj));
+                end
+                else begin
+                    set_local_var(4, 1);
+                end
+            end
+        end
+    end
+end
+
+procedure get_reaction
+begin
+    if (local_var(2) == 0) then begin
+        set_local_var(0, 50);
+        set_local_var(1, 2);
+        set_local_var(2, 1);
+        set_local_var(0, local_var(0) + (5 * dude_charisma) - 25);
+        set_local_var(0, local_var(0) + (10 * has_trait(TRAIT_PERK, dude_obj, PERK_presence)));
+        if (has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality)) then begin
+            if (global_var(GVAR_PLAYER_REPUATION) > 0) then begin
+                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+            end
+            else begin
+                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+            end
+        end
+        else begin
+            if (local_var(3) == 1) then begin
+                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+            end
+            else begin
+                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+            end
+        end
+        if (global_var(GVAR_CHILDKILLER_REPUATION) > 2) then begin
+            set_local_var(0, local_var(0) - 30);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+            set_local_var(0, local_var(0) + 20);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+            set_local_var(0, local_var(0) - 20);
+        end
+        call ReactToLevel();
+    end
+end
+
+procedure ReactToLevel
+begin
+    if (local_var(0) <= 25) then begin
+        set_local_var(1, 1);
+    end
+    else begin
+        if (local_var(0) <= 75) then begin
+            set_local_var(1, 2);
+        end
+        else begin
+            set_local_var(1, 3);
+        end
+    end
+end
+
+procedure LevelToReact
+begin
+    if (local_var(1) == 1) then begin
+        set_local_var(0, random(1, 25));
+    end
+    else begin
+        if (local_var(1) == 2) then begin
+            set_local_var(0, random(26, 75));
+        end
+        else begin
+            set_local_var(0, random(76, 100));
+        end
+    end
+end
+
+procedure UpReact
+begin
+    set_local_var(0, local_var(0) + 10);
+    call ReactToLevel();
+end
+
+procedure DownReact
+begin
+    set_local_var(0, local_var(0) - 10);
+    call ReactToLevel();
+end
+
+procedure BottomReact
+begin
+    set_local_var(1, 1);
+    set_local_var(0, 1);
+end
+
+procedure TopReact
+begin
+    set_local_var(0, 100);
+    set_local_var(1, 3);
+end
+
+procedure BigUpReact
+begin
+    set_local_var(0, local_var(0) + 25);
+    call ReactToLevel();
+end
+
+procedure BigDownReact
+begin
+    set_local_var(0, local_var(0) - 25);
+    call ReactToLevel();
+end
+
+procedure UpReactLevel
+begin
+    set_local_var(1, local_var(1) + 1);
+    if (local_var(1) > 3) then begin
+        set_local_var(1, 3);
+    end
+    call LevelToReact();
+end
+
+procedure DownReactLevel
+begin
+    set_local_var(1, local_var(1) - 1);
+    if (local_var(1) < 1) then begin
+        set_local_var(1, 1);
+    end
+    call LevelToReact();
+end
+
+procedure Goodbyes
+begin
+    exit_line := message_str(SCRIPT_MODREACT, random(100, 105));
+end

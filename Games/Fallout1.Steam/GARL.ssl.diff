@@ -1,0 +1,817 @@
+diff --git a/Games/Fallout1.Steam/Original/GARL.ssl b/Games/Fallout1.Steam/ReDefine/GARL.ssl
+index b999c84..740f0dd 100644
+--- a/Games/Fallout1.Steam/Original/GARL.ssl
++++ b/Games/Fallout1.Steam/ReDefine/GARL.ssl
+@@ -103,16 +103,16 @@ procedure start
+ begin
+     if (only_once) then begin
+         only_once := 0;
+-        critter_add_trait(self_obj, 1, 6, 6);
+-        critter_add_trait(self_obj, 1, 5, 22);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 6);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_RAIDER_LEADER);
+     end
+-    if (script_action == 11) then begin
++    if (script_action == talk_proc) then begin
+         call do_dialogue();
+     end
+     else begin
+-        if (script_action == 22) then begin
++        if (script_action == timed_event_proc) then begin
+             if (fixed_param == 1) then begin
+-                if (global_var(611) != 1) then begin
++                if (global_var(GVAR_GARLS_FRIEND) != 1) then begin
+                     dialogue_system_enter;
+                 end
+             end
+@@ -134,55 +134,55 @@ begin
+             end
+         end
+         else begin
+-            if (script_action == 21) then begin
++            if (script_action == look_at_proc) then begin
+                 script_overrides;
+-                display_msg(message_str(137, 100));
++                display_mstr(100);
+             end
+             else begin
+-                if (script_action == 4) then begin
++                if (script_action == pickup_proc) then begin
+                     HOSTILE := 1;
+                 end
+                 else begin
+-                    if (script_action == 12) then begin
++                    if (script_action == critter_proc) then begin
+                         call Critter_Action();
+                         if (HOSTILE) then begin
+                             HOSTILE := 0;
+-                            attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++                            attack(dude_obj);
+                         end
+                     end
+                     else begin
+-                        if (script_action == 14) then begin
++                        if (script_action == damage_proc) then begin
+                             call damage_p_proc();
+                         end
+                         else begin
+-                            if (script_action == 18) then begin
++                            if (script_action == destroy_proc) then begin
+                                 if (local_var(7) == 1) then begin
+                                     move_to(dude_obj, local_var(6), 0);
+                                     move_obj_inven_to_obj(Garls_Inven_Ptr, dude_obj);
+-                                    set_global_var(26, 5);
++                                    set_global_var(GVAR_TANDI_STATUS, 5);
+                                     set_map_var(2, 2);
+                                     obj_unlock(Cell_Door_Ptr);
+                                 end
+                                 if (source_obj == dude_obj) then begin
+-                                    if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-                                        set_global_var(156, 1);
+-                                        set_global_var(157, 0);
++                                    if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++                                        set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++                                        set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+                                     end
+-                                    if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+-                                        set_global_var(157, 1);
+-                                        set_global_var(156, 0);
++                                    if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
++                                        set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++                                        set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+                                     end
+-                                    set_global_var(160, global_var(160) + 1);
+-                                    if ((global_var(160) % 6) == 0) then begin
+-                                        set_global_var(155, global_var(155) + 1);
++                                    set_global_var(GVAR_BAD_MONSTER, global_var(GVAR_BAD_MONSTER) + 1);
++                                    if ((global_var(GVAR_BAD_MONSTER) % 6) == 0) then begin
++                                        set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) + 1);
+                                     end
+                                 end
+                                 if (local_var(7) == 0) then begin
+-                                    set_global_var(254, 1);
+-                                    set_global_var(611, 0);
++                                    set_global_var(GVAR_ENEMY_RAIDERS, 1);
++                                    set_global_var(GVAR_GARLS_FRIEND, 0);
+                                 end
+-                                set_global_var(114, 1);
+-                                set_global_var(115, global_var(115) - 1);
++                                set_global_var(GVAR_GARL_DEAD, 1);
++                                set_global_var(GVAR_TOTAL_RAIDERS, global_var(GVAR_TOTAL_RAIDERS) - 1);
+                             end
+                         end
+                     end
+@@ -195,7 +195,7 @@ end
+ procedure do_dialogue
+ begin
+     if (elevation(self_obj) == 1) then begin
+-        float_msg(self_obj, message_str(137, 208), 2);
++        float_msg(self_obj, mstr(208), FLOAT_MSG_RED);
+         add_timer_event(self_obj, 5, 4);
+     end
+     else begin
+@@ -211,7 +211,7 @@ begin
+                 call garl11();
+             end
+             else begin
+-                if (global_var(116)) then begin
++                if (global_var(GVAR_MISTAKEN_ID)) then begin
+                     call garl01();
+                 end
+                 else begin
+@@ -231,7 +231,7 @@ begin
+     if (obj_carrying_pid_obj(dude_obj, 212)) then begin
+         rm_obj_from_inven(dude_obj, tandi_pid_ptr);
+         destroy_object(tandi_pid_ptr);
+-        set_global_var(26, 5);
++        set_global_var(GVAR_TANDI_STATUS, 5);
+         set_map_var(2, 2);
+         obj_unlock(Cell_Door_Ptr);
+         add_timer_event(self_obj, 1, 2);
+@@ -247,11 +247,11 @@ end
+ 
+ procedure first
+ begin
+-    if (global_var(26) > 1) then begin
++    if (global_var(GVAR_TANDI_STATUS) > 1) then begin
+         call garl43();
+     end
+     else begin
+-        if (global_var(26) > 0) then begin
++        if (global_var(GVAR_TANDI_STATUS) > 0) then begin
+             call garl12();
+         end
+         else begin
+@@ -262,11 +262,11 @@ end
+ 
+ procedure notfirst
+ begin
+-    if (global_var(26) > 1) then begin
++    if (global_var(GVAR_TANDI_STATUS) > 1) then begin
+         call garl43();
+     end
+     else begin
+-        if (global_var(26) > 0) then begin
++        if (global_var(GVAR_TANDI_STATUS) > 0) then begin
+             call garl22();
+         end
+         else begin
+@@ -277,17 +277,17 @@ end
+ 
+ procedure garl00
+ begin
+-    gsay_message(137, 101, 50);
++    gsay_message(NAME, 101, NEUTRAL_REACTION);
+     call garlcbt();
+ end
+ 
+ procedure garl01
+ begin
+-    gsay_reply(137, 102);
+-    giq_option(-3, 137, 207, garl09, 50);
+-    giq_option(4, 137, 103, garl01a, 50);
+-    giq_option(5, 137, 104, garl01b, 50);
+-    giq_option(6, 137, 105, garl01c, 50);
++    Reply(102);
++    giq_option(-3, NAME, 207, garl09, NEUTRAL_REACTION);
++    giq_option(4, NAME, 103, garl01a, NEUTRAL_REACTION);
++    giq_option(5, NAME, 104, garl01b, NEUTRAL_REACTION);
++    giq_option(6, NAME, 105, garl01c, NEUTRAL_REACTION);
+ end
+ 
+ procedure garl01a
+@@ -307,36 +307,36 @@ end
+ 
+ procedure garl01d
+ begin
+-    gsay_reply(137, 106);
+-    giq_option(4, 137, 107, garl02, 50);
+-    giq_option(5, 137, 108, garl03, 50);
+-    giq_option(6, 137, 109, garl04, 50);
++    Reply(106);
++    giq_option(4, NAME, 107, garl02, NEUTRAL_REACTION);
++    giq_option(5, NAME, 108, garl03, NEUTRAL_REACTION);
++    giq_option(6, NAME, 109, garl04, NEUTRAL_REACTION);
+ end
+ 
+ procedure garl02
+ begin
+-    gsay_message(137, 110, 50);
+-    set_global_var(116, 0);
++    gsay_message(NAME, 110, NEUTRAL_REACTION);
++    set_global_var(GVAR_MISTAKEN_ID, 0);
+     call garlcbt();
+ end
+ 
+ procedure garl03
+ begin
+-    gsay_reply(137, 111);
+-    giq_option(8, 137, 112, garl03a, 50);
++    Reply(111);
++    giq_option(8, NAME, 112, garl03a, NEUTRAL_REACTION);
+ end
+ 
+ procedure garl03a
+ begin
+-    set_global_var(116, 0);
++    set_global_var(GVAR_MISTAKEN_ID, 0);
+     call garlcbt();
+ end
+ 
+ procedure garl04
+ begin
+-    gsay_reply(137, 113);
+-    giq_option(6, 137, 114, garl04a, 50);
+-    giq_option(6, 137, 115, garl04b, 50);
++    Reply(113);
++    giq_option(6, NAME, 114, garl04a, NEUTRAL_REACTION);
++    giq_option(6, NAME, 115, garl04b, NEUTRAL_REACTION);
+ end
+ 
+ procedure garl04a
+@@ -351,26 +351,26 @@ end
+ 
+ procedure garl04c
+ begin
+-    gsay_reply(137, 116);
+-    giq_option(6, 137, 117, garl06, 50);
+-    giq_option(6, 137, 118, garl05, 50);
++    Reply(116);
++    giq_option(6, NAME, 117, garl06, NEUTRAL_REACTION);
++    giq_option(6, NAME, 118, garl05, NEUTRAL_REACTION);
+ end
+ 
+ procedure garl05
+ begin
+-    gsay_message(137, 119, 50);
+-    set_global_var(116, 0);
++    gsay_message(NAME, 119, NEUTRAL_REACTION);
++    set_global_var(GVAR_MISTAKEN_ID, 0);
+     call garlcbt();
+ end
+ 
+ procedure garl06
+ begin
+-    gsay_reply(137, 120);
+-    if (global_var(26) == 1) then begin
+-        giq_option(6, 137, 121, garl06a, 50);
++    Reply(120);
++    if (global_var(GVAR_TANDI_STATUS) == 1) then begin
++        giq_option(6, NAME, 121, garl06a, NEUTRAL_REACTION);
+     end
+-    giq_option(6, 137, 122, garl10, 50);
+-    giq_option(6, 137, 123, garl10, 50);
++    giq_option(6, NAME, 122, garl10, NEUTRAL_REACTION);
++    giq_option(6, NAME, 123, garl10, NEUTRAL_REACTION);
+ end
+ 
+ procedure garl06a
+@@ -385,27 +385,27 @@ end
+ 
+ procedure garl07
+ begin
+-    gsay_message(137, 124, 50);
+-    giq_option(6, 137, 125, garl08, 50);
++    gsay_message(NAME, 124, NEUTRAL_REACTION);
++    giq_option(6, NAME, 125, garl08, NEUTRAL_REACTION);
+ end
+ 
+ procedure garl08
+ begin
+-    gsay_message(137, 126, 50);
+-    set_global_var(116, 0);
++    gsay_message(NAME, 126, NEUTRAL_REACTION);
++    set_global_var(GVAR_MISTAKEN_ID, 0);
+     call freetandi();
+ end
+ 
+ procedure garl09
+ begin
+-    gsay_message(137, 127, 50);
++    gsay_message(NAME, 127, NEUTRAL_REACTION);
+     call garlcbt();
+ end
+ 
+ procedure garl10
+ begin
+-    gsay_message(137, 128, 50);
+-    set_global_var(116, 0);
++    gsay_message(NAME, 128, NEUTRAL_REACTION);
++    set_global_var(GVAR_MISTAKEN_ID, 0);
+     call garlcbt();
+ end
+ 
+@@ -413,28 +413,28 @@ procedure garl11
+ begin
+     if (women_killed > 1) then begin
+         women_killed := 0;
+-        gsay_message(137, 129, 50);
++        gsay_message(NAME, 129, NEUTRAL_REACTION);
+         call garlcbt();
+     end
+ end
+ 
+ procedure garl12
+ begin
+-    gsay_reply(137, 130);
+-    if (global_var(218) == 1) then begin
+-        giq_option(4, 137, 131, garl12b, 50);
+-        giq_option(5, 137, 133, garl15, 50);
++    Reply(130);
++    if (global_var(GVAR_TALKED_ABOUT_TANDI) == 1) then begin
++        giq_option(4, NAME, 131, garl12b, NEUTRAL_REACTION);
++        giq_option(5, NAME, 133, garl15, NEUTRAL_REACTION);
+     end
+     else begin
+-        giq_option(5, 137, 200, garl12a, 50);
++        giq_option(5, NAME, 200, garl12a, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 137, 132, garlcbt, 50);
+-    giq_option(-3, 137, 134, garl17, 50);
++    giq_option(4, NAME, 132, garlcbt, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 134, garl17, NEUTRAL_REACTION);
+ end
+ 
+ procedure garl12a
+ begin
+-    gsay_message(137, 201, 50);
++    gsay_message(NAME, 201, NEUTRAL_REACTION);
+ end
+ 
+ procedure garl12b
+@@ -449,13 +449,13 @@ end
+ 
+ procedure garl15
+ begin
+-    gsay_reply(137, 140);
+-    if (has_skill(dude_obj, 14) >= 45) then begin
+-        giq_option(6, 137, 141, garl15a, 50);
++    Reply(140);
++    if (dude_skill(SKILL_SPEECH) >= 45) then begin
++        giq_option(6, NAME, 141, garl15a, NEUTRAL_REACTION);
+     end
+-    giq_option(6, 137, 142, garl18, 50);
+-    giq_option(6, 137, 143, garl21, 50);
+-    giq_option(5, 137, 203, garl28, 50);
++    giq_option(6, NAME, 142, garl18, NEUTRAL_REACTION);
++    giq_option(6, NAME, 143, garl21, NEUTRAL_REACTION);
++    giq_option(5, NAME, 203, garl28, NEUTRAL_REACTION);
+ end
+ 
+ procedure garl15a
+@@ -470,161 +470,161 @@ end
+ 
+ procedure garl16
+ begin
+-    gsay_message(137, 145, 50);
++    gsay_message(NAME, 145, NEUTRAL_REACTION);
+     call freetandi();
+ end
+ 
+ procedure garl17
+ begin
+-    gsay_message(137, 146, 50);
++    gsay_message(NAME, 146, NEUTRAL_REACTION);
+     call garlcbt();
+ end
+ 
+ procedure garl17a
+ begin
+-    gsay_message(137, 204, 50);
++    gsay_message(NAME, 204, NEUTRAL_REACTION);
+     call garlcbt();
+ end
+ 
+ procedure garl18
+ begin
+-    tandi_pid_ptr := create_object_sid(212, 0, 0, -1);
++    tandi_pid_ptr := create_object(212, 0, 0);
+     add_obj_to_inven(self_obj, tandi_pid_ptr);
+-    gsay_message(137, 147, 50);
++    gsay_message(NAME, 147, NEUTRAL_REACTION);
+     call garlbarter();
+ end
+ 
+ procedure garl19
+ begin
+-    float_msg(self_obj, message_str(137, 148), 2);
++    float_msg(self_obj, mstr(148), FLOAT_MSG_RED);
+     call freetandi();
+ end
+ 
+ procedure garl20
+ begin
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        float_msg(self_obj, message_str(137, 149), 2);
++    if (dude_gender == 0) then begin
++        float_msg(self_obj, mstr(149), FLOAT_MSG_RED);
+     end
+     else begin
+-        float_msg(self_obj, message_str(137, 205), 2);
++        float_msg(self_obj, mstr(205), FLOAT_MSG_RED);
+     end
+     call garlcbt();
+ end
+ 
+ procedure garl21
+ begin
+-    gsay_message(137, 150, 50);
++    gsay_message(NAME, 150, NEUTRAL_REACTION);
+     call garlcbt();
+ end
+ 
+ procedure garl22
+ begin
+-    gsay_reply(137, 151);
+-    giq_option(4, 137, 152, garl23, 50);
+-    giq_option(4, 137, 153, garl24, 50);
+-    giq_option(-3, 137, 207, garl17, 50);
++    Reply(151);
++    giq_option(4, NAME, 152, garl23, NEUTRAL_REACTION);
++    giq_option(4, NAME, 153, garl24, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 207, garl17, NEUTRAL_REACTION);
+ end
+ 
+ procedure garl23
+ begin
+-    gsay_message(137, 155, 50);
++    gsay_message(NAME, 155, NEUTRAL_REACTION);
+ end
+ 
+ procedure garl24
+ begin
+-    gsay_reply(137, 156);
+-    giq_option(4, 137, 157, garl25, 50);
+-    giq_option(6, 137, 158, garl18, 50);
+-    giq_option(6, 137, 159, garl15a, 50);
++    Reply(156);
++    giq_option(4, NAME, 157, garl25, NEUTRAL_REACTION);
++    giq_option(6, NAME, 158, garl18, NEUTRAL_REACTION);
++    giq_option(6, NAME, 159, garl15a, NEUTRAL_REACTION);
+ end
+ 
+ procedure garl25
+ begin
+-    gsay_reply(137, 160);
+-    giq_option(4, 137, 161, garl26, 50);
+-    giq_option(4, 137, 162, garl27, 50);
++    Reply(160);
++    giq_option(4, NAME, 161, garl26, NEUTRAL_REACTION);
++    giq_option(4, NAME, 162, garl27, NEUTRAL_REACTION);
+ end
+ 
+ procedure garl26
+ begin
+-    gsay_message(137, 163, 50);
++    gsay_message(NAME, 163, NEUTRAL_REACTION);
+     call garlcbt();
+ end
+ 
+ procedure garl27
+ begin
+-    gsay_reply(137, 164);
+-    giq_option(4, 137, 165, garl26, 50);
+-    giq_option(4, 137, 166, garl28, 50);
+-    giq_option(6, 137, 167, garl29, 50);
++    Reply(164);
++    giq_option(4, NAME, 165, garl26, NEUTRAL_REACTION);
++    giq_option(4, NAME, 166, garl28, NEUTRAL_REACTION);
++    giq_option(6, NAME, 167, garl29, NEUTRAL_REACTION);
+ end
+ 
+ procedure garl28
+ begin
+-    gsay_reply(137, 168);
+-    giq_option(4, 137, 169, honorcbt, 50);
++    Reply(168);
++    giq_option(4, NAME, 169, honorcbt, NEUTRAL_REACTION);
+ end
+ 
+ procedure garl29
+ begin
+-    gsay_reply(137, 170);
+-    giq_option(4, 137, 171, garlcbt, 50);
++    Reply(170);
++    giq_option(4, NAME, 171, garlcbt, NEUTRAL_REACTION);
+ end
+ 
+ procedure garl30
+ begin
+-    gsay_message(137, 172, 50);
++    gsay_message(NAME, 172, NEUTRAL_REACTION);
+     call freetandi();
+ end
+ 
+ procedure garl31
+ begin
+-    gsay_message(137, 173, 50);
++    gsay_message(NAME, 173, NEUTRAL_REACTION);
+ end
+ 
+ procedure garl32
+ begin
+-    gsay_reply(137, 174);
+-    giq_option(4, 137, 175, garl33, 50);
+-    giq_option(6, 137, 176, garl34, 50);
+-    giq_option(-3, 137, 154, garl23, 50);
++    Reply(174);
++    giq_option(4, NAME, 175, garl33, NEUTRAL_REACTION);
++    giq_option(6, NAME, 176, garl34, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 154, garl23, NEUTRAL_REACTION);
+ end
+ 
+ procedure garl33
+ begin
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        gsay_message(137, 177, 50);
++    if (dude_gender == 0) then begin
++        gsay_message(NAME, 177, NEUTRAL_REACTION);
+     end
+     else begin
+-        gsay_message(137, 206, 50);
++        gsay_message(NAME, 206, NEUTRAL_REACTION);
+     end
+     call garlcbt();
+ end
+ 
+ procedure garl34
+ begin
+-    gsay_reply(137, 178);
+-    giq_option(6, 137, 179, garl35, 50);
+-    giq_option(6, 137, 180, garl33, 50);
++    Reply(178);
++    giq_option(6, NAME, 179, garl35, NEUTRAL_REACTION);
++    giq_option(6, NAME, 180, garl33, NEUTRAL_REACTION);
+ end
+ 
+ procedure garl35
+ begin
+-    gsay_reply(137, 181);
+-    giq_option(4, 137, 182, garl37, 50);
+-    giq_option(4, 137, 183, garl36, 50);
++    Reply(181);
++    giq_option(4, NAME, 182, garl37, NEUTRAL_REACTION);
++    giq_option(4, NAME, 183, garl36, NEUTRAL_REACTION);
+ end
+ 
+ procedure garl36
+ begin
+-    gsay_message(137, 184, 50);
++    gsay_message(NAME, 184, NEUTRAL_REACTION);
+ end
+ 
+ procedure garl37
+ begin
+-    gsay_reply(137, 185);
+-    giq_option(4, 137, 186, garl38, 50);
+-    giq_option(4, 137, 187, garl37a, 50);
++    Reply(185);
++    giq_option(4, NAME, 186, garl38, NEUTRAL_REACTION);
++    giq_option(4, NAME, 187, garl37a, NEUTRAL_REACTION);
+ end
+ 
+ procedure garl37a
+@@ -637,11 +637,11 @@ end
+ procedure garl38
+ begin
+     women_killed := 0;
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        gsay_message(137, 188, 50);
++    if (dude_gender == 0) then begin
++        gsay_message(NAME, 188, NEUTRAL_REACTION);
+     end
+     else begin
+-        gsay_message(137, 189, 50);
++        gsay_message(NAME, 189, NEUTRAL_REACTION);
+     end
+     call garlcbt();
+ end
+@@ -649,18 +649,18 @@ end
+ procedure garl38a
+ begin
+     women_killed := 0;
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        float_msg(self_obj, message_str(137, 188), 2);
++    if (dude_gender == 0) then begin
++        float_msg(self_obj, mstr(188), FLOAT_MSG_RED);
+     end
+     else begin
+-        float_msg(self_obj, message_str(137, 189), 2);
++        float_msg(self_obj, mstr(189), FLOAT_MSG_RED);
+     end
+     call garlcbt();
+ end
+ 
+ procedure garl39
+ begin
+-    gsay_message(137, 190, 50);
++    gsay_message(NAME, 190, NEUTRAL_REACTION);
+     call garlcbt();
+ end
+ 
+@@ -679,34 +679,34 @@ procedure garl40
+ begin
+     women_killed := 0;
+     call TopReact();
+-    float_msg(self_obj, message_str(137, 191), 2);
++    float_msg(self_obj, mstr(191), FLOAT_MSG_RED);
+     temp := 500;
+-    display_msg(message_str(238, 100) + temp + message_str(238, 102));
++    display_msg(message_str(SCRIPT_RAIDMAP, 100) + temp + message_str(SCRIPT_RAIDMAP, 102));
+     give_exp_points(temp);
+-    set_global_var(155, global_var(155) + -2);
+-    set_global_var(611, 1);
++    set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) + -2);
++    set_global_var(GVAR_GARLS_FRIEND, 1);
+ end
+ 
+ procedure garl41
+ begin
+-    gsay_reply(137, 192);
+-    giq_option(4, 137, 193, garl23, 50);
+-    giq_option(6, 137, 194, garl42, 50);
+-    giq_option(-3, 137, 195, garl23, 50);
++    Reply(192);
++    giq_option(4, NAME, 193, garl23, NEUTRAL_REACTION);
++    giq_option(6, NAME, 194, garl42, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 195, garl23, NEUTRAL_REACTION);
+ end
+ 
+ procedure garl42
+ begin
+-    gsay_message(137, 196, 50);
++    gsay_message(NAME, 196, NEUTRAL_REACTION);
+ end
+ 
+ procedure garl43
+ begin
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        gsay_message(137, 197, 50);
++    if (dude_gender == 0) then begin
++        gsay_message(NAME, 197, NEUTRAL_REACTION);
+     end
+     else begin
+-        gsay_message(137, 198, 50);
++        gsay_message(NAME, 198, NEUTRAL_REACTION);
+     end
+     call garlcbt();
+ end
+@@ -721,7 +721,7 @@ end
+ 
+ procedure freetandi
+ begin
+-    set_global_var(26, 5);
++    set_global_var(GVAR_TANDI_STATUS, 5);
+     set_map_var(2, 2);
+     obj_unlock(Cell_Door_Ptr);
+ end
+@@ -739,7 +739,7 @@ end
+ procedure honorarea
+ begin
+     variable LVar0 := 0;
+-    set_local_var(6, tile_num(dude_obj));
++    set_local_var(6, dude_tile);
+     set_local_var(7, 1);
+     move_to(dude_obj, 20102, 1);
+     move_to(self_obj, 20301, 1);
+@@ -750,61 +750,61 @@ begin
+     add_obj_to_inven(dude_obj, LVar0);
+     wield_obj_critter(dude_obj, LVar0);
+     if (party_member_obj(16777292) != 0) then begin
+-        move_to(party_member_obj(16777292), tile_num_in_direction(tile_num(dude_obj), 0, 10), 1);
++        move_to(party_member_obj(16777292), tile_num_in_direction(dude_tile, 0, 10), 1);
+     end
+     if (party_member_obj(16777518) != 0) then begin
+-        move_to(party_member_obj(16777518), tile_num_in_direction(tile_num(dude_obj), 1, 10), 1);
++        move_to(party_member_obj(16777518), tile_num_in_direction(dude_tile, 1, 10), 1);
+     end
+     if (party_member_obj(16777426) != 0) then begin
+-        move_to(party_member_obj(16777426), tile_num_in_direction(tile_num(dude_obj), 2, 10), 1);
++        move_to(party_member_obj(16777426), tile_num_in_direction(dude_tile, 2, 10), 1);
+     end
+     if (party_member_obj(16777338) != 0) then begin
+-        move_to(party_member_obj(16777338), tile_num_in_direction(tile_num(dude_obj), 4, 10), 1);
++        move_to(party_member_obj(16777338), tile_num_in_direction(dude_tile, 4, 10), 1);
+     end
+     if (party_member_obj(16777279) != 0) then begin
+-        move_to(party_member_obj(16777279), tile_num_in_direction(tile_num(dude_obj), 5, 10), 1);
++        move_to(party_member_obj(16777279), tile_num_in_direction(dude_tile, 5, 10), 1);
+     end
+-    critter_add_trait(self_obj, 1, 6, 87);
+-    critter_add_trait(self_obj, 1, 5, 43);
++    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 87);
++    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_GARL_HONOR);
+     call garlcbt();
+ end
+ 
+ procedure garlbarter
+ begin
+-    gdialog_mod_barter(0);
+-    gsay_message(137, "", 50);
++    gdialog_barter;
++    gsay_message(NAME, "", NEUTRAL_REACTION);
+ end
+ 
+ procedure return_to_map
+ begin
+     move_to(dude_obj, local_var(6), 0);
+     move_obj_inven_to_obj(Garls_Inven_Ptr, dude_obj);
+-    set_global_var(26, 5);
++    set_global_var(GVAR_TANDI_STATUS, 5);
+     set_map_var(2, 2);
+     obj_unlock(Cell_Door_Ptr);
+ end
+ 
+ procedure Critter_Action
+ begin
+-    if (global_var(26) == 2) then begin
+-        set_global_var(254, 1);
++    if (global_var(GVAR_TANDI_STATUS) == 2) then begin
++        set_global_var(GVAR_ENEMY_RAIDERS, 1);
+     end
+     else begin
+-        if (global_var(116)) then begin
+-            set_global_var(254, 0);
++        if (global_var(GVAR_MISTAKEN_ID)) then begin
++            set_global_var(GVAR_ENEMY_RAIDERS, 0);
+         end
+         else begin
+-            if (global_var(213)) then begin
+-                set_global_var(254, 1);
++            if (global_var(GVAR_TANDI_ESCAPE)) then begin
++                set_global_var(GVAR_ENEMY_RAIDERS, 1);
+             end
+             if (obj_can_see_obj(self_obj, dude_obj)) then begin
+-                if (global_var(214)) then begin
+-                    set_global_var(254, 1);
++                if (global_var(GVAR_RAID_LOOTING)) then begin
++                    set_global_var(GVAR_ENEMY_RAIDERS, 1);
+                 end
+             end
+         end
+     end
+-    if (global_var(254) and obj_can_see_obj(self_obj, dude_obj)) then begin
++    if (global_var(GVAR_ENEMY_RAIDERS) and obj_can_see_obj(self_obj, dude_obj)) then begin
+         HOSTILE := 1;
+     end
+     if (tile_distance_objs(self_obj, dude_obj) > 12) then begin
+@@ -815,7 +815,7 @@ end
+ procedure damage_p_proc
+ begin
+     if (local_var(7) == 0) then begin
+-        set_global_var(254, 1);
++        set_global_var(GVAR_ENEMY_RAIDERS, 1);
+     end
+ end
+ 
+@@ -825,31 +825,31 @@ begin
+         set_local_var(0, 50);
+         set_local_var(1, 2);
+         set_local_var(2, 1);
+-        set_local_var(0, local_var(0) + (5 * get_critter_stat(dude_obj, 3)) - 25);
+-        set_local_var(0, local_var(0) + (10 * has_trait(0, dude_obj, 10)));
+-        if (has_trait(0, dude_obj, 39)) then begin
+-            if (global_var(155) > 0) then begin
+-                set_local_var(0, local_var(0) + global_var(155));
++        set_local_var(0, local_var(0) + (5 * dude_charisma) - 25);
++        set_local_var(0, local_var(0) + (10 * has_trait(TRAIT_PERK, dude_obj, PERK_presence)));
++        if (has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality)) then begin
++            if (global_var(GVAR_PLAYER_REPUATION) > 0) then begin
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+         else begin
+             if (local_var(3) == 1) then begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) + global_var(155));
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+-        if (global_var(158) > 2) then begin
++        if (global_var(GVAR_CHILDKILLER_REPUATION) > 2) then begin
+             set_local_var(0, local_var(0) - 30);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) + 20);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) - 20);
+         end
+         call ReactToLevel();
+@@ -942,6 +942,5 @@ end
+ 
+ procedure Goodbyes
+ begin
+-    exit_line := message_str(634, random(100, 105));
++    exit_line := message_str(SCRIPT_MODREACT, random(100, 105));
+ end
+-

@@ -1,0 +1,337 @@
+procedure start;
+procedure combat;
+procedure critter_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure destroy_p_proc;
+procedure look_at_p_proc;
+procedure Troy00;
+procedure Troy01;
+procedure Troy02;
+procedure Troy03;
+procedure Troy04;
+procedure Troy05;
+procedure Troy06;
+procedure Troy07;
+procedure Troy08;
+
+variable hostile;
+variable Only_Once := 1;
+variable TalkToPlayer;
+
+procedure get_reaction;
+procedure ReactToLevel;
+procedure LevelToReact;
+procedure UpReact;
+procedure DownReact;
+procedure BottomReact;
+procedure TopReact;
+procedure BigUpReact;
+procedure BigDownReact;
+procedure UpReactLevel;
+procedure DownReactLevel;
+procedure Goodbyes;
+
+variable exit_line;
+
+
+procedure start
+begin
+    if (Only_Once) then begin
+        Only_Once := 0;
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 34);
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_SUPER_MUTANT_AGGRESSIVE);
+    end
+    if (script_action == look_at_proc) then begin
+        call look_at_p_proc();
+    end
+    else begin
+        if (script_action == pickup_proc) then begin
+            call pickup_p_proc();
+        end
+        else begin
+            if (script_action == talk_proc) then begin
+                call talk_p_proc();
+            end
+            else begin
+                if (script_action == critter_proc) then begin
+                    call critter_p_proc();
+                end
+                else begin
+                    if (script_action == destroy_proc) then begin
+                        call destroy_p_proc();
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure combat
+begin
+    hostile := 1;
+end
+
+procedure critter_p_proc
+begin
+    if (hostile) then begin
+        hostile := 0;
+        attack(dude_obj);
+    end
+    if ((TalkToPlayer == 1) and (tile_distance_objs(self_obj, dude_obj) <= 3)) then begin
+        dialogue_system_enter;
+    end
+    if (map_var(3) == 1) then begin
+        set_map_var(3, 0);
+        TalkToPlayer := 1;
+        reg_anim_func(1, 1);
+        reg_anim_obj_move_to_obj(self_obj, dude_obj, -1);
+        reg_anim_func(3, 0);
+    end
+end
+
+procedure pickup_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        hostile := 1;
+    end
+end
+
+procedure talk_p_proc
+begin
+    call get_reaction();
+    if (TalkToPlayer == 1) then begin
+        start_gdialog(604, self_obj, 4, -1, -1);
+        gsay_start;
+        call Troy00();
+        gsay_end;
+        end_dialogue;
+    end
+    else begin
+        display_mstr(132);
+    end
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
+            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
+            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+        end
+        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
+        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
+            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+        end
+    end
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    display_mstr(100);
+end
+
+procedure Troy00
+begin
+    Reply(101);
+    giq_option(7, NAME, 102, Troy01, NEUTRAL_REACTION);
+    giq_option(4, NAME, 103, Troy01, NEUTRAL_REACTION);
+    giq_option(4, NAME, 104, Troy02, NEUTRAL_REACTION);
+    giq_option(4, NAME, 105, Troy03, BAD_REACTION);
+    giq_option(4, NAME, 106, Troy04, BAD_REACTION);
+    giq_option(-3, NAME, 107, Troy05, NEUTRAL_REACTION);
+end
+
+procedure Troy01
+begin
+    Reply(108);
+    giq_option(4, NAME, 109, Troy06, NEUTRAL_REACTION);
+    giq_option(4, NAME, 110, Troy02, NEUTRAL_REACTION);
+    giq_option(4, NAME, 111, Troy03, BAD_REACTION);
+    giq_option(4, NAME, 112, Troy07, BAD_REACTION);
+end
+
+procedure Troy02
+begin
+    gsay_message(NAME, 113, NEUTRAL_REACTION);
+    game_time_advance(game_ticks(60 * 60 * 24 * 14));
+    set_global_var(GVAR_ENTERING_VATS_HOW, 1);
+    load_map(32, 5);
+end
+
+procedure Troy03
+begin
+    set_global_var(GVAR_ENEMY_CATHEDRAL, 1);
+    gsay_message(NAME, 114, NEUTRAL_REACTION);
+    call combat();
+end
+
+procedure Troy04
+begin
+    Reply(115);
+    giq_option(4, NAME, 116, Troy02, NEUTRAL_REACTION);
+    giq_option(4, NAME, 117, Troy03, BAD_REACTION);
+    giq_option(4, NAME, 118, Troy08, BAD_REACTION);
+    giq_option(4, NAME, 119, Troy07, BAD_REACTION);
+end
+
+procedure Troy05
+begin
+    Reply(120);
+    giq_option(4, NAME, 121, Troy02, NEUTRAL_REACTION);
+    giq_option(4, NAME, 122, Troy03, NEUTRAL_REACTION);
+end
+
+procedure Troy06
+begin
+    Reply(123);
+    giq_option(4, NAME, 124, Troy02, NEUTRAL_REACTION);
+    giq_option(4, NAME, 125, Troy03, BAD_REACTION);
+    giq_option(4, NAME, 126, Troy07, BAD_REACTION);
+end
+
+procedure Troy07
+begin
+    set_global_var(GVAR_ENEMY_CATHEDRAL, 1);
+    gsay_message(NAME, 127, BAD_REACTION);
+    call combat();
+end
+
+procedure Troy08
+begin
+    Reply(128);
+    giq_option(4, NAME, 129, Troy02, NEUTRAL_REACTION);
+    giq_option(4, NAME, 120, Troy03, BAD_REACTION);
+    giq_option(4, NAME, 121, Troy07, BAD_REACTION);
+end
+
+procedure get_reaction
+begin
+    if (local_var(2) == 0) then begin
+        set_local_var(0, 50);
+        set_local_var(1, 2);
+        set_local_var(2, 1);
+        set_local_var(0, local_var(0) + (5 * dude_charisma) - 25);
+        set_local_var(0, local_var(0) + (10 * has_trait(TRAIT_PERK, dude_obj, PERK_presence)));
+        if (has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality)) then begin
+            if (global_var(GVAR_PLAYER_REPUATION) > 0) then begin
+                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+            end
+            else begin
+                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+            end
+        end
+        else begin
+            if (local_var(3) == 1) then begin
+                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+            end
+            else begin
+                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+            end
+        end
+        if (global_var(GVAR_CHILDKILLER_REPUATION) > 2) then begin
+            set_local_var(0, local_var(0) - 30);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+            set_local_var(0, local_var(0) + 20);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+            set_local_var(0, local_var(0) - 20);
+        end
+        call ReactToLevel();
+    end
+end
+
+procedure ReactToLevel
+begin
+    if (local_var(0) <= 25) then begin
+        set_local_var(1, 1);
+    end
+    else begin
+        if (local_var(0) <= 75) then begin
+            set_local_var(1, 2);
+        end
+        else begin
+            set_local_var(1, 3);
+        end
+    end
+end
+
+procedure LevelToReact
+begin
+    if (local_var(1) == 1) then begin
+        set_local_var(0, random(1, 25));
+    end
+    else begin
+        if (local_var(1) == 2) then begin
+            set_local_var(0, random(26, 75));
+        end
+        else begin
+            set_local_var(0, random(76, 100));
+        end
+    end
+end
+
+procedure UpReact
+begin
+    set_local_var(0, local_var(0) + 10);
+    call ReactToLevel();
+end
+
+procedure DownReact
+begin
+    set_local_var(0, local_var(0) - 10);
+    call ReactToLevel();
+end
+
+procedure BottomReact
+begin
+    set_local_var(1, 1);
+    set_local_var(0, 1);
+end
+
+procedure TopReact
+begin
+    set_local_var(0, 100);
+    set_local_var(1, 3);
+end
+
+procedure BigUpReact
+begin
+    set_local_var(0, local_var(0) + 25);
+    call ReactToLevel();
+end
+
+procedure BigDownReact
+begin
+    set_local_var(0, local_var(0) - 25);
+    call ReactToLevel();
+end
+
+procedure UpReactLevel
+begin
+    set_local_var(1, local_var(1) + 1);
+    if (local_var(1) > 3) then begin
+        set_local_var(1, 3);
+    end
+    call LevelToReact();
+end
+
+procedure DownReactLevel
+begin
+    set_local_var(1, local_var(1) - 1);
+    if (local_var(1) < 1) then begin
+        set_local_var(1, 1);
+    end
+    call LevelToReact();
+end
+
+procedure Goodbyes
+begin
+    exit_line := message_str(SCRIPT_MODREACT, random(100, 105));
+end

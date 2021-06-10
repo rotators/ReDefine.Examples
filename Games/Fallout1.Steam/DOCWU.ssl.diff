@@ -1,0 +1,590 @@
+diff --git a/Games/Fallout1.Steam/Original/DOCWU.ssl b/Games/Fallout1.Steam/ReDefine/DOCWU.ssl
+index 8880e22..0850be2 100644
+--- a/Games/Fallout1.Steam/Original/DOCWU.ssl
++++ b/Games/Fallout1.Steam/ReDefine/DOCWU.ssl
+@@ -70,65 +70,65 @@ variable exit_line;
+ procedure start
+ begin
+     if (Only_Once) then begin
+-        critter_add_trait(self_obj, 1, 6, 20);
+-        critter_add_trait(self_obj, 1, 5, 69);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 20);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_CHILDREN_TRUE);
+         Only_Once := 0;
+     end
+-    if (script_action == 11) then begin
++    if (script_action == talk_proc) then begin
+         call do_dialogue();
+     end
+     else begin
+-        if (script_action == 18) then begin
++        if (script_action == destroy_proc) then begin
+             if (source_obj == dude_obj) then begin
+-                if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-                    set_global_var(156, 1);
+-                    set_global_var(157, 0);
++                if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++                    set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++                    set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+                 end
+-                if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+-                    set_global_var(157, 1);
+-                    set_global_var(156, 0);
++                if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
++                    set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++                    set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+                 end
+-                set_global_var(160, global_var(160) + 1);
+-                if ((global_var(160) % 6) == 0) then begin
+-                    set_global_var(155, global_var(155) + 1);
++                set_global_var(GVAR_BAD_MONSTER, global_var(GVAR_BAD_MONSTER) + 1);
++                if ((global_var(GVAR_BAD_MONSTER) % 6) == 0) then begin
++                    set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) + 1);
+                 end
+             end
+         end
+         else begin
+-            if (script_action == 12) then begin
++            if (script_action == critter_proc) then begin
+                 if (hostile) then begin
+                     hostile := 0;
+-                    attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++                    attack(dude_obj);
+                 end
+             end
+             else begin
+-                if ((script_action == 21) or (script_action == 3)) then begin
++                if ((script_action == look_at_proc) or (script_action == description_proc)) then begin
+                 end
+                 else begin
+-                    if (script_action == 4) then begin
++                    if (script_action == pickup_proc) then begin
+                         hostile := 1;
+                     end
+                     else begin
+-                        if (script_action == 22) then begin
++                        if (script_action == timed_event_proc) then begin
+                             if (fixed_param == 1) then begin
+                                 if ((healing == 1) or (healing == 3)) then begin
+-                                    float_msg(dude_obj, message_str(400, 138), 2);
++                                    float_msg(dude_obj, mstr(138), FLOAT_MSG_RED);
+                                 end
+                                 else begin
+                                     if (healing == 2) then begin
+-                                        float_msg(dude_obj, message_str(400, 152), 2);
++                                        float_msg(dude_obj, mstr(152), FLOAT_MSG_RED);
+                                     end
+                                     else begin
+                                         if (healing == 4) then begin
+-                                            float_msg(dude_obj, message_str(400, 175), 2);
++                                            float_msg(dude_obj, mstr(175), FLOAT_MSG_RED);
+                                         end
+                                         else begin
+                                             if (healing == 5) then begin
+-                                                float_msg(self_obj, message_str(400, 150), 8);
++                                                float_msg(self_obj, mstr(150), FLOAT_MSG_YELLOW);
+                                             end
+                                             else begin
+                                                 if (healing == 6) then begin
+-                                                    float_msg(self_obj, message_str(400, 178), 8);
++                                                    float_msg(self_obj, mstr(178), FLOAT_MSG_YELLOW);
+                                                 end
+                                             end
+                                         end
+@@ -139,11 +139,11 @@ begin
+                             else begin
+                                 if (fixed_param == 2) then begin
+                                     if (healing < 4) then begin
+-                                        float_msg(self_obj, message_str(400, 139), 8);
++                                        float_msg(self_obj, mstr(139), FLOAT_MSG_YELLOW);
+                                     end
+                                     else begin
+                                         if (healing == 4) then begin
+-                                            float_msg(self_obj, message_str(400, 176), 8);
++                                            float_msg(self_obj, mstr(176), FLOAT_MSG_YELLOW);
+                                         end
+                                     end
+                                     add_timer_event(self_obj, game_ticks(3), 3);
+@@ -151,24 +151,24 @@ begin
+                                 else begin
+                                     if (fixed_param == 3) then begin
+                                         if (healing == 1) then begin
+-                                            if (get_critter_stat(dude_obj, 34) == 0) then begin
+-                                                float_msg(self_obj, message_str(400, 140), 8);
++                                            if (dude_gender == 0) then begin
++                                                float_msg(self_obj, mstr(140), FLOAT_MSG_YELLOW);
+                                             end
+                                             else begin
+-                                                float_msg(self_obj, message_str(400, 141), 8);
++                                                float_msg(self_obj, mstr(141), FLOAT_MSG_YELLOW);
+                                             end
+                                         end
+                                         else begin
+                                             if (healing == 2) then begin
+-                                                float_msg(self_obj, message_str(400, 153), 8);
++                                                float_msg(self_obj, mstr(153), FLOAT_MSG_YELLOW);
+                                             end
+                                             else begin
+                                                 if (healing == 3) then begin
+-                                                    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-                                                        float_msg(self_obj, message_str(400, 167), 8);
++                                                    if (dude_gender == 0) then begin
++                                                        float_msg(self_obj, mstr(167), FLOAT_MSG_YELLOW);
+                                                     end
+                                                     else begin
+-                                                        float_msg(self_obj, message_str(400, 168), 8);
++                                                        float_msg(self_obj, mstr(168), FLOAT_MSG_YELLOW);
+                                                     end
+                                                 end
+                                             end
+@@ -225,41 +225,41 @@ begin
+     variable LVar0 := 0;
+     set_local_var(4, 1);
+     set_local_var(5, 1);
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        gsay_reply(400, message_str(400, 102));
++    if (dude_gender == 0) then begin
++        Reply(mstr(102));
+     end
+     else begin
+-        gsay_reply(400, message_str(400, 103));
++        Reply(mstr(103));
+     end
+-    giq_option(7, 400, 106, DocWu04, 50);
++    giq_option(7, NAME, 106, DocWu04, NEUTRAL_REACTION);
+     call DocWuOpts1();
+-    giq_option(4, 400, 109, DocWu07, 50);
++    giq_option(4, NAME, 109, DocWu07, NEUTRAL_REACTION);
+     call DocWuOpts2();
+-    giq_option(4, 400, 111, DocWu09, 50);
++    giq_option(4, NAME, 111, DocWu09, NEUTRAL_REACTION);
+     call DocWuOpts3();
+ end
+ 
+ procedure DocWu01
+ begin
+     set_local_var(6, 1);
+-    gsay_reply(400, 113);
+-    giq_option(7, 400, 114, DocWu11, 50);
++    Reply(113);
++    giq_option(7, NAME, 114, DocWu11, NEUTRAL_REACTION);
+     call DocWuOpts1();
+-    giq_option(4, 400, 115, DocWu12, 50);
++    giq_option(4, NAME, 115, DocWu12, NEUTRAL_REACTION);
+     call DocWuOpts2();
+-    giq_option(4, 400, 116, DocWu09, 50);
++    giq_option(4, NAME, 116, DocWu09, NEUTRAL_REACTION);
+     call DocWuOpts3();
+ end
+ 
+ procedure DocWu02
+ begin
+     set_local_var(7, 1);
+-    gsay_reply(400, 117);
+-    giq_option(7, 400, 118, DocWu13, 50);
++    Reply(117);
++    giq_option(7, NAME, 118, DocWu13, NEUTRAL_REACTION);
+     call DocWuOpts1();
+-    giq_option(4, 400, 119, DocWu12, 50);
++    giq_option(4, NAME, 119, DocWu12, NEUTRAL_REACTION);
+     call DocWuOpts2();
+-    giq_option(4, 400, 120, DocWu14, 50);
++    giq_option(4, NAME, 120, DocWu14, NEUTRAL_REACTION);
+     call DocWuOpts3();
+ end
+ 
+@@ -268,32 +268,32 @@ begin
+     set_local_var(5, 0);
+     set_local_var(6, 0);
+     set_local_var(7, 0);
+-    gsay_reply(400, 121);
+-    giq_option(7, 400, 122, DocWu15, 50);
++    Reply(121);
++    giq_option(7, NAME, 122, DocWu15, NEUTRAL_REACTION);
+     call DocWuOpts1();
+-    giq_option(4, 400, 123, DocWu12, 50);
++    giq_option(4, NAME, 123, DocWu12, NEUTRAL_REACTION);
+     call DocWuOpts2();
+-    giq_option(4, 400, 124, DocWu14, 50);
++    giq_option(4, NAME, 124, DocWu14, NEUTRAL_REACTION);
+     call DocWuOpts3();
+ end
+ 
+ procedure DocWu04
+ begin
+-    gsay_reply(400, 125);
+-    giq_option(7, 400, 126, DocWu16, 50);
++    Reply(125);
++    giq_option(7, NAME, 126, DocWu16, NEUTRAL_REACTION);
+     call DocWuOpts4();
+ end
+ 
+ procedure DocWu05
+ begin
+-    gsay_reply(400, 130);
+-    giq_option(0, 400, 101, DocWuEnd, 50);
++    Reply(130);
++    giq_option(0, NAME, 101, DocWuEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure DocWu06
+ begin
+-    gsay_reply(400, 131);
+-    giq_option(0, 400, 100, DocWu06a, 50);
++    Reply(131);
++    giq_option(0, NAME, 100, DocWu06a, NEUTRAL_REACTION);
+ end
+ 
+ procedure DocWu06a
+@@ -303,34 +303,34 @@ end
+ 
+ procedure DocWu07
+ begin
+-    gsay_reply(400, 142);
++    Reply(142);
+     call DocWuOpts4();
+ end
+ 
+ procedure DocWu08
+ begin
+-    gsay_reply(400, 143);
+-    giq_option(0, 400, 101, DocWuEnd, 50);
++    Reply(143);
++    giq_option(0, NAME, 101, DocWuEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure DocWu09
+ begin
+-    gsay_reply(400, 144);
+-    giq_option(4, 400, 145, DocWu06, 50);
+-    giq_option(4, 400, 146, DocWu23, 50);
+-    giq_option(4, 400, 147, DocWu24, 50);
++    Reply(144);
++    giq_option(4, NAME, 145, DocWu06, NEUTRAL_REACTION);
++    giq_option(4, NAME, 146, DocWu23, NEUTRAL_REACTION);
++    giq_option(4, NAME, 147, DocWu24, NEUTRAL_REACTION);
+ end
+ 
+ procedure DocWu10
+ begin
+-    gsay_reply(400, 148);
+-    giq_option(0, 400, 100, DocWu10a, 50);
++    Reply(148);
++    giq_option(0, NAME, 100, DocWu10a, NEUTRAL_REACTION);
+ end
+ 
+ procedure DocWu10a
+ begin
+-    gsay_reply(400, 151);
+-    giq_option(0, 400, 100, DocWu10c, 50);
++    Reply(151);
++    giq_option(0, NAME, 100, DocWu10c, NEUTRAL_REACTION);
+ end
+ 
+ procedure DocWu10b
+@@ -345,56 +345,56 @@ end
+ 
+ procedure DocWu11
+ begin
+-    gsay_reply(400, 154);
++    Reply(154);
+     call DocWuOpts4();
+ end
+ 
+ procedure DocWu12
+ begin
+-    gsay_reply(400, 155);
++    Reply(155);
+     call DocWuOpts4();
+ end
+ 
+ procedure DocWu13
+ begin
+-    gsay_reply(400, 156);
++    Reply(156);
+     call DocWuOpts4();
+ end
+ 
+ procedure DocWu14
+ begin
+-    gsay_reply(400, 157);
+-    giq_option(4, 400, 158, DocWu06, 50);
+-    giq_option(4, 400, 159, DocWu23, 50);
+-    giq_option(4, 400, 160, DocWu24, 50);
++    Reply(157);
++    giq_option(4, NAME, 158, DocWu06, NEUTRAL_REACTION);
++    giq_option(4, NAME, 159, DocWu23, NEUTRAL_REACTION);
++    giq_option(4, NAME, 160, DocWu24, NEUTRAL_REACTION);
+ end
+ 
+ procedure DocWu15
+ begin
+-    gsay_reply(400, 161);
+-    giq_option(4, 400, 162, DocWu06, 50);
+-    giq_option(4, 400, 163, DocWu23, 50);
+-    giq_option(4, 400, 160, DocWu24, 50);
++    Reply(161);
++    giq_option(4, NAME, 162, DocWu06, NEUTRAL_REACTION);
++    giq_option(4, NAME, 163, DocWu23, NEUTRAL_REACTION);
++    giq_option(4, NAME, 160, DocWu24, NEUTRAL_REACTION);
+ end
+ 
+ procedure DocWu16
+ begin
+-    gsay_reply(400, 164);
+-    giq_option(4, 400, 162, DocWu06, 50);
+-    giq_option(4, 400, 163, DocWu23, 50);
+-    giq_option(4, 400, 160, DocWu24, 50);
++    Reply(164);
++    giq_option(4, NAME, 162, DocWu06, NEUTRAL_REACTION);
++    giq_option(4, NAME, 163, DocWu23, NEUTRAL_REACTION);
++    giq_option(4, NAME, 160, DocWu24, NEUTRAL_REACTION);
+ end
+ 
+ procedure DocWu17
+ begin
+-    gsay_reply(400, 165);
+-    giq_option(0, 400, 100, DocWu17a, 50);
++    Reply(165);
++    giq_option(0, NAME, 100, DocWu17a, NEUTRAL_REACTION);
+ end
+ 
+ procedure DocWu17a
+ begin
+-    gsay_reply(400, 166);
+-    giq_option(0, 400, 100, DocWu17b, 50);
++    Reply(166);
++    giq_option(0, NAME, 100, DocWu17b, NEUTRAL_REACTION);
+ end
+ 
+ procedure DocWu17b
+@@ -404,19 +404,19 @@ end
+ 
+ procedure DocWu18
+ begin
+-    gsay_reply(400, 169);
+-    giq_option(0, 400, 101, DocWuEnd, 50);
++    Reply(169);
++    giq_option(0, NAME, 101, DocWuEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure DocWu19
+ begin
+     variable LVar0 := 0;
+     variable LVar1 := 0;
+-    LVar1 := get_critter_stat(dude_obj, 7);
+-    LVar0 := get_critter_stat(dude_obj, 35);
++    LVar1 := get_critter_stat(dude_obj, STAT_max_hp);
++    LVar0 := get_critter_stat(dude_obj, STAT_current_hp);
+     if (LVar0 == LVar1) then begin
+-        gsay_reply(400, 170);
+-        giq_option(0, 400, 101, DocWuEnd, 50);
++        Reply(170);
++        giq_option(0, NAME, 101, DocWuEnd, NEUTRAL_REACTION);
+     end
+     else begin
+         if (LVar0 > (LVar1 / 2)) then begin
+@@ -430,28 +430,28 @@ end
+ 
+ procedure DocWu19a
+ begin
+-    gsay_reply(400, 171);
+-    giq_option(4, 400, 127, DocWu06, 50);
+-    giq_option(4, 400, 173, DocWu23, 50);
++    Reply(171);
++    giq_option(4, NAME, 127, DocWu06, NEUTRAL_REACTION);
++    giq_option(4, NAME, 173, DocWu23, NEUTRAL_REACTION);
+ end
+ 
+ procedure DocWu19b
+ begin
+-    gsay_reply(400, 171);
+-    giq_option(4, 400, 127, DocWu06, 50);
+-    giq_option(4, 400, 173, DocWu18, 50);
++    Reply(171);
++    giq_option(4, NAME, 127, DocWu06, NEUTRAL_REACTION);
++    giq_option(4, NAME, 173, DocWu18, NEUTRAL_REACTION);
+ end
+ 
+ procedure DocWu20
+ begin
+-    gsay_reply(400, 174);
+-    giq_option(0, 400, 100, DocWu20a, 50);
++    Reply(174);
++    giq_option(0, NAME, 100, DocWu20a, NEUTRAL_REACTION);
+ end
+ 
+ procedure DocWu20a
+ begin
+-    gsay_reply(400, 137);
+-    giq_option(0, 400, 100, DocWu20b, 50);
++    Reply(137);
++    giq_option(0, NAME, 100, DocWu20b, NEUTRAL_REACTION);
+ end
+ 
+ procedure DocWu20b
+@@ -461,8 +461,8 @@ end
+ 
+ procedure DocWu21
+ begin
+-    gsay_reply(400, 177);
+-    giq_option(0, 400, 100, DocWu21a, 50);
++    Reply(177);
++    giq_option(0, NAME, 100, DocWu21a, NEUTRAL_REACTION);
+ end
+ 
+ procedure DocWu21a
+@@ -472,25 +472,25 @@ end
+ 
+ procedure DocWu22
+ begin
+-    gsay_reply(400, 179);
+-    giq_option(0, 400, 101, DocWuEnd, 50);
++    Reply(179);
++    giq_option(0, NAME, 101, DocWuEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure DocWu23
+ begin
+-    gsay_reply(400, 180);
+-    giq_option(0, 400, 101, DocWuEnd, 50);
++    Reply(180);
++    giq_option(0, NAME, 101, DocWuEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure DocWu24
+ begin
+     variable LVar0 := 0;
+     variable LVar1 := 0;
+-    LVar1 := get_critter_stat(dude_obj, 7);
+-    LVar0 := get_critter_stat(dude_obj, 35);
++    LVar1 := get_critter_stat(dude_obj, STAT_max_hp);
++    LVar0 := get_critter_stat(dude_obj, STAT_current_hp);
+     if (LVar0 == LVar1) then begin
+-        gsay_reply(400, 170);
+-        giq_option(0, 400, 101, DocWuEnd, 50);
++        Reply(170);
++        giq_option(0, NAME, 101, DocWuEnd, NEUTRAL_REACTION);
+     end
+     else begin
+         if (LVar0 > (LVar1 / 2)) then begin
+@@ -504,49 +504,49 @@ end
+ 
+ procedure DocWu24a
+ begin
+-    gsay_reply(400, 181);
+-    giq_option(4, 400, 127, DocWu17, 50);
+-    giq_option(4, 400, 173, DocWu23, 50);
++    Reply(181);
++    giq_option(4, NAME, 127, DocWu17, NEUTRAL_REACTION);
++    giq_option(4, NAME, 173, DocWu23, NEUTRAL_REACTION);
+ end
+ 
+ procedure DocWu24b
+ begin
+-    gsay_reply(400, 182);
+-    giq_option(4, 400, 183, DocWu06, 50);
+-    giq_option(4, 400, 173, DocWu23, 50);
++    Reply(182);
++    giq_option(4, NAME, 183, DocWu06, NEUTRAL_REACTION);
++    giq_option(4, NAME, 173, DocWu23, NEUTRAL_REACTION);
+ end
+ 
+ procedure DocWuOpts1
+ begin
+-    giq_option(4, 400, 107, DocWu05, 50);
+-    giq_option(4, 400, 108, DocWu06, 50);
++    giq_option(4, NAME, 107, DocWu05, NEUTRAL_REACTION);
++    giq_option(4, NAME, 108, DocWu06, NEUTRAL_REACTION);
+ end
+ 
+ procedure DocWuOpts2
+ begin
+-    giq_option(4, 400, 110, DocWu08, 50);
++    giq_option(4, NAME, 110, DocWu08, NEUTRAL_REACTION);
+ end
+ 
+ procedure DocWuOpts3
+ begin
+-    giq_option(-3, 400, 112, DocWu10, 50);
+-    giq_option(-3, 400, 184, DocWuEnd, 50);
++    giq_option(-3, NAME, 112, DocWu10, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 184, DocWuEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure DocWuOpts4
+ begin
+-    giq_option(4, 400, 127, DocWu17, 50);
+-    giq_option(4, 400, 128, DocWu18, 50);
+-    giq_option(4, 400, 129, DocWu19, 50);
++    giq_option(4, NAME, 127, DocWu17, NEUTRAL_REACTION);
++    giq_option(4, NAME, 128, DocWu18, NEUTRAL_REACTION);
++    giq_option(4, NAME, 129, DocWu19, NEUTRAL_REACTION);
+ end
+ 
+ procedure DocWuOpts5
+ begin
+-    gsay_reply(400, 132);
+-    giq_option(7, 400, 133, DocWuOpts5a, 50);
+-    giq_option(4, 400, 134, DocWu21, 50);
+-    giq_option(4, 400, 135, DocWu22, 50);
+-    giq_option(4, 400, 136, DocWuOpts5a, 50);
++    Reply(132);
++    giq_option(7, NAME, 133, DocWuOpts5a, NEUTRAL_REACTION);
++    giq_option(4, NAME, 134, DocWu21, NEUTRAL_REACTION);
++    giq_option(4, NAME, 135, DocWu22, NEUTRAL_REACTION);
++    giq_option(4, NAME, 136, DocWuOpts5a, NEUTRAL_REACTION);
+ end
+ 
+ procedure DocWuOpts5a
+@@ -569,31 +569,31 @@ begin
+         set_local_var(0, 50);
+         set_local_var(1, 2);
+         set_local_var(2, 1);
+-        set_local_var(0, local_var(0) + (5 * get_critter_stat(dude_obj, 3)) - 25);
+-        set_local_var(0, local_var(0) + (10 * has_trait(0, dude_obj, 10)));
+-        if (has_trait(0, dude_obj, 39)) then begin
+-            if (global_var(155) > 0) then begin
+-                set_local_var(0, local_var(0) + global_var(155));
++        set_local_var(0, local_var(0) + (5 * dude_charisma) - 25);
++        set_local_var(0, local_var(0) + (10 * has_trait(TRAIT_PERK, dude_obj, PERK_presence)));
++        if (has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality)) then begin
++            if (global_var(GVAR_PLAYER_REPUATION) > 0) then begin
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+         else begin
+             if (local_var(3) == 1) then begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) + global_var(155));
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+-        if (global_var(158) > 2) then begin
++        if (global_var(GVAR_CHILDKILLER_REPUATION) > 2) then begin
+             set_local_var(0, local_var(0) - 30);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) + 20);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) - 20);
+         end
+         call ReactToLevel();
+@@ -686,6 +686,5 @@ end
+ 
+ procedure Goodbyes
+ begin
+-    exit_line := message_str(634, random(100, 105));
++    exit_line := message_str(SCRIPT_MODREACT, random(100, 105));
+ end
+-

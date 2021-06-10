@@ -1,0 +1,156 @@
+procedure start;
+procedure skills;
+procedure armit;
+procedure disarmit;
+procedure reset;
+
+import variable KEY_USED;
+import variable SKILL_USED;
+import variable MASTER_HAS_ARMED;
+import variable BOMB_ARMED;
+
+variable use_skill;
+variable test;
+variable test1;
+variable test2;
+variable my_iq;
+variable my_pe;
+variable lockmod;
+
+
+procedure start
+begin
+    if (script_action == use_proc) then begin
+        set_map_var(5, 1);
+        script_overrides;
+        display_mstr(100);
+        my_iq := dude_iq;
+        my_pe := dude_perception;
+        if (my_iq < my_pe) then begin
+            test := do_check(dude_obj, 4, 0);
+        end
+        else begin
+            test := do_check(dude_obj, 1, 0);
+        end
+        if (is_success(test)) then begin
+            display_mstr(101);
+        end
+    end
+    else begin
+        if (script_action == use_skill_on_proc) then begin
+            set_map_var(5, 1);
+            use_skill := action_being_used;
+            script_overrides;
+            call skills();
+        end
+        else begin
+            if (script_action == use_obj_on_proc) then begin
+                set_map_var(5, 1);
+                if (obj_pid(obj_being_used_with) == 105) then begin
+                    script_overrides;
+                    if (BOMB_ARMED == 1) then begin
+                        if (MASTER_HAS_ARMED == 1) then begin
+                            display_mstr(105);
+                        end
+                        else begin
+                            call disarmit();
+                        end
+                    end
+                    else begin
+                        call armit();
+                    end
+                end
+                else begin
+                    if (obj_pid(obj_being_used_with) == 77) then begin
+                        lockmod := 40;
+                    end
+                    else begin
+                        display_mstr(105);
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure skills
+begin
+    if (BOMB_ARMED == 1) then begin
+        display_mstr(105);
+    end
+    else begin
+        if (use_skill == 12) then begin
+            if (dude_skill(SKILL_SCIENCE) < 70) then begin
+                display_mstr(112);
+            end
+            else begin
+                test := roll_vs_skill(dude_obj, 12, -40);
+                if (is_success(test)) then begin
+                    call armit();
+                end
+                else begin
+                    display_mstr(112);
+                end
+            end
+        end
+        else begin
+            if (use_skill == 9) then begin
+                if (dude_skill(SKILL_REPAIR) < 70) then begin
+                    display_mstr(112);
+                end
+                else begin
+                    test := roll_vs_skill(dude_obj, 9, lockmod - 60);
+                    if (is_success(test)) then begin
+                        call armit();
+                    end
+                    else begin
+                        display_mstr(112);
+                    end
+                end
+            end
+            else begin
+                if (use_skill == 11) then begin
+                    display_mstr(111);
+                end
+                else begin
+                    if (use_skill == 13) then begin
+                        display_mstr(110);
+                    end
+                    else begin
+                        display_mstr(105);
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure armit
+begin
+    display_mstr(102);
+    if (global_var(GVAR_COUNTDOWN_TO_DESTRUCTION) == 0) then begin
+        set_global_var(GVAR_COUNTDOWN_TO_DESTRUCTION, game_time / 10);
+    end
+    set_global_var(GVAR_MASTER_BLOWN, 1);
+    if (global_var(GVAR_VATS_BLOWN) == 0) then begin
+        set_global_var(GVAR_VATS_STATUS, 1);
+    end
+end
+
+procedure disarmit
+begin
+    if ((((game_time / 10) - global_var(GVAR_COUNTDOWN_TO_DESTRUCTION)) > 30) or (SKILL_USED == 1)) then begin
+        call reset();
+    end
+    else begin
+        KEY_USED := 1;
+        display_mstr(105);
+    end
+end
+
+procedure reset
+begin
+    display_mstr(103);
+    set_global_var(GVAR_COUNTDOWN_TO_DESTRUCTION, 0);
+    set_global_var(GVAR_MASTER_BLOWN, 0);
+end

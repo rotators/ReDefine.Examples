@@ -1,0 +1,552 @@
+procedure start;
+procedure critter_p_proc;
+procedure damage_p_proc;
+procedure destroy_p_proc;
+procedure map_enter_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure Officer00;
+procedure Officer01;
+procedure Officer02;
+procedure Officer03;
+procedure Officer04;
+procedure Officer05;
+procedure Officer06;
+procedure Officer07;
+procedure Officer08;
+procedure Officer09;
+procedure Officer10;
+procedure Officer11;
+procedure Officer12;
+procedure Officer13;
+procedure Officer14;
+procedure Officer15;
+procedure Officer15a;
+procedure Officer16;
+procedure Officer17;
+procedure Officer18;
+procedure Officer19;
+procedure Officer20;
+procedure Officer21;
+procedure Officer21a;
+procedure Officer22;
+procedure Officer23;
+procedure Officer24;
+procedure Officer25;
+procedure Officer26;
+procedure Officer27;
+procedure Officer28;
+procedure Officer29;
+procedure Officer30;
+procedure Officer31;
+procedure OfficerCombat;
+procedure OfficerEnd;
+
+variable hostile;
+
+import variable SecDoor_ptr;
+import variable armory_access;
+import variable Officer_ptr;
+
+procedure get_reaction;
+procedure ReactToLevel;
+procedure LevelToReact;
+procedure UpReact;
+procedure DownReact;
+procedure BottomReact;
+procedure TopReact;
+procedure BigUpReact;
+procedure BigDownReact;
+procedure UpReactLevel;
+procedure DownReactLevel;
+procedure Goodbyes;
+
+variable exit_line;
+
+
+procedure start
+begin
+    if (script_action == critter_proc) then begin
+        call critter_p_proc();
+    end
+    else begin
+        if (script_action == destroy_proc) then begin
+            call destroy_p_proc();
+        end
+        else begin
+            if (script_action == map_enter_proc) then begin
+                call map_enter_p_proc();
+            end
+            else begin
+                if (script_action == pickup_proc) then begin
+                    call pickup_p_proc();
+                end
+                else begin
+                    if (script_action == talk_proc) then begin
+                        call talk_p_proc();
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure critter_p_proc
+begin
+    if (hostile) then begin
+        hostile := 0;
+        attack(dude_obj);
+    end
+    else begin
+        if (global_var(GVAR_WATER_CHIP_4)) then begin
+            if (obj_can_see_obj(self_obj, dude_obj)) then begin
+                dialogue_system_enter;
+            end
+        end
+        else begin
+            if ((armory_access == 1) and not(obj_is_open(SecDoor_ptr))) then begin
+                use_obj(SecDoor_ptr);
+            end
+            else begin
+                if (armory_access == 2) then begin
+                    anim(self_obj, 1000, 5);
+                    float_msg(self_obj, mstr(159), FLOAT_MSG_NORMAL);
+                    armory_access := 0;
+                end
+                else begin
+                    if (not(armory_access) and (dude_elevation == elevation(self_obj))) then begin
+                        if (tile_distance(dude_tile, 21292) < 2) then begin
+                            hostile := 1;
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure damage_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_global_var(GVAR_WATER_CHIP_4, 1);
+    end
+end
+
+procedure destroy_p_proc
+begin
+    Officer_ptr := 0;
+    if (source_obj == dude_obj) then begin
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
+            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
+            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+        end
+        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
+        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
+            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+        end
+    end
+    if (source_obj == dude_obj) then begin
+        set_global_var(GVAR_WATER_CHIP_4, 1);
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 1);
+    Officer_ptr := self_obj;
+end
+
+procedure pickup_p_proc
+begin
+    hostile := 1;
+end
+
+procedure talk_p_proc
+begin
+    call get_reaction();
+    start_gdialog(178, self_obj, 4, -1, -1);
+    gsay_start;
+    if (global_var(GVAR_WATER_CHIP_4)) then begin
+        call Officer00();
+    end
+    else begin
+        if ((obj_item_subtype(critter_inven_obj(dude_obj, 1)) == 3) or (obj_item_subtype(critter_inven_obj(dude_obj, 2)) == 3)) then begin
+            call Officer27();
+        end
+        else begin
+            if ((global_var(GVAR_FIND_WATER_CHIP) != 0) and (global_var(GVAR_FIND_WATER_CHIP) != 1)) then begin
+                call Officer01();
+            end
+            else begin
+                if (local_var(1) > 1) then begin
+                    if (armory_access) then begin
+                        call Officer25();
+                    end
+                    else begin
+                        call Officer02();
+                    end
+                end
+                else begin
+                    if (armory_access) then begin
+                        call Officer26();
+                    end
+                    else begin
+                        call Officer18();
+                    end
+                end
+            end
+        end
+    end
+    gsay_end;
+    end_dialogue;
+end
+
+procedure Officer00
+begin
+    gsay_message(NAME, 100, BAD_REACTION);
+    hostile := 1;
+end
+
+procedure Officer01
+begin
+    gsay_message(NAME, 101, 0);
+end
+
+procedure Officer02
+begin
+    Reply(102);
+    giq_option(4, NAME, 103, Officer04, 0);
+    giq_option(5, NAME, 104, Officer08, 0);
+    giq_option(6, NAME, 105, Officer11, 0);
+    giq_option(-3, NAME, 106, Officer03, 0);
+end
+
+procedure Officer03
+begin
+    Reply(107);
+    giq_option(4, NAME, 159, OfficerEnd, 0);
+end
+
+procedure Officer04
+begin
+    Reply(108);
+    giq_option(4, NAME, 109, OfficerEnd, 0);
+    giq_option(5, NAME, 110, Officer05, 0);
+end
+
+procedure Officer05
+begin
+    Reply(111);
+    giq_option(5, NAME, 112, Officer06, 0);
+    giq_option(6, NAME, 113, Officer07, 0);
+end
+
+procedure Officer06
+begin
+    Reply(114);
+    giq_option(5, NAME, 115, OfficerEnd, 0);
+end
+
+procedure Officer07
+begin
+    call UpReact();
+    gsay_message(NAME, 116, 10);
+end
+
+procedure Officer08
+begin
+    Reply(117);
+    giq_option(4, NAME, 118, Officer09, 0);
+    giq_option(4, NAME, 119, Officer10, 0);
+end
+
+procedure Officer09
+begin
+    call DownReact();
+    gsay_message(NAME, 120, -10);
+end
+
+procedure Officer10
+begin
+    gsay_message(NAME, 121, 0);
+end
+
+procedure Officer11
+begin
+    Reply(122);
+    giq_option(5, NAME, 123, Officer13, 0);
+    giq_option(5, NAME, 124, Officer12, 0);
+end
+
+procedure Officer12
+begin
+    gsay_message(NAME, 125, 0);
+end
+
+procedure Officer13
+begin
+    Reply(126);
+    giq_option(5, NAME, 127, Officer15, 0);
+    giq_option(5, NAME, 128, Officer14, 0);
+end
+
+procedure Officer14
+begin
+    gsay_message(NAME, 129, 0);
+end
+
+procedure Officer15
+begin
+    Reply(130);
+    giq_option(5, NAME, 131, Officer15a, 0);
+end
+
+procedure Officer15a
+begin
+    if (is_success(roll_vs_skill(dude_obj, 14, 0))) then begin
+        call Officer17();
+    end
+    else begin
+        call Officer16();
+    end
+end
+
+procedure Officer16
+begin
+    gsay_message(NAME, 132, 0);
+end
+
+procedure Officer17
+begin
+    armory_access := 1;
+    gsay_message(NAME, 133, 0);
+end
+
+procedure Officer18
+begin
+    Reply(mstr(134) + proto_data(obj_pid(dude_obj), 1) + mstr(135));
+    giq_option(4, NAME, 136, Officer20, 0);
+    giq_option(5, NAME, 137, Officer21, 0);
+    giq_option(-3, NAME, 138, Officer19, 0);
+end
+
+procedure Officer19
+begin
+    gsay_message(NAME, 139, 0);
+end
+
+procedure Officer20
+begin
+    gsay_message(NAME, 140, 0);
+end
+
+procedure Officer21
+begin
+    Reply(141);
+    giq_option(5, NAME, 142, Officer22, 0);
+    giq_option(5, NAME, 143, Officer21a, 0);
+end
+
+procedure Officer21a
+begin
+    if (is_success(roll_vs_skill(dude_obj, 14, 0))) then begin
+        call Officer23();
+    end
+    else begin
+        call Officer24();
+    end
+end
+
+procedure Officer22
+begin
+    Reply(144);
+    giq_option(5, NAME, 145, OfficerEnd, 0);
+    giq_option(5, NAME, 146, OfficerCombat, -10);
+end
+
+procedure Officer23
+begin
+    gsay_message(NAME, 147, 0);
+end
+
+procedure Officer24
+begin
+    gsay_message(NAME, 148, 0);
+end
+
+procedure Officer25
+begin
+    gsay_message(NAME, 149, 0);
+end
+
+procedure Officer26
+begin
+    gsay_message(NAME, 150, 0);
+end
+
+procedure Officer27
+begin
+    gsay_message(NAME, 151, 0);
+end
+
+procedure Officer28
+begin
+    Reply(152);
+    giq_option(4, NAME, 153, Officer30, 0);
+    giq_option(5, NAME, 154, Officer31, 0);
+    giq_option(-3, NAME, 155, Officer29, 0);
+end
+
+procedure Officer29
+begin
+    gsay_message(NAME, 156, 0);
+end
+
+procedure Officer30
+begin
+    gsay_message(NAME, 157, 0);
+end
+
+procedure Officer31
+begin
+    gsay_message(NAME, 158, 0);
+end
+
+procedure OfficerCombat
+begin
+    hostile := 1;
+end
+
+procedure OfficerEnd
+begin
+end
+
+procedure get_reaction
+begin
+    if (local_var(2) == 0) then begin
+        set_local_var(0, 50);
+        set_local_var(1, 2);
+        set_local_var(2, 1);
+        set_local_var(0, local_var(0) + (5 * dude_charisma) - 25);
+        set_local_var(0, local_var(0) + (10 * has_trait(TRAIT_PERK, dude_obj, PERK_presence)));
+        if (has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality)) then begin
+            if (global_var(GVAR_PLAYER_REPUATION) > 0) then begin
+                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+            end
+            else begin
+                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+            end
+        end
+        else begin
+            if (local_var(3) == 1) then begin
+                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+            end
+            else begin
+                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+            end
+        end
+        if (global_var(GVAR_CHILDKILLER_REPUATION) > 2) then begin
+            set_local_var(0, local_var(0) - 30);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+            set_local_var(0, local_var(0) + 20);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+            set_local_var(0, local_var(0) - 20);
+        end
+        call ReactToLevel();
+    end
+end
+
+procedure ReactToLevel
+begin
+    if (local_var(0) <= 25) then begin
+        set_local_var(1, 1);
+    end
+    else begin
+        if (local_var(0) <= 75) then begin
+            set_local_var(1, 2);
+        end
+        else begin
+            set_local_var(1, 3);
+        end
+    end
+end
+
+procedure LevelToReact
+begin
+    if (local_var(1) == 1) then begin
+        set_local_var(0, random(1, 25));
+    end
+    else begin
+        if (local_var(1) == 2) then begin
+            set_local_var(0, random(26, 75));
+        end
+        else begin
+            set_local_var(0, random(76, 100));
+        end
+    end
+end
+
+procedure UpReact
+begin
+    set_local_var(0, local_var(0) + 10);
+    call ReactToLevel();
+end
+
+procedure DownReact
+begin
+    set_local_var(0, local_var(0) - 10);
+    call ReactToLevel();
+end
+
+procedure BottomReact
+begin
+    set_local_var(1, 1);
+    set_local_var(0, 1);
+end
+
+procedure TopReact
+begin
+    set_local_var(0, 100);
+    set_local_var(1, 3);
+end
+
+procedure BigUpReact
+begin
+    set_local_var(0, local_var(0) + 25);
+    call ReactToLevel();
+end
+
+procedure BigDownReact
+begin
+    set_local_var(0, local_var(0) - 25);
+    call ReactToLevel();
+end
+
+procedure UpReactLevel
+begin
+    set_local_var(1, local_var(1) + 1);
+    if (local_var(1) > 3) then begin
+        set_local_var(1, 3);
+    end
+    call LevelToReact();
+end
+
+procedure DownReactLevel
+begin
+    set_local_var(1, local_var(1) - 1);
+    if (local_var(1) < 1) then begin
+        set_local_var(1, 1);
+    end
+    call LevelToReact();
+end
+
+procedure Goodbyes
+begin
+    exit_line := message_str(SCRIPT_MODREACT, random(100, 105));
+end

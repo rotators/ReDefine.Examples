@@ -1,0 +1,62 @@
+procedure start;
+procedure critter_p_proc;
+procedure damage_p_proc;
+procedure timed_event_p_proc;
+
+variable initialized;
+variable hostile;
+
+
+procedure start
+begin
+    if (not(initialized)) then begin
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_RATS);
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 9);
+        initialized := 1;
+        if ((game_time_hour >= 1900) or (game_time_hour < 600)) then begin
+            add_timer_event(self_obj, game_ticks(random(30, 40)), 0);
+        end
+    end
+    else begin
+        if (script_action == critter_proc) then begin
+            call critter_p_proc();
+        end
+        else begin
+            if (script_action == damage_proc) then begin
+                call damage_p_proc();
+            end
+            else begin
+                if (script_action == timed_event_proc) then begin
+                    call timed_event_p_proc();
+                end
+            end
+        end
+    end
+end
+
+procedure critter_p_proc
+begin
+    if (not((game_time_hour >= 1900) or (game_time_hour < 600)) and not(hostile)) then begin
+        if (obj_can_see_obj(self_obj, dude_obj)) then begin
+            if (has_trait(TRAIT_PERK, dude_obj, PERK_animal_friend) == 0) then begin
+                attack(dude_obj);
+                hostile := 1;
+            end
+        end
+    end
+    if (not(hostile)) then begin
+        script_overrides;
+        animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), random(3, 4), 4), 1);
+    end
+end
+
+procedure damage_p_proc
+begin
+    attack(self_obj);
+end
+
+procedure timed_event_p_proc
+begin
+    attack(dude_obj);
+    hostile := 1;
+end

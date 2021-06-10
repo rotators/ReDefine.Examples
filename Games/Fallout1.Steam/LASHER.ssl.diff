@@ -1,0 +1,646 @@
+diff --git a/Games/Fallout1.Steam/Original/LASHER.ssl b/Games/Fallout1.Steam/ReDefine/LASHER.ssl
+index 736bd51..62845e0 100644
+--- a/Games/Fallout1.Steam/Original/LASHER.ssl
++++ b/Games/Fallout1.Steam/ReDefine/LASHER.ssl
+@@ -65,37 +65,37 @@ variable Only_Once := 1;
+ procedure start
+ begin
+     if (Only_Once) then begin
+-        critter_add_trait(self_obj, 1, 6, 20);
+-        critter_add_trait(self_obj, 1, 5, 83);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 20);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_COC_LASHER);
+         Only_Once := 0;
+     end
+-    if ((script_action == 21) or (script_action == 3)) then begin
++    if ((script_action == look_at_proc) or (script_action == description_proc)) then begin
+         script_overrides;
+-        display_msg(message_str(384, 100));
++        display_mstr(100);
+     end
+     else begin
+-        if (script_action == 4) then begin
++        if (script_action == pickup_proc) then begin
+             Hostile := 1;
+         end
+         else begin
+-            if (script_action == 18) then begin
++            if (script_action == destroy_proc) then begin
+                 if (source_obj == dude_obj) then begin
+-                    if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-                        set_global_var(156, 1);
+-                        set_global_var(157, 0);
++                    if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++                        set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++                        set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+                     end
+-                    if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+-                        set_global_var(157, 1);
+-                        set_global_var(156, 0);
++                    if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
++                        set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++                        set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+                     end
+-                    set_global_var(160, global_var(160) + 1);
+-                    if ((global_var(160) % 6) == 0) then begin
+-                        set_global_var(155, global_var(155) + 1);
++                    set_global_var(GVAR_BAD_MONSTER, global_var(GVAR_BAD_MONSTER) + 1);
++                    if ((global_var(GVAR_BAD_MONSTER) % 6) == 0) then begin
++                        set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) + 1);
+                     end
+                 end
+             end
+             else begin
+-                if (script_action == 12) then begin
++                if (script_action == critter_proc) then begin
+                     if ((local_var(1) == 0) and obj_can_see_obj(self_obj, dude_obj)) then begin
+                         set_local_var(1, 1);
+                         dialogue_system_enter;
+@@ -107,11 +107,11 @@ begin
+                     end
+                     if (Hostile) then begin
+                         Hostile := 0;
+-                        attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++                        attack(dude_obj);
+                     end
+                 end
+                 else begin
+-                    if (script_action == 11) then begin
++                    if (script_action == talk_proc) then begin
+                         script_overrides;
+                         if (obj_pid(critter_inven_obj(dude_obj, 0)) == 113) then begin
+                             if ((obj_item_subtype(critter_inven_obj(dude_obj, 1)) == 3) or (obj_item_subtype(critter_inven_obj(dude_obj, 2)) == 3)) then begin
+@@ -138,7 +138,7 @@ begin
+                                 end_dialogue;
+                             end
+                             else begin
+-                                if (global_var(195) == 1) then begin
++                                if (global_var(GVAR_CATHEDRAL_ENEMY) == 1) then begin
+                                     start_gdialog(384, self_obj, 4, -1, -1);
+                                     gsay_start;
+                                     call lasher00();
+@@ -146,7 +146,7 @@ begin
+                                     end_dialogue;
+                                 end
+                                 else begin
+-                                    if (global_var(158) > 2) then begin
++                                    if (global_var(GVAR_CHILDKILLER_REPUATION) > 2) then begin
+                                         start_gdialog(384, self_obj, 4, -1, -1);
+                                         gsay_start;
+                                         call lasher01();
+@@ -154,7 +154,7 @@ begin
+                                         end_dialogue;
+                                     end
+                                     else begin
+-                                        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
++                                        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+                                             start_gdialog(384, self_obj, 4, -1, -1);
+                                             gsay_start;
+                                             call lasher02();
+@@ -191,86 +191,86 @@ end
+ 
+ procedure lasher00
+ begin
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        gsay_reply(384, 101);
++    if (dude_gender == 0) then begin
++        Reply(101);
+     end
+     else begin
+-        gsay_reply(384, 102);
++        Reply(102);
+     end
+-    gsay_option(384, 223, lasherend, 50);
++    giq_option(1, NAME, 223, lasherend, NEUTRAL_REACTION);
+ end
+ 
+ procedure lasher01
+ begin
+-    gsay_message(384, 103, 50);
++    gsay_message(NAME, 103, NEUTRAL_REACTION);
+     call combat();
+ end
+ 
+ procedure lasher02
+ begin
+-    gsay_message(384, 104, 50);
++    gsay_message(NAME, 104, NEUTRAL_REACTION);
+     call combat();
+ end
+ 
+ procedure lasher03
+ begin
+-    gsay_reply(384, 105);
+-    gsay_option(384, 223, lasherend, 50);
++    Reply(105);
++    giq_option(1, NAME, 223, lasherend, NEUTRAL_REACTION);
+ end
+ 
+ procedure lasher04
+ begin
+-    gsay_reply(384, 106);
+-    giq_option(7, 384, 107, lasher08, 50);
+-    giq_option(4, 384, 108, lasher09, 50);
+-    giq_option(4, 384, 109, lasher10, 50);
+-    giq_option(4, 384, 110, lasher11, 50);
++    Reply(106);
++    giq_option(7, NAME, 107, lasher08, NEUTRAL_REACTION);
++    giq_option(4, NAME, 108, lasher09, NEUTRAL_REACTION);
++    giq_option(4, NAME, 109, lasher10, NEUTRAL_REACTION);
++    giq_option(4, NAME, 110, lasher11, NEUTRAL_REACTION);
+     if (Lasher_Abuse) then begin
+-        giq_option(4, 384, 111, lasher12, 50);
++        giq_option(4, NAME, 111, lasher12, NEUTRAL_REACTION);
+     end
+-    if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-        giq_option(4, 384, 112, lasher02, 50);
++    if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++        giq_option(4, NAME, 112, lasher02, NEUTRAL_REACTION);
+     end
+-    giq_option(-3, 384, 113, lasher13, 50);
++    giq_option(-3, NAME, 113, lasher13, NEUTRAL_REACTION);
+ end
+ 
+ procedure lasher05
+ begin
+-    gsay_reply(384, 114);
+-    giq_option(7, 384, 115, lasher14, 50);
+-    giq_option(7, 384, 116, lasher15, 50);
++    Reply(114);
++    giq_option(7, NAME, 115, lasher14, NEUTRAL_REACTION);
++    giq_option(7, NAME, 116, lasher15, NEUTRAL_REACTION);
+     if (Lasher_Abuse) then begin
+-        giq_option(4, 384, 117, lasher12, 50);
++        giq_option(4, NAME, 117, lasher12, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 384, 118, lasher16, 50);
+-    giq_option(4, 384, 119, lasher11, 50);
+-    giq_option(4, 384, 109, lasher10, 50);
+-    if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-        giq_option(4, 384, 120, lasher02, 50);
++    giq_option(4, NAME, 118, lasher16, NEUTRAL_REACTION);
++    giq_option(4, NAME, 119, lasher11, NEUTRAL_REACTION);
++    giq_option(4, NAME, 109, lasher10, NEUTRAL_REACTION);
++    if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++        giq_option(4, NAME, 120, lasher02, NEUTRAL_REACTION);
+     end
+-    giq_option(-3, 384, 121, lasher13, 50);
++    giq_option(-3, NAME, 121, lasher13, NEUTRAL_REACTION);
+ end
+ 
+ procedure lasher06
+ begin
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        gsay_reply(384, 122);
++    if (dude_gender == 0) then begin
++        Reply(122);
+     end
+     else begin
+-        gsay_reply(384, 123);
++        Reply(123);
+     end
+-    giq_option(7, 384, 124, lasher06a, 50);
+-    giq_option(7, 384, 125, lasher15, 50);
++    giq_option(7, NAME, 124, lasher06a, NEUTRAL_REACTION);
++    giq_option(7, NAME, 125, lasher15, NEUTRAL_REACTION);
+     if (Lasher_Abuse) then begin
+-        giq_option(4, 384, 126, lasher12, 50);
++        giq_option(4, NAME, 126, lasher12, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 384, 127, lasher16, 50);
+-    giq_option(4, 384, 128, lasher11, 50);
+-    giq_option(4, 384, 109, lasher10, 50);
+-    if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-        giq_option(4, 384, 129, lasher02, 50);
++    giq_option(4, NAME, 127, lasher16, NEUTRAL_REACTION);
++    giq_option(4, NAME, 128, lasher11, NEUTRAL_REACTION);
++    giq_option(4, NAME, 109, lasher10, NEUTRAL_REACTION);
++    if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++        giq_option(4, NAME, 129, lasher02, NEUTRAL_REACTION);
+     end
+-    giq_option(-3, 384, 130, lasher13, 50);
++    giq_option(-3, NAME, 130, lasher13, NEUTRAL_REACTION);
+ end
+ 
+ procedure lasher06a
+@@ -285,18 +285,18 @@ end
+ 
+ procedure lasher07
+ begin
+-    gsay_reply(384, 131);
+-    giq_option(7, 384, 132, lasher07a, 50);
++    Reply(131);
++    giq_option(7, NAME, 132, lasher07a, NEUTRAL_REACTION);
+     if (Lasher_Abuse) then begin
+-        giq_option(4, 384, 133, lasher12, 50);
++        giq_option(4, NAME, 133, lasher12, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 384, 134, lasher19, 50);
+-    giq_option(4, 384, 109, lasher10, 50);
+-    giq_option(4, 384, 135, lasher11, 50);
+-    if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-        giq_option(4, 384, 136, lasher02, 50);
++    giq_option(4, NAME, 134, lasher19, NEUTRAL_REACTION);
++    giq_option(4, NAME, 109, lasher10, NEUTRAL_REACTION);
++    giq_option(4, NAME, 135, lasher11, NEUTRAL_REACTION);
++    if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++        giq_option(4, NAME, 136, lasher02, NEUTRAL_REACTION);
+     end
+-    giq_option(-3, 384, 137, lasher13, 50);
++    giq_option(-3, NAME, 137, lasher13, NEUTRAL_REACTION);
+ end
+ 
+ procedure lasher07a
+@@ -311,15 +311,15 @@ end
+ 
+ procedure lasher08
+ begin
+-    gsay_reply(384, 138);
+-    giq_option(7, 384, 139, lasher08a, 50);
++    Reply(138);
++    giq_option(7, NAME, 139, lasher08a, NEUTRAL_REACTION);
+     if (Lasher_Abuse) then begin
+-        giq_option(4, 384, 140, lasher12, 50);
++        giq_option(4, NAME, 140, lasher12, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 384, 141, lasher19, 50);
+-    giq_option(4, 384, 142, lasher22, 50);
+-    if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-        giq_option(4, 384, 143, lasher13, 50);
++    giq_option(4, NAME, 141, lasher19, NEUTRAL_REACTION);
++    giq_option(4, NAME, 142, lasher22, NEUTRAL_REACTION);
++    if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++        giq_option(4, NAME, 143, lasher13, NEUTRAL_REACTION);
+     end
+ end
+ 
+@@ -335,21 +335,21 @@ end
+ 
+ procedure lasher09
+ begin
+-    gsay_reply(384, 144);
+-    gsay_option(384, 223, lasherend, 50);
++    Reply(144);
++    giq_option(1, NAME, 223, lasherend, NEUTRAL_REACTION);
+ end
+ 
+ procedure lasher10
+ begin
+-    gsay_reply(384, 145);
+-    giq_option(7, 384, 146, lasher10a, 50);
++    Reply(145);
++    giq_option(7, NAME, 146, lasher10a, NEUTRAL_REACTION);
+     if (Lasher_Abuse) then begin
+-        giq_option(4, 384, 147, lasher26, 50);
++        giq_option(4, NAME, 147, lasher26, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 384, 148, lasher27, 50);
+-    giq_option(4, 384, 149, lasher28, 50);
+-    if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-        giq_option(4, 384, 150, lasher29, 50);
++    giq_option(4, NAME, 148, lasher27, NEUTRAL_REACTION);
++    giq_option(4, NAME, 149, lasher28, NEUTRAL_REACTION);
++    if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++        giq_option(4, NAME, 150, lasher29, NEUTRAL_REACTION);
+     end
+ end
+ 
+@@ -365,44 +365,44 @@ end
+ 
+ procedure lasher11
+ begin
+-    gsay_reply(384, 151);
+-    giq_option(4, 384, 152, lasher09, 50);
+-    giq_option(4, 384, 153, lasher30, 50);
+-    if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-        giq_option(4, 384, 154, lasher02, 50);
++    Reply(151);
++    giq_option(4, NAME, 152, lasher09, NEUTRAL_REACTION);
++    giq_option(4, NAME, 153, lasher30, NEUTRAL_REACTION);
++    if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++        giq_option(4, NAME, 154, lasher02, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure lasher12
+ begin
+-    gsay_reply(384, 155);
+-    giq_option(7, 384, 156, lasher31, 50);
+-    giq_option(4, 384, 157, lasher30, 50);
+-    giq_option(4, 384, 158, lasher02, 50);
+-    giq_option(4, 384, 159, lasher32, 50);
+-    if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-        giq_option(4, 384, 160, lasher33, 50);
++    Reply(155);
++    giq_option(7, NAME, 156, lasher31, NEUTRAL_REACTION);
++    giq_option(4, NAME, 157, lasher30, NEUTRAL_REACTION);
++    giq_option(4, NAME, 158, lasher02, NEUTRAL_REACTION);
++    giq_option(4, NAME, 159, lasher32, NEUTRAL_REACTION);
++    if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++        giq_option(4, NAME, 160, lasher33, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure lasher13
+ begin
+-    gsay_message(384, 161, 50);
++    gsay_message(NAME, 161, NEUTRAL_REACTION);
+ end
+ 
+ procedure lasher14
+ begin
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        gsay_reply(384, 163);
++    if (dude_gender == 0) then begin
++        Reply(163);
+     end
+     else begin
+-        gsay_reply(384, 162);
++        Reply(162);
+     end
+-    giq_option(7, 384, 164, lasher31, 50);
+-    giq_option(4, 384, 165, lasher30, 50);
+-    giq_option(4, 384, 166, lasher02, 50);
+-    if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-        giq_option(4, 384, 167, lasher33, 50);
++    giq_option(7, NAME, 164, lasher31, NEUTRAL_REACTION);
++    giq_option(4, NAME, 165, lasher30, NEUTRAL_REACTION);
++    giq_option(4, NAME, 166, lasher02, NEUTRAL_REACTION);
++    if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++        giq_option(4, NAME, 167, lasher33, NEUTRAL_REACTION);
+     end
+ end
+ 
+@@ -418,32 +418,32 @@ end
+ 
+ procedure lasher15
+ begin
+-    gsay_reply(384, 168);
+-    giq_option(7, 384, 169, lasher18, 50);
+-    giq_option(4, 384, 170, lasher35, 50);
+-    giq_option(4, 384, 171, lasher36, 50);
+-    giq_option(4, 384, 172, lasher09, 50);
+-    if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-        giq_option(4, 384, 173, lasher37, 50);
++    Reply(168);
++    giq_option(7, NAME, 169, lasher18, NEUTRAL_REACTION);
++    giq_option(4, NAME, 170, lasher35, NEUTRAL_REACTION);
++    giq_option(4, NAME, 171, lasher36, NEUTRAL_REACTION);
++    giq_option(4, NAME, 172, lasher09, NEUTRAL_REACTION);
++    if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++        giq_option(4, NAME, 173, lasher37, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure lasher16
+ begin
+-    gsay_message(384, 174, 50);
++    gsay_message(NAME, 174, NEUTRAL_REACTION);
+ end
+ 
+ procedure lasher17
+ begin
+-    gsay_reply(384, 175);
+-    if (global_var(196) == 1) then begin
+-        giq_option(7, 384, 176, lasher17a, 50);
++    Reply(175);
++    if (global_var(GVAR_MORPHEUS_KNOWN) == 1) then begin
++        giq_option(7, NAME, 176, lasher17a, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 384, 177, lasher40_1, 50);
+-    giq_option(4, 384, 178, lasher41_1, 50);
+-    giq_option(4, 384, 179, lasher12, 50);
+-    if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-        giq_option(4, 384, 180, lasher35, 50);
++    giq_option(4, NAME, 177, lasher40_1, NEUTRAL_REACTION);
++    giq_option(4, NAME, 178, lasher41_1, NEUTRAL_REACTION);
++    giq_option(4, NAME, 179, lasher12, NEUTRAL_REACTION);
++    if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++        giq_option(4, NAME, 180, lasher35, NEUTRAL_REACTION);
+     end
+ end
+ 
+@@ -459,17 +459,17 @@ end
+ 
+ procedure lasher18
+ begin
+-    gsay_message(384, 181, 50);
++    gsay_message(NAME, 181, NEUTRAL_REACTION);
+ end
+ 
+ procedure lasher19
+ begin
+-    gsay_message(384, 182, 50);
++    gsay_message(NAME, 182, NEUTRAL_REACTION);
+ end
+ 
+ procedure lasher20_1
+ begin
+-    gsay_message(384, message_str(384, 183) + message_str(384, 183), 50);
++    gsay_message(NAME, mstr(183) + mstr(183), NEUTRAL_REACTION);
+ end
+ 
+ procedure lasher20_2
+@@ -478,41 +478,41 @@ end
+ 
+ procedure lasher21
+ begin
+-    gsay_message(384, 186, 50);
++    gsay_message(NAME, 186, NEUTRAL_REACTION);
+ end
+ 
+ procedure lasher22
+ begin
+-    gsay_message(384, 187, 50);
++    gsay_message(NAME, 187, NEUTRAL_REACTION);
+ end
+ 
+ procedure lasher23
+ begin
+-    gsay_message(384, 188, 50);
++    gsay_message(NAME, 188, NEUTRAL_REACTION);
+ end
+ 
+ procedure lasher24
+ begin
+     variable LVar0 := 0;
+-    LVar0 := create_object_sid(142, 0, 0, -1);
++    LVar0 := create_object(142, 0, 0);
+     add_obj_to_inven(dude_obj, LVar0);
+-    gsay_message(384, 189, 50);
++    gsay_message(NAME, 189, NEUTRAL_REACTION);
+ end
+ 
+ procedure lasher25
+ begin
+-    gsay_message(384, 190, 50);
++    gsay_message(NAME, 190, NEUTRAL_REACTION);
+ end
+ 
+ procedure lasher26
+ begin
+-    gsay_reply(384, 191);
+-    giq_option(7, 384, 192, lasher26a, 50);
+-    giq_option(4, 384, 193, lasher25, 50);
+-    giq_option(4, 384, 194, lasher27, 50);
+-    giq_option(4, 384, 195, lasher28, 50);
+-    if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-        giq_option(4, 384, 196, lasher23, 50);
++    Reply(191);
++    giq_option(7, NAME, 192, lasher26a, NEUTRAL_REACTION);
++    giq_option(4, NAME, 193, lasher25, NEUTRAL_REACTION);
++    giq_option(4, NAME, 194, lasher27, NEUTRAL_REACTION);
++    giq_option(4, NAME, 195, lasher28, NEUTRAL_REACTION);
++    if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++        giq_option(4, NAME, 196, lasher23, NEUTRAL_REACTION);
+     end
+ end
+ 
+@@ -528,88 +528,88 @@ end
+ 
+ procedure lasher27
+ begin
+-    gsay_message(384, 197, 50);
++    gsay_message(NAME, 197, NEUTRAL_REACTION);
+ end
+ 
+ procedure lasher28
+ begin
+     variable LVar0 := 0;
+-    LVar0 := create_object_sid(142, 0, 0, -1);
++    LVar0 := create_object(142, 0, 0);
+     add_obj_to_inven(dude_obj, LVar0);
+-    gsay_message(384, 198, 50);
++    gsay_message(NAME, 198, NEUTRAL_REACTION);
+ end
+ 
+ procedure lasher29
+ begin
+-    gsay_message(384, 199, 50);
++    gsay_message(NAME, 199, NEUTRAL_REACTION);
+ end
+ 
+ procedure lasher30
+ begin
+-    gsay_message(384, 200, 50);
++    gsay_message(NAME, 200, NEUTRAL_REACTION);
+ end
+ 
+ procedure lasher31
+ begin
+-    gsay_message(384, 201, 50);
++    gsay_message(NAME, 201, NEUTRAL_REACTION);
+ end
+ 
+ procedure lasher32
+ begin
+-    gsay_reply(384, 202);
+-    giq_option(7, 384, 203, lasher21, 50);
+-    giq_option(4, 384, 204, lasher42, 50);
+-    giq_option(4, 384, 205, lasher43, 50);
+-    giq_option(4, 384, 206, lasher44, 50);
+-    giq_option(4, 384, 207, lasher28, 50);
+-    if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-        giq_option(4, 384, 208, lasher35, 50);
++    Reply(202);
++    giq_option(7, NAME, 203, lasher21, NEUTRAL_REACTION);
++    giq_option(4, NAME, 204, lasher42, NEUTRAL_REACTION);
++    giq_option(4, NAME, 205, lasher43, NEUTRAL_REACTION);
++    giq_option(4, NAME, 206, lasher44, NEUTRAL_REACTION);
++    giq_option(4, NAME, 207, lasher28, NEUTRAL_REACTION);
++    if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++        giq_option(4, NAME, 208, lasher35, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure lasher33
+ begin
+-    if (get_critter_stat(dude_obj, 34) == 1) then begin
+-        gsay_message(384, 209, 50);
++    if (dude_gender == 1) then begin
++        gsay_message(NAME, 209, NEUTRAL_REACTION);
+     end
+     else begin
+-        gsay_message(384, 210, 50);
++        gsay_message(NAME, 210, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure lasher34
+ begin
+-    gsay_message(384, 211, 50);
++    gsay_message(NAME, 211, NEUTRAL_REACTION);
+ end
+ 
+ procedure lasher35
+ begin
+-    gsay_message(384, 212, 50);
++    gsay_message(NAME, 212, NEUTRAL_REACTION);
+ end
+ 
+ procedure lasher36
+ begin
+-    gsay_message(384, 213, 50);
++    gsay_message(NAME, 213, NEUTRAL_REACTION);
+ end
+ 
+ procedure lasher37
+ begin
+-    gsay_message(384, 214, 50);
++    gsay_message(NAME, 214, NEUTRAL_REACTION);
+ end
+ 
+ procedure lasher38
+ begin
+-    gsay_message(384, 224, 50);
++    gsay_message(NAME, 224, NEUTRAL_REACTION);
+ end
+ 
+ procedure lasher39
+ begin
+-    gsay_message(384, 215, 50);
++    gsay_message(NAME, 215, NEUTRAL_REACTION);
+ end
+ 
+ procedure lasher40_1
+ begin
+-    gsay_message(384, message_str(384, 216) + message_str(384, 217), 50);
++    gsay_message(NAME, mstr(216) + mstr(217), NEUTRAL_REACTION);
+ end
+ 
+ procedure lasher40_2
+@@ -618,7 +618,7 @@ end
+ 
+ procedure lasher41_1
+ begin
+-    gsay_message(384, message_str(384, 218) + message_str(384, 219), 50);
++    gsay_message(NAME, mstr(218) + mstr(219), NEUTRAL_REACTION);
+ end
+ 
+ procedure lasher41_2
+@@ -627,17 +627,17 @@ end
+ 
+ procedure lasher42
+ begin
+-    gsay_message(384, 220, 50);
++    gsay_message(NAME, 220, NEUTRAL_REACTION);
+ end
+ 
+ procedure lasher43
+ begin
+-    gsay_message(384, 221, 50);
++    gsay_message(NAME, 221, NEUTRAL_REACTION);
+ end
+ 
+ procedure lasher44
+ begin
+-    gsay_message(384, 222, 50);
++    gsay_message(NAME, 222, NEUTRAL_REACTION);
+ end
+ 
+ procedure lasherend
+@@ -648,4 +648,3 @@ procedure combat
+ begin
+     Hostile := 1;
+ end
+-

@@ -1,0 +1,256 @@
+procedure start;
+procedure critter_p_proc;
+procedure damage_p_proc;
+procedure destroy_p_proc;
+procedure look_at_p_proc;
+procedure map_enter_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure Lyle01;
+procedure Lyle02;
+procedure Lyle03;
+procedure Lyle04;
+procedure LyleEnd;
+procedure flee_dude;
+procedure sleeping;
+
+variable night_person;
+variable wake_time;
+variable sleep_time;
+variable home_tile;
+variable sleep_tile;
+variable hostile;
+variable initialized;
+
+
+procedure start
+begin
+    if (script_action == critter_proc) then begin
+        call critter_p_proc();
+    end
+    else begin
+        if (script_action == damage_proc) then begin
+            call damage_p_proc();
+        end
+        else begin
+            if (script_action == destroy_proc) then begin
+                call destroy_p_proc();
+            end
+            else begin
+                if (script_action == look_at_proc) then begin
+                    call look_at_p_proc();
+                end
+                else begin
+                    if (script_action == map_enter_proc) then begin
+                        call map_enter_p_proc();
+                    end
+                    else begin
+                        if (script_action == pickup_proc) then begin
+                            call pickup_p_proc();
+                        end
+                        else begin
+                            if (script_action == talk_proc) then begin
+                                call talk_p_proc();
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure critter_p_proc
+begin
+    if (hostile) then begin
+        hostile := 0;
+        attack(dude_obj);
+    end
+    else begin
+        if (local_var(5)) then begin
+            if (tile_distance_objs(self_obj, dude_obj) < 8) then begin
+                call flee_dude();
+            end
+            else begin
+                if (tile_distance(dude_tile, home_tile) > 4) then begin
+                    if (local_var(4) == 0) then begin
+                        animate_move_obj_to_tile(self_obj, home_tile, 0);
+                    end
+                end
+            end
+        end
+    end
+    call sleeping();
+end
+
+procedure damage_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_local_var(5, 1);
+    end
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
+            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
+            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+        end
+        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
+        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
+            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+        end
+    end
+    if (source_obj == dude_obj) then begin
+        set_global_var(GVAR_WATER_CHIP_4, 1);
+    end
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    display_mstr(100);
+end
+
+procedure map_enter_p_proc
+begin
+    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 1);
+    sleep_time := 1920;
+    wake_time := 710;
+    home_tile := 24911;
+    sleep_tile := home_tile;
+end
+
+procedure pickup_p_proc
+begin
+    if ((game_time / (10 * 60 * 60 * 24)) >= 30) then begin
+        float_msg(self_obj, mstr(101), FLOAT_MSG_NORMAL);
+    end
+    set_global_var(GVAR_WATER_CHIP_4, 1);
+    hostile := 1;
+end
+
+procedure talk_p_proc
+begin
+    if (local_var(4) == 1) then begin
+        float_msg(self_obj, message_str(SCRIPT_GENVAULT, 166), FLOAT_MSG_NORMAL);
+    end
+    else begin
+        if (global_var(GVAR_WATER_CHIP_4) or local_var(5)) then begin
+            float_msg(self_obj, mstr(114), FLOAT_MSG_NORMAL);
+        end
+        else begin
+            if (global_var(GVAR_FIND_WATER_CHIP) == 2) then begin
+                float_msg(self_obj, mstr(102), FLOAT_MSG_NORMAL);
+            end
+            else begin
+                if (global_var(GVAR_WATER_THIEF) == 2) then begin
+                    float_msg(self_obj, mstr(113), FLOAT_MSG_NORMAL);
+                end
+                else begin
+                    start_gdialog(507, self_obj, 4, -1, -1);
+                    gsay_start;
+                    call Lyle01();
+                    gsay_end;
+                    end_dialogue;
+                end
+            end
+        end
+    end
+end
+
+procedure Lyle01
+begin
+    Reply(mstr(103) + proto_data(obj_pid(dude_obj), 1) + mstr(104));
+    giq_option(4, NAME, 105, Lyle02, NEUTRAL_REACTION);
+    giq_option(-3, NAME, 107, LyleEnd, NEUTRAL_REACTION);
+end
+
+procedure Lyle02
+begin
+    if ((game_time / (10 * 60 * 60 * 24)) < 30) then begin
+        gsay_message(NAME, 106, NEUTRAL_REACTION);
+    end
+    else begin
+        Reply(108);
+        giq_option(4, NAME, 109, Lyle03, NEUTRAL_REACTION);
+        giq_option(4, NAME, 110, Lyle04, GOOD_REACTION);
+    end
+end
+
+procedure Lyle03
+begin
+    gsay_message(NAME, 111, NEUTRAL_REACTION);
+end
+
+procedure Lyle04
+begin
+    set_global_var(GVAR_WATER_THIEF, 1);
+    gsay_message(NAME, 112, GOOD_REACTION);
+end
+
+procedure LyleEnd
+begin
+end
+
+procedure flee_dude
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    while (LVar1 < 5) do begin
+        if (tile_distance(dude_tile, tile_num_in_direction(tile_num(self_obj), LVar1, 3)) > LVar2) then begin
+            LVar0 := tile_num_in_direction(tile_num(self_obj), LVar1, 3);
+            LVar2 := tile_distance(dude_tile, LVar0);
+        end
+        LVar1 := LVar1 + 1;
+    end
+    animate_move_obj_to_tile(self_obj, LVar0, 1);
+end
+
+procedure sleeping
+begin
+    if (local_var(4) == 1) then begin
+        if (not(night_person) and (game_time_hour >= wake_time) and (game_time_hour < sleep_time) or (night_person and ((game_time_hour >= wake_time) or (game_time_hour < sleep_time)))) then begin
+            if (((game_time_hour - wake_time) < 10) and ((game_time_hour - wake_time) > 0)) then begin
+                if (tile_num(self_obj) != home_tile) then begin
+                    animate_move_obj_to_tile(self_obj, home_tile, 0);
+                end
+                else begin
+                    set_local_var(4, 0);
+                end
+            end
+            else begin
+                move_to(self_obj, home_tile, elevation(self_obj));
+                if (tile_num(self_obj) == home_tile) then begin
+                    set_local_var(4, 0);
+                end
+            end
+        end
+    end
+    else begin
+        if (night_person and (game_time_hour >= sleep_time) and (game_time_hour < wake_time) or (not(night_person) and ((game_time_hour >= sleep_time) or (game_time_hour < wake_time)))) then begin
+            if (((game_time_hour - sleep_time) < 10) and ((game_time_hour - sleep_time) > 0)) then begin
+                if (tile_num(self_obj) != sleep_tile) then begin
+                    animate_move_obj_to_tile(self_obj, self_obj, 0);
+                end
+                else begin
+                    set_local_var(4, 1);
+                end
+            end
+            else begin
+                if (tile_num(self_obj) != sleep_tile) then begin
+                    move_to(self_obj, sleep_tile, elevation(self_obj));
+                end
+                else begin
+                    set_local_var(4, 1);
+                end
+            end
+        end
+    end
+end

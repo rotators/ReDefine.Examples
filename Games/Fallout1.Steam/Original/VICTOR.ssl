@@ -1,0 +1,247 @@
+procedure start;
+procedure critter_p_proc;
+procedure look_at_p_proc;
+procedure map_enter_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure timed_event_p_proc;
+procedure destroy_p_proc;
+procedure Victor01;
+procedure Victor02;
+procedure Victor03;
+procedure Victor04;
+procedure Victor05;
+procedure Victor06;
+procedure Victor07;
+procedure VictorEnd;
+procedure VictorCombat;
+procedure VictorDies;
+procedure sleeping;
+
+variable night_person;
+variable wake_time;
+variable sleep_time;
+variable home_tile;
+variable sleep_tile;
+variable hostile;
+
+
+procedure start
+begin
+    if (script_action == 12) then begin
+        call critter_p_proc();
+    end
+    else begin
+        if (script_action == 21) then begin
+            call look_at_p_proc();
+        end
+        else begin
+            if (script_action == 18) then begin
+                call destroy_p_proc();
+            end
+            else begin
+                if (script_action == 4) then begin
+                    call pickup_p_proc();
+                end
+                else begin
+                    if (script_action == 11) then begin
+                        call talk_p_proc();
+                    end
+                    else begin
+                        if (script_action == 22) then begin
+                            call timed_event_p_proc();
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure critter_p_proc
+begin
+    if (hostile) then begin
+        hostile := 0;
+        attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
+    end
+    if (global_var(555) != 2) then begin
+        call sleeping();
+    end
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    if (local_var(4)) then begin
+        display_msg(message_str(386, 100));
+    end
+    else begin
+        display_msg(message_str(386, 101));
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    home_tile := 13907;
+    sleep_tile := 13097;
+    sleep_time := 2203;
+    wake_time := 707;
+    critter_add_trait(self_obj, 1, 6, 14);
+    if (global_var(555) == 2) then begin
+        destroy_object(self_obj);
+    end
+end
+
+procedure pickup_p_proc
+begin
+    hostile := 1;
+end
+
+procedure talk_p_proc
+begin
+    if (local_var(5)) then begin
+        float_msg(self_obj, message_str(386, 116), 0);
+    end
+    else begin
+        start_gdialog(386, self_obj, 4, -1, -1);
+        gsay_start;
+        if (local_var(4)) then begin
+            call Victor06();
+        end
+        else begin
+            call Victor01();
+        end
+        gsay_end;
+        end_dialogue;
+    end
+end
+
+procedure timed_event_p_proc
+begin
+    if (obj_can_hear_obj(dude_obj, self_obj)) then begin
+        float_msg(self_obj, message_str(386, 102), 5);
+    end
+    critter_dmg(self_obj, 250, 0);
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+            set_global_var(156, 1);
+            set_global_var(157, 0);
+        end
+        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+            set_global_var(157, 1);
+            set_global_var(156, 0);
+        end
+        set_global_var(160, global_var(160) + 1);
+        if ((global_var(160) % 6) == 0) then begin
+            set_global_var(155, global_var(155) + 1);
+        end
+    end
+end
+
+procedure Victor01
+begin
+    set_local_var(4, 1);
+    gsay_reply(386, 103);
+    giq_option(4, 386, 104, Victor02, 50);
+    giq_option(4, 386, 105, Victor03, 50);
+    giq_option(-3, 386, 106, Victor07, 50);
+end
+
+procedure Victor02
+begin
+    gsay_message(386, 107, 50);
+    call VictorCombat();
+end
+
+procedure Victor03
+begin
+    gsay_reply(386, 108);
+    giq_option(4, 386, 109, Victor04, 50);
+    giq_option(4, 386, 110, Victor02, 50);
+    giq_option(6, 386, 111, Victor05, 50);
+end
+
+procedure Victor04
+begin
+    gsay_message(386, 112, 50);
+    call VictorCombat();
+end
+
+procedure Victor05
+begin
+    gsay_message(386, 113, 50);
+end
+
+procedure Victor06
+begin
+    gsay_reply(386, 114);
+    giq_option(4, 386, 117, Victor04, 50);
+    giq_option(4, 386, 118, VictorEnd, 50);
+end
+
+procedure Victor07
+begin
+    gsay_message(386, 115, 50);
+    call VictorDies();
+end
+
+procedure VictorEnd
+begin
+end
+
+procedure VictorCombat
+begin
+    hostile := 1;
+end
+
+procedure VictorDies
+begin
+    add_timer_event(self_obj, game_ticks(5), 1);
+end
+
+procedure sleeping
+begin
+    if (local_var(5) == 1) then begin
+        if (not(night_person) and (game_time_hour >= wake_time) and (game_time_hour < sleep_time) or (night_person and ((game_time_hour >= wake_time) or (game_time_hour < sleep_time)))) then begin
+            if (((game_time_hour - wake_time) < 10) and ((game_time_hour - wake_time) > 0)) then begin
+                if (tile_num(self_obj) != home_tile) then begin
+                    animate_move_obj_to_tile(self_obj, home_tile, 0);
+                end
+                else begin
+                    set_local_var(5, 0);
+                end
+            end
+            else begin
+                move_to(self_obj, home_tile, elevation(self_obj));
+                if (tile_num(self_obj) == home_tile) then begin
+                    set_local_var(5, 0);
+                end
+            end
+        end
+    end
+    else begin
+        if (night_person and (game_time_hour >= sleep_time) and (game_time_hour < wake_time) or (not(night_person) and ((game_time_hour >= sleep_time) or (game_time_hour < wake_time)))) then begin
+            if (((game_time_hour - sleep_time) < 10) and ((game_time_hour - sleep_time) > 0)) then begin
+                if (tile_num(self_obj) != sleep_tile) then begin
+                    animate_move_obj_to_tile(self_obj, self_obj, 0);
+                end
+                else begin
+                    set_local_var(5, 1);
+                end
+            end
+            else begin
+                if (tile_num(self_obj) != sleep_tile) then begin
+                    move_to(self_obj, sleep_tile, elevation(self_obj));
+                end
+                else begin
+                    set_local_var(5, 1);
+                end
+            end
+        end
+    end
+end
+

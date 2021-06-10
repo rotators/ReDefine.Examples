@@ -1,0 +1,437 @@
+procedure start;
+procedure combat;
+procedure critter_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure destroy_p_proc;
+procedure look_at_p_proc;
+procedure timed_event_p_proc;
+procedure damage_p_proc;
+procedure Farmer00;
+procedure Farmer01;
+procedure SendToWork;
+procedure SendToSleep;
+procedure CheckWorkHeading;
+
+variable hostile;
+variable Only_Once := 1;
+variable SetDayNight;
+variable Sleeping;
+variable LastMove;
+variable destination;
+variable CurrentTile;
+variable Count;
+
+procedure get_reaction;
+procedure ReactToLevel;
+procedure LevelToReact;
+procedure UpReact;
+procedure DownReact;
+procedure BottomReact;
+procedure TopReact;
+procedure BigUpReact;
+procedure BigDownReact;
+procedure UpReactLevel;
+procedure DownReactLevel;
+procedure Goodbyes;
+
+variable exit_line;
+
+
+procedure start
+begin
+    if (Only_Once) then begin
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 65);
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_HUB_PEASANTS);
+        Only_Once := 0;
+        LastMove := 21461;
+        Count := 0;
+    end
+    if (script_action == look_at_proc) then begin
+        call look_at_p_proc();
+    end
+    else begin
+        if (script_action == pickup_proc) then begin
+            call pickup_p_proc();
+        end
+        else begin
+            if (script_action == talk_proc) then begin
+                call talk_p_proc();
+            end
+            else begin
+                if (script_action == critter_proc) then begin
+                    call critter_p_proc();
+                end
+                else begin
+                    if (script_action == destroy_proc) then begin
+                        call destroy_p_proc();
+                    end
+                    else begin
+                        if (script_action == timed_event_proc) then begin
+                            call timed_event_p_proc();
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure combat
+begin
+    hostile := 1;
+end
+
+procedure critter_p_proc
+begin
+    if (hostile) then begin
+        hostile := 0;
+        attack(dude_obj);
+    end
+    if (not((game_time_hour >= 1900) or (game_time_hour < 600))) then begin
+        if (SetDayNight == 0) then begin
+            add_timer_event(self_obj, game_ticks(random(20, 30)), 1);
+            SetDayNight := 1;
+        end
+    end
+    else begin
+        if (Sleeping == 0) then begin
+            add_timer_event(self_obj, game_ticks(2), 1);
+        end
+    end
+    if (tile_num(self_obj) == 26672) then begin
+        if (obj_get_rot(self_obj) != 0) then begin
+            anim(self_obj, 1000, 0);
+        end
+    end
+    call CheckWorkHeading();
+end
+
+procedure pickup_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        hostile := 1;
+    end
+end
+
+procedure talk_p_proc
+begin
+    call get_reaction();
+    if ((game_time_hour >= 600) and (game_time_hour < 700) or ((game_time_hour >= 700) and (game_time_hour < 1800))) then begin
+        call Farmer00();
+    end
+    else begin
+        call Farmer01();
+    end
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
+            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
+            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+        end
+        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
+        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
+            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+        end
+    end
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    display_mstr(100);
+end
+
+procedure timed_event_p_proc
+begin
+    if ((game_time_hour >= 600) and (game_time_hour < 700) or ((game_time_hour >= 700) and (game_time_hour < 1800))) then begin
+        Sleeping := 0;
+        call SendToWork();
+    end
+    else begin
+        call SendToSleep();
+    end
+end
+
+procedure damage_p_proc
+begin
+    variable LVar0 := 0;
+    LVar0 := obj_pid(source_obj);
+    if (party_member_obj(LVar0) != 0) then begin
+        set_global_var(GVAR_ENEMY_HUB, 1);
+    end
+end
+
+procedure Farmer00
+begin
+    if (global_var(GVAR_DOG_EMPATHY) == 1) then begin
+        float_msg(self_obj, mstr(random(101, 109)), FLOAT_MSG_GREEN);
+    end
+    else begin
+        float_msg(self_obj, mstr(random(101, 107)), FLOAT_MSG_GREEN);
+    end
+end
+
+procedure Farmer01
+begin
+    float_msg(self_obj, mstr(random(110, 114)), FLOAT_MSG_GREEN);
+end
+
+procedure SendToWork
+begin
+    destination := 0;
+    while (destination == 0) do begin
+        destination := random(1, 16);
+        if (destination == 1) then begin
+            destination := 21461;
+        end
+        else begin
+            if (destination == 2) then begin
+                destination := 22460;
+            end
+            else begin
+                if (destination == 3) then begin
+                    destination := 24060;
+                end
+                else begin
+                    if (destination == 4) then begin
+                        destination := 21056;
+                    end
+                    else begin
+                        if (destination == 5) then begin
+                            destination := 23656;
+                        end
+                        else begin
+                            if (destination == 6) then begin
+                                destination := 21252;
+                            end
+                            else begin
+                                if (destination == 7) then begin
+                                    destination := 22256;
+                                end
+                                else begin
+                                    if (destination == 8) then begin
+                                        destination := 22652;
+                                    end
+                                    else begin
+                                        if (destination == 9) then begin
+                                            destination := 24052;
+                                        end
+                                        else begin
+                                            if (destination == 10) then begin
+                                                destination := 23449;
+                                            end
+                                            else begin
+                                                if (destination == 11) then begin
+                                                    destination := 21248;
+                                                end
+                                                else begin
+                                                    if (destination == 12) then begin
+                                                        destination := 21844;
+                                                    end
+                                                    else begin
+                                                        if (destination == 13) then begin
+                                                            destination := 21040;
+                                                        end
+                                                        else begin
+                                                            if (destination == 14) then begin
+                                                                destination := 20844;
+                                                            end
+                                                            else begin
+                                                                if (destination == 15) then begin
+                                                                    destination := 26270;
+                                                                end
+                                                                else begin
+                                                                    if (destination == 16) then begin
+                                                                        destination := 20048;
+                                                                    end
+                                                                end
+                                                            end
+                                                        end
+                                                    end
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        if (destination == LastMove) then begin
+            destination := 0;
+        end
+    end
+    Count := Count + 1;
+    if (Count >= 7) then begin
+        Count := 0;
+        destination := 26672;
+    end
+    LastMove := destination;
+    reg_anim_func(2, self_obj);
+    reg_anim_func(1, 1);
+    reg_anim_obj_move_to_tile(self_obj, destination, -1);
+    reg_anim_func(3, 0);
+    add_timer_event(self_obj, game_ticks(random(15, 30)), 1);
+end
+
+procedure SendToSleep
+begin
+    if (Sleeping == 0) then begin
+        reg_anim_func(2, self_obj);
+        reg_anim_func(1, 1);
+        reg_anim_obj_move_to_tile(self_obj, 26672, -1);
+        reg_anim_func(3, 0);
+        Sleeping := 1;
+        SetDayNight := 0;
+        Count := 0;
+        LastMove := 26672;
+    end
+end
+
+procedure CheckWorkHeading
+begin
+    if (Sleeping == 0) then begin
+        CurrentTile := tile_num(self_obj);
+        if (CurrentTile == LastMove) then begin
+            if (obj_get_rot(self_obj) != 1) then begin
+                anim(self_obj, 1000, 1);
+            end
+        end
+    end
+end
+
+procedure get_reaction
+begin
+    if (local_var(2) == 0) then begin
+        set_local_var(0, 50);
+        set_local_var(1, 2);
+        set_local_var(2, 1);
+        set_local_var(0, local_var(0) + (5 * dude_charisma) - 25);
+        set_local_var(0, local_var(0) + (10 * has_trait(TRAIT_PERK, dude_obj, PERK_presence)));
+        if (has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality)) then begin
+            if (global_var(GVAR_PLAYER_REPUATION) > 0) then begin
+                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+            end
+            else begin
+                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+            end
+        end
+        else begin
+            if (local_var(3) == 1) then begin
+                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+            end
+            else begin
+                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+            end
+        end
+        if (global_var(GVAR_CHILDKILLER_REPUATION) > 2) then begin
+            set_local_var(0, local_var(0) - 30);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+            set_local_var(0, local_var(0) + 20);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+            set_local_var(0, local_var(0) - 20);
+        end
+        call ReactToLevel();
+    end
+end
+
+procedure ReactToLevel
+begin
+    if (local_var(0) <= 25) then begin
+        set_local_var(1, 1);
+    end
+    else begin
+        if (local_var(0) <= 75) then begin
+            set_local_var(1, 2);
+        end
+        else begin
+            set_local_var(1, 3);
+        end
+    end
+end
+
+procedure LevelToReact
+begin
+    if (local_var(1) == 1) then begin
+        set_local_var(0, random(1, 25));
+    end
+    else begin
+        if (local_var(1) == 2) then begin
+            set_local_var(0, random(26, 75));
+        end
+        else begin
+            set_local_var(0, random(76, 100));
+        end
+    end
+end
+
+procedure UpReact
+begin
+    set_local_var(0, local_var(0) + 10);
+    call ReactToLevel();
+end
+
+procedure DownReact
+begin
+    set_local_var(0, local_var(0) - 10);
+    call ReactToLevel();
+end
+
+procedure BottomReact
+begin
+    set_local_var(1, 1);
+    set_local_var(0, 1);
+end
+
+procedure TopReact
+begin
+    set_local_var(0, 100);
+    set_local_var(1, 3);
+end
+
+procedure BigUpReact
+begin
+    set_local_var(0, local_var(0) + 25);
+    call ReactToLevel();
+end
+
+procedure BigDownReact
+begin
+    set_local_var(0, local_var(0) - 25);
+    call ReactToLevel();
+end
+
+procedure UpReactLevel
+begin
+    set_local_var(1, local_var(1) + 1);
+    if (local_var(1) > 3) then begin
+        set_local_var(1, 3);
+    end
+    call LevelToReact();
+end
+
+procedure DownReactLevel
+begin
+    set_local_var(1, local_var(1) - 1);
+    if (local_var(1) < 1) then begin
+        set_local_var(1, 1);
+    end
+    call LevelToReact();
+end
+
+procedure Goodbyes
+begin
+    exit_line := message_str(SCRIPT_MODREACT, random(100, 105));
+end

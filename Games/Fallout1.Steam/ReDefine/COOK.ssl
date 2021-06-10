@@ -1,0 +1,162 @@
+procedure start;
+procedure combat_p_proc;
+procedure critter_p_proc;
+procedure damage_p_proc;
+procedure description_p_proc;
+procedure destroy_p_proc;
+procedure look_at_p_proc;
+procedure talk_p_proc;
+procedure pickup_p_proc;
+procedure Cook01;
+
+variable hostile;
+variable initialized;
+variable round_counter;
+
+
+procedure start
+begin
+    if (not(initialized)) then begin
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 2);
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_PEASANT);
+        initialized := 1;
+    end
+    else begin
+        if (script_action == combat_proc) then begin
+            call combat_p_proc();
+        end
+        else begin
+            if (script_action == critter_proc) then begin
+                call critter_p_proc();
+            end
+            else begin
+                if (script_action == damage_proc) then begin
+                    call damage_p_proc();
+                end
+                else begin
+                    if (script_action == description_proc) then begin
+                        call description_p_proc();
+                    end
+                    else begin
+                        if (script_action == destroy_proc) then begin
+                            call destroy_p_proc();
+                        end
+                        else begin
+                            if (script_action == look_at_proc) then begin
+                                call look_at_p_proc();
+                            end
+                            else begin
+                                if (script_action == pickup_proc) then begin
+                                    call pickup_p_proc();
+                                end
+                                else begin
+                                    if (script_action == talk_proc) then begin
+                                        call talk_p_proc();
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure combat_p_proc
+begin
+    if (fixed_param == 4) then begin
+        round_counter := round_counter + 1;
+    end
+    if (round_counter > 3) then begin
+        if (global_var(GVAR_ENEMY_SHADY_SANDS) == 0) then begin
+            set_global_var(GVAR_ENEMY_SHADY_SANDS, 1);
+            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 5);
+        end
+    end
+end
+
+procedure critter_p_proc
+begin
+    if (obj_can_see_obj(self_obj, dude_obj)) then begin
+        if (global_var(GVAR_ENEMY_SHADY_SANDS) == 1) then begin
+            hostile := 1;
+        end
+    end
+    if (hostile) then begin
+        hostile := 0;
+        attack(dude_obj);
+    end
+end
+
+procedure damage_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_local_var(1, 1);
+    end
+end
+
+procedure description_p_proc
+begin
+    script_overrides;
+    display_mstr(100);
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_global_var(GVAR_ENEMY_SHADY_SANDS, 1);
+    end
+    if (source_obj == dude_obj) then begin
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
+            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
+            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+        end
+        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
+        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
+            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+        end
+    end
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    display_mstr(100);
+end
+
+procedure talk_p_proc
+begin
+    if (global_var(GVAR_ENEMY_SHADY_SANDS) or (local_var(1) == 1)) then begin
+        float_msg(self_obj, message_str(SCRIPT_ENEMY, random(100, 105)), FLOAT_MSG_NORMAL);
+    end
+    else begin
+        if (is_success(do_check(dude_obj, 6, 0)) and (local_var(0) == 0)) then begin
+            start_gdialog(114, self_obj, 4, -1, -1);
+            gsay_start;
+            Reply(101);
+            giq_option(1, NAME, 102, Cook01, NEUTRAL_REACTION);
+            gsay_end;
+            end_dialogue;
+        end
+        else begin
+            float_msg(self_obj, mstr(103), FLOAT_MSG_YELLOW);
+        end
+        set_local_var(0, 1);
+    end
+end
+
+procedure pickup_p_proc
+begin
+    set_local_var(1, 1);
+end
+
+procedure Cook01
+begin
+    set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) + 1);
+    gsay_message(NAME, 104, NEUTRAL_REACTION);
+end

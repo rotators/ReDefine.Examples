@@ -1,0 +1,405 @@
+diff --git a/Games/Fallout1.Steam/Original/PATRICK.ssl b/Games/Fallout1.Steam/ReDefine/PATRICK.ssl
+index 566ec76..b73d07f 100644
+--- a/Games/Fallout1.Steam/Original/PATRICK.ssl
++++ b/Games/Fallout1.Steam/ReDefine/PATRICK.ssl
+@@ -35,28 +35,28 @@ variable scared;
+ procedure start
+ begin
+     if (not(initialized)) then begin
+-        critter_add_trait(self_obj, 1, 6, 87);
+-        critter_add_trait(self_obj, 1, 5, 2);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 87);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_CAREFUL);
+         initialized := 1;
+     end
+     else begin
+-        if (script_action == 12) then begin
++        if (script_action == critter_proc) then begin
+             call critter_p_proc();
+         end
+         else begin
+-            if (script_action == 18) then begin
++            if (script_action == destroy_proc) then begin
+                 call destroy_p_proc();
+             end
+             else begin
+-                if (script_action == 21) then begin
++                if (script_action == look_at_proc) then begin
+                     call look_at_p_proc();
+                 end
+                 else begin
+-                    if (script_action == 4) then begin
++                    if (script_action == pickup_proc) then begin
+                         call pickup_p_proc();
+                     end
+                     else begin
+-                        if (script_action == 11) then begin
++                        if (script_action == talk_proc) then begin
+                             call talk_p_proc();
+                         end
+                     end
+@@ -77,26 +77,26 @@ begin
+         if (hostile) then begin
+             hostile := 0;
+             scared := 1;
+-            attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++            attack(dude_obj);
+         end
+     end
+ end
+ 
+ procedure destroy_p_proc
+ begin
+-    set_global_var(297, 1);
++    set_global_var(GVAR_WATER_THIEF_10, 1);
+     if (source_obj == dude_obj) then begin
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-            set_global_var(156, 1);
+-            set_global_var(157, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+-            set_global_var(157, 1);
+-            set_global_var(156, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+         end
+-        set_global_var(159, global_var(159) + 1);
+-        if ((global_var(159) % 2) == 0) then begin
+-            set_global_var(155, global_var(155) - 1);
++        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
++        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
++            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+         end
+     end
+ end
+@@ -104,12 +104,12 @@ end
+ procedure look_at_p_proc
+ begin
+     script_overrides;
+-    known := global_var(330);
++    known := global_var(GVAR_SAVE_TANDI_1);
+     if (known) then begin
+-        display_msg(message_str(667, 101));
++        display_mstr(101);
+     end
+     else begin
+-        display_msg(message_str(667, 100));
++        display_mstr(100);
+     end
+ end
+ 
+@@ -120,9 +120,9 @@ end
+ 
+ procedure talk_p_proc
+ begin
+-    known := global_var(330);
++    known := global_var(GVAR_SAVE_TANDI_1);
+     if (scared) then begin
+-        float_msg(self_obj, message_str(669, random(100, 105)), 2);
++        float_msg(self_obj, message_str(SCRIPT_ENEMY, random(100, 105)), FLOAT_MSG_RED);
+     end
+     else begin
+         start_gdialog(667, self_obj, 4, -1, -1);
+@@ -144,9 +144,9 @@ begin
+     variable LVar1 := 0;
+     variable LVar2 := 0;
+     while (LVar1 < 5) do begin
+-        if (tile_distance(tile_num(dude_obj), tile_num_in_direction(tile_num(self_obj), LVar1, 3)) > LVar2) then begin
++        if (tile_distance(dude_tile, tile_num_in_direction(tile_num(self_obj), LVar1, 3)) > LVar2) then begin
+             LVar0 := tile_num_in_direction(tile_num(self_obj), LVar1, 3);
+-            LVar2 := tile_distance(tile_num(dude_obj), LVar0);
++            LVar2 := tile_distance(dude_tile, LVar0);
+         end
+         LVar1 := LVar1 + 1;
+     end
+@@ -156,120 +156,120 @@ end
+ procedure Patrick01
+ begin
+     known := 1;
+-    set_global_var(330, known);
+-    gsay_reply(667, 102);
+-    giq_option(4, 667, 103, Patrick02, 50);
+-    giq_option(4, 667, 104, Patrick03, 50);
+-    if ((global_var(101) == 0) and (obj_is_carrying_obj_pid(dude_obj, 55) == 0)) then begin
+-        giq_option(4, 667, 105, Patrick04, 50);
++    set_global_var(GVAR_SAVE_TANDI_1, known);
++    Reply(102);
++    giq_option(4, NAME, 103, Patrick02, NEUTRAL_REACTION);
++    giq_option(4, NAME, 104, Patrick03, NEUTRAL_REACTION);
++    if ((global_var(GVAR_FIND_WATER_CHIP) == 0) and (obj_is_carrying_obj_pid(dude_obj, 55) == 0)) then begin
++        giq_option(4, NAME, 105, Patrick04, NEUTRAL_REACTION);
+     end
+-    if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-        giq_option(4, 667, 106, PatrickCombat, 51);
++    if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++        giq_option(4, NAME, 106, PatrickCombat, BAD_REACTION);
+     end
+-    giq_option(-3, 667, 107, PatrickEnd, 50);
++    giq_option(-3, NAME, 107, PatrickEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Patrick02
+ begin
+-    gsay_reply(667, 108);
+-    giq_option(4, 667, 109, Patrick05, 50);
+-    giq_option(4, 667, 110, Patrick06, 50);
+-    giq_option(4, 667, 111, Patrick05, 50);
+-    giq_option(4, 667, 112, PatrickEnd, 50);
++    Reply(108);
++    giq_option(4, NAME, 109, Patrick05, NEUTRAL_REACTION);
++    giq_option(4, NAME, 110, Patrick06, NEUTRAL_REACTION);
++    giq_option(4, NAME, 111, Patrick05, NEUTRAL_REACTION);
++    giq_option(4, NAME, 112, PatrickEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Patrick03
+ begin
+-    gsay_reply(667, 113);
+-    giq_option(4, 667, 114, PatrickEnd, 50);
+-    giq_option(4, 667, 115, Patrick05, 50);
++    Reply(113);
++    giq_option(4, NAME, 114, PatrickEnd, NEUTRAL_REACTION);
++    giq_option(4, NAME, 115, Patrick05, NEUTRAL_REACTION);
+ end
+ 
+ procedure Patrick04
+ begin
+-    gsay_reply(667, 116);
+-    if (get_critter_stat(dude_obj, 4) > 6) then begin
+-        giq_option(7, 667, 117, Patrick07, 50);
++    Reply(116);
++    if (dude_iq > 6) then begin
++        giq_option(7, NAME, 117, Patrick07, NEUTRAL_REACTION);
+     end
+     else begin
+-        giq_option(4, 667, 118, Patrick07, 50);
++        giq_option(4, NAME, 118, Patrick07, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure Patrick05
+ begin
+-    gsay_reply(667, 119);
+-    giq_option(4, 667, 120, Patrick08, 50);
+-    giq_option(4, 667, 121, Patrick09, 50);
+-    giq_option(4, 667, 110, Patrick06, 50);
+-    giq_option(4, 667, 122, PatrickEnd, 50);
++    Reply(119);
++    giq_option(4, NAME, 120, Patrick08, NEUTRAL_REACTION);
++    giq_option(4, NAME, 121, Patrick09, NEUTRAL_REACTION);
++    giq_option(4, NAME, 110, Patrick06, NEUTRAL_REACTION);
++    giq_option(4, NAME, 122, PatrickEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Patrick06
+ begin
+-    gsay_reply(667, 123);
+-    if (global_var(68) < 1) then begin
+-        set_global_var(68, 1);
++    Reply(123);
++    if (global_var(GVAR_SHADY_SANDS) < 1) then begin
++        set_global_var(GVAR_SHADY_SANDS, 1);
+     end
+-    if (global_var(71) < 1) then begin
+-        set_global_var(71, 1);
++    if (global_var(GVAR_JUNKTOWN) < 1) then begin
++        set_global_var(GVAR_JUNKTOWN, 1);
+     end
+-    if (global_var(73) < 1) then begin
+-        set_global_var(71, 1);
++    if (global_var(GVAR_THE_HUB) < 1) then begin
++        set_global_var(GVAR_JUNKTOWN, 1);
+     end
+-    if (global_var(72) < 1) then begin
+-        set_global_var(72, 1);
++    if (global_var(GVAR_NECROPOLIS) < 1) then begin
++        set_global_var(GVAR_NECROPOLIS, 1);
+     end
+     call Patrick06a();
+ end
+ 
+ procedure Patrick06a
+ begin
+-    giq_option(4, 667, 124, Patrick10, 50);
+-    giq_option(4, 667, 125, Patrick11, 50);
+-    giq_option(4, 667, 126, Patrick12, 50);
+-    giq_option(4, 667, 127, Patrick13, 50);
+-    giq_option(4, 634, 100, PatrickEnd, 50);
++    giq_option(4, NAME, 124, Patrick10, NEUTRAL_REACTION);
++    giq_option(4, NAME, 125, Patrick11, NEUTRAL_REACTION);
++    giq_option(4, NAME, 126, Patrick12, NEUTRAL_REACTION);
++    giq_option(4, NAME, 127, Patrick13, NEUTRAL_REACTION);
++    giq_option(4, SCRIPT_MODREACT, 100, PatrickEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Patrick07
+ begin
+-    gsay_reply(667, 128);
+-    giq_option(4, 634, 100, PatrickEnd, 50);
+-    giq_option(4, 667, 115, Patrick05, 50);
++    Reply(128);
++    giq_option(4, SCRIPT_MODREACT, 100, PatrickEnd, NEUTRAL_REACTION);
++    giq_option(4, NAME, 115, Patrick05, NEUTRAL_REACTION);
+ end
+ 
+ procedure Patrick08
+ begin
+-    gsay_reply(667, 129);
+-    if ((global_var(101) == 0) and (obj_is_carrying_obj_pid(dude_obj, 55) == 0)) then begin
+-        giq_option(4, 667, 130, Patrick07, 50);
++    Reply(129);
++    if ((global_var(GVAR_FIND_WATER_CHIP) == 0) and (obj_is_carrying_obj_pid(dude_obj, 55) == 0)) then begin
++        giq_option(4, NAME, 130, Patrick07, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 667, 110, Patrick05, 50);
+-    giq_option(4, 667, 112, PatrickEnd, 50);
++    giq_option(4, NAME, 110, Patrick05, NEUTRAL_REACTION);
++    giq_option(4, NAME, 112, PatrickEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Patrick09
+ begin
+-    gsay_reply(667, 131);
++    Reply(131);
+     if (is_success(roll_vs_skill(dude_obj, 14, 0))) then begin
+-        giq_option(7, 667, 132, Patrick15, 49);
++        giq_option(7, NAME, 132, Patrick15, GOOD_REACTION);
+     end
+-    giq_option(4, 667, 133, Patrick05, 50);
+-    giq_option(4, 667, 122, PatrickEnd, 50);
++    giq_option(4, NAME, 133, Patrick05, NEUTRAL_REACTION);
++    giq_option(4, NAME, 122, PatrickEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Patrick10
+ begin
+-    if (global_var(13) == 1) then begin
+-        gsay_reply(667, 141);
++    if (global_var(GVAR_NECROPOLIS_INVADED) == 1) then begin
++        Reply(141);
+     end
+     else begin
+-        if (global_var(26) == 27) then begin
+-            gsay_reply(667, 135);
++        if (global_var(GVAR_TANDI_STATUS) == 27) then begin
++            Reply(135);
+         end
+         else begin
+-            gsay_reply(667, 134);
++            Reply(134);
+         end
+     end
+     call Patrick06a();
+@@ -277,20 +277,20 @@ end
+ 
+ procedure Patrick11
+ begin
+-    if (global_var(13) == 1) then begin
+-        gsay_reply(667, 141);
++    if (global_var(GVAR_NECROPOLIS_INVADED) == 1) then begin
++        Reply(141);
+     end
+     else begin
+-        if (global_var(37)) then begin
+-            if (global_var(38)) then begin
+-                gsay_reply(667, 138);
++        if (global_var(GVAR_KILLIAN_DEAD)) then begin
++            if (global_var(GVAR_GIZMO_DEAD)) then begin
++                Reply(138);
+             end
+             else begin
+-                gsay_reply(667, 137);
++                Reply(137);
+             end
+         end
+         else begin
+-            gsay_reply(667, 136);
++            Reply(136);
+         end
+     end
+     call Patrick06a();
+@@ -298,25 +298,25 @@ end
+ 
+ procedure Patrick12
+ begin
+-    if (global_var(13) == 1) then begin
+-        gsay_reply(667, 141);
++    if (global_var(GVAR_NECROPOLIS_INVADED) == 1) then begin
++        Reply(141);
+     end
+     else begin
+-        gsay_reply(667, 139);
++        Reply(139);
+     end
+     call Patrick06a();
+ end
+ 
+ procedure Patrick13
+ begin
+-    if (global_var(13) == 1) then begin
+-        gsay_reply(667, 141);
++    if (global_var(GVAR_NECROPOLIS_INVADED) == 1) then begin
++        Reply(141);
+     end
+     else begin
+-        gsay_reply(667, 140);
++        Reply(140);
+     end
+-    if (get_critter_stat(dude_obj, 4) > 5) then begin
+-        giq_option(6, 667, 142, Patrick14, 50);
++    if (dude_iq > 5) then begin
++        giq_option(6, NAME, 142, Patrick14, NEUTRAL_REACTION);
+     end
+     else begin
+         call Patrick06a();
+@@ -325,31 +325,31 @@ end
+ 
+ procedure Patrick14
+ begin
+-    gsay_reply(667, 143);
++    Reply(143);
+     call Patrick06a();
+ end
+ 
+ procedure Patrick15
+ begin
+-    gsay_reply(667, 144);
+-    giq_option(4, 667, 145, Patrick16, 49);
+-    giq_option(4, 667, 146, PatrickEnd, 50);
++    Reply(144);
++    giq_option(4, NAME, 145, Patrick16, GOOD_REACTION);
++    giq_option(4, NAME, 146, PatrickEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Patrick16
+ begin
+     gfade_out(600);
+-    set_critter_stat(dude_obj, 3, 1);
++    set_critter_stat(dude_obj, STAT_ch, 1);
+     gfade_in(600);
+-    gsay_message(667, 147, 49);
++    gsay_message(NAME, 147, GOOD_REACTION);
+ end
+ 
+ procedure Patrick17
+ begin
+-    gsay_reply(667, 148);
+-    giq_option(4, 667, 149, Patrick06, 50);
+-    giq_option(4, 667, 150, PatrickEnd, 50);
+-    giq_option(-3, 667, 107, PatrickEnd, 50);
++    Reply(148);
++    giq_option(4, NAME, 149, Patrick06, NEUTRAL_REACTION);
++    giq_option(4, NAME, 150, PatrickEnd, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 107, PatrickEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure PatrickCombat
+@@ -360,4 +360,3 @@ end
+ procedure PatrickEnd
+ begin
+ end
+-

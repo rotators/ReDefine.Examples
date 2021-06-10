@@ -1,0 +1,150 @@
+procedure start;
+procedure critter_p_proc;
+procedure map_enter_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure destroy_p_proc;
+procedure Cougar00;
+procedure Cougar01;
+procedure Cougar02;
+procedure Cougar03;
+procedure Cougar04;
+
+variable hostile;
+
+import variable fetch_dude;
+
+procedure damage_p_proc;
+
+
+procedure start
+begin
+    if (script_action == destroy_proc) then begin
+        call destroy_p_proc();
+    end
+    else begin
+        if (script_action == critter_proc) then begin
+            call critter_p_proc();
+        end
+        else begin
+            if (script_action == map_enter_proc) then begin
+                call map_enter_p_proc();
+            end
+            else begin
+                if (script_action == talk_proc) then begin
+                    call talk_p_proc();
+                end
+                else begin
+                    if ((script_action == look_at_proc) or (script_action == description_proc)) then begin
+                        script_overrides;
+                        display_mstr(100);
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure critter_p_proc
+begin
+    if (hostile) then begin
+        hostile := 0;
+        attack(dude_obj);
+    end
+    else begin
+        if (fetch_dude) then begin
+            hostile := 1;
+            fetch_dude := 0;
+        end
+    end
+    if (global_var(GVAR_CURE_JARVIS_7) == 1) then begin
+        if (obj_can_see_obj(self_obj, dude_obj)) then begin
+            attack(dude_obj);
+        end
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    if (global_var(GVAR_JUNKTOWN_INVADED) == 1) then begin
+        kill_critter(self_obj, 48);
+    end
+    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 19);
+end
+
+procedure pickup_p_proc
+begin
+    hostile := 1;
+end
+
+procedure talk_p_proc
+begin
+    if (local_var(0)) then begin
+        call Cougar04();
+    end
+    else begin
+        start_gdialog(35, self_obj, 4, -1, -1);
+        gsay_start;
+        call Cougar00();
+        gsay_end;
+        end_dialogue;
+    end
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_global_var(GVAR_CURE_JARVIS_7, 1);
+        if (source_obj == dude_obj) then begin
+            if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+                set_global_var(GVAR_BERSERKER_REPUTATION, 1);
+                set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+            end
+            if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+                set_global_var(GVAR_CHAMPION_REPUTATION, 1);
+                set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+            end
+            set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
+            if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
+                set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+            end
+        end
+    end
+end
+
+procedure Cougar00
+begin
+    set_local_var(0, 1);
+    Reply(101);
+    giq_option(4, NAME, 102, Cougar01, NEUTRAL_REACTION);
+    giq_option(5, NAME, 103, Cougar02, NEUTRAL_REACTION);
+    giq_option(-3, NAME, 104, Cougar03, NEUTRAL_REACTION);
+end
+
+procedure Cougar01
+begin
+    Reply(105);
+    giq_option(4, NAME, 106, Cougar02, NEUTRAL_REACTION);
+end
+
+procedure Cougar02
+begin
+    gsay_message(NAME, 107, NEUTRAL_REACTION);
+end
+
+procedure Cougar03
+begin
+    gsay_message(NAME, 108, NEUTRAL_REACTION);
+end
+
+procedure Cougar04
+begin
+    float_msg(self_obj, mstr(109), 50);
+end
+
+procedure damage_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_global_var(GVAR_CURE_JARVIS_7, 1);
+    end
+end

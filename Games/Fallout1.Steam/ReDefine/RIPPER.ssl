@@ -1,0 +1,76 @@
+procedure start;
+procedure combat_p_proc;
+procedure critter_p_proc;
+procedure destroy_p_proc;
+procedure pickup_p_proc;
+
+variable stealing;
+variable initialized;
+
+
+procedure start
+begin
+    if (not(initialized)) then begin
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 45);
+        initialized := 1;
+    end
+    else begin
+        if (script_action == combat_proc) then begin
+            call combat_p_proc();
+        end
+        else begin
+            if (script_action == critter_proc) then begin
+                call critter_p_proc();
+            end
+            else begin
+                if (script_action == destroy_proc) then begin
+                    call destroy_p_proc();
+                end
+                else begin
+                    if (script_action == pickup_proc) then begin
+                        call pickup_p_proc();
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure combat_p_proc
+begin
+    if (fixed_param == 2) then begin
+        if (obj_pid(critter_inven_obj(dude_obj, 2)) == 4) then begin
+            poison(dude_obj, random(1, 6));
+        end
+    end
+end
+
+procedure critter_p_proc
+begin
+    if (obj_can_see_obj(self_obj, dude_obj) or stealing) then begin
+        attack(dude_obj);
+    end
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
+            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
+            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+        end
+        set_global_var(GVAR_BAD_MONSTER, global_var(GVAR_BAD_MONSTER) + 1);
+        if ((global_var(GVAR_BAD_MONSTER) % 6) == 0) then begin
+            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) + 1);
+        end
+    end
+end
+
+procedure pickup_p_proc
+begin
+    stealing := 1;
+end

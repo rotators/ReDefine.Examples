@@ -1,0 +1,280 @@
+procedure start;
+procedure critter_p_proc;
+procedure damage_p_proc;
+procedure destroy_p_proc;
+procedure map_enter_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure timed_event_p_proc;
+procedure get_rations;
+procedure set_ration_tile;
+procedure set_sleep_tile;
+procedure sleeping;
+
+variable night_person;
+variable wake_time;
+variable sleep_time;
+variable home_tile;
+variable sleep_tile;
+variable rndx;
+variable hostile;
+variable sleeping_disabled;
+variable ration_tile;
+
+import variable recipient;
+import variable WtrGrd_ptr;
+import variable getting_ration;
+
+
+procedure start
+begin
+    if (script_action == 12) then begin
+        call critter_p_proc();
+    end
+    else begin
+        if (script_action == 14) then begin
+            call damage_p_proc();
+        end
+        else begin
+            if (script_action == 18) then begin
+                call destroy_p_proc();
+            end
+            else begin
+                if (script_action == 15) then begin
+                    call map_enter_p_proc();
+                end
+                else begin
+                    if (script_action == 4) then begin
+                        call pickup_p_proc();
+                    end
+                    else begin
+                        if (script_action == 11) then begin
+                            call talk_p_proc();
+                        end
+                        else begin
+                            if (script_action == 22) then begin
+                                call timed_event_p_proc();
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure critter_p_proc
+begin
+    if (hostile) then begin
+        hostile := 0;
+        attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
+    end
+    else begin
+        if (global_var(101) == 0) then begin
+            if (local_var(5) == 0) then begin
+                if ((elevation(self_obj) == elevation(WtrGrd_ptr)) and (elevation(self_obj) == elevation(dude_obj))) then begin
+                    if ((game_time_hour > 700) and (game_time_hour < 900)) then begin
+                        call get_rations();
+                    end
+                end
+            end
+        end
+        if (not((game_time_hour >= 700) and (game_time_hour < 1800))) then begin
+            set_local_var(5, 0);
+            sleeping_disabled := 0;
+        end
+        if (sleeping_disabled == 0) then begin
+            call sleeping();
+        end
+    end
+end
+
+procedure damage_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_local_var(7, 1);
+    end
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+            set_global_var(156, 1);
+            set_global_var(157, 0);
+        end
+        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+            set_global_var(157, 1);
+            set_global_var(156, 0);
+        end
+        set_global_var(159, global_var(159) + 1);
+        if ((global_var(159) % 2) == 0) then begin
+            set_global_var(155, global_var(155) - 1);
+        end
+    end
+    if (source_obj == dude_obj) then begin
+        set_global_var(261, 1);
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    if (not(local_var(4))) then begin
+        set_local_var(4, tile_num(self_obj));
+    end
+    home_tile := local_var(4);
+    critter_add_trait(self_obj, 1, 6, 1);
+    call set_ration_tile();
+    call set_sleep_tile();
+    sleep_time := random(1900, 1930);
+    wake_time := sleep_time - 1300;
+end
+
+procedure pickup_p_proc
+begin
+    hostile := 1;
+end
+
+procedure talk_p_proc
+begin
+    if (local_var(6) == 1) then begin
+        if (random(0, 1)) then begin
+            float_msg(self_obj, message_str(185, 166), 0);
+        end
+        else begin
+            display_msg(message_str(185, 167));
+        end
+    end
+    else begin
+        if (local_var(7) or global_var(261)) then begin
+            float_msg(self_obj, message_str(669, 105), 0);
+        end
+        else begin
+            if (rndx == 0) then begin
+                rndx := random(101, 106);
+            end
+            float_msg(self_obj, message_str(130, rndx), 0);
+        end
+    end
+end
+
+procedure timed_event_p_proc
+begin
+    if (fixed_param == 1) then begin
+        animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(WtrGrd_ptr), 2, 1), 0);
+        add_timer_event(self_obj, game_ticks(3), 2);
+    end
+    else begin
+        if (fixed_param == 2) then begin
+            getting_ration := 1;
+            if (random(0, 1)) then begin
+                float_msg(self_obj, message_str(185, 165), 0);
+            end
+            add_timer_event(self_obj, game_ticks(3), 3);
+        end
+        else begin
+            if (fixed_param == 3) then begin
+                recipient := 0;
+                animate_move_obj_to_tile(self_obj, home_tile, 0);
+            end
+        end
+    end
+end
+
+procedure get_rations
+begin
+    sleeping_disabled := 1;
+    if (tile_num(self_obj) != ration_tile) then begin
+        if (random(0, 1)) then begin
+            animate_move_obj_to_tile(self_obj, ration_tile, 0);
+        end
+        else begin
+            animate_move_obj_to_tile(self_obj, ration_tile, 1);
+        end
+    end
+    else begin
+        if (not(recipient)) then begin
+            recipient := self_obj;
+            add_timer_event(self_obj, game_ticks(3), 1);
+            set_local_var(5, 1);
+            sleeping_disabled := 0;
+        end
+    end
+end
+
+procedure set_ration_tile
+begin
+    if (elevation(self_obj) == 0) then begin
+        ration_tile := tile_num_in_direction(14704, random(0, 5), random(1, 2));
+    end
+    else begin
+        if (elevation(self_obj) == 1) then begin
+            ration_tile := tile_num_in_direction(21895, random(0, 5), random(1, 2));
+        end
+        else begin
+            if (elevation(self_obj) == 2) then begin
+                ration_tile := tile_num_in_direction(22513, random(0, 5), random(1, 2));
+            end
+        end
+    end
+end
+
+procedure set_sleep_tile
+begin
+    if (elevation(self_obj) == 0) then begin
+        sleep_tile := 7000;
+    end
+    else begin
+        if (elevation(self_obj) == 1) then begin
+            sleep_tile := home_tile;
+        end
+        else begin
+            if (elevation(self_obj) == 2) then begin
+                sleep_tile := 7000;
+            end
+        end
+    end
+end
+
+procedure sleeping
+begin
+    if (local_var(6) == 1) then begin
+        if (not(night_person) and (game_time_hour >= wake_time) and (game_time_hour < sleep_time) or (night_person and ((game_time_hour >= wake_time) or (game_time_hour < sleep_time)))) then begin
+            if (((game_time_hour - wake_time) < 10) and ((game_time_hour - wake_time) > 0)) then begin
+                if (tile_num(self_obj) != home_tile) then begin
+                    animate_move_obj_to_tile(self_obj, home_tile, 0);
+                end
+                else begin
+                    set_local_var(6, 0);
+                end
+            end
+            else begin
+                move_to(self_obj, home_tile, elevation(self_obj));
+                if (tile_num(self_obj) == home_tile) then begin
+                    set_local_var(6, 0);
+                end
+            end
+        end
+    end
+    else begin
+        if (night_person and (game_time_hour >= sleep_time) and (game_time_hour < wake_time) or (not(night_person) and ((game_time_hour >= sleep_time) or (game_time_hour < wake_time)))) then begin
+            if (((game_time_hour - sleep_time) < 10) and ((game_time_hour - sleep_time) > 0)) then begin
+                if (tile_num(self_obj) != sleep_tile) then begin
+                    animate_move_obj_to_tile(self_obj, self_obj, 0);
+                end
+                else begin
+                    set_local_var(6, 1);
+                end
+            end
+            else begin
+                if (tile_num(self_obj) != sleep_tile) then begin
+                    move_to(self_obj, sleep_tile, elevation(self_obj));
+                end
+                else begin
+                    set_local_var(6, 1);
+                end
+            end
+        end
+    end
+end
+

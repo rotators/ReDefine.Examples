@@ -1,0 +1,76 @@
+procedure start;
+procedure critter_p_proc;
+procedure destroy_p_proc;
+procedure pickup_p_proc;
+
+import variable Team9_Count;
+
+variable hostile;
+variable initialized;
+
+
+procedure start
+begin
+    if (not(initialized)) then begin
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 34);
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_MUTATED_RAT);
+        initialized := 1;
+    end
+    if (script_action == critter_proc) then begin
+        call critter_p_proc();
+    end
+    else begin
+        if (script_action == destroy_proc) then begin
+            call destroy_p_proc();
+        end
+        else begin
+            if (script_action == pickup_proc) then begin
+                hostile := 1;
+            end
+        end
+    end
+end
+
+procedure critter_p_proc
+begin
+    if (obj_can_see_obj(self_obj, dude_obj)) then begin
+        if (hostile) then begin
+            hostile := 0;
+            attack(dude_obj);
+        end
+        else begin
+            if (global_var(GVAR_ENEMY_VAULT_VILLAGE) == 1) then begin
+                attack(dude_obj);
+            end
+            else begin
+                if (not(obj_pid(critter_inven_obj(dude_obj, 0)) == 113)) then begin
+                    hostile := 1;
+                end
+            end
+        end
+    end
+end
+
+procedure destroy_p_proc
+begin
+    Team9_Count := Team9_Count - 1;
+    if (source_obj == dude_obj) then begin
+        if (((global_var(GVAR_GECKO_SKEETER_PART) + global_var(GVAR_GECKO_REQ_FORM)) >= 25) and ((global_var(GVAR_GECKO_REQ_FORM) > (2 * global_var(GVAR_GECKO_SKEETER_PART))) or (global_var(GVAR_SIERRA_LOCKOUT) == 1))) then begin
+            set_global_var(GVAR_SIERRA_LOCKOUT, 1);
+            set_global_var(GVAR_SIERRA_PASSWORD, 0);
+        end
+        if (((global_var(GVAR_GECKO_SKEETER_PART) + global_var(GVAR_GECKO_REQ_FORM)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GECKO_REQ_FORM))) or (global_var(GVAR_SIERRA_PASSWORD) == 1))) then begin
+            set_global_var(GVAR_SIERRA_PASSWORD, 1);
+            set_global_var(GVAR_SIERRA_LOCKOUT, 0);
+        end
+        set_global_var(GVAR_GECKO_SKEETER_PART, global_var(GVAR_GECKO_SKEETER_PART) + 1);
+        if ((global_var(GVAR_GECKO_SKEETER_PART) % 6) == 0) then begin
+            set_global_var(GVAR_BRAIN_BOT_BRAIN, global_var(GVAR_BRAIN_BOT_BRAIN) + 1);
+        end
+    end
+end
+
+procedure pickup_p_proc
+begin
+    hostile := 1;
+end

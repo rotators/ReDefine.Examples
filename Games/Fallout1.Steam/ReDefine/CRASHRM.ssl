@@ -1,0 +1,83 @@
+procedure start;
+procedure spatial_p_proc;
+procedure talk_p_proc;
+procedure CrashRm01;
+procedure CrashRm02;
+procedure CrashRmEnd;
+
+variable item;
+
+import variable JTRaider_ptr;
+import variable Sinthia_ptr;
+
+
+procedure start
+begin
+    if (script_action == spatial_proc) then begin
+        call spatial_p_proc();
+    end
+    else begin
+        if (script_action == talk_proc) then begin
+            call talk_p_proc();
+        end
+    end
+end
+
+procedure spatial_p_proc
+begin
+    if ((source_obj == dude_obj) and (global_var(GVAR_RENT_TIME) > (game_time / (10 * 60 * 60 * 24)))) then begin
+        dialogue_system_enter;
+    end
+end
+
+procedure talk_p_proc
+begin
+    start_gdialog(807, self_obj, 4, -1, -1);
+    gsay_start;
+    Reply(100);
+    giq_option(0, NAME, 101, CrashRm01, NEUTRAL_REACTION);
+    giq_option(0, NAME, 102, CrashRmEnd, NEUTRAL_REACTION);
+    gsay_end;
+    end_dialogue;
+    if (local_var(0) == 1) then begin
+        call CrashRm02();
+    end
+end
+
+procedure CrashRm01
+begin
+    set_local_var(0, 1);
+end
+
+procedure CrashRm02
+begin
+    set_local_var(0, 0);
+    gfade_out(600);
+    game_time_advance(game_ticks(60 * (60 - (game_time_hour % 100))));
+    if (game_time_hour < 1000) then begin
+        game_time_advance(game_ticks(36 * (1000 - game_time_hour)));
+    end
+    else begin
+        game_time_advance(game_ticks(36 * (3400 - game_time_hour)));
+    end
+    critter_heal(dude_obj, random(10, 15));
+    display_mstr(103);
+    if ((map_var(3) == 0) and (map_var(0) != 2)) then begin
+        JTRaider_ptr := create_object_sid(16777449, 17484, 0, SCRIPT_JTRAIDER);
+        move_to(Sinthia_ptr, 17485, 0);
+        anim(JTRaider_ptr, 1000, 3);
+        anim(Sinthia_ptr, 1000, 3);
+        item := create_object(8, 0, 0);
+        add_obj_to_inven(JTRaider_ptr, item);
+        wield_obj_critter(JTRaider_ptr, item);
+        item := create_object(1, 0, 0);
+        add_obj_to_inven(JTRaider_ptr, item);
+        wield_obj_critter(JTRaider_ptr, item);
+        set_map_var(3, 1);
+    end
+    gfade_in(600);
+end
+
+procedure CrashRmEnd
+begin
+end

@@ -1,0 +1,204 @@
+diff --git a/Games/Fallout1.Steam/Original/VAULTENT.ssl b/Games/Fallout1.Steam/ReDefine/VAULTENT.ssl
+index 01df7a4..4bc6bbf 100644
+--- a/Games/Fallout1.Steam/Original/VAULTENT.ssl
++++ b/Games/Fallout1.Steam/ReDefine/VAULTENT.ssl
+@@ -28,15 +28,15 @@ procedure Invasion;
+ 
+ procedure start
+ begin
+-    if (script_action == 15) then begin
++    if (script_action == map_enter_proc) then begin
+         call map_enter_p_proc();
+     end
+     else begin
+-        if (script_action == 23) then begin
++        if (script_action == map_update_proc) then begin
+             call map_update_p_proc();
+         end
+         else begin
+-            if (script_action == 16) then begin
++            if (script_action == map_exit_proc) then begin
+                 call map_exit_p_proc();
+             end
+         end
+@@ -45,16 +45,16 @@ end
+ 
+ procedure map_enter_p_proc
+ begin
+-    if (metarule(14, 0)) then begin
+-        display_msg(message_str(194, 102));
++    if (map_first_run) then begin
++        display_msg(message_str(SCRIPT_SHADYWST, 102));
+     end
+-    set_global_var(562, 1);
++    set_global_var(GVAR_MARK_V15_1, 1);
+     call Lighting();
+-    if (global_var(32) == 1) then begin
++    if (global_var(GVAR_LOAD_MAP_INDEX) == 1) then begin
+         override_map_start(113, 96, 0, 2);
+     end
+     else begin
+-        if (global_var(32) == 2) then begin
++        if (global_var(GVAR_LOAD_MAP_INDEX) == 2) then begin
+             override_map_start(115, 105, 0, 5);
+         end
+         else begin
+@@ -63,13 +63,13 @@ begin
+     end
+     if (map_var(0) == 0) then begin
+         set_map_var(0, 1);
+-        luck := get_critter_stat(dude_obj, 6);
++        luck := dude_luck;
+         roll := random(1, 6) + random(1, 6) + random(1, 6);
+         if ((luck < 4) or (roll < 8)) then begin
+-            Scorp_ptr := create_object_sid(16777227, 0, 0, 12);
++            Scorp_ptr := create_object_sid(16777227, 0, 0, SCRIPT_RADSCORP);
+             Scorp_hex := 21515;
+             critter_attempt_placement(Scorp_ptr, Scorp_hex, 0);
+-            critter_add_trait(Scorp_ptr, 1, 6, 5);
++            critter_add_trait(Scorp_ptr, TRAIT_OBJECT, OBJECT_TEAM_NUM, 5);
+         end
+     end
+     call add_party();
+@@ -111,11 +111,11 @@ procedure add_party
+ begin
+     variable LVar0 := 0;
+     variable LVar1 := 0;
+-    party_elevation := elevation(dude_obj);
+-    if (global_var(26) == 5) then begin
++    party_elevation := dude_elevation;
++    if (global_var(GVAR_TANDI_STATUS) == 5) then begin
+         if (Tandi_ptr == 0) then begin
+         end
+-        critter_add_trait(Tandi_ptr, 1, 6, 0);
++        critter_add_trait(Tandi_ptr, TRAIT_OBJECT, OBJECT_TEAM_NUM, 0);
+     end
+ end
+ 
+@@ -123,41 +123,41 @@ procedure update_party
+ begin
+     variable LVar0 := 0;
+     variable LVar1 := 0;
+-    if (elevation(dude_obj) != party_elevation) then begin
+-        party_elevation := elevation(dude_obj);
+-        if (global_var(118) == 2) then begin
++    if (dude_elevation != party_elevation) then begin
++        party_elevation := dude_elevation;
++        if (global_var(GVAR_IAN_STATUS) == 2) then begin
+             if (Ian_ptr == 0) then begin
+             end
+             else begin
+-                move_to(Ian_ptr, tile_num_in_direction(tile_num(dude_obj), 1, 2), elevation(dude_obj));
++                move_to(Ian_ptr, tile_num_in_direction(dude_tile, 1, 2), dude_elevation);
+             end
+         end
+-        if (global_var(5)) then begin
++        if (global_var(GVAR_DOG_EMPATHY)) then begin
+             if (Dog_ptr == 0) then begin
+             end
+             else begin
+-                move_to(Dog_ptr, tile_num_in_direction(tile_num(dude_obj), 2, 1), elevation(dude_obj));
++                move_to(Dog_ptr, tile_num_in_direction(dude_tile, 2, 1), dude_elevation);
+             end
+         end
+-        if (global_var(121) == 2) then begin
++        if (global_var(GVAR_HERNANDEZ_STATUS) == 2) then begin
+             if (Tycho_ptr == 0) then begin
+             end
+             else begin
+-                move_to(Tycho_ptr, tile_num_in_direction(tile_num(dude_obj), 3, 2), elevation(dude_obj));
++                move_to(Tycho_ptr, tile_num_in_direction(dude_tile, 3, 2), dude_elevation);
+             end
+         end
+-        if (global_var(244) == 2) then begin
++        if (global_var(GVAR_KATJA_STATUS) == 2) then begin
+             if (Katja_ptr == 0) then begin
+             end
+             else begin
+-                move_to(Katja_ptr, tile_num_in_direction(tile_num(dude_obj), 4, 2), elevation(dude_obj));
++                move_to(Katja_ptr, tile_num_in_direction(dude_tile, 4, 2), dude_elevation);
+             end
+         end
+-        if (global_var(26) == 5) then begin
++        if (global_var(GVAR_TANDI_STATUS) == 5) then begin
+             if (Tandi_ptr == 0) then begin
+             end
+             else begin
+-                move_to(Tandi_ptr, tile_num_in_direction(tile_num(dude_obj), 4, 4), elevation(dude_obj));
++                move_to(Tandi_ptr, tile_num_in_direction(dude_tile, 4, 4), dude_elevation);
+             end
+         end
+     end
+@@ -165,19 +165,19 @@ end
+ 
+ procedure remove_party
+ begin
+-    if (global_var(118) == 2) then begin
+-        set_global_var(118, 2);
++    if (global_var(GVAR_IAN_STATUS) == 2) then begin
++        set_global_var(GVAR_IAN_STATUS, 2);
+     end
+-    if (global_var(5)) then begin
+-        set_global_var(5, 1);
++    if (global_var(GVAR_DOG_EMPATHY)) then begin
++        set_global_var(GVAR_DOG_EMPATHY, 1);
+     end
+-    if (global_var(121) == 2) then begin
+-        set_global_var(121, 2);
++    if (global_var(GVAR_HERNANDEZ_STATUS) == 2) then begin
++        set_global_var(GVAR_HERNANDEZ_STATUS, 2);
+     end
+-    if (global_var(244) == 2) then begin
+-        set_global_var(244, 2);
++    if (global_var(GVAR_KATJA_STATUS) == 2) then begin
++        set_global_var(GVAR_KATJA_STATUS, 2);
+     end
+-    if (global_var(26) == 5) then begin
++    if (global_var(GVAR_TANDI_STATUS) == 5) then begin
+     end
+ end
+ 
+@@ -188,28 +188,27 @@ end
+ 
+ procedure Invasion
+ begin
+-    if (not(global_var(18) == 2)) then begin
+-        if (global_var(149) > (game_time / (10 * 60 * 60 * 24))) then begin
+-            set_global_var(13, 1);
++    if (not(global_var(GVAR_MASTER_BLOWN) == 2)) then begin
++        if (global_var(GVAR_NECROPOLIS_INVADED_DATE) > (game_time / (10 * 60 * 60 * 24))) then begin
++            set_global_var(GVAR_NECROPOLIS_INVADED, 1);
+         end
+-        if (global_var(150) > (game_time / (10 * 60 * 60 * 24))) then begin
+-            set_global_var(14, 1);
++        if (global_var(GVAR_THE_HUB_INVADED_DATE) > (game_time / (10 * 60 * 60 * 24))) then begin
++            set_global_var(GVAR_HUB_INVADED, 1);
+         end
+-        if (global_var(151) > (game_time / (10 * 60 * 60 * 24))) then begin
+-            set_global_var(16, 1);
++        if (global_var(GVAR_BROTHERHOOD_INVADED_DATE) > (game_time / (10 * 60 * 60 * 24))) then begin
++            set_global_var(GVAR_BROTHERHOOD_INVADED, 1);
+         end
+-        if (global_var(152) > (game_time / (10 * 60 * 60 * 24))) then begin
+-            set_global_var(15, 1);
++        if (global_var(GVAR_JUNKTOWN_INVADED_DATE) > (game_time / (10 * 60 * 60 * 24))) then begin
++            set_global_var(GVAR_JUNKTOWN_INVADED, 1);
+         end
+-        if (global_var(153) > (game_time / (10 * 60 * 60 * 24))) then begin
+-            set_global_var(12, 1);
++        if (global_var(GVAR_SHADY_SANDS_INVADED_DATE) > (game_time / (10 * 60 * 60 * 24))) then begin
++            set_global_var(GVAR_SHADY_SANDS_INVADED, 1);
+         end
+-        if (global_var(154) <= 0) then begin
+-            set_global_var(11, 1);
++        if (global_var(GVAR_VAULT_13_INVADED_DATE) <= 0) then begin
++            set_global_var(GVAR_VAULT_INVADED, 1);
+         end
+-        if (global_var(148) > (game_time / (10 * 60 * 60 * 24))) then begin
+-            set_global_var(7, 1);
++        if (global_var(GVAR_FOLLOWERS_INVADED_DATE) > (game_time / (10 * 60 * 60 * 24))) then begin
++            set_global_var(GVAR_FOLLOWERS_INVADED, 1);
+         end
+     end
+ end
+-

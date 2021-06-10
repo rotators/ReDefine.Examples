@@ -1,0 +1,557 @@
+procedure start;
+procedure critter_p_proc;
+procedure damage_p_proc;
+procedure destroy_p_proc;
+procedure look_at_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure Medic00;
+procedure Medic01;
+procedure Medic02;
+procedure Medic03;
+procedure Medic04;
+procedure Medic04a;
+procedure Medic05;
+procedure Medic06;
+procedure Medic07;
+procedure Medic08;
+procedure Medic08a;
+procedure Medic09;
+procedure Medic10;
+procedure Medic11;
+procedure Medic12;
+procedure Medic13;
+procedure Medic14;
+procedure Medic15;
+procedure Medic16;
+procedure Medic17;
+procedure Medic18;
+procedure Medic19;
+procedure Medic20;
+procedure Medic21;
+procedure Medic22;
+procedure Medic23;
+procedure Medic24;
+procedure flee_dude;
+procedure pushdrugs;
+procedure medicend;
+
+variable damage;
+variable intensity;
+variable removal;
+variable rndx;
+variable rads;
+variable initialized;
+variable player_hits;
+variable player_max_hits;
+variable home_tile := 13881;
+
+procedure get_reaction;
+procedure ReactToLevel;
+procedure LevelToReact;
+procedure UpReact;
+procedure DownReact;
+procedure BottomReact;
+procedure TopReact;
+procedure BigUpReact;
+procedure BigDownReact;
+procedure UpReactLevel;
+procedure DownReactLevel;
+procedure Goodbyes;
+
+variable exit_line;
+
+
+procedure start
+begin
+    if (not(initialized)) then begin
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 1);
+        initialized := 1;
+    end
+    else begin
+        if (script_action == critter_proc) then begin
+            call critter_p_proc();
+        end
+        else begin
+            if (script_action == damage_proc) then begin
+                call damage_p_proc();
+            end
+            else begin
+                if (script_action == destroy_proc) then begin
+                    call destroy_p_proc();
+                end
+                else begin
+                    if (script_action == look_at_proc) then begin
+                        call look_at_p_proc();
+                    end
+                    else begin
+                        if (script_action == pickup_proc) then begin
+                            call pickup_p_proc();
+                        end
+                        else begin
+                            if (script_action == talk_proc) then begin
+                                call talk_p_proc();
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure critter_p_proc
+begin
+    if (local_var(5)) then begin
+        if (tile_distance_objs(self_obj, dude_obj) < 8) then begin
+            call flee_dude();
+        end
+        else begin
+            if (tile_distance(dude_tile, home_tile) > 4) then begin
+                animate_move_obj_to_tile(self_obj, home_tile, 0);
+            end
+        end
+    end
+    else begin
+        if (tile_num(self_obj) != home_tile) then begin
+            animate_move_obj_to_tile(self_obj, home_tile, 0);
+        end
+    end
+end
+
+procedure damage_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_local_var(4, 1);
+        set_local_var(5, 1);
+    end
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
+            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
+            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+        end
+        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
+        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
+            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+        end
+    end
+    if (source_obj == dude_obj) then begin
+        set_global_var(GVAR_WATER_CHIP_4, 1);
+    end
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    display_mstr(136);
+end
+
+procedure pickup_p_proc
+begin
+    float_msg(self_obj, mstr(160), FLOAT_MSG_NORMAL);
+    set_local_var(5, 1);
+end
+
+procedure talk_p_proc
+begin
+    if (not(local_var(4))) then begin
+        call get_reaction();
+        start_gdialog(184, self_obj, 4, -1, -1);
+        gsay_start;
+        player_hits := get_critter_stat(dude_obj, STAT_current_hp);
+        player_max_hits := get_critter_stat(dude_obj, STAT_max_hp);
+        if ((local_var(5) == 1) or (global_var(GVAR_WATER_CHIP_4) == 1)) then begin
+            call Medic00();
+        end
+        else begin
+            damage := player_max_hits - player_hits;
+            if (damage > 7) then begin
+                call Medic03();
+            end
+            else begin
+                if (global_var(GVAR_FIND_WATER_CHIP) == 2) then begin
+                    call Medic24();
+                end
+                else begin
+                    call Medic04();
+                end
+            end
+        end
+        gsay_end;
+        end_dialogue;
+    end
+    else begin
+        display_mstr(159);
+    end
+end
+
+procedure Medic00
+begin
+    Reply(100);
+    giq_option(4, NAME, 101, Medic01, -10);
+    giq_option(-3, NAME, 102, Medic02, -10);
+end
+
+procedure Medic01
+begin
+    set_local_var(4, 1);
+    gsay_message(NAME, 103, -10);
+end
+
+procedure Medic02
+begin
+    set_local_var(4, 1);
+    gsay_message(NAME, 104, -10);
+end
+
+procedure Medic03
+begin
+    gsay_message(NAME, 105, 0);
+    call Medic16();
+end
+
+procedure Medic04
+begin
+    Reply(mstr(106) + proto_data(obj_pid(dude_obj), 1) + mstr(107));
+    giq_option(4, NAME, 108, Medic06, 0);
+    giq_option(4, NAME, 109, Medic04a, 0);
+    giq_option(-3, NAME, 110, Medic05, 0);
+end
+
+procedure Medic04a
+begin
+    if (damage > 3) then begin
+        call Medic14();
+    end
+    else begin
+        call Medic13();
+    end
+end
+
+procedure Medic05
+begin
+    gsay_message(NAME, 111, 0);
+    call pushdrugs();
+end
+
+procedure Medic06
+begin
+    gsay_message(NAME, 112, 0);
+end
+
+procedure Medic07
+begin
+    Reply(113);
+    giq_option(4, NAME, 114, Medic04a, 0);
+    giq_option(4, NAME, 115, Medic08, 0);
+    giq_option(4, NAME, 116, Medic11, 0);
+    giq_option(-3, NAME, 117, Medic12, 0);
+    giq_option(-3, NAME, 118, Medic15, 0);
+end
+
+procedure Medic08
+begin
+    Reply(119);
+    giq_option(4, NAME, 120, medicend, 0);
+    giq_option(6, NAME, 121, Medic08a, 0);
+end
+
+procedure Medic08a
+begin
+    if (is_success(roll_vs_skill(dude_obj, 14, 0))) then begin
+        call Medic10();
+    end
+    else begin
+        call Medic09();
+    end
+end
+
+procedure Medic09
+begin
+    gsay_message(NAME, 122, 0);
+end
+
+procedure Medic10
+begin
+    Reply(123);
+    giq_option(4, NAME, 124, pushdrugs, 0);
+end
+
+procedure Medic11
+begin
+    gsay_message(NAME, 125, 0);
+end
+
+procedure Medic12
+begin
+    Reply(126);
+    call Medic04a();
+end
+
+procedure Medic13
+begin
+    gsay_message(NAME, 127, 0);
+end
+
+procedure Medic14
+begin
+    gsay_message(NAME, 128, 0);
+    call Medic16();
+end
+
+procedure Medic15
+begin
+    gsay_message(NAME, 129, 0);
+end
+
+procedure Medic16
+begin
+    Reply(130);
+    call Medic17();
+end
+
+procedure Medic17
+begin
+    gfade_out(600);
+    game_time_advance(game_ticks(damage * 10));
+    critter_heal(dude_obj, damage);
+    gfade_in(600);
+    gsay_message(NAME, 131, 0);
+    if (get_critter_stat(dude_obj, STAT_current_rad) > 30) then begin
+        call Medic18();
+    end
+end
+
+procedure Medic18
+begin
+    removal := 70 + random(1, 6) + random(1, 6) + random(1, 6);
+    rads := get_critter_stat(dude_obj, STAT_current_rad);
+    rndx := rads * 20;
+    if (rads > 400) then begin
+        intensity := mstr(132);
+    end
+    else begin
+        if (rads > 200) then begin
+            intensity := mstr(133);
+        end
+        else begin
+            if (rads > 100) then begin
+                intensity := mstr(134);
+            end
+            else begin
+                if (rads > 30) then begin
+                    intensity := mstr(135);
+                end
+            end
+        end
+    end
+    Reply(intensity);
+    giq_option(4, NAME, 138, Medic19, 0);
+    giq_option(4, NAME, 139, Medic22, 0);
+    giq_option(4, NAME, 140, Medic20, 0);
+    giq_option(6, NAME, 141, Medic21, 0);
+    giq_option(-3, NAME, 142, Medic19, 0);
+    giq_option(-3, NAME, 143, Medic22, 0);
+end
+
+procedure Medic19
+begin
+    gsay_message(NAME, 144, 0);
+end
+
+procedure Medic20
+begin
+    Reply(mstr(145) + rndx + mstr(146));
+    giq_option(4, NAME, 147, Medic19, 0);
+    giq_option(4, NAME, 148, Medic22, 0);
+end
+
+procedure Medic21
+begin
+    Reply(mstr(149) + rndx + mstr(150) + removal + mstr(151));
+    giq_option(4, NAME, 152, Medic19, 0);
+    giq_option(4, NAME, 153, Medic22, 0);
+end
+
+procedure Medic22
+begin
+    gsay_message(NAME, random(154, 155), 0);
+    call Medic23();
+    radiation_inc(dude_obj, -removal);
+end
+
+procedure Medic23
+begin
+    gfade_out(600);
+    game_time_advance(game_ticks(rndx));
+    gfade_in(600);
+    gsay_message(NAME, 156, 0);
+end
+
+procedure Medic24
+begin
+    Reply(157);
+    giq_option(4, NAME, 109, Medic04a, NEUTRAL_REACTION);
+    giq_option(4, SCRIPT_MODREACT, 103, medicend, NEUTRAL_REACTION);
+    giq_option(-3, NAME, 110, Medic05, NEUTRAL_REACTION);
+end
+
+procedure flee_dude
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    while (LVar1 < 5) do begin
+        if (tile_distance(dude_tile, tile_num_in_direction(tile_num(self_obj), LVar1, 3)) > LVar2) then begin
+            LVar0 := tile_num_in_direction(tile_num(self_obj), LVar1, 3);
+            LVar2 := tile_distance(dude_tile, LVar0);
+        end
+        LVar1 := LVar1 + 1;
+    end
+    animate_move_obj_to_tile(self_obj, LVar0, 1);
+end
+
+procedure pushdrugs
+begin
+    variable LVar0 := 0;
+    LVar0 := create_object(40, 0, 0);
+    add_obj_to_inven(dude_obj, LVar0);
+end
+
+procedure medicend
+begin
+end
+
+procedure get_reaction
+begin
+    if (local_var(2) == 0) then begin
+        set_local_var(0, 50);
+        set_local_var(1, 2);
+        set_local_var(2, 1);
+        set_local_var(0, local_var(0) + (5 * dude_charisma) - 25);
+        set_local_var(0, local_var(0) + (10 * has_trait(TRAIT_PERK, dude_obj, PERK_presence)));
+        if (has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality)) then begin
+            if (global_var(GVAR_PLAYER_REPUATION) > 0) then begin
+                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+            end
+            else begin
+                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+            end
+        end
+        else begin
+            if (local_var(3) == 1) then begin
+                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+            end
+            else begin
+                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+            end
+        end
+        if (global_var(GVAR_CHILDKILLER_REPUATION) > 2) then begin
+            set_local_var(0, local_var(0) - 30);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+            set_local_var(0, local_var(0) + 20);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+            set_local_var(0, local_var(0) - 20);
+        end
+        call ReactToLevel();
+    end
+end
+
+procedure ReactToLevel
+begin
+    if (local_var(0) <= 25) then begin
+        set_local_var(1, 1);
+    end
+    else begin
+        if (local_var(0) <= 75) then begin
+            set_local_var(1, 2);
+        end
+        else begin
+            set_local_var(1, 3);
+        end
+    end
+end
+
+procedure LevelToReact
+begin
+    if (local_var(1) == 1) then begin
+        set_local_var(0, random(1, 25));
+    end
+    else begin
+        if (local_var(1) == 2) then begin
+            set_local_var(0, random(26, 75));
+        end
+        else begin
+            set_local_var(0, random(76, 100));
+        end
+    end
+end
+
+procedure UpReact
+begin
+    set_local_var(0, local_var(0) + 10);
+    call ReactToLevel();
+end
+
+procedure DownReact
+begin
+    set_local_var(0, local_var(0) - 10);
+    call ReactToLevel();
+end
+
+procedure BottomReact
+begin
+    set_local_var(1, 1);
+    set_local_var(0, 1);
+end
+
+procedure TopReact
+begin
+    set_local_var(0, 100);
+    set_local_var(1, 3);
+end
+
+procedure BigUpReact
+begin
+    set_local_var(0, local_var(0) + 25);
+    call ReactToLevel();
+end
+
+procedure BigDownReact
+begin
+    set_local_var(0, local_var(0) - 25);
+    call ReactToLevel();
+end
+
+procedure UpReactLevel
+begin
+    set_local_var(1, local_var(1) + 1);
+    if (local_var(1) > 3) then begin
+        set_local_var(1, 3);
+    end
+    call LevelToReact();
+end
+
+procedure DownReactLevel
+begin
+    set_local_var(1, local_var(1) - 1);
+    if (local_var(1) < 1) then begin
+        set_local_var(1, 1);
+    end
+    call LevelToReact();
+end
+
+procedure Goodbyes
+begin
+    exit_line := message_str(SCRIPT_MODREACT, random(100, 105));
+end

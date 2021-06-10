@@ -1,0 +1,481 @@
+diff --git a/Games/Fallout1.Steam/Original/THERESA.ssl b/Games/Fallout1.Steam/ReDefine/THERESA.ssl
+index 1427306..148ae68 100644
+--- a/Games/Fallout1.Steam/Original/THERESA.ssl
++++ b/Games/Fallout1.Steam/ReDefine/THERESA.ssl
+@@ -68,35 +68,35 @@ variable exit_line;
+ 
+ procedure start
+ begin
+-    if (script_action == 12) then begin
++    if (script_action == critter_proc) then begin
+         call critter_p_proc();
+     end
+     else begin
+-        if (script_action == 14) then begin
++        if (script_action == damage_proc) then begin
+             call damage_p_proc();
+         end
+         else begin
+-            if (script_action == 18) then begin
++            if (script_action == destroy_proc) then begin
+                 call destroy_p_proc();
+             end
+             else begin
+-                if (script_action == 21) then begin
++                if (script_action == look_at_proc) then begin
+                     call look_at_p_proc();
+                 end
+                 else begin
+-                    if (script_action == 15) then begin
++                    if (script_action == map_enter_proc) then begin
+                         call map_enter_p_proc();
+                     end
+                     else begin
+-                        if (script_action == 4) then begin
++                        if (script_action == pickup_proc) then begin
+                             call pickup_p_proc();
+                         end
+                         else begin
+-                            if (script_action == 11) then begin
++                            if (script_action == talk_proc) then begin
+                                 call talk_p_proc();
+                             end
+                             else begin
+-                                if (script_action == 22) then begin
++                                if (script_action == timed_event_proc) then begin
+                                     call timed_event_p_proc();
+                                 end
+                             end
+@@ -112,14 +112,14 @@ procedure critter_p_proc
+ begin
+     if (hostile) then begin
+         hostile := 0;
+-        attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++        attack(dude_obj);
+     end
+     else begin
+-        if (((game_time / (10 * 60 * 60 * 24)) > map_var(5)) and (global_var(238) != 2)) then begin
++        if (((game_time / (10 * 60 * 60 * 24)) > map_var(5)) and (global_var(GVAR_CALM_REBELS) != 2)) then begin
+             destroy_object(self_obj);
+         end
+         if ((game_time_hour >= 1700) and (game_time_hour < 1710)) then begin
+-            if (global_var(238) != 2) then begin
++            if (global_var(GVAR_CALM_REBELS) != 2) then begin
+                 if (not_at_meeting) then begin
+                     call rebel_meeting();
+                 end
+@@ -139,26 +139,26 @@ end
+ procedure destroy_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-            set_global_var(156, 1);
+-            set_global_var(157, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+-            set_global_var(157, 1);
+-            set_global_var(156, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+         end
+-        set_global_var(159, global_var(159) + 1);
+-        if ((global_var(159) % 2) == 0) then begin
+-            set_global_var(155, global_var(155) - 1);
++        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
++        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
++            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+         end
+     end
+-    set_global_var(238, 2);
++    set_global_var(GVAR_CALM_REBELS, 2);
+ end
+ 
+ procedure look_at_p_proc
+ begin
+     script_overrides;
+-    display_msg(message_str(378, 100));
++    display_mstr(100);
+ end
+ 
+ procedure map_enter_p_proc
+@@ -167,7 +167,7 @@ begin
+         set_local_var(4, tile_num(self_obj));
+     end
+     home_tile := local_var(4);
+-    critter_add_trait(self_obj, 1, 6, 87);
++    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 87);
+     sleep_tile := home_tile;
+     sleep_time := 1915;
+     wake_time := 715;
+@@ -185,24 +185,24 @@ begin
+     end
+     call get_reaction();
+     if (local_var(5) == 1) then begin
+-        float_msg(self_obj, message_str(185, 166), 0);
++        float_msg(self_obj, message_str(SCRIPT_GENVAULT, 166), FLOAT_MSG_NORMAL);
+     end
+     else begin
+-        if (global_var(261) or local_var(8)) then begin
+-            float_msg(self_obj, message_str(378, 174), 2);
++        if (global_var(GVAR_WATER_CHIP_4) or local_var(8)) then begin
++            float_msg(self_obj, mstr(174), FLOAT_MSG_RED);
+         end
+         else begin
+             start_gdialog(378, self_obj, 4, -1, -1);
+             gsay_start;
+-            if (global_var(101) == 2) then begin
++            if (global_var(GVAR_FIND_WATER_CHIP) == 2) then begin
+                 call Theresa24();
+             end
+             else begin
+-                if (global_var(238) == 2) then begin
++                if (global_var(GVAR_CALM_REBELS) == 2) then begin
+                     call Theresa23();
+                 end
+                 else begin
+-                    if ((global_var(238) != 2) and (game_time_hour > 1700) and (game_time_hour < 1710)) then begin
++                    if ((global_var(GVAR_CALM_REBELS) != 2) and (game_time_hour > 1700) and (game_time_hour < 1710)) then begin
+                         call Theresa15();
+                     end
+                     else begin
+@@ -222,7 +222,7 @@ begin
+     if (exp_flag) then begin
+         exp_flag := 0;
+         give_exp_points(750);
+-        display_msg(message_str(378, 173));
++        display_mstr(173);
+     end
+ end
+ 
+@@ -251,19 +251,19 @@ end
+ 
+ procedure Theresa01
+ begin
+-    gsay_reply(378, message_str(378, 101) + proto_data(obj_pid(dude_obj), 1) + message_str(378, 102));
+-    giq_option(4, 378, 103, Theresa02, 50);
+-    giq_option(4, 378, 104, Theresa03, 50);
+-    giq_option(-3, 378, 105, Theresa04, 50);
++    Reply(mstr(101) + proto_data(obj_pid(dude_obj), 1) + mstr(102));
++    giq_option(4, NAME, 103, Theresa02, NEUTRAL_REACTION);
++    giq_option(4, NAME, 104, Theresa03, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 105, Theresa04, NEUTRAL_REACTION);
+ end
+ 
+ procedure Theresa02
+ begin
+-    gsay_reply(378, 106);
+-    giq_option(4, 378, 107, Theresa05, 51);
+-    giq_option(4, 378, 108, Theresa06, 50);
+-    giq_option(4, 378, 109, Theresa07, 50);
+-    giq_option(6, 378, 110, Theresa02a, 50);
++    Reply(106);
++    giq_option(4, NAME, 107, Theresa05, BAD_REACTION);
++    giq_option(4, NAME, 108, Theresa06, NEUTRAL_REACTION);
++    giq_option(4, NAME, 109, Theresa07, NEUTRAL_REACTION);
++    giq_option(6, NAME, 110, Theresa02a, NEUTRAL_REACTION);
+ end
+ 
+ procedure Theresa02a
+@@ -286,128 +286,128 @@ end
+ 
+ procedure Theresa03
+ begin
+-    gsay_reply(378, 111);
+-    giq_option(4, 378, 112, Theresa07, 50);
+-    giq_option(4, 378, 113, Theresa06, 50);
++    Reply(111);
++    giq_option(4, NAME, 112, Theresa07, NEUTRAL_REACTION);
++    giq_option(4, NAME, 113, Theresa06, NEUTRAL_REACTION);
+ end
+ 
+ procedure Theresa04
+ begin
+-    gsay_message(378, 114, 50);
++    gsay_message(NAME, 114, NEUTRAL_REACTION);
+ end
+ 
+ procedure Theresa05
+ begin
+     call DownReact();
+-    gsay_reply(378, 115);
+-    giq_option(4, 378, 116, Theresa09, 50);
+-    giq_option(6, 378, 117, Theresa02a, 50);
++    Reply(115);
++    giq_option(4, NAME, 116, Theresa09, NEUTRAL_REACTION);
++    giq_option(6, NAME, 117, Theresa02a, NEUTRAL_REACTION);
+ end
+ 
+ procedure Theresa06
+ begin
+-    gsay_message(378, 118, 50);
++    gsay_message(NAME, 118, NEUTRAL_REACTION);
+ end
+ 
+ procedure Theresa07
+ begin
+-    gsay_reply(378, 119);
+-    giq_option(4, 378, 120, Theresa11, 50);
+-    giq_option(4, 378, 121, Theresa12, 50);
++    Reply(119);
++    giq_option(4, NAME, 120, Theresa11, NEUTRAL_REACTION);
++    giq_option(4, NAME, 121, Theresa12, NEUTRAL_REACTION);
+ end
+ 
+ procedure Theresa08
+ begin
+     call UpReact();
+-    set_global_var(238, 2);
++    set_global_var(GVAR_CALM_REBELS, 2);
+     line := 10;
+     exp_flag := 1;
+-    gsay_reply(378, 122);
+-    giq_option(4, 378, 123, TheresaEnd, 50);
++    Reply(122);
++    giq_option(4, NAME, 123, TheresaEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Theresa09
+ begin
+     call DownReact();
+-    gsay_message(378, 124, 50);
++    gsay_message(NAME, 124, NEUTRAL_REACTION);
+ end
+ 
+ procedure Theresa10
+ begin
+-    gsay_message(378, 125, 50);
++    gsay_message(NAME, 125, NEUTRAL_REACTION);
+ end
+ 
+ procedure Theresa11
+ begin
+     call DownReact();
+-    gsay_reply(378, 126);
+-    giq_option(4, 378, 127, TheresaEnd, 50);
+-    giq_option(6, 378, 128, Theresa02a, 50);
++    Reply(126);
++    giq_option(4, NAME, 127, TheresaEnd, NEUTRAL_REACTION);
++    giq_option(6, NAME, 128, Theresa02a, NEUTRAL_REACTION);
+ end
+ 
+ procedure Theresa12
+ begin
+     call UpReact();
+-    gsay_reply(378, 129);
+-    giq_option(4, 378, 130, Theresa13, 50);
+-    if (global_var(68) != 0) then begin
+-        giq_option(4, 378, 131, Theresa13, 50);
++    Reply(129);
++    giq_option(4, NAME, 130, Theresa13, NEUTRAL_REACTION);
++    if (global_var(GVAR_SHADY_SANDS) != 0) then begin
++        giq_option(4, NAME, 131, Theresa13, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure Theresa13
+ begin
+-    gsay_message(378, 132, 50);
++    gsay_message(NAME, 132, NEUTRAL_REACTION);
+ end
+ 
+ procedure Theresa14
+ begin
+-    gsay_message(378, 133, 50);
++    gsay_message(NAME, 133, NEUTRAL_REACTION);
+ end
+ 
+ procedure Theresa15
+ begin
+-    gsay_reply(378, 134);
+-    giq_option(4, 378, 135, Theresa16, 51);
+-    giq_option(4, 378, 136, Theresa17, 50);
+-    giq_option(6, 378, 137, Theresa18, 50);
+-    giq_option(-3, 378, 138, TheresaEnd, 50);
++    Reply(134);
++    giq_option(4, NAME, 135, Theresa16, BAD_REACTION);
++    giq_option(4, NAME, 136, Theresa17, NEUTRAL_REACTION);
++    giq_option(6, NAME, 137, Theresa18, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 138, TheresaEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Theresa16
+ begin
+     call DownReact();
+-    gsay_reply(378, 139);
+-    giq_option(4, 378, 140, Theresa20, 50);
+-    giq_option(4, 378, 141, TheresaEnd, 50);
++    Reply(139);
++    giq_option(4, NAME, 140, Theresa20, NEUTRAL_REACTION);
++    giq_option(4, NAME, 141, TheresaEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Theresa17
+ begin
+-    gsay_reply(378, 142);
+-    giq_option(4, 378, 143, Theresa19, 50);
+-    giq_option(6, 378, 144, Theresa21, 50);
++    Reply(142);
++    giq_option(4, NAME, 143, Theresa19, NEUTRAL_REACTION);
++    giq_option(6, NAME, 144, Theresa21, NEUTRAL_REACTION);
+ end
+ 
+ procedure Theresa18
+ begin
+-    gsay_reply(378, 145);
+-    giq_option(6, 378, 146, Theresa21, 50);
+-    giq_option(6, 378, 147, Theresa19, 50);
++    Reply(145);
++    giq_option(6, NAME, 146, Theresa21, NEUTRAL_REACTION);
++    giq_option(6, NAME, 147, Theresa19, NEUTRAL_REACTION);
+ end
+ 
+ procedure Theresa19
+ begin
+-    gsay_reply(378, 148);
+-    giq_option(4, 378, 149, TheresaCombat, 51);
+-    giq_option(4, 378, 150, TheresaEnd, 50);
++    Reply(148);
++    giq_option(4, NAME, 149, TheresaCombat, BAD_REACTION);
++    giq_option(4, NAME, 150, TheresaEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Theresa20
+ begin
+-    gsay_reply(378, 151);
+-    giq_option(4, 378, 152, Theresa17, 50);
+-    giq_option(6, 378, 153, Theresa21, 50);
++    Reply(151);
++    giq_option(4, NAME, 152, Theresa17, NEUTRAL_REACTION);
++    giq_option(6, NAME, 153, Theresa21, NEUTRAL_REACTION);
+ end
+ 
+ procedure Theresa21
+@@ -419,47 +419,47 @@ begin
+         set_local_var(7, 1);
+         if (is_success(roll_vs_skill(dude_obj, 14, 0))) then begin
+             exp_flag := 1;
+-            set_global_var(238, 2);
++            set_global_var(GVAR_CALM_REBELS, 2);
+             line := 10;
+-            gsay_message(378, 154, 50);
++            gsay_message(NAME, 154, NEUTRAL_REACTION);
+         end
+         else begin
+-            gsay_reply(378, 155);
+-            giq_option(4, 378, 156, TheresaCombat, 51);
+-            giq_option(4, 378, 157, TheresaEnd, 50);
++            Reply(155);
++            giq_option(4, NAME, 156, TheresaCombat, BAD_REACTION);
++            giq_option(4, NAME, 157, TheresaEnd, NEUTRAL_REACTION);
+         end
+     end
+ end
+ 
+ procedure Theresa22
+ begin
+-    set_global_var(238, 2);
++    set_global_var(GVAR_CALM_REBELS, 2);
+     line := 10;
+     exp_flag := 1;
+-    gsay_reply(378, 158);
+-    giq_option(4, 378, 159, TheresaEnd, 50);
++    Reply(158);
++    giq_option(4, NAME, 159, TheresaEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Theresa23
+ begin
+-    gsay_reply(378, 170);
+-    giq_option(4, 378, 171, TheresaEnd, 50);
+-    giq_option(-3, 378, 138, TheresaEnd, 50);
++    Reply(170);
++    giq_option(4, NAME, 171, TheresaEnd, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 138, TheresaEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Theresa24
+ begin
+-    if (global_var(238) != 2) then begin
+-        set_global_var(238, 2);
++    if (global_var(GVAR_CALM_REBELS) != 2) then begin
++        set_global_var(GVAR_CALM_REBELS, 2);
+         exp_flag := 0;
+         line := 10;
+     end
+-    gsay_message(378, 172, 50);
++    gsay_message(NAME, 172, NEUTRAL_REACTION);
+ end
+ 
+ procedure Theresa25
+ begin
+-    gsay_message(378, 175, 50);
++    gsay_message(NAME, 175, NEUTRAL_REACTION);
+ end
+ 
+ procedure TheresaEnd
+@@ -481,8 +481,8 @@ end
+ procedure say_lines
+ begin
+     variable LVar0 := 0;
+-    LVar0 := message_str(378, 159 + line);
+-    float_msg(self_obj, LVar0, 0);
++    LVar0 := mstr(159 + line);
++    float_msg(self_obj, LVar0, FLOAT_MSG_NORMAL);
+     line := line + 1;
+     if (line < 11) then begin
+         add_timer_event(self_obj, game_ticks(10), 3);
+@@ -546,31 +546,31 @@ begin
+         set_local_var(0, 50);
+         set_local_var(1, 2);
+         set_local_var(2, 1);
+-        set_local_var(0, local_var(0) + (5 * get_critter_stat(dude_obj, 3)) - 25);
+-        set_local_var(0, local_var(0) + (10 * has_trait(0, dude_obj, 10)));
+-        if (has_trait(0, dude_obj, 39)) then begin
+-            if (global_var(155) > 0) then begin
+-                set_local_var(0, local_var(0) + global_var(155));
++        set_local_var(0, local_var(0) + (5 * dude_charisma) - 25);
++        set_local_var(0, local_var(0) + (10 * has_trait(TRAIT_PERK, dude_obj, PERK_presence)));
++        if (has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality)) then begin
++            if (global_var(GVAR_PLAYER_REPUATION) > 0) then begin
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+         else begin
+             if (local_var(3) == 1) then begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) + global_var(155));
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+-        if (global_var(158) > 2) then begin
++        if (global_var(GVAR_CHILDKILLER_REPUATION) > 2) then begin
+             set_local_var(0, local_var(0) - 30);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) + 20);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) - 20);
+         end
+         call ReactToLevel();
+@@ -663,6 +663,5 @@ end
+ 
+ procedure Goodbyes
+ begin
+-    exit_line := message_str(634, random(100, 105));
++    exit_line := message_str(SCRIPT_MODREACT, random(100, 105));
+ end
+-

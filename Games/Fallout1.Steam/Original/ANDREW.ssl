@@ -1,0 +1,242 @@
+procedure start;
+procedure combat_p_proc;
+procedure critter_p_proc;
+procedure look_at_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure timed_event_p_proc;
+procedure damage_p_proc;
+procedure destroy_p_proc;
+procedure Andrew01;
+procedure Andrew02;
+procedure Andrew03;
+procedure Andrew04;
+procedure Andrew05;
+procedure Andrew06;
+
+variable hostile;
+variable round_counter;
+variable moving_flag := 1;
+
+import variable jail_door_ptr;
+
+procedure map_enter_p_proc;
+
+
+procedure start
+begin
+    if (script_action == 13) then begin
+        call combat_p_proc();
+    end
+    else begin
+        if (script_action == 12) then begin
+            call critter_p_proc();
+        end
+        else begin
+            if (script_action == 21) then begin
+                call look_at_p_proc();
+            end
+            else begin
+                if (script_action == 4) then begin
+                    call pickup_p_proc();
+                end
+                else begin
+                    if (script_action == 11) then begin
+                        call talk_p_proc();
+                    end
+                    else begin
+                        if (script_action == 22) then begin
+                            call timed_event_p_proc();
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure combat_p_proc
+begin
+    if (fixed_param == 4) then begin
+        round_counter := round_counter + 1;
+    end
+    if (round_counter > 3) then begin
+        if (global_var(247) == 0) then begin
+            set_global_var(247, 1);
+            set_global_var(155, global_var(155) - 5);
+        end
+    end
+end
+
+procedure critter_p_proc
+begin
+    if (hostile) then begin
+        hostile := 0;
+        attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
+    end
+    else begin
+        if ((map_var(1) == 1) and ((game_time / (10 * 60 * 60 * 24)) > map_var(5))) then begin
+            if (jail_door_ptr != 0) then begin
+                obj_unlock(jail_door_ptr);
+                use_obj(jail_door_ptr);
+                moving_flag := 0;
+                rm_timer_event(self_obj);
+                add_timer_event(self_obj, game_ticks(5), 1);
+            end
+            set_map_var(1, 0);
+            float_msg(self_obj, message_str(172, 101), 3);
+        end
+        else begin
+            if (map_var(3) == 1) then begin
+                set_map_var(3, map_var(3) + 1);
+                float_msg(self_obj, message_str(172, 116), 2);
+            end
+            else begin
+                if (map_var(3) == 3) then begin
+                    if (jail_door_ptr != 0) then begin
+                        obj_unlock(jail_door_ptr);
+                    end
+                    hostile := 1;
+                end
+                else begin
+                    if (moving_flag == 1) then begin
+                        if (tile_num(self_obj) != local_var(1)) then begin
+                            animate_move_obj_to_tile(self_obj, local_var(1), 0);
+                        end
+                    end
+                    if ((global_var(247) == 1) and obj_can_see_obj(self_obj, dude_obj)) then begin
+                        dialogue_system_enter;
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure look_at_p_proc
+begin
+    if (local_var(0) == 1) then begin
+        script_overrides;
+        display_msg(message_str(172, 100));
+    end
+end
+
+procedure pickup_p_proc
+begin
+    hostile := 1;
+end
+
+procedure talk_p_proc
+begin
+    if (global_var(247) == 1) then begin
+        float_msg(self_obj, message_str(172, 102), 2);
+        hostile := 1;
+    end
+    else begin
+        start_gdialog(172, self_obj, 4, -1, -1);
+        gsay_start;
+        call Andrew01();
+        gsay_end;
+        end_dialogue;
+    end
+end
+
+procedure timed_event_p_proc
+begin
+    if (fixed_param == 1) then begin
+        obj_close(jail_door_ptr);
+        rm_timer_event(self_obj);
+        add_timer_event(self_obj, game_ticks(10), 2);
+    end
+    else begin
+        if (fixed_param == 2) then begin
+            moving_flag := 1;
+        end
+    end
+end
+
+procedure damage_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_global_var(247, 1);
+    end
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_global_var(247, 1);
+        if (source_obj == dude_obj) then begin
+            if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+                set_global_var(156, 1);
+                set_global_var(157, 0);
+            end
+            if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+                set_global_var(157, 1);
+                set_global_var(156, 0);
+            end
+            set_global_var(159, global_var(159) + 1);
+            if ((global_var(159) % 2) == 0) then begin
+                set_global_var(155, global_var(155) - 1);
+            end
+        end
+    end
+end
+
+procedure Andrew01
+begin
+    gsay_reply(172, 103);
+    giq_option(4, 172, 104, Andrew02, 50);
+    giq_option(4, 172, 105, Andrew03, 50);
+    giq_option(4, 172, 106, Andrew04, 50);
+    giq_option(-3, 172, 113, Andrew06, 50);
+end
+
+procedure Andrew02
+begin
+    set_local_var(0, 1);
+    gsay_reply(172, 107);
+    giq_option(4, 172, 105, Andrew03, 50);
+    giq_option(4, 172, 106, Andrew04, 50);
+end
+
+procedure Andrew03
+begin
+    gsay_reply(172, 108);
+    giq_option(6, 172, 109, Andrew05, 50);
+    giq_option(4, 172, 110, Andrew04, 50);
+end
+
+procedure Andrew04
+begin
+    gsay_message(172, 111, 50);
+end
+
+procedure Andrew05
+begin
+    gsay_reply(172, 112);
+    giq_option(4, 172, 110, Andrew04, 50);
+end
+
+procedure Andrew06
+begin
+    if (get_critter_stat(dude_obj, 34) == 0) then begin
+        gsay_message(172, 114, 50);
+    end
+    else begin
+        gsay_message(172, 115, 50);
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    if (global_var(15) == 1) then begin
+        kill_critter(self_obj, 49);
+    end
+    critter_add_trait(self_obj, 1, 6, 12);
+    critter_add_trait(self_obj, 1, 5, 17);
+    if (local_var(1) == 0) then begin
+        set_local_var(1, tile_num(self_obj));
+    end
+end
+

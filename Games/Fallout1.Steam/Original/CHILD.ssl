@@ -1,0 +1,217 @@
+procedure start;
+procedure child01;
+procedure child02;
+procedure child03;
+procedure child04;
+procedure child05;
+procedure child06;
+procedure childend;
+procedure critter_p_proc;
+procedure talk_p_proc;
+procedure pickup_p_proc;
+procedure destroy_p_proc;
+procedure look_at_p_proc;
+procedure description_p_proc;
+procedure timed_event_p_proc;
+
+variable rndx;
+variable rndy;
+variable Only_Once := 1;
+variable hostile;
+variable item;
+variable Start_Moving;
+
+
+procedure start
+begin
+    if (Only_Once) then begin
+        Only_Once := 0;
+        critter_add_trait(self_obj, 1, 6, 2);
+        critter_add_trait(self_obj, 1, 5, 68);
+        item := create_object_sid(19, 0, 0, -1);
+        add_mult_objs_to_inven(self_obj, item, random(8, 14));
+        if (local_var(3) == 0) then begin
+            set_local_var(3, tile_num(self_obj));
+        end
+    end
+    if (script_action == 11) then begin
+        call talk_p_proc();
+    end
+    else begin
+        if (script_action == 12) then begin
+            call critter_p_proc();
+        end
+        else begin
+            if (script_action == 4) then begin
+                call pickup_p_proc();
+            end
+            else begin
+                if ((script_action == 3) or (script_action == 21)) then begin
+                    call look_at_p_proc();
+                end
+                else begin
+                    if (script_action == 18) then begin
+                        call destroy_p_proc();
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure child01
+begin
+    gsay_reply(237, 101);
+    giq_option(4, 237, 102, childend, 50);
+    giq_option(5, 237, 103, child02, 50);
+    giq_option(-3, 237, 104, child03, 50);
+end
+
+procedure child02
+begin
+    gsay_message(237, 105, 50);
+end
+
+procedure child03
+begin
+    gsay_message(237, 106, 50);
+end
+
+procedure child04
+begin
+    gsay_reply(237, 107);
+    giq_option(4, 237, 108, child05, 50);
+    giq_option(4, 237, 109, child06, 50);
+    giq_option(-3, 237, 110, child03, 50);
+end
+
+procedure child05
+begin
+    gsay_message(237, 111, 50);
+end
+
+procedure child06
+begin
+    gsay_message(237, 112, 50);
+end
+
+procedure childend
+begin
+end
+
+procedure critter_p_proc
+begin
+    if ((game_time_hour > 600) and (game_time_hour < 1900)) then begin
+        set_local_var(0, 0);
+        set_local_var(1, 1);
+    end
+    else begin
+        set_local_var(1, 0);
+        set_local_var(0, 1);
+    end
+    if (cur_map_index == 25) then begin
+        if (local_var(0) == 1) then begin
+            if (tile_num(self_obj) != 14950) then begin
+                animate_move_obj_to_tile(self_obj, 14950, 0);
+            end
+            else begin
+                set_obj_visibility(self_obj, 1);
+            end
+        end
+        else begin
+            set_obj_visibility(self_obj, 0);
+            if (random(0, 15) == 1) then begin
+                animate_move_obj_to_tile(self_obj, tile_num_in_direction(local_var(3), random(0, 5), random(3, 7)), 1);
+            end
+        end
+    end
+    else begin
+        if (cur_map_index == 26) then begin
+            if (local_var(0) == 1) then begin
+                if (tile_num(self_obj) != 14950) then begin
+                    animate_move_obj_to_tile(self_obj, 22443, 0);
+                end
+                else begin
+                    set_obj_visibility(self_obj, 1);
+                end
+            end
+            else begin
+                set_obj_visibility(self_obj, 0);
+                if (random(0, 15) == 1) then begin
+                    animate_move_obj_to_tile(self_obj, tile_num_in_direction(local_var(3), random(0, 5), random(3, 7)), 1);
+                end
+            end
+        end
+        else begin
+            if ((random(0, 15) == 1) and (Start_Moving == 0)) then begin
+                add_timer_event(self_obj, game_ticks(random(3, 6)), 1);
+            end
+        end
+    end
+    if (hostile) then begin
+        hostile := 0;
+        attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
+    end
+end
+
+procedure talk_p_proc
+begin
+    start_gdialog(237, self_obj, 4, -1, -1);
+    gsay_start;
+    if ((obj_item_subtype(critter_inven_obj(dude_obj, 1)) == 3) or (obj_item_subtype(critter_inven_obj(dude_obj, 2)) == 3)) then begin
+        call child04();
+    end
+    else begin
+        call child01();
+    end
+    gsay_end;
+    end_dialogue;
+end
+
+procedure pickup_p_proc
+begin
+    hostile := 1;
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+            set_global_var(156, 1);
+            set_global_var(157, 0);
+        end
+        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+            set_global_var(157, 1);
+            set_global_var(156, 0);
+        end
+        set_global_var(159, global_var(159) + 1);
+        if ((global_var(159) % 2) == 0) then begin
+            set_global_var(155, global_var(155) - 1);
+        end
+    end
+    if (source_obj == dude_obj) then begin
+        set_global_var(158, global_var(158) + 1);
+        set_global_var(155, global_var(155) - 1);
+    end
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    display_msg(message_str(237, 100));
+end
+
+procedure description_p_proc
+begin
+    script_overrides;
+    display_msg(message_str(237, 100));
+end
+
+procedure timed_event_p_proc
+begin
+    Start_Moving := 0;
+    if (obj_on_screen(self_obj)) then begin
+        animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), random(0, 5), random(3, 7)), 1);
+    end
+end
+

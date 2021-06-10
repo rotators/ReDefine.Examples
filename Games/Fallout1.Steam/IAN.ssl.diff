@@ -1,0 +1,692 @@
+diff --git a/Games/Fallout1.Steam/Original/IAN.ssl b/Games/Fallout1.Steam/ReDefine/IAN.ssl
+index 5b60eb2..b41607e 100644
+--- a/Games/Fallout1.Steam/Original/IAN.ssl
++++ b/Games/Fallout1.Steam/ReDefine/IAN.ssl
+@@ -82,39 +82,39 @@ variable exit_line;
+ 
+ procedure start
+ begin
+-    if (script_action == 12) then begin
++    if (script_action == critter_proc) then begin
+         call critter_p_proc();
+     end
+     else begin
+-        if (script_action == 3) then begin
++        if (script_action == description_proc) then begin
+             call description_p_proc();
+         end
+         else begin
+-            if (script_action == 18) then begin
++            if (script_action == destroy_proc) then begin
+                 call destroy_p_proc();
+             end
+             else begin
+-                if (script_action == 21) then begin
++                if (script_action == look_at_proc) then begin
+                     call look_at_p_proc();
+                 end
+                 else begin
+-                    if (script_action == 15) then begin
++                    if (script_action == map_enter_proc) then begin
+                         call map_enter_p_proc();
+                     end
+                     else begin
+-                        if (script_action == 4) then begin
++                        if (script_action == pickup_proc) then begin
+                             call pickup_p_proc();
+                         end
+                         else begin
+-                            if (script_action == 11) then begin
++                            if (script_action == talk_proc) then begin
+                                 call talk_p_proc();
+                             end
+                             else begin
+-                                if (script_action == 22) then begin
++                                if (script_action == timed_event_proc) then begin
+                                     call timed_event_p_proc();
+                                 end
+                                 else begin
+-                                    if (script_action == 7) then begin
++                                    if (script_action == use_obj_on_proc) then begin
+                                         call use_obj_on_p_proc();
+                                     end
+                                 end
+@@ -131,34 +131,34 @@ procedure critter_p_proc
+ begin
+     if (hostile) then begin
+         hostile := 0;
+-        attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++        attack(dude_obj);
+     end
+     call map_commentary();
+ end
+ 
+ procedure description_p_proc
+ begin
+-    if (is_success(do_check(dude_obj, 1, has_trait(0, dude_obj, 0)))) then begin
++    if (is_success(do_check(dude_obj, 1, has_trait(TRAIT_PERK, dude_obj, PERK_bonus_awareness)))) then begin
+         script_overrides;
+-        display_msg(message_str(235, 130));
++        display_mstr(130);
+     end
+ end
+ 
+ procedure destroy_p_proc
+ begin
+-    set_global_var(118, 3);
++    set_global_var(GVAR_IAN_STATUS, 3);
+     if (source_obj == dude_obj) then begin
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-            set_global_var(156, 1);
+-            set_global_var(157, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+-            set_global_var(157, 1);
+-            set_global_var(156, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+         end
+-        set_global_var(159, global_var(159) + 1);
+-        if ((global_var(159) % 2) == 0) then begin
+-            set_global_var(155, global_var(155) - 1);
++        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
++        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
++            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+         end
+     end
+ end
+@@ -166,29 +166,29 @@ end
+ procedure look_at_p_proc
+ begin
+     script_overrides;
+-    if (global_var(118) == 0) then begin
+-        display_msg(message_str(235, 100));
++    if (global_var(GVAR_IAN_STATUS) == 0) then begin
++        display_mstr(100);
+     end
+     else begin
+-        display_msg(message_str(235, 113));
++        display_mstr(113);
+     end
+ end
+ 
+ procedure map_enter_p_proc
+ begin
+-    if (global_var(118) == 2) then begin
+-        critter_add_trait(self_obj, 1, 6, 0);
++    if (global_var(GVAR_IAN_STATUS) == 2) then begin
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 0);
+         add_timer_event(self_obj, game_ticks(1), 1);
+     end
+     else begin
+-        critter_add_trait(self_obj, 1, 6, 2);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 2);
+     end
+-    critter_add_trait(self_obj, 1, 5, 89);
++    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_IAN);
+ end
+ 
+ procedure pickup_p_proc
+ begin
+-    if (global_var(118) < 2) then begin
++    if (global_var(GVAR_IAN_STATUS) < 2) then begin
+         hostile := 1;
+     end
+     else begin
+@@ -201,19 +201,19 @@ begin
+     call get_reaction();
+     start_gdialog(235, self_obj, 4, -1, -1);
+     gsay_start;
+-    if ((global_var(246) == 1) and (global_var(118) != 2)) then begin
++    if ((global_var(GVAR_ENEMY_SHADY_SANDS) == 1) and (global_var(GVAR_IAN_STATUS) != 2)) then begin
+         call Ian14();
+     end
+     else begin
+-        if (global_var(118) == 0) then begin
++        if (global_var(GVAR_IAN_STATUS) == 0) then begin
+             call Ian02();
+         end
+         else begin
+-            if (global_var(118) == 2) then begin
++            if (global_var(GVAR_IAN_STATUS) == 2) then begin
+                 call Ian15();
+             end
+             else begin
+-                if (global_var(118) == 3) then begin
++                if (global_var(GVAR_IAN_STATUS) == 3) then begin
+                     call Ian21();
+                 end
+                 else begin
+@@ -224,9 +224,9 @@ begin
+     end
+     gsay_end;
+     end_dialogue;
+-    if ((global_var(118) == 2) and (global_var(313) == 0)) then begin
+-        set_global_var(313, 1);
+-        display_msg(message_str(235, 169));
++    if ((global_var(GVAR_IAN_STATUS) == 2) and (global_var(GVAR_DESTROY_MASTER_9) == 0)) then begin
++        set_global_var(GVAR_DESTROY_MASTER_9, 1);
++        display_mstr(169);
+         give_exp_points(100);
+     end
+     if (unwield_flag == 1) then begin
+@@ -242,7 +242,7 @@ end
+ 
+ procedure use_obj_on_p_proc
+ begin
+-    if (global_var(118) == 2) then begin
++    if (global_var(GVAR_IAN_STATUS) == 2) then begin
+         item := obj_pid(obj_being_used_with);
+         if ((item != 40) and (item != 47) and (item != 91)) then begin
+             script_overrides;
+@@ -256,7 +256,7 @@ begin
+                     add_obj_to_inven(self_obj, obj_being_used_with);
+                 end
+                 else begin
+-                    float_msg(self_obj, message_str(634, 109), 3);
++                    float_msg(self_obj, message_str(SCRIPT_MODREACT, 109), FLOAT_MSG_GREEN);
+                 end
+             end
+         end
+@@ -265,11 +265,11 @@ end
+ 
+ procedure join_party
+ begin
+-    set_global_var(118, 2);
++    set_global_var(GVAR_IAN_STATUS, 2);
+     party_add(self_obj);
+     add_timer_event(self_obj, game_ticks(1), 1);
+-    critter_add_trait(self_obj, 1, 6, 0);
+-    gsay_message(235, 150, 50);
++    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 0);
++    gsay_message(NAME, 150, NEUTRAL_REACTION);
+ end
+ 
+ procedure hire_Ian
+@@ -281,150 +281,150 @@ end
+ 
+ procedure Ian01
+ begin
+-    gsay_message(235, 101, 51);
++    gsay_message(NAME, 101, BAD_REACTION);
+ end
+ 
+ procedure Ian02
+ begin
+-    gsay_reply(235, 102);
+-    giq_option(4, 235, 103, Ian03, 51);
+-    giq_option(4, 235, message_str(235, 104) + proto_data(obj_pid(dude_obj), 1) + message_str(235, 105), Ian04, 50);
+-    giq_option(-3, 235, 106, Ian05, 50);
++    Reply(102);
++    giq_option(4, NAME, 103, Ian03, BAD_REACTION);
++    giq_option(4, NAME, mstr(104) + proto_data(obj_pid(dude_obj), 1) + mstr(105), Ian04, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 106, Ian05, NEUTRAL_REACTION);
+ end
+ 
+ procedure Ian03
+ begin
+-    gsay_message(235, 107, 51);
++    gsay_message(NAME, 107, BAD_REACTION);
+ end
+ 
+ procedure Ian04
+ begin
+-    gsay_reply(235, 108);
+-    set_global_var(118, 1);
+-    giq_option(4, 235, 109, Ian06, 50);
+-    giq_option(5, 235, 110, Ian07, 50);
++    Reply(108);
++    set_global_var(GVAR_IAN_STATUS, 1);
++    giq_option(4, NAME, 109, Ian06, NEUTRAL_REACTION);
++    giq_option(5, NAME, 110, Ian07, NEUTRAL_REACTION);
+ end
+ 
+ procedure Ian05
+ begin
+-    gsay_message(235, 111, 50);
++    gsay_message(NAME, 111, NEUTRAL_REACTION);
+ end
+ 
+ procedure Ian06
+ begin
+-    gsay_reply(235, 112);
+-    giq_option(4, 235, 114, Ian18, 50);
+-    giq_option(4, 235, 115, Ian13, 50);
+-    giq_option(4, 235, 149, Ian17, 50);
+-    giq_option(5, 235, 116, Ian08, 50);
++    Reply(112);
++    giq_option(4, NAME, 114, Ian18, NEUTRAL_REACTION);
++    giq_option(4, NAME, 115, Ian13, NEUTRAL_REACTION);
++    giq_option(4, NAME, 149, Ian17, NEUTRAL_REACTION);
++    giq_option(5, NAME, 116, Ian08, NEUTRAL_REACTION);
+ end
+ 
+ procedure Ian07
+ begin
+-    gsay_reply(235, 117);
+-    giq_option(4, 235, 118, Ian09, 50);
+-    giq_option(4, 235, 119, Ian08, 50);
++    Reply(117);
++    giq_option(4, NAME, 118, Ian09, NEUTRAL_REACTION);
++    giq_option(4, NAME, 119, Ian08, NEUTRAL_REACTION);
+ end
+ 
+ procedure Ian08
+ begin
+-    gsay_reply(235, 120);
+-    giq_option(4, 235, 121, Ian10, 50);
+-    giq_option(5, 235, 122, Ian11, 50);
++    Reply(120);
++    giq_option(4, NAME, 121, Ian10, NEUTRAL_REACTION);
++    giq_option(5, NAME, 122, Ian11, NEUTRAL_REACTION);
+ end
+ 
+ procedure Ian09
+ begin
+-    gsay_reply(235, 123);
+-    giq_option(4, 634, 104, IanEnd, 50);
++    Reply(123);
++    giq_option(4, SCRIPT_MODREACT, 104, IanEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Ian10
+ begin
+-    gsay_reply(235, 125);
+-    giq_option(4, 235, 126, Ian09, 50);
+-    giq_option(4, 634, 101, IanEnd, 50);
++    Reply(125);
++    giq_option(4, NAME, 126, Ian09, NEUTRAL_REACTION);
++    giq_option(4, SCRIPT_MODREACT, 101, IanEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Ian11
+ begin
+-    gsay_reply(235, 128);
+-    giq_option(4, 235, 129, Ian07, 50);
+-    giq_option(4, 634, 101, IanEnd, 50);
++    Reply(128);
++    giq_option(4, NAME, 129, Ian07, NEUTRAL_REACTION);
++    giq_option(4, SCRIPT_MODREACT, 101, IanEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Ian12
+ begin
+-    gsay_reply(235, message_str(235, 131) + proto_data(obj_pid(dude_obj), 1) + message_str(235, 132));
++    Reply(mstr(131) + proto_data(obj_pid(dude_obj), 1) + mstr(132));
+     call Ian12a();
+ end
+ 
+ procedure Ian12a
+ begin
+-    giq_option(4, 235, 133, Ian11, 50);
+-    giq_option(4, 235, 134, Ian09, 50);
+-    giq_option(4, 235, 135, Ian07, 50);
+-    giq_option(4, 235, 136, Ian10, 50);
+-    giq_option(4, 235, 137, Ian13, 50);
+-    giq_option(4, 235, 149, Ian17, 50);
+-    giq_option(4, 235, 138, IanEnd, 50);
++    giq_option(4, NAME, 133, Ian11, NEUTRAL_REACTION);
++    giq_option(4, NAME, 134, Ian09, NEUTRAL_REACTION);
++    giq_option(4, NAME, 135, Ian07, NEUTRAL_REACTION);
++    giq_option(4, NAME, 136, Ian10, NEUTRAL_REACTION);
++    giq_option(4, NAME, 137, Ian13, NEUTRAL_REACTION);
++    giq_option(4, NAME, 149, Ian17, NEUTRAL_REACTION);
++    giq_option(4, NAME, 138, IanEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Ian13
+ begin
+-    if (not(global_var(73))) then begin
+-        set_global_var(73, 1);
++    if (not(global_var(GVAR_THE_HUB))) then begin
++        set_global_var(GVAR_THE_HUB, 1);
+     end
+-    if (not(global_var(71))) then begin
+-        set_global_var(71, 1);
++    if (not(global_var(GVAR_JUNKTOWN))) then begin
++        set_global_var(GVAR_JUNKTOWN, 1);
+     end
+-    gsay_reply(235, 139);
+-    if (global_var(118) == 2) then begin
+-        giq_option(4, 235, 140, Ian15, 50);
++    Reply(139);
++    if (global_var(GVAR_IAN_STATUS) == 2) then begin
++        giq_option(4, NAME, 140, Ian15, NEUTRAL_REACTION);
+     end
+     else begin
+-        giq_option(4, 235, 140, Ian12, 50);
++        giq_option(4, NAME, 140, Ian12, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure Ian14
+ begin
+     hostile := 1;
+-    gsay_message(235, 141, 51);
++    gsay_message(NAME, 141, BAD_REACTION);
+ end
+ 
+ procedure Ian15
+ begin
+-    gsay_reply(235, message_str(235, 142) + proto_data(obj_pid(dude_obj), 1) + message_str(235, 143));
+-    giq_option(4, 235, 145, Ian16, 50);
+-    giq_option(4, 235, 146, Ian13, 50);
+-    giq_option(4, 235, 200, IanChange, 50);
+-    giq_option(4, 389, 159, IanTactics, 50);
+-    giq_option(4, 235, 173, Ian20, 50);
+-    giq_option(4, 235, 144, IanEnd, 50);
++    Reply(mstr(142) + proto_data(obj_pid(dude_obj), 1) + mstr(143));
++    giq_option(4, NAME, 145, Ian16, NEUTRAL_REACTION);
++    giq_option(4, NAME, 146, Ian13, NEUTRAL_REACTION);
++    giq_option(4, NAME, 200, IanChange, NEUTRAL_REACTION);
++    giq_option(4, SCRIPT_TYCHO, 159, IanTactics, NEUTRAL_REACTION);
++    giq_option(4, NAME, 173, Ian20, NEUTRAL_REACTION);
++    giq_option(4, NAME, 144, IanEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Ian16
+ begin
+-    set_global_var(118, 3);
++    set_global_var(GVAR_IAN_STATUS, 3);
+     party_remove(self_obj);
+-    gsay_message(235, 147, 50);
++    gsay_message(NAME, 147, NEUTRAL_REACTION);
+     rm_timer_event(self_obj);
+ end
+ 
+ procedure Ian17
+ begin
+     if (local_var(1) == 1) then begin
+-        gsay_message(235, 148, 51);
++        gsay_message(NAME, 148, BAD_REACTION);
+     end
+     else begin
+         if (local_var(1) == 2) then begin
+-            gsay_reply(235, 156);
++            Reply(156);
+             if (item_caps_total(dude_obj) >= 100) then begin
+-                giq_option(4, 235, 157, hire_Ian, 49);
++                giq_option(4, NAME, 157, hire_Ian, GOOD_REACTION);
+             end
+-            giq_option(6, 235, 159, Ian17a, 50);
+-            giq_option(4, 235, 158, IanEnd, 50);
++            giq_option(6, NAME, 159, Ian17a, NEUTRAL_REACTION);
++            giq_option(4, NAME, 158, IanEnd, NEUTRAL_REACTION);
+         end
+         else begin
+             call join_party();
+@@ -435,49 +435,49 @@ end
+ procedure Ian17a
+ begin
+     if (is_success(roll_vs_skill(dude_obj, 14, 20))) then begin
+-        gsay_reply(235, 160);
+-        giq_option(4, 634, 106, join_party, 49);
++        Reply(160);
++        giq_option(4, SCRIPT_MODREACT, 106, join_party, GOOD_REACTION);
+     end
+     else begin
+         call DownReact();
+-        gsay_message(235, 161, 51);
++        gsay_message(NAME, 161, BAD_REACTION);
+     end
+ end
+ 
+ procedure Ian18
+ begin
+-    gsay_reply(235, 124);
++    Reply(124);
+     call UpReact();
+-    giq_option(4, 634, 106, Ian19, 50);
++    giq_option(4, SCRIPT_MODREACT, 106, Ian19, NEUTRAL_REACTION);
+ end
+ 
+ procedure Ian19
+ begin
+-    gsay_reply(235, 127);
++    Reply(127);
+     call Ian12a();
+ end
+ 
+ procedure Ian20
+ begin
+-    gsay_message(235, 174, 50);
++    gsay_message(NAME, 174, NEUTRAL_REACTION);
+     call Ian15();
+ end
+ 
+ procedure Ian21
+ begin
+-    gsay_reply(235, 202);
+-    giq_option(4, 235, 203, join_party, 50);
+-    giq_option(4, 235, 204, IanEnd, 50);
++    Reply(202);
++    giq_option(4, NAME, 203, join_party, NEUTRAL_REACTION);
++    giq_option(4, NAME, 204, IanEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure follow_player
+ begin
+     variable LVar0 := 0;
+     prev_tile := dest_tile;
+-    LVar0 := (has_trait(1, dude_obj, 10) + random(2, 4)) % 6;
+-    dest_tile := tile_num_in_direction(tile_num(dude_obj), LVar0, (global_var(277) * 2) + random(1, 2));
+-    if ((tile_distance_objs(self_obj, dude_obj) > ((global_var(277) + 1) * 2)) or (random(0, 3) == 3)) then begin
+-        if (tile_distance(prev_tile, tile_num(dude_obj)) > tile_distance(dest_tile, tile_num(dude_obj))) then begin
++    LVar0 := (obj_get_rot(dude_obj) + random(2, 4)) % 6;
++    dest_tile := tile_num_in_direction(dude_tile, LVar0, (global_var(GVAR_DESTROY_VATS_5) * 2) + random(1, 2));
++    if ((tile_distance_objs(self_obj, dude_obj) > ((global_var(GVAR_DESTROY_VATS_5) + 1) * 2)) or (random(0, 3) == 3)) then begin
++        if (tile_distance(prev_tile, dude_tile) > tile_distance(dest_tile, dude_tile)) then begin
+             if (tile_distance_objs(self_obj, dude_obj) > 8) then begin
+                 animate_move_obj_to_tile(self_obj, dest_tile, 1 bwor 16);
+             end
+@@ -502,7 +502,7 @@ begin
+     if (cur_map_index == 12) then begin
+         if (tile_distance(tile_num(self_obj), 27883) < 4) then begin
+             if (not(line151flag)) then begin
+-                float_msg(self_obj, message_str(235, 151), 0);
++                float_msg(self_obj, mstr(151), FLOAT_MSG_NORMAL);
+                 line151flag := 1;
+             end
+         end
+@@ -511,7 +511,7 @@ begin
+         if (cur_map_index == 11) then begin
+             if (tile_distance(tile_num(self_obj), 27919) < 4) then begin
+                 if (not(line152flag)) then begin
+-                    float_msg(self_obj, message_str(235, 152), 0);
++                    float_msg(self_obj, mstr(152), FLOAT_MSG_NORMAL);
+                     line152flag := 1;
+                 end
+             end
+@@ -519,16 +519,16 @@ begin
+         else begin
+             if (cur_map_index == 3) then begin
+                 if (not(line153flag)) then begin
+-                    float_msg(self_obj, message_str(235, 153), 0);
++                    float_msg(self_obj, mstr(153), FLOAT_MSG_NORMAL);
+                     line153flag := 1;
+                 end
+             end
+             else begin
+                 if (cur_map_index == 27) then begin
+                     if (not(line154flag)) then begin
+-                        float_msg(self_obj, message_str(235, 154), 0);
+-                        if (global_var(244) == 2) then begin
+-                            float_msg(Katja_ptr, message_str(623, 185), 5);
++                        float_msg(self_obj, mstr(154), FLOAT_MSG_NORMAL);
++                        if (global_var(GVAR_KATJA_STATUS) == 2) then begin
++                            float_msg(Katja_ptr, message_str(SCRIPT_KATJA, 185), FLOAT_MSG_PURPLE);
+                         end
+                         line154flag := 1;
+                     end
+@@ -536,7 +536,7 @@ begin
+                 else begin
+                     if (cur_map_index == 30) then begin
+                         if (not(line155flag)) then begin
+-                            float_msg(self_obj, message_str(235, 155), 0);
++                            float_msg(self_obj, mstr(155), FLOAT_MSG_NORMAL);
+                             line155flag := 1;
+                         end
+                     end
+@@ -544,28 +544,28 @@ begin
+                         if (cur_map_index == 38) then begin
+                             if (tile_distance(tile_num(self_obj), 24890) < 4) then begin
+                                 if (not(line162flag)) then begin
+-                                    float_msg(self_obj, message_str(235, 162), 0);
++                                    float_msg(self_obj, mstr(162), FLOAT_MSG_NORMAL);
+                                     line162flag := 1;
+                                 end
+                             end
+                             else begin
+                                 if (tile_distance(tile_num(self_obj), 14116) < 4) then begin
+                                     if (not(line165flag)) then begin
+-                                        float_msg(self_obj, message_str(235, 165), 0);
++                                        float_msg(self_obj, mstr(165), FLOAT_MSG_NORMAL);
+                                         line165flag := 1;
+                                     end
+                                 end
+                                 else begin
+                                     if (tile_distance(tile_num(self_obj), 18464) < 4) then begin
+                                         if (not(line166flag)) then begin
+-                                            float_msg(self_obj, message_str(235, 166), 0);
++                                            float_msg(self_obj, mstr(166), FLOAT_MSG_NORMAL);
+                                             line166flag := 1;
+                                         end
+                                     end
+                                     else begin
+                                         if (tile_distance(tile_num(self_obj), 21730) < 4) then begin
+                                             if (not(line167flag)) then begin
+-                                                float_msg(self_obj, message_str(235, 167), 0);
++                                                float_msg(self_obj, mstr(167), FLOAT_MSG_NORMAL);
+                                                 line167flag := 1;
+                                             end
+                                         end
+@@ -577,7 +577,7 @@ begin
+                             if (cur_map_index == 40) then begin
+                                 if (tile_distance(tile_num(self_obj), 16082) < 4) then begin
+                                     if (line163flag == 0) then begin
+-                                        float_msg(self_obj, message_str(235, 163), 0);
++                                        float_msg(self_obj, mstr(163), FLOAT_MSG_NORMAL);
+                                         line163flag := 1;
+                                     end
+                                 end
+@@ -586,7 +586,7 @@ begin
+                                 if (cur_map_index == 41) then begin
+                                     if (tile_distance(tile_num(self_obj), 22497) < 4) then begin
+                                         if (line164flag == 0) then begin
+-                                            float_msg(self_obj, message_str(235, 164), 0);
++                                            float_msg(self_obj, mstr(164), FLOAT_MSG_NORMAL);
+                                             line164flag := 1;
+                                         end
+                                     end
+@@ -594,7 +594,7 @@ begin
+                                 else begin
+                                     if (cur_map_index == 6) then begin
+                                         if (line170flag == 0) then begin
+-                                            float_msg(self_obj, message_str(235, 170), 0);
++                                            float_msg(self_obj, mstr(170), FLOAT_MSG_NORMAL);
+                                             line170flag := 1;
+                                         end
+                                     end
+@@ -619,36 +619,36 @@ end
+ 
+ procedure IanTactics
+ begin
+-    gsay_reply(389, 160);
+-    giq_option(4, 389, 161, IanClose, 50);
+-    giq_option(4, 389, 162, IanModerate, 50);
+-    giq_option(4, 389, 163, IanFar, 50);
++    gsay_reply(SCRIPT_TYCHO, 160);
++    giq_option(4, SCRIPT_TYCHO, 161, IanClose, NEUTRAL_REACTION);
++    giq_option(4, SCRIPT_TYCHO, 162, IanModerate, NEUTRAL_REACTION);
++    giq_option(4, SCRIPT_TYCHO, 163, IanFar, NEUTRAL_REACTION);
+ end
+ 
+ procedure IanClose
+ begin
+-    set_global_var(277, 0);
+-    gsay_message(235, 201, 50);
++    set_global_var(GVAR_DESTROY_VATS_5, 0);
++    gsay_message(NAME, 201, NEUTRAL_REACTION);
+     call Ian15();
+ end
+ 
+ procedure IanModerate
+ begin
+-    set_global_var(277, 1);
+-    gsay_message(235, 201, 50);
++    set_global_var(GVAR_DESTROY_VATS_5, 1);
++    gsay_message(NAME, 201, NEUTRAL_REACTION);
+     call Ian15();
+ end
+ 
+ procedure IanFar
+ begin
+-    set_global_var(277, 2);
+-    gsay_message(235, 201, 50);
++    set_global_var(GVAR_DESTROY_VATS_5, 2);
++    gsay_message(NAME, 201, NEUTRAL_REACTION);
+     call Ian15();
+ end
+ 
+ procedure IanChange
+ begin
+-    gsay_message(235, 201, 50);
++    gsay_message(NAME, 201, NEUTRAL_REACTION);
+     unwield_flag := 1;
+     call Ian15();
+ end
+@@ -659,31 +659,31 @@ begin
+         set_local_var(0, 50);
+         set_local_var(1, 2);
+         set_local_var(2, 1);
+-        set_local_var(0, local_var(0) + (5 * get_critter_stat(dude_obj, 3)) - 25);
+-        set_local_var(0, local_var(0) + (10 * has_trait(0, dude_obj, 10)));
+-        if (has_trait(0, dude_obj, 39)) then begin
+-            if (global_var(155) > 0) then begin
+-                set_local_var(0, local_var(0) + global_var(155));
++        set_local_var(0, local_var(0) + (5 * dude_charisma) - 25);
++        set_local_var(0, local_var(0) + (10 * has_trait(TRAIT_PERK, dude_obj, PERK_presence)));
++        if (has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality)) then begin
++            if (global_var(GVAR_PLAYER_REPUATION) > 0) then begin
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+         else begin
+             if (local_var(3) == 1) then begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) + global_var(155));
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+-        if (global_var(158) > 2) then begin
++        if (global_var(GVAR_CHILDKILLER_REPUATION) > 2) then begin
+             set_local_var(0, local_var(0) - 30);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) + 20);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) - 20);
+         end
+         call ReactToLevel();
+@@ -776,6 +776,5 @@ end
+ 
+ procedure Goodbyes
+ begin
+-    exit_line := message_str(634, random(100, 105));
++    exit_line := message_str(SCRIPT_MODREACT, random(100, 105));
+ end
+-

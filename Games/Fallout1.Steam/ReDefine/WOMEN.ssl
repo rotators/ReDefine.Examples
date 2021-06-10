@@ -1,0 +1,109 @@
+procedure start;
+procedure combat;
+procedure critter_p_proc;
+procedure talk_p_proc;
+procedure destroy_p_proc;
+procedure look_at_p_proc;
+
+import variable women_killed;
+import variable signal_women;
+
+variable hostile;
+variable Only_Once := 1;
+variable message;
+variable temp;
+
+
+procedure start
+begin
+    if (Only_Once) then begin
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 44);
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_LOSER);
+    end
+    if (script_action == look_at_proc) then begin
+        call look_at_p_proc();
+    end
+    else begin
+        if (script_action == talk_proc) then begin
+            call talk_p_proc();
+        end
+        else begin
+            if (script_action == critter_proc) then begin
+                call critter_p_proc();
+            end
+            else begin
+                if (script_action == destroy_proc) then begin
+                    call destroy_p_proc();
+                end
+            end
+        end
+    end
+end
+
+procedure combat
+begin
+    hostile := 1;
+end
+
+procedure critter_p_proc
+begin
+    if ((global_var(GVAR_GARL_DEAD) == 1) and (global_var(GVAR_TOTAL_RAIDERS) <= 12) or (global_var(GVAR_TOTAL_RAIDERS) <= 6)) then begin
+        if (local_var(0) == 0) then begin
+            set_local_var(0, 1);
+            temp := 200;
+            display_msg(message_str(SCRIPT_RAIDMAP, 100) + temp + message_str(SCRIPT_RAIDMAP, 103));
+            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) + 1);
+            give_exp_points(temp);
+        end
+    end
+    else begin
+        if (signal_women == 2) then begin
+            signal_women := signal_women - 1;
+            float_msg(self_obj, mstr(101), FLOAT_MSG_RED);
+        end
+        else begin
+            if (signal_women == 1) then begin
+                signal_women := signal_women - 1;
+                float_msg(self_obj, mstr(102), FLOAT_MSG_RED);
+            end
+        end
+    end
+end
+
+procedure talk_p_proc
+begin
+    if (local_var(0) == 1) then begin
+        float_msg(self_obj, mstr(104), FLOAT_MSG_RED);
+    end
+    else begin
+        float_msg(self_obj, mstr(random(102, 103)), FLOAT_MSG_RED);
+    end
+end
+
+procedure destroy_p_proc
+begin
+    women_killed := women_killed + 1;
+    if (women_killed > 1) then begin
+        set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+    end
+    if (source_obj == dude_obj) then begin
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
+            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
+            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+        end
+        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
+        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
+            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+        end
+    end
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    display_mstr(100);
+end

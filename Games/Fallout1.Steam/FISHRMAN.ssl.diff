@@ -1,0 +1,546 @@
+diff --git a/Games/Fallout1.Steam/Original/FISHRMAN.ssl b/Games/Fallout1.Steam/ReDefine/FISHRMAN.ssl
+index b336ba5..2f4a3d0 100644
+--- a/Games/Fallout1.Steam/Original/FISHRMAN.ssl
++++ b/Games/Fallout1.Steam/ReDefine/FISHRMAN.ssl
+@@ -71,29 +71,29 @@ variable exit_line;
+ procedure start
+ begin
+     if (not(initialized)) then begin
+-        critter_add_trait(self_obj, 1, 6, 2);
+-        critter_add_trait(self_obj, 1, 5, 6);
+-        hostile := global_var(334);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 2);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_PEASANT);
++        hostile := global_var(GVAR_SAVE_TANDI_5);
+         initialized := 1;
+     end
+     else begin
+-        if (script_action == 12) then begin
++        if (script_action == critter_proc) then begin
+             call critter_p_proc();
+         end
+         else begin
+-            if (script_action == 14) then begin
++            if (script_action == damage_proc) then begin
+                 call damage_p_proc();
+             end
+             else begin
+-                if (script_action == 18) then begin
++                if (script_action == destroy_proc) then begin
+                     call destroy_p_proc();
+                 end
+                 else begin
+-                    if (script_action == 21) then begin
++                    if (script_action == look_at_proc) then begin
+                         call look_at_p_proc();
+                     end
+                     else begin
+-                        if (script_action == 11) then begin
++                        if (script_action == talk_proc) then begin
+                             call talk_p_proc();
+                         end
+                     end
+@@ -107,12 +107,12 @@ procedure critter_p_proc
+ begin
+     if (hostile) then begin
+         hostile := 0;
+-        attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++        attack(dude_obj);
+     end
+     if (dude_enemy) then begin
+         if (obj_can_see_obj(self_obj, dude_obj)) then begin
+             hostile := 1;
+-            set_global_var(334, 1);
++            set_global_var(GVAR_SAVE_TANDI_5, 1);
+         end
+     end
+ end
+@@ -120,23 +120,23 @@ end
+ procedure damage_p_proc
+ begin
+     dude_enemy := 1;
+-    set_global_var(334, 1);
++    set_global_var(GVAR_SAVE_TANDI_5, 1);
+ end
+ 
+ procedure destroy_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-            set_global_var(156, 1);
+-            set_global_var(157, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+-            set_global_var(157, 1);
+-            set_global_var(156, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+         end
+-        set_global_var(159, global_var(159) + 1);
+-        if ((global_var(159) % 2) == 0) then begin
+-            set_global_var(155, global_var(155) - 1);
++        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
++        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
++            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+         end
+     end
+ end
+@@ -144,24 +144,24 @@ end
+ procedure look_at_p_proc
+ begin
+     script_overrides;
+-    display_msg(message_str(644, 100));
++    display_mstr(100);
+ end
+ 
+ procedure pickup_p_proc
+ begin
+     dude_enemy := 1;
+     hostile := 1;
+-    set_global_var(334, 1);
++    set_global_var(GVAR_SAVE_TANDI_5, 1);
+ end
+ 
+ procedure talk_p_proc
+ begin
+     call get_reaction();
+     if (dude_enemy) then begin
+-        float_msg(self_obj, message_str(669, 101), 0);
++        float_msg(self_obj, message_str(SCRIPT_ENEMY, 101), FLOAT_MSG_NORMAL);
+     end
+     else begin
+-        if ((local_var(1) < 2) or (global_var(158) > 2) or (global_var(155) < -30)) then begin
++        if ((local_var(1) < 2) or (global_var(GVAR_CHILDKILLER_REPUATION) > 2) or (global_var(GVAR_PLAYER_REPUATION) < -30)) then begin
+             call FishrMan00();
+         end
+         else begin
+@@ -175,7 +175,7 @@ begin
+                     call FishrMan03();
+                 end
+                 else begin
+-                    if (global_var(155) >= 30) then begin
++                    if (global_var(GVAR_PLAYER_REPUATION) >= 30) then begin
+                         call FishrMan02();
+                     end
+                     else begin
+@@ -191,60 +191,60 @@ end
+ 
+ procedure FishrMan00
+ begin
+-    float_msg(self_obj, message_str(644, 101 + (get_critter_stat(dude_obj, 34) == 1)), 0);
++    float_msg(self_obj, mstr(101 + (dude_gender == 1)), FLOAT_MSG_NORMAL);
+ end
+ 
+ procedure FishrMan01
+ begin
+     known := 1;
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        gsay_reply(644, 103);
++    if (dude_gender == 0) then begin
++        Reply(103);
+     end
+     else begin
+-        gsay_reply(644, 104);
++        Reply(104);
+     end
+-    if ((global_var(101) == 1) and (obj_is_carrying_obj_pid(dude_obj, 55) == 0)) then begin
+-        giq_option(4, 644, 105, FishrMan04, 50);
++    if ((global_var(GVAR_FIND_WATER_CHIP) == 1) and (obj_is_carrying_obj_pid(dude_obj, 55) == 0)) then begin
++        giq_option(4, NAME, 105, FishrMan04, NEUTRAL_REACTION);
+     end
+-    giq_option(7, 644, 106, FishrMan05, 50);
+-    giq_option(4, 644, 107, FishrMan06, 50);
+-    giq_option(4, 644, 108, FishrMan07, 50);
+-    if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-        giq_option(4, 644, 109, FishrMan08, 51);
++    giq_option(7, NAME, 106, FishrMan05, NEUTRAL_REACTION);
++    giq_option(4, NAME, 107, FishrMan06, NEUTRAL_REACTION);
++    giq_option(4, NAME, 108, FishrMan07, NEUTRAL_REACTION);
++    if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++        giq_option(4, NAME, 109, FishrMan08, BAD_REACTION);
+     end
+-    giq_option(-3, 644, 110, FishrMan09, 50);
++    giq_option(-3, NAME, 110, FishrMan09, NEUTRAL_REACTION);
+ end
+ 
+ procedure FishrMan02
+ begin
+     known := 1;
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        gsay_reply(644, 111);
++    if (dude_gender == 0) then begin
++        Reply(111);
+     end
+     else begin
+-        gsay_reply(644, 112);
++        Reply(112);
+     end
+-    if ((global_var(101) == 1) and (obj_is_carrying_obj_pid(dude_obj, 55) == 0)) then begin
+-        giq_option(4, 644, 105, FishrMan04, 50);
++    if ((global_var(GVAR_FIND_WATER_CHIP) == 1) and (obj_is_carrying_obj_pid(dude_obj, 55) == 0)) then begin
++        giq_option(4, NAME, 105, FishrMan04, NEUTRAL_REACTION);
+     end
+-    giq_option(7, 644, 106, FishrMan05, 50);
+-    giq_option(4, 644, 108, FishrMan07, 50);
+-    giq_option(4, 644, 113, FishrMan13, 50);
+-    giq_option(-3, 644, 110, FishrMan14, 50);
++    giq_option(7, NAME, 106, FishrMan05, NEUTRAL_REACTION);
++    giq_option(4, NAME, 108, FishrMan07, NEUTRAL_REACTION);
++    giq_option(4, NAME, 113, FishrMan13, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 110, FishrMan14, NEUTRAL_REACTION);
+ end
+ 
+ procedure FishrMan03
+ begin
+-    gsay_reply(644, 114);
+-    giq_option(4, 644, 115, FishrMan15, 51);
+-    giq_option(4, 644, 116, FishrMan16, 50);
+-    giq_option(4, 644, 117, FishrMan03a, 50);
+-    giq_option(-3, 644, 110, FishrMan19, 50);
++    Reply(114);
++    giq_option(4, NAME, 115, FishrMan15, BAD_REACTION);
++    giq_option(4, NAME, 116, FishrMan16, NEUTRAL_REACTION);
++    giq_option(4, NAME, 117, FishrMan03a, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 110, FishrMan19, NEUTRAL_REACTION);
+ end
+ 
+ procedure FishrMan03a
+ begin
+-    if (get_critter_stat(dude_obj, 3) >= 6) then begin
++    if (dude_charisma >= 6) then begin
+         call FishrMan17();
+     end
+     else begin
+@@ -254,65 +254,65 @@ end
+ 
+ procedure FishrMan04
+ begin
+-    gsay_reply(644, 118);
+-    giq_option(0, 634, 106, FishrMan04a, 50);
++    Reply(118);
++    giq_option(0, SCRIPT_MODREACT, 106, FishrMan04a, NEUTRAL_REACTION);
+ end
+ 
+ procedure FishrMan04a
+ begin
+-    gsay_reply(644, 119);
+-    giq_option(0, 634, 106, FishrMan04b, 50);
++    Reply(119);
++    giq_option(0, SCRIPT_MODREACT, 106, FishrMan04b, NEUTRAL_REACTION);
+ end
+ 
+ procedure FishrMan04b
+ begin
+-    gsay_reply(644, 120);
+-    giq_option(0, 634, 106, FishrManEnd1, 50);
++    Reply(120);
++    giq_option(0, SCRIPT_MODREACT, 106, FishrManEnd1, NEUTRAL_REACTION);
+ end
+ 
+ procedure FishrMan05
+ begin
+-    gsay_reply(644, 122);
+-    giq_option(0, 634, 106, FishrMan05a, 50);
++    Reply(122);
++    giq_option(0, SCRIPT_MODREACT, 106, FishrMan05a, NEUTRAL_REACTION);
+ end
+ 
+ procedure FishrMan05a
+ begin
+-    gsay_reply(644, 123);
+-    giq_option(0, 634, 106, FishrManEnd1, 50);
++    Reply(123);
++    giq_option(0, SCRIPT_MODREACT, 106, FishrManEnd1, NEUTRAL_REACTION);
+ end
+ 
+ procedure FishrMan06
+ begin
+-    gsay_reply(644, 124);
+-    giq_option(0, 634, 106, FishrManEnd1, 50);
++    Reply(124);
++    giq_option(0, SCRIPT_MODREACT, 106, FishrManEnd1, NEUTRAL_REACTION);
+ end
+ 
+ procedure FishrMan07
+ begin
+-    gsay_reply(644, 125);
+-    giq_option(0, 634, 106, FishrMan07a, 50);
++    Reply(125);
++    giq_option(0, SCRIPT_MODREACT, 106, FishrMan07a, NEUTRAL_REACTION);
+ end
+ 
+ procedure FishrMan07a
+ begin
+-    gsay_reply(644, 126);
+-    giq_option(0, 634, 106, FishrManEnd1, 50);
++    Reply(126);
++    giq_option(0, SCRIPT_MODREACT, 106, FishrManEnd1, NEUTRAL_REACTION);
+ end
+ 
+ procedure FishrMan08
+ begin
+     call DownReactLevel();
+     call DownReactLevel();
+-    gsay_reply(644, 127);
+-    giq_option(4, 644, 128, FishrMan08a, 51);
+-    giq_option(4, 644, 129, FishrManCombat, 51);
+-    giq_option(4, 644, 130, FishrMan22, 50);
++    Reply(127);
++    giq_option(4, NAME, 128, FishrMan08a, BAD_REACTION);
++    giq_option(4, NAME, 129, FishrManCombat, BAD_REACTION);
++    giq_option(4, NAME, 130, FishrMan22, NEUTRAL_REACTION);
+ end
+ 
+ procedure FishrMan08a
+ begin
+-    if ((get_critter_stat(dude_obj, 0) >= 8) or obj_is_carrying_obj_pid(dude_obj, 11) or obj_is_carrying_obj_pid(dude_obj, 12) or obj_is_carrying_obj_pid(dude_obj, 13) or obj_is_carrying_obj_pid(dude_obj, 118) or obj_is_carrying_obj_pid(dude_obj, 15)) then begin
++    if ((dude_strength >= 8) or obj_is_carrying_obj_pid(dude_obj, 11) or obj_is_carrying_obj_pid(dude_obj, 12) or obj_is_carrying_obj_pid(dude_obj, 13) or obj_is_carrying_obj_pid(dude_obj, 118) or obj_is_carrying_obj_pid(dude_obj, 15)) then begin
+         call FishrMan20();
+     end
+     else begin
+@@ -322,8 +322,8 @@ end
+ 
+ procedure FishrMan09
+ begin
+-    gsay_reply(644, 131 + (get_critter_stat(dude_obj, 34) == 1));
+-    giq_option(0, 634, 106, FishrMan09a, 50);
++    Reply(131 + (dude_gender == 1));
++    giq_option(0, SCRIPT_MODREACT, 106, FishrMan09a, NEUTRAL_REACTION);
+ end
+ 
+ procedure FishrMan09a
+@@ -333,129 +333,129 @@ begin
+         LVar0 := obj_carrying_pid_obj(self_obj, 109);
+         rm_obj_from_inven(self_obj, LVar0);
+         add_obj_to_inven(dude_obj, LVar0);
+-        gsay_message(644, 133, 50);
++        gsay_message(NAME, 133, NEUTRAL_REACTION);
+     end
+     else begin
+-        gsay_message(644, 134, 50);
++        gsay_message(NAME, 134, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure FishrMan10
+ begin
+-    gsay_reply(644, 135);
+-    giq_option(0, 634, 106, FishrManEnd2, 50);
++    Reply(135);
++    giq_option(0, SCRIPT_MODREACT, 106, FishrManEnd2, NEUTRAL_REACTION);
+ end
+ 
+ procedure FishrMan11
+ begin
+-    gsay_reply(644, 137);
+-    giq_option(0, 634, 106, FishrManEnd2, 50);
++    Reply(137);
++    giq_option(0, SCRIPT_MODREACT, 106, FishrManEnd2, NEUTRAL_REACTION);
+ end
+ 
+ procedure FishrMan12
+ begin
+-    gsay_reply(644, 138);
+-    giq_option(0, 634, 106, FishrMan12a, 50);
++    Reply(138);
++    giq_option(0, SCRIPT_MODREACT, 106, FishrMan12a, NEUTRAL_REACTION);
+ end
+ 
+ procedure FishrMan12a
+ begin
+-    gsay_reply(644, 139);
+-    giq_option(0, 634, 106, FishrManEnd2, 50);
++    Reply(139);
++    giq_option(0, SCRIPT_MODREACT, 106, FishrManEnd2, NEUTRAL_REACTION);
+ end
+ 
+ procedure FishrMan13
+ begin
+-    gsay_reply(644, 140);
++    Reply(140);
+     call FishrManBarter();
+ end
+ 
+ procedure FishrMan14
+ begin
+-    gsay_reply(644, 141);
+-    giq_option(0, 634, 106, FishrManEnd2, 50);
++    Reply(141);
++    giq_option(0, SCRIPT_MODREACT, 106, FishrManEnd2, NEUTRAL_REACTION);
+ end
+ 
+ procedure FishrMan15
+ begin
+-    gsay_reply(644, 142);
+-    giq_option(0, 634, 106, FishrMan15a, 50);
++    Reply(142);
++    giq_option(0, SCRIPT_MODREACT, 106, FishrMan15a, NEUTRAL_REACTION);
+ end
+ 
+ procedure FishrMan15a
+ begin
+-    gsay_message(644, 143, 50);
++    gsay_message(NAME, 143, NEUTRAL_REACTION);
+ end
+ 
+ procedure FishrMan16
+ begin
+-    gsay_message(644, 144, 50);
++    gsay_message(NAME, 144, NEUTRAL_REACTION);
+ end
+ 
+ procedure FishrMan17
+ begin
+-    gsay_reply(644, 145);
+-    if ((global_var(101) == 1) and (obj_is_carrying_obj_pid(dude_obj, 55) == 0)) then begin
+-        giq_option(4, 644, 146, FishrMan04, 50);
++    Reply(145);
++    if ((global_var(GVAR_FIND_WATER_CHIP) == 1) and (obj_is_carrying_obj_pid(dude_obj, 55) == 0)) then begin
++        giq_option(4, NAME, 146, FishrMan04, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 644, 147, FishrMan11, 50);
+-    giq_option(4, 644, 148, FishrMan23, 50);
+-    giq_option(4, 644, 149, FishrMan24, 50);
+-    giq_option(4, 644, 108, FishrMan07, 50);
++    giq_option(4, NAME, 147, FishrMan11, NEUTRAL_REACTION);
++    giq_option(4, NAME, 148, FishrMan23, NEUTRAL_REACTION);
++    giq_option(4, NAME, 149, FishrMan24, NEUTRAL_REACTION);
++    giq_option(4, NAME, 108, FishrMan07, NEUTRAL_REACTION);
+ end
+ 
+ procedure FishrMan18
+ begin
+-    gsay_message(644, 150, 50);
++    gsay_message(NAME, 150, NEUTRAL_REACTION);
+ end
+ 
+ procedure FishrMan19
+ begin
+-    gsay_message(644, 151, 50);
++    gsay_message(NAME, 151, NEUTRAL_REACTION);
+ end
+ 
+ procedure FishrMan20
+ begin
+-    gsay_reply(644, 152);
++    Reply(152);
+     call FishrManBarter();
+ end
+ 
+ procedure FishrMan21
+ begin
+-    gsay_message(644, 153, 51);
++    gsay_message(NAME, 153, BAD_REACTION);
+     call FishrManCombat();
+ end
+ 
+ procedure FishrMan22
+ begin
+-    gsay_message(644, 154, 51);
++    gsay_message(NAME, 154, BAD_REACTION);
+ end
+ 
+ procedure FishrMan23
+ begin
+-    gsay_message(644, 155, 50);
++    gsay_message(NAME, 155, NEUTRAL_REACTION);
+ end
+ 
+ procedure FishrMan24
+ begin
+-    gsay_message(644, 156, 50);
++    gsay_message(NAME, 156, NEUTRAL_REACTION);
+ end
+ 
+ procedure FishrMan25
+ begin
+-    float_msg(self_obj, message_str(644, 157), 0);
++    float_msg(self_obj, mstr(157), FLOAT_MSG_NORMAL);
+ end
+ 
+ procedure FishrManBarter
+ begin
+-    gdialog_mod_barter(0);
+-    giq_option(0, 634, 100, FishrManEnd, 50);
++    gdialog_barter;
++    giq_option(0, SCRIPT_MODREACT, 100, FishrManEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure FishrManCombat
+ begin
+     hostile := 1;
+-    set_global_var(334, 1);
++    set_global_var(GVAR_SAVE_TANDI_5, 1);
+ end
+ 
+ procedure FishrManEnd
+@@ -464,12 +464,12 @@ end
+ 
+ procedure FishrManEnd1
+ begin
+-    gsay_message(644, 121, 50);
++    gsay_message(NAME, 121, NEUTRAL_REACTION);
+ end
+ 
+ procedure FishrManEnd2
+ begin
+-    gsay_message(644, 136, 50);
++    gsay_message(NAME, 136, NEUTRAL_REACTION);
+ end
+ 
+ procedure get_reaction
+@@ -478,31 +478,31 @@ begin
+         set_local_var(0, 50);
+         set_local_var(1, 2);
+         set_local_var(2, 1);
+-        set_local_var(0, local_var(0) + (5 * get_critter_stat(dude_obj, 3)) - 25);
+-        set_local_var(0, local_var(0) + (10 * has_trait(0, dude_obj, 10)));
+-        if (has_trait(0, dude_obj, 39)) then begin
+-            if (global_var(155) > 0) then begin
+-                set_local_var(0, local_var(0) + global_var(155));
++        set_local_var(0, local_var(0) + (5 * dude_charisma) - 25);
++        set_local_var(0, local_var(0) + (10 * has_trait(TRAIT_PERK, dude_obj, PERK_presence)));
++        if (has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality)) then begin
++            if (global_var(GVAR_PLAYER_REPUATION) > 0) then begin
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+         else begin
+             if (local_var(3) == 1) then begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) + global_var(155));
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+-        if (global_var(158) > 2) then begin
++        if (global_var(GVAR_CHILDKILLER_REPUATION) > 2) then begin
+             set_local_var(0, local_var(0) - 30);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) + 20);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) - 20);
+         end
+         call ReactToLevel();
+@@ -595,6 +595,5 @@ end
+ 
+ procedure Goodbyes
+ begin
+-    exit_line := message_str(634, random(100, 105));
++    exit_line := message_str(SCRIPT_MODREACT, random(100, 105));
+ end
+-

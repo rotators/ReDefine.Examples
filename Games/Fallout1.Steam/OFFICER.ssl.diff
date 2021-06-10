@@ -1,0 +1,438 @@
+diff --git a/Games/Fallout1.Steam/Original/OFFICER.ssl b/Games/Fallout1.Steam/ReDefine/OFFICER.ssl
+index a2fb757..17ba816 100644
+--- a/Games/Fallout1.Steam/Original/OFFICER.ssl
++++ b/Games/Fallout1.Steam/ReDefine/OFFICER.ssl
+@@ -66,23 +66,23 @@ variable exit_line;
+ 
+ procedure start
+ begin
+-    if (script_action == 12) then begin
++    if (script_action == critter_proc) then begin
+         call critter_p_proc();
+     end
+     else begin
+-        if (script_action == 18) then begin
++        if (script_action == destroy_proc) then begin
+             call destroy_p_proc();
+         end
+         else begin
+-            if (script_action == 15) then begin
++            if (script_action == map_enter_proc) then begin
+                 call map_enter_p_proc();
+             end
+             else begin
+-                if (script_action == 4) then begin
++                if (script_action == pickup_proc) then begin
+                     call pickup_p_proc();
+                 end
+                 else begin
+-                    if (script_action == 11) then begin
++                    if (script_action == talk_proc) then begin
+                         call talk_p_proc();
+                     end
+                 end
+@@ -95,10 +95,10 @@ procedure critter_p_proc
+ begin
+     if (hostile) then begin
+         hostile := 0;
+-        attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++        attack(dude_obj);
+     end
+     else begin
+-        if (global_var(261)) then begin
++        if (global_var(GVAR_WATER_CHIP_4)) then begin
+             if (obj_can_see_obj(self_obj, dude_obj)) then begin
+                 dialogue_system_enter;
+             end
+@@ -110,12 +110,12 @@ begin
+             else begin
+                 if (armory_access == 2) then begin
+                     anim(self_obj, 1000, 5);
+-                    float_msg(self_obj, message_str(178, 159), 0);
++                    float_msg(self_obj, mstr(159), FLOAT_MSG_NORMAL);
+                     armory_access := 0;
+                 end
+                 else begin
+-                    if (not(armory_access) and (elevation(dude_obj) == elevation(self_obj))) then begin
+-                        if (tile_distance(tile_num(dude_obj), 21292) < 2) then begin
++                    if (not(armory_access) and (dude_elevation == elevation(self_obj))) then begin
++                        if (tile_distance(dude_tile, 21292) < 2) then begin
+                             hostile := 1;
+                         end
+                     end
+@@ -128,7 +128,7 @@ end
+ procedure damage_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        set_global_var(261, 1);
++        set_global_var(GVAR_WATER_CHIP_4, 1);
+     end
+ end
+ 
+@@ -136,27 +136,27 @@ procedure destroy_p_proc
+ begin
+     Officer_ptr := 0;
+     if (source_obj == dude_obj) then begin
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-            set_global_var(156, 1);
+-            set_global_var(157, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+-            set_global_var(157, 1);
+-            set_global_var(156, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+         end
+-        set_global_var(159, global_var(159) + 1);
+-        if ((global_var(159) % 2) == 0) then begin
+-            set_global_var(155, global_var(155) - 1);
++        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
++        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
++            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+         end
+     end
+     if (source_obj == dude_obj) then begin
+-        set_global_var(261, 1);
++        set_global_var(GVAR_WATER_CHIP_4, 1);
+     end
+ end
+ 
+ procedure map_enter_p_proc
+ begin
+-    critter_add_trait(self_obj, 1, 6, 1);
++    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 1);
+     Officer_ptr := self_obj;
+ end
+ 
+@@ -170,7 +170,7 @@ begin
+     call get_reaction();
+     start_gdialog(178, self_obj, 4, -1, -1);
+     gsay_start;
+-    if (global_var(261)) then begin
++    if (global_var(GVAR_WATER_CHIP_4)) then begin
+         call Officer00();
+     end
+     else begin
+@@ -178,7 +178,7 @@ begin
+             call Officer27();
+         end
+         else begin
+-            if ((global_var(101) != 0) and (global_var(101) != 1)) then begin
++            if ((global_var(GVAR_FIND_WATER_CHIP) != 0) and (global_var(GVAR_FIND_WATER_CHIP) != 1)) then begin
+                 call Officer01();
+             end
+             else begin
+@@ -207,102 +207,102 @@ end
+ 
+ procedure Officer00
+ begin
+-    gsay_message(178, 100, 51);
++    gsay_message(NAME, 100, BAD_REACTION);
+     hostile := 1;
+ end
+ 
+ procedure Officer01
+ begin
+-    gsay_message(178, 101, 0);
++    gsay_message(NAME, 101, 0);
+ end
+ 
+ procedure Officer02
+ begin
+-    gsay_reply(178, 102);
+-    giq_option(4, 178, 103, Officer04, 0);
+-    giq_option(5, 178, 104, Officer08, 0);
+-    giq_option(6, 178, 105, Officer11, 0);
+-    giq_option(-3, 178, 106, Officer03, 0);
++    Reply(102);
++    giq_option(4, NAME, 103, Officer04, 0);
++    giq_option(5, NAME, 104, Officer08, 0);
++    giq_option(6, NAME, 105, Officer11, 0);
++    giq_option(-3, NAME, 106, Officer03, 0);
+ end
+ 
+ procedure Officer03
+ begin
+-    gsay_reply(178, 107);
+-    giq_option(4, 178, 159, OfficerEnd, 0);
++    Reply(107);
++    giq_option(4, NAME, 159, OfficerEnd, 0);
+ end
+ 
+ procedure Officer04
+ begin
+-    gsay_reply(178, 108);
+-    giq_option(4, 178, 109, OfficerEnd, 0);
+-    giq_option(5, 178, 110, Officer05, 0);
++    Reply(108);
++    giq_option(4, NAME, 109, OfficerEnd, 0);
++    giq_option(5, NAME, 110, Officer05, 0);
+ end
+ 
+ procedure Officer05
+ begin
+-    gsay_reply(178, 111);
+-    giq_option(5, 178, 112, Officer06, 0);
+-    giq_option(6, 178, 113, Officer07, 0);
++    Reply(111);
++    giq_option(5, NAME, 112, Officer06, 0);
++    giq_option(6, NAME, 113, Officer07, 0);
+ end
+ 
+ procedure Officer06
+ begin
+-    gsay_reply(178, 114);
+-    giq_option(5, 178, 115, OfficerEnd, 0);
++    Reply(114);
++    giq_option(5, NAME, 115, OfficerEnd, 0);
+ end
+ 
+ procedure Officer07
+ begin
+     call UpReact();
+-    gsay_message(178, 116, 10);
++    gsay_message(NAME, 116, 10);
+ end
+ 
+ procedure Officer08
+ begin
+-    gsay_reply(178, 117);
+-    giq_option(4, 178, 118, Officer09, 0);
+-    giq_option(4, 178, 119, Officer10, 0);
++    Reply(117);
++    giq_option(4, NAME, 118, Officer09, 0);
++    giq_option(4, NAME, 119, Officer10, 0);
+ end
+ 
+ procedure Officer09
+ begin
+     call DownReact();
+-    gsay_message(178, 120, -10);
++    gsay_message(NAME, 120, -10);
+ end
+ 
+ procedure Officer10
+ begin
+-    gsay_message(178, 121, 0);
++    gsay_message(NAME, 121, 0);
+ end
+ 
+ procedure Officer11
+ begin
+-    gsay_reply(178, 122);
+-    giq_option(5, 178, 123, Officer13, 0);
+-    giq_option(5, 178, 124, Officer12, 0);
++    Reply(122);
++    giq_option(5, NAME, 123, Officer13, 0);
++    giq_option(5, NAME, 124, Officer12, 0);
+ end
+ 
+ procedure Officer12
+ begin
+-    gsay_message(178, 125, 0);
++    gsay_message(NAME, 125, 0);
+ end
+ 
+ procedure Officer13
+ begin
+-    gsay_reply(178, 126);
+-    giq_option(5, 178, 127, Officer15, 0);
+-    giq_option(5, 178, 128, Officer14, 0);
++    Reply(126);
++    giq_option(5, NAME, 127, Officer15, 0);
++    giq_option(5, NAME, 128, Officer14, 0);
+ end
+ 
+ procedure Officer14
+ begin
+-    gsay_message(178, 129, 0);
++    gsay_message(NAME, 129, 0);
+ end
+ 
+ procedure Officer15
+ begin
+-    gsay_reply(178, 130);
+-    giq_option(5, 178, 131, Officer15a, 0);
++    Reply(130);
++    giq_option(5, NAME, 131, Officer15a, 0);
+ end
+ 
+ procedure Officer15a
+@@ -317,38 +317,38 @@ end
+ 
+ procedure Officer16
+ begin
+-    gsay_message(178, 132, 0);
++    gsay_message(NAME, 132, 0);
+ end
+ 
+ procedure Officer17
+ begin
+     armory_access := 1;
+-    gsay_message(178, 133, 0);
++    gsay_message(NAME, 133, 0);
+ end
+ 
+ procedure Officer18
+ begin
+-    gsay_reply(178, message_str(178, 134) + proto_data(obj_pid(dude_obj), 1) + message_str(178, 135));
+-    giq_option(4, 178, 136, Officer20, 0);
+-    giq_option(5, 178, 137, Officer21, 0);
+-    giq_option(-3, 178, 138, Officer19, 0);
++    Reply(mstr(134) + proto_data(obj_pid(dude_obj), 1) + mstr(135));
++    giq_option(4, NAME, 136, Officer20, 0);
++    giq_option(5, NAME, 137, Officer21, 0);
++    giq_option(-3, NAME, 138, Officer19, 0);
+ end
+ 
+ procedure Officer19
+ begin
+-    gsay_message(178, 139, 0);
++    gsay_message(NAME, 139, 0);
+ end
+ 
+ procedure Officer20
+ begin
+-    gsay_message(178, 140, 0);
++    gsay_message(NAME, 140, 0);
+ end
+ 
+ procedure Officer21
+ begin
+-    gsay_reply(178, 141);
+-    giq_option(5, 178, 142, Officer22, 0);
+-    giq_option(5, 178, 143, Officer21a, 0);
++    Reply(141);
++    giq_option(5, NAME, 142, Officer22, 0);
++    giq_option(5, NAME, 143, Officer21a, 0);
+ end
+ 
+ procedure Officer21a
+@@ -363,57 +363,57 @@ end
+ 
+ procedure Officer22
+ begin
+-    gsay_reply(178, 144);
+-    giq_option(5, 178, 145, OfficerEnd, 0);
+-    giq_option(5, 178, 146, OfficerCombat, -10);
++    Reply(144);
++    giq_option(5, NAME, 145, OfficerEnd, 0);
++    giq_option(5, NAME, 146, OfficerCombat, -10);
+ end
+ 
+ procedure Officer23
+ begin
+-    gsay_message(178, 147, 0);
++    gsay_message(NAME, 147, 0);
+ end
+ 
+ procedure Officer24
+ begin
+-    gsay_message(178, 148, 0);
++    gsay_message(NAME, 148, 0);
+ end
+ 
+ procedure Officer25
+ begin
+-    gsay_message(178, 149, 0);
++    gsay_message(NAME, 149, 0);
+ end
+ 
+ procedure Officer26
+ begin
+-    gsay_message(178, 150, 0);
++    gsay_message(NAME, 150, 0);
+ end
+ 
+ procedure Officer27
+ begin
+-    gsay_message(178, 151, 0);
++    gsay_message(NAME, 151, 0);
+ end
+ 
+ procedure Officer28
+ begin
+-    gsay_reply(178, 152);
+-    giq_option(4, 178, 153, Officer30, 0);
+-    giq_option(5, 178, 154, Officer31, 0);
+-    giq_option(-3, 178, 155, Officer29, 0);
++    Reply(152);
++    giq_option(4, NAME, 153, Officer30, 0);
++    giq_option(5, NAME, 154, Officer31, 0);
++    giq_option(-3, NAME, 155, Officer29, 0);
+ end
+ 
+ procedure Officer29
+ begin
+-    gsay_message(178, 156, 0);
++    gsay_message(NAME, 156, 0);
+ end
+ 
+ procedure Officer30
+ begin
+-    gsay_message(178, 157, 0);
++    gsay_message(NAME, 157, 0);
+ end
+ 
+ procedure Officer31
+ begin
+-    gsay_message(178, 158, 0);
++    gsay_message(NAME, 158, 0);
+ end
+ 
+ procedure OfficerCombat
+@@ -431,31 +431,31 @@ begin
+         set_local_var(0, 50);
+         set_local_var(1, 2);
+         set_local_var(2, 1);
+-        set_local_var(0, local_var(0) + (5 * get_critter_stat(dude_obj, 3)) - 25);
+-        set_local_var(0, local_var(0) + (10 * has_trait(0, dude_obj, 10)));
+-        if (has_trait(0, dude_obj, 39)) then begin
+-            if (global_var(155) > 0) then begin
+-                set_local_var(0, local_var(0) + global_var(155));
++        set_local_var(0, local_var(0) + (5 * dude_charisma) - 25);
++        set_local_var(0, local_var(0) + (10 * has_trait(TRAIT_PERK, dude_obj, PERK_presence)));
++        if (has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality)) then begin
++            if (global_var(GVAR_PLAYER_REPUATION) > 0) then begin
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+         else begin
+             if (local_var(3) == 1) then begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) + global_var(155));
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+-        if (global_var(158) > 2) then begin
++        if (global_var(GVAR_CHILDKILLER_REPUATION) > 2) then begin
+             set_local_var(0, local_var(0) - 30);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) + 20);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) - 20);
+         end
+         call ReactToLevel();
+@@ -548,6 +548,5 @@ end
+ 
+ procedure Goodbyes
+ begin
+-    exit_line := message_str(634, random(100, 105));
++    exit_line := message_str(SCRIPT_MODREACT, random(100, 105));
+ end
+-

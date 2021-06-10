@@ -1,0 +1,603 @@
+diff --git a/Games/Fallout1.Steam/Original/THORNDYK.ssl b/Games/Fallout1.Steam/ReDefine/THORNDYK.ssl
+index ad6c648..1793a9a 100644
+--- a/Games/Fallout1.Steam/Original/THORNDYK.ssl
++++ b/Games/Fallout1.Steam/ReDefine/THORNDYK.ssl
+@@ -74,26 +74,26 @@ begin
+     if (Only_Once) then begin
+         Only_Once := 0;
+         Thorndyke_Ptr := self_obj;
+-        critter_add_trait(self_obj, 1, 6, 72);
+-        critter_add_trait(self_obj, 1, 5, 77);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 72);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_COC_HUB_BRAINWASHED);
+     end
+-    if (script_action == 21) then begin
++    if (script_action == look_at_proc) then begin
+         call look_at_p_proc();
+     end
+     else begin
+-        if (script_action == 4) then begin
++        if (script_action == pickup_proc) then begin
+             call pickup_p_proc();
+         end
+         else begin
+-            if (script_action == 11) then begin
++            if (script_action == talk_proc) then begin
+                 call talk_p_proc();
+             end
+             else begin
+-                if (script_action == 12) then begin
++                if (script_action == critter_proc) then begin
+                     call critter_p_proc();
+                 end
+                 else begin
+-                    if (script_action == 18) then begin
++                    if (script_action == destroy_proc) then begin
+                         call destroy_p_proc();
+                     end
+                 end
+@@ -111,7 +111,7 @@ procedure critter_p_proc
+ begin
+     if (hostile) then begin
+         hostile := 0;
+-        attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++        attack(dude_obj);
+     end
+     if ((map_var(6) == 1) and (obj_can_see_obj(self_obj, dude_obj) == 1)) then begin
+         call combat();
+@@ -129,7 +129,7 @@ procedure talk_p_proc
+ begin
+     variable LVar0 := 0;
+     call get_reaction();
+-    if (global_var(195) == 1) then begin
++    if (global_var(GVAR_CATHEDRAL_ENEMY) == 1) then begin
+         call Thorn00();
+     end
+     else begin
+@@ -141,7 +141,7 @@ begin
+                 call Thorn29();
+             end
+             else begin
+-                if ((global_var(158) == 1) or (global_var(156) == 1)) then begin
++                if ((global_var(GVAR_CHILDKILLER_REPUATION) == 1) or (global_var(GVAR_BERSERKER_REPUTATION) == 1)) then begin
+                     call Thorn01();
+                 end
+                 else begin
+@@ -159,9 +159,9 @@ begin
+         set_local_var(6, game_time / (10 * 60 * 60));
+         if (PlayerYellsOuch == 1) then begin
+             PlayerYellsOuch := 0;
+-            float_msg(dude_obj, 168, 9);
++            float_msg(dude_obj, 168, FLOAT_MSG_WHITE);
+         end
+-        float_msg(self_obj, message_str(603, DoctorPostTreatmentResponse), 2);
++        float_msg(self_obj, mstr(DoctorPostTreatmentResponse), FLOAT_MSG_RED);
+         LVar0 := random(5, 15) + 10;
+         critter_heal(dude_obj, LVar0);
+     end
+@@ -170,17 +170,17 @@ end
+ procedure destroy_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-            set_global_var(156, 1);
+-            set_global_var(157, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+-            set_global_var(157, 1);
+-            set_global_var(156, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+         end
+-        set_global_var(159, global_var(159) + 1);
+-        if ((global_var(159) % 2) == 0) then begin
+-            set_global_var(155, global_var(155) - 1);
++        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
++        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
++            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+         end
+     end
+ end
+@@ -188,7 +188,7 @@ end
+ procedure look_at_p_proc
+ begin
+     script_overrides;
+-    display_msg(message_str(603, 100));
++    display_mstr(100);
+ end
+ 
+ procedure flee_dude
+@@ -197,9 +197,9 @@ begin
+     variable LVar1 := 0;
+     variable LVar2 := 0;
+     while (LVar1 < 5) do begin
+-        if (tile_distance(tile_num(dude_obj), tile_num_in_direction(tile_num(self_obj), LVar1, 3)) > LVar2) then begin
++        if (tile_distance(dude_tile, tile_num_in_direction(tile_num(self_obj), LVar1, 3)) > LVar2) then begin
+             LVar0 := tile_num_in_direction(tile_num(self_obj), LVar1, 3);
+-            LVar2 := tile_distance(tile_num(dude_obj), LVar0);
++            LVar2 := tile_distance(dude_tile, LVar0);
+         end
+         LVar1 := LVar1 + 1;
+     end
+@@ -217,13 +217,13 @@ end
+ 
+ procedure Thorn00
+ begin
+-    float_msg(self_obj, message_str(603, 101), 2);
++    float_msg(self_obj, mstr(101), FLOAT_MSG_RED);
+     call flee_dude();
+ end
+ 
+ procedure Thorn01
+ begin
+-    float_msg(self_obj, message_str(603, 102), 2);
++    float_msg(self_obj, mstr(102), FLOAT_MSG_RED);
+     call flee_dude();
+ end
+ 
+@@ -231,70 +231,70 @@ procedure Thorn02
+ begin
+     variable LVar0 := 0;
+     variable LVar1 := 0;
+-    LVar0 := get_critter_stat(dude_obj, 35);
+-    LVar1 := get_critter_stat(dude_obj, 7);
++    LVar0 := get_critter_stat(dude_obj, STAT_current_hp);
++    LVar1 := get_critter_stat(dude_obj, STAT_max_hp);
+     if (LVar0 == LVar1) then begin
+-        if (get_critter_stat(dude_obj, 34) == 0) then begin
+-            gsay_reply(603, 103);
++        if (dude_gender == 0) then begin
++            Reply(103);
+         end
+         else begin
+-            gsay_reply(603, 104);
++            Reply(104);
+         end
+-        giq_option(7, 603, 105, Thorn02a, 49);
+-        giq_option(7, 603, 106, Thorn05, 50);
+-        giq_option(4, 603, 107, Thorn06, 50);
+-        giq_option(4, 603, 108, Thorn07, 50);
+-        giq_option(4, 603, 109, Thorn08, 51);
+-        giq_option(-3, 603, 110, Thorn09, 51);
++        giq_option(7, NAME, 105, Thorn02a, GOOD_REACTION);
++        giq_option(7, NAME, 106, Thorn05, NEUTRAL_REACTION);
++        giq_option(4, NAME, 107, Thorn06, NEUTRAL_REACTION);
++        giq_option(4, NAME, 108, Thorn07, NEUTRAL_REACTION);
++        giq_option(4, NAME, 109, Thorn08, BAD_REACTION);
++        giq_option(-3, NAME, 110, Thorn09, BAD_REACTION);
+     end
+     else begin
+         if ((LVar0 < LVar1) and (((game_time / (10 * 60 * 60)) - local_var(6)) < 24)) then begin
+-            if (get_critter_stat(dude_obj, 34) == 0) then begin
+-                gsay_reply(603, 111);
++            if (dude_gender == 0) then begin
++                Reply(111);
+             end
+             else begin
+-                gsay_reply(603, 112);
++                Reply(112);
+             end
+-            giq_option(7, 603, 113, Thorn02a, 50);
+-            giq_option(7, 603, 114, Thorn05, 50);
+-            giq_option(4, 603, 115, Thorn27, 51);
+-            giq_option(4, 603, 116, Thorn07, 49);
+-            giq_option(4, 603, 117, Thorn08, 51);
+-            giq_option(-3, 603, 118, Thorn09, 50);
++            giq_option(7, NAME, 113, Thorn02a, NEUTRAL_REACTION);
++            giq_option(7, NAME, 114, Thorn05, NEUTRAL_REACTION);
++            giq_option(4, NAME, 115, Thorn27, BAD_REACTION);
++            giq_option(4, NAME, 116, Thorn07, GOOD_REACTION);
++            giq_option(4, NAME, 117, Thorn08, BAD_REACTION);
++            giq_option(-3, NAME, 118, Thorn09, NEUTRAL_REACTION);
+         end
+         else begin
+             if ((LVar0 > (LVar1 / 2)) and (((game_time / (10 * 60 * 60)) - local_var(6)) > 24)) then begin
+-                if (get_critter_stat(dude_obj, 34) == 0) then begin
+-                    gsay_reply(603, 119);
++                if (dude_gender == 0) then begin
++                    Reply(119);
+                 end
+                 else begin
+-                    gsay_reply(603, 120);
++                    Reply(120);
+                 end
+-                giq_option(7, 603, 121, Thorn10, 50);
+-                giq_option(7, 603, 122, Thorn10, 50);
+-                giq_option(4, 603, 123, Thorn11, 50);
+-                giq_option(4, 603, 124, Thorn12, 50);
+-                giq_option(4, 603, 125, Thorn13, 50);
+-                giq_option(4, 603, 126, Thorn14, 50);
+-                giq_option(-3, 603, 127, Thorn15, 50);
+-                giq_option(-3, 603, 128, Thorn16, 50);
++                giq_option(7, NAME, 121, Thorn10, NEUTRAL_REACTION);
++                giq_option(7, NAME, 122, Thorn10, NEUTRAL_REACTION);
++                giq_option(4, NAME, 123, Thorn11, NEUTRAL_REACTION);
++                giq_option(4, NAME, 124, Thorn12, NEUTRAL_REACTION);
++                giq_option(4, NAME, 125, Thorn13, NEUTRAL_REACTION);
++                giq_option(4, NAME, 126, Thorn14, NEUTRAL_REACTION);
++                giq_option(-3, NAME, 127, Thorn15, NEUTRAL_REACTION);
++                giq_option(-3, NAME, 128, Thorn16, NEUTRAL_REACTION);
+             end
+             else begin
+                 if ((LVar0 < (LVar1 / 2)) and (((game_time / (10 * 60 * 60)) - local_var(6)) > 24)) then begin
+-                    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-                        gsay_reply(603, 129);
++                    if (dude_gender == 0) then begin
++                        Reply(129);
+                     end
+                     else begin
+-                        gsay_reply(603, 130);
++                        Reply(130);
+                     end
+-                    giq_option(7, 603, 131, Thorn10, 50);
+-                    giq_option(7, 603, 132, Thorn10, 50);
+-                    giq_option(4, 603, 133, Thorn11, 50);
+-                    giq_option(4, 603, 124, Thorn12, 50);
+-                    giq_option(4, 603, 134, Thorn13, 50);
+-                    giq_option(4, 603, 135, Thorn14, 50);
+-                    giq_option(-3, 603, 136, Thorn15, 50);
+-                    giq_option(-3, 603, 137, Thorn16, 50);
++                    giq_option(7, NAME, 131, Thorn10, NEUTRAL_REACTION);
++                    giq_option(7, NAME, 132, Thorn10, NEUTRAL_REACTION);
++                    giq_option(4, NAME, 133, Thorn11, NEUTRAL_REACTION);
++                    giq_option(4, NAME, 124, Thorn12, NEUTRAL_REACTION);
++                    giq_option(4, NAME, 134, Thorn13, NEUTRAL_REACTION);
++                    giq_option(4, NAME, 135, Thorn14, NEUTRAL_REACTION);
++                    giq_option(-3, NAME, 136, Thorn15, NEUTRAL_REACTION);
++                    giq_option(-3, NAME, 137, Thorn16, NEUTRAL_REACTION);
+                 end
+             end
+         end
+@@ -313,12 +313,12 @@ end
+ 
+ procedure Thorn03
+ begin
+-    gsay_reply(603, 138);
+-    giq_option(7, 603, 139, Thorn03a, 50);
+-    giq_option(7, 603, 140, Thorn03b, 50);
+-    giq_option(7, 603, 141, Thorn05, 50);
+-    giq_option(4, 603, 142, Thorn07, 50);
+-    giq_option(4, 603, 143, Thorn19, 50);
++    Reply(138);
++    giq_option(7, NAME, 139, Thorn03a, NEUTRAL_REACTION);
++    giq_option(7, NAME, 140, Thorn03b, NEUTRAL_REACTION);
++    giq_option(7, NAME, 141, Thorn05, NEUTRAL_REACTION);
++    giq_option(4, NAME, 142, Thorn07, NEUTRAL_REACTION);
++    giq_option(4, NAME, 143, Thorn19, NEUTRAL_REACTION);
+ end
+ 
+ procedure Thorn03a
+@@ -343,62 +343,62 @@ end
+ 
+ procedure Thorn04
+ begin
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        gsay_message(603, 144, 50);
++    if (dude_gender == 0) then begin
++        gsay_message(NAME, 144, NEUTRAL_REACTION);
+     end
+     else begin
+-        gsay_message(603, 145, 50);
++        gsay_message(NAME, 145, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure Thorn05
+ begin
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        gsay_message(603, 146, 50);
++    if (dude_gender == 0) then begin
++        gsay_message(NAME, 146, NEUTRAL_REACTION);
+     end
+     else begin
+-        gsay_message(603, 147, 50);
++        gsay_message(NAME, 147, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure Thorn06
+ begin
+-    gsay_message(603, 148, 50);
++    gsay_message(NAME, 148, NEUTRAL_REACTION);
+ end
+ 
+ procedure Thorn07
+ begin
+-    gsay_message(603, 149, 50);
++    gsay_message(NAME, 149, NEUTRAL_REACTION);
+ end
+ 
+ procedure Thorn08
+ begin
+-    gsay_message(603, 150, 51);
++    gsay_message(NAME, 150, BAD_REACTION);
+ end
+ 
+ procedure Thorn09
+ begin
+-    gsay_message(603, 151, 50);
++    gsay_message(NAME, 151, NEUTRAL_REACTION);
+ end
+ 
+ procedure Thorn10
+ begin
+-    gsay_reply(603, 152);
+-    giq_option(7, 603, 153, Thorn20, 51);
+-    giq_option(7, 603, 154, Thorn20, 50);
+-    giq_option(4, 603, 155, Thorn11, 50);
+-    giq_option(4, 603, 156, Thorn12, 49);
+-    giq_option(4, 603, 157, Thorn13, 50);
+-    giq_option(4, 603, 158, Thorn14, 50);
++    Reply(152);
++    giq_option(7, NAME, 153, Thorn20, BAD_REACTION);
++    giq_option(7, NAME, 154, Thorn20, NEUTRAL_REACTION);
++    giq_option(4, NAME, 155, Thorn11, NEUTRAL_REACTION);
++    giq_option(4, NAME, 156, Thorn12, GOOD_REACTION);
++    giq_option(4, NAME, 157, Thorn13, NEUTRAL_REACTION);
++    giq_option(4, NAME, 158, Thorn14, NEUTRAL_REACTION);
+ end
+ 
+ procedure Thorn11
+ begin
+-    gsay_reply(603, 159);
+-    giq_option(4, 603, 160, Thorn12, 50);
+-    giq_option(4, 603, 157, Thorn13, 50);
+-    giq_option(4, 603, 162, Thorn24, 51);
+-    giq_option(4, 603, 163, Thorn14, 50);
++    Reply(159);
++    giq_option(4, NAME, 160, Thorn12, NEUTRAL_REACTION);
++    giq_option(4, NAME, 157, Thorn13, NEUTRAL_REACTION);
++    giq_option(4, NAME, 162, Thorn24, BAD_REACTION);
++    giq_option(4, NAME, 163, Thorn14, NEUTRAL_REACTION);
+ end
+ 
+ procedure Thorn12
+@@ -406,17 +406,17 @@ begin
+     DoctorPostTreatmentResponse := 164;
+     PlayerYellsOuch := 0;
+     HealPlayer := 1;
+-    gsay_message(603, 161, 50);
++    gsay_message(NAME, 161, NEUTRAL_REACTION);
+ end
+ 
+ procedure Thorn13
+ begin
+-    gsay_message(603, 165, 50);
++    gsay_message(NAME, 165, NEUTRAL_REACTION);
+ end
+ 
+ procedure Thorn14
+ begin
+-    gsay_message(603, 166, 50);
++    gsay_message(NAME, 166, NEUTRAL_REACTION);
+ end
+ 
+ procedure Thorn15
+@@ -424,21 +424,21 @@ begin
+     DoctorPostTreatmentResponse := 169;
+     PlayerYellsOuch := 1;
+     HealPlayer := 1;
+-    gsay_message(603, 167, 50);
++    gsay_message(NAME, 167, NEUTRAL_REACTION);
+ end
+ 
+ procedure Thorn16
+ begin
+-    gsay_message(603, 170, 50);
++    gsay_message(NAME, 170, NEUTRAL_REACTION);
+ end
+ 
+ procedure Thorn17
+ begin
+-    gsay_reply(603, 171);
+-    giq_option(7, 603, 172, Thorn17a, 50);
+-    giq_option(4, 603, 173, Thorn27, 50);
+-    giq_option(4, 603, 174, Thorn27, 50);
+-    giq_option(4, 603, 175, Thorn14, 50);
++    Reply(171);
++    giq_option(7, NAME, 172, Thorn17a, NEUTRAL_REACTION);
++    giq_option(4, NAME, 173, Thorn27, NEUTRAL_REACTION);
++    giq_option(4, NAME, 174, Thorn27, NEUTRAL_REACTION);
++    giq_option(4, NAME, 175, Thorn14, NEUTRAL_REACTION);
+ end
+ 
+ procedure Thorn17a
+@@ -453,12 +453,12 @@ end
+ 
+ procedure Thorn18
+ begin
+-    gsay_reply(603, 176);
+-    giq_option(7, 603, 177, Thorn18a, 50);
+-    giq_option(4, 603, 178, Thorn24, 51);
+-    giq_option(4, 603, 179, Thorn27, 50);
+-    giq_option(4, 603, 180, Thorn24, 51);
+-    giq_option(4, 603, 181, Thorn14, 50);
++    Reply(176);
++    giq_option(7, NAME, 177, Thorn18a, NEUTRAL_REACTION);
++    giq_option(4, NAME, 178, Thorn24, BAD_REACTION);
++    giq_option(4, NAME, 179, Thorn27, NEUTRAL_REACTION);
++    giq_option(4, NAME, 180, Thorn24, BAD_REACTION);
++    giq_option(4, NAME, 181, Thorn14, NEUTRAL_REACTION);
+ end
+ 
+ procedure Thorn18a
+@@ -473,36 +473,36 @@ end
+ 
+ procedure Thorn19
+ begin
+-    gsay_message(603, 182, 50);
++    gsay_message(NAME, 182, NEUTRAL_REACTION);
+ end
+ 
+ procedure Thorn20
+ begin
+-    gsay_reply(603, 183);
+-    giq_option(7, 603, 184, Thorn23, 51);
+-    giq_option(4, 603, 185, Thorn24, 51);
+-    giq_option(4, 603, 186, Thorn12, 49);
+-    giq_option(4, 603, 187, Thorn13, 50);
+-    giq_option(4, 603, 188, Thorn14, 50);
++    Reply(183);
++    giq_option(7, NAME, 184, Thorn23, BAD_REACTION);
++    giq_option(4, NAME, 185, Thorn24, BAD_REACTION);
++    giq_option(4, NAME, 186, Thorn12, GOOD_REACTION);
++    giq_option(4, NAME, 187, Thorn13, NEUTRAL_REACTION);
++    giq_option(4, NAME, 188, Thorn14, NEUTRAL_REACTION);
+ end
+ 
+ procedure Thorn21
+ begin
+-    gsay_reply(603, 189);
+-    giq_option(7, 603, 190, Thorn25, 50);
+-    giq_option(4, 603, 191, Thorn27, 50);
+-    giq_option(4, 603, 192, Thorn27, 50);
+-    giq_option(4, 603, 193, Thorn24, 51);
++    Reply(189);
++    giq_option(7, NAME, 190, Thorn25, NEUTRAL_REACTION);
++    giq_option(4, NAME, 191, Thorn27, NEUTRAL_REACTION);
++    giq_option(4, NAME, 192, Thorn27, NEUTRAL_REACTION);
++    giq_option(4, NAME, 193, Thorn24, BAD_REACTION);
+ end
+ 
+ procedure Thorn22
+ begin
+-    gsay_reply(603, 194);
+-    giq_option(7, 603, 195, Thorn22a, 50);
+-    giq_option(4, 603, 196, Thorn22b, 50);
+-    giq_option(4, 603, 197, Thorn27, 50);
+-    giq_option(4, 603, 198, Thorn27, 50);
+-    giq_option(4, 603, 199, Thorn24, 51);
++    Reply(194);
++    giq_option(7, NAME, 195, Thorn22a, NEUTRAL_REACTION);
++    giq_option(4, NAME, 196, Thorn22b, NEUTRAL_REACTION);
++    giq_option(4, NAME, 197, Thorn27, NEUTRAL_REACTION);
++    giq_option(4, NAME, 198, Thorn27, NEUTRAL_REACTION);
++    giq_option(4, NAME, 199, Thorn24, BAD_REACTION);
+ end
+ 
+ procedure Thorn22a
+@@ -528,53 +528,53 @@ end
+ procedure Thorn23
+ begin
+     set_local_var(5, 1);
+-    gsay_message(603, 200, 51);
++    gsay_message(NAME, 200, BAD_REACTION);
+ end
+ 
+ procedure Thorn24
+ begin
+     set_local_var(5, 1);
+-    gsay_message(603, 201, 51);
++    gsay_message(NAME, 201, BAD_REACTION);
+ end
+ 
+ procedure Thorn25
+ begin
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        gsay_message(603, 202, 50);
++    if (dude_gender == 0) then begin
++        gsay_message(NAME, 202, NEUTRAL_REACTION);
+     end
+     else begin
+-        gsay_message(603, 203, 50);
++        gsay_message(NAME, 203, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure Thorn26
+ begin
+-    gsay_reply(603, 204);
+-    giq_option(7, 603, 205, Thorn27, 50);
+-    giq_option(4, 603, 206, Thorn07, 50);
+-    giq_option(4, 603, 207, Thorn24, 51);
+-    giq_option(4, 603, 208, Thorn24, 51);
+-    giq_option(4, 603, 209, Thorn27, 51);
++    Reply(204);
++    giq_option(7, NAME, 205, Thorn27, NEUTRAL_REACTION);
++    giq_option(4, NAME, 206, Thorn07, NEUTRAL_REACTION);
++    giq_option(4, NAME, 207, Thorn24, BAD_REACTION);
++    giq_option(4, NAME, 208, Thorn24, BAD_REACTION);
++    giq_option(4, NAME, 209, Thorn27, BAD_REACTION);
+ end
+ 
+ procedure Thorn27
+ begin
+-    gsay_message(603, 210, 50);
++    gsay_message(NAME, 210, NEUTRAL_REACTION);
+ end
+ 
+ procedure Thorn28
+ begin
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        float_msg(self_obj, message_str(603, 211), 2);
++    if (dude_gender == 0) then begin
++        float_msg(self_obj, mstr(211), FLOAT_MSG_RED);
+     end
+     else begin
+-        float_msg(self_obj, message_str(603, 212), 2);
++        float_msg(self_obj, mstr(212), FLOAT_MSG_RED);
+     end
+ end
+ 
+ procedure Thorn29
+ begin
+-    float_msg(self_obj, message_str(603, 213), 2);
++    float_msg(self_obj, mstr(213), FLOAT_MSG_RED);
+ end
+ 
+ procedure get_reaction
+@@ -583,31 +583,31 @@ begin
+         set_local_var(0, 50);
+         set_local_var(1, 2);
+         set_local_var(2, 1);
+-        set_local_var(0, local_var(0) + (5 * get_critter_stat(dude_obj, 3)) - 25);
+-        set_local_var(0, local_var(0) + (10 * has_trait(0, dude_obj, 10)));
+-        if (has_trait(0, dude_obj, 39)) then begin
+-            if (global_var(155) > 0) then begin
+-                set_local_var(0, local_var(0) + global_var(155));
++        set_local_var(0, local_var(0) + (5 * dude_charisma) - 25);
++        set_local_var(0, local_var(0) + (10 * has_trait(TRAIT_PERK, dude_obj, PERK_presence)));
++        if (has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality)) then begin
++            if (global_var(GVAR_PLAYER_REPUATION) > 0) then begin
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+         else begin
+             if (local_var(3) == 1) then begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) + global_var(155));
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+-        if (global_var(158) > 2) then begin
++        if (global_var(GVAR_CHILDKILLER_REPUATION) > 2) then begin
+             set_local_var(0, local_var(0) - 30);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) + 20);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) - 20);
+         end
+         call ReactToLevel();
+@@ -700,6 +700,5 @@ end
+ 
+ procedure Goodbyes
+ begin
+-    exit_line := message_str(634, random(100, 105));
++    exit_line := message_str(SCRIPT_MODREACT, random(100, 105));
+ end
+-

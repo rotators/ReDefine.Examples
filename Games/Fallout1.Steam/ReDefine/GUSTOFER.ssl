@@ -1,0 +1,512 @@
+procedure start;
+procedure combat_p_proc;
+procedure critter_p_proc;
+procedure destroy_p_proc;
+procedure map_enter_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure Gustofer00;
+procedure Gustofer00a;
+procedure Gustofer01;
+procedure Gustofer02;
+procedure Gustofer03;
+procedure Gustofer04;
+procedure Gustofer05;
+procedure Gustofer06;
+procedure Gustofer07;
+procedure Gustofer08;
+procedure Gustofer09;
+procedure Gustofer10;
+procedure Gustofer10a;
+procedure Gustofer11;
+procedure Gustofer12;
+procedure Gustofer13;
+procedure Gustofer14;
+procedure Gustofer15;
+procedure Gustofer16;
+procedure Gustofer17;
+procedure Gustofer18;
+procedure Gustofer19;
+procedure GustoferEnd;
+procedure GustoferWait;
+procedure GustoferBet1;
+procedure GustoferBet2;
+procedure flee_dude;
+procedure destroy_challenger;
+
+variable round_counter;
+variable robbed;
+variable dude_bet;
+variable line148flag;
+
+import variable challenger_ptr;
+import variable fight;
+import variable Saul_loses;
+import variable Saul_wins;
+import variable shot_challenger;
+
+procedure sleeping;
+
+variable night_person;
+variable wake_time;
+variable sleep_time;
+variable home_tile;
+variable sleep_tile;
+
+
+procedure start
+begin
+    if (script_action == combat_proc) then begin
+        call combat_p_proc();
+    end
+    else begin
+        if (script_action == critter_proc) then begin
+            call critter_p_proc();
+        end
+        else begin
+            if (script_action == destroy_proc) then begin
+                call destroy_p_proc();
+            end
+            else begin
+                if (script_action == map_enter_proc) then begin
+                    call map_enter_p_proc();
+                end
+                else begin
+                    if (script_action == pickup_proc) then begin
+                        call pickup_p_proc();
+                    end
+                    else begin
+                        if (script_action == talk_proc) then begin
+                            call talk_p_proc();
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure combat_p_proc
+begin
+    if ((fixed_param == 4) and obj_can_see_obj(self_obj, dude_obj)) then begin
+        round_counter := round_counter + 1;
+    end
+    if (round_counter > 3) then begin
+        if (global_var(GVAR_ENEMY_JUNKTOWN) == 0) then begin
+            set_global_var(GVAR_ENEMY_JUNKTOWN, 1);
+            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 5);
+        end
+    end
+end
+
+procedure critter_p_proc
+begin
+    if ((obj_item_subtype(critter_inven_obj(dude_obj, 1)) == 3) or (obj_item_subtype(critter_inven_obj(dude_obj, 2)) == 3) and (tile_distance_objs(self_obj, dude_obj) < 8) and (local_var(1) == 0)) then begin
+        call flee_dude();
+    end
+    else begin
+        if (game_time_hour == 1400) then begin
+            if ((line148flag == 0) and ((game_time / (10 * 60 * 60 * 24) % 3) == 0)) then begin
+                line148flag := 1;
+                fight := 1;
+                float_msg(self_obj, mstr(148), FLOAT_MSG_NORMAL);
+            end
+        end
+        else begin
+            line148flag := 0;
+        end
+        if (Saul_wins or Saul_loses and shot_challenger) then begin
+            call destroy_challenger();
+            if (obj_can_see_obj(self_obj, dude_obj) and (tile_distance_objs(self_obj, dude_obj) < 12)) then begin
+                dialogue_system_enter;
+            end
+        end
+        else begin
+            call sleeping();
+        end
+    end
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
+            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
+            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+        end
+        set_global_var(GVAR_BAD_MONSTER, global_var(GVAR_BAD_MONSTER) + 1);
+        if ((global_var(GVAR_BAD_MONSTER) % 6) == 0) then begin
+            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) + 1);
+        end
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    if (global_var(GVAR_JUNKTOWN_INVADED) == 1) then begin
+        destroy_object(self_obj);
+    end
+    if (local_var(0) == 0) then begin
+        set_local_var(0, tile_num(self_obj));
+    end
+    if (obj_is_carrying_obj_pid(self_obj, 41) == 0) then begin
+        item_caps_adjust(self_obj, random(0, 10));
+    end
+    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 25);
+    sleep_time := 1920;
+    wake_time := 530;
+    home_tile := 17096;
+    sleep_tile := 7000;
+end
+
+procedure pickup_p_proc
+begin
+    robbed := 1;
+    dialogue_system_enter;
+end
+
+procedure talk_p_proc
+begin
+    if (not(robbed) and (local_var(2) == 1) and ((game_time / (10 * 60 * 60 * 24) % 3) != 0)) then begin
+        call Gustofer05();
+    end
+    else begin
+        start_gdialog(529, self_obj, 4, -1, -1);
+        gsay_start;
+        if (Saul_wins) then begin
+            if (dude_bet == 1) then begin
+                call Gustofer16();
+            end
+            else begin
+                call Gustofer07();
+            end
+        end
+        else begin
+            if (Saul_loses) then begin
+                if (dude_bet == 2) then begin
+                    call Gustofer16();
+                end
+                else begin
+                    call Gustofer07();
+                end
+            end
+            else begin
+                if (robbed) then begin
+                    call Gustofer13();
+                end
+                else begin
+                    if ((game_time / (10 * 60 * 60 * 24) % 3) == 0) then begin
+                        if (game_time_hour < 1400) then begin
+                            if (dude_bet == 0) then begin
+                                call Gustofer06();
+                            end
+                            else begin
+                                gsay_message(NAME, 152, NEUTRAL_REACTION);
+                            end
+                        end
+                        else begin
+                            if (challenger_ptr != 0) then begin
+                                call Gustofer19();
+                            end
+                            else begin
+                                call Gustofer18();
+                                dude_bet := 0;
+                            end
+                        end
+                    end
+                    else begin
+                        call Gustofer00();
+                    end
+                end
+            end
+        end
+        gsay_end;
+        end_dialogue;
+    end
+end
+
+procedure Gustofer00
+begin
+    set_local_var(2, 1);
+    Reply(100);
+    giq_option(-3, NAME, 101, Gustofer01, NEUTRAL_REACTION);
+    giq_option(4, NAME, 102, GustoferEnd, NEUTRAL_REACTION);
+    giq_option(6, NAME, 103, Gustofer00a, NEUTRAL_REACTION);
+end
+
+procedure Gustofer00a
+begin
+    if ((game_time / (10 * 60 * 60 * 24) % 3) == 1) then begin
+        call Gustofer03();
+    end
+    else begin
+        call Gustofer02();
+    end
+end
+
+procedure Gustofer01
+begin
+    gsay_message(NAME, 104, NEUTRAL_REACTION);
+end
+
+procedure Gustofer02
+begin
+    Reply(105);
+    giq_option(4, NAME, 107, GustoferEnd, NEUTRAL_REACTION);
+    giq_option(4, NAME, 108, Gustofer04, NEUTRAL_REACTION);
+end
+
+procedure Gustofer03
+begin
+    Reply(106);
+    giq_option(4, NAME, 107, GustoferEnd, NEUTRAL_REACTION);
+    giq_option(4, NAME, 108, Gustofer04, NEUTRAL_REACTION);
+end
+
+procedure Gustofer04
+begin
+    gsay_message(NAME, 109, NEUTRAL_REACTION);
+end
+
+procedure Gustofer05
+begin
+    variable LVar0 := 0;
+    LVar0 := mstr(110);
+    if ((game_time / (10 * 60 * 60 * 24) % 3) == 1) then begin
+        LVar0 := LVar0 + mstr(112);
+    end
+    else begin
+        if ((game_time / (10 * 60 * 60 * 24) % 3) == 2) then begin
+            LVar0 := LVar0 + mstr(111);
+        end
+    end
+    float_msg(self_obj, LVar0, FLOAT_MSG_NORMAL);
+end
+
+procedure Gustofer06
+begin
+    Reply(113);
+    giq_option(-3, NAME, 101, Gustofer01, NEUTRAL_REACTION);
+    giq_option(4, NAME, 114, GustoferEnd, NEUTRAL_REACTION);
+    giq_option(4, NAME, 115, Gustofer08, NEUTRAL_REACTION);
+    giq_option(4, NAME, 116, Gustofer09, NEUTRAL_REACTION);
+end
+
+procedure Gustofer07
+begin
+    Saul_wins := 0;
+    Saul_loses := 0;
+    dude_bet := 0;
+    if (dude_gender == 0) then begin
+        gsay_message(NAME, 150, NEUTRAL_REACTION);
+    end
+    else begin
+        gsay_message(NAME, 151, NEUTRAL_REACTION);
+    end
+end
+
+procedure Gustofer08
+begin
+    Reply(120);
+    giq_option(4, NAME, 121, GustoferBet1, NEUTRAL_REACTION);
+    giq_option(4, NAME, 122, GustoferBet2, NEUTRAL_REACTION);
+end
+
+procedure Gustofer09
+begin
+    if (is_success(roll_vs_skill(dude_obj, 14, 0))) then begin
+        Reply(123);
+        if (global_var(GVAR_SAUL_STATUS) < 1) then begin
+            giq_option(4, NAME, 124, Gustofer10, NEUTRAL_REACTION);
+        end
+        giq_option(4, NAME, 125, Gustofer11, NEUTRAL_REACTION);
+        giq_option(4, NAME, 126, GustoferEnd, NEUTRAL_REACTION);
+    end
+    else begin
+        gsay_message(NAME, 127, NEUTRAL_REACTION);
+    end
+end
+
+procedure Gustofer10
+begin
+    Reply(128);
+    giq_option(0, SCRIPT_MODREACT, 106, Gustofer10a, NEUTRAL_REACTION);
+end
+
+procedure Gustofer10a
+begin
+    Reply(129);
+    giq_option(4, NAME, 130, Gustofer11, NEUTRAL_REACTION);
+    giq_option(4, NAME, 131, GustoferEnd, NEUTRAL_REACTION);
+end
+
+procedure Gustofer11
+begin
+    Reply(132);
+    giq_option(4, NAME, 133, Gustofer12, NEUTRAL_REACTION);
+    giq_option(4, NAME, 134, GustoferEnd, NEUTRAL_REACTION);
+end
+
+procedure Gustofer12
+begin
+    Reply(135);
+    giq_option(4, NAME, 136, GustoferEnd, NEUTRAL_REACTION);
+end
+
+procedure Gustofer13
+begin
+    robbed := 0;
+    Reply(137);
+    giq_option(4, NAME, 138, Gustofer14, BAD_REACTION);
+    giq_option(4, NAME, 139, Gustofer15, BAD_REACTION);
+    giq_option(-3, NAME, 101, Gustofer15, BAD_REACTION);
+end
+
+procedure Gustofer14
+begin
+    gsay_message(NAME, 140, BAD_REACTION);
+end
+
+procedure Gustofer15
+begin
+    gsay_message(NAME, 141, BAD_REACTION);
+end
+
+procedure Gustofer16
+begin
+    dude_bet := 0;
+    if (Saul_wins) then begin
+        item_caps_adjust(dude_obj, 50);
+    end
+    else begin
+        item_caps_adjust(dude_obj, 100);
+    end
+    Saul_wins := 0;
+    Saul_loses := 0;
+    gsay_message(NAME, 142, NEUTRAL_REACTION);
+    call destroy_challenger();
+end
+
+procedure Gustofer17
+begin
+    gsay_message(NAME, 147, NEUTRAL_REACTION);
+end
+
+procedure Gustofer18
+begin
+    Reply(118);
+    giq_option(4, NAME, 119, GustoferEnd, NEUTRAL_REACTION);
+    giq_option(-3, NAME, 101, GustoferEnd, NEUTRAL_REACTION);
+end
+
+procedure Gustofer19
+begin
+    gsay_message(NAME, 149, NEUTRAL_REACTION);
+end
+
+procedure GustoferEnd
+begin
+end
+
+procedure GustoferWait
+begin
+    gfade_out(600);
+    game_time_advance(game_ticks((3600 * (13 - (game_time_hour / 100))) + (60 * (60 - (game_time_hour % 100)))));
+    gfade_in(600);
+end
+
+procedure GustoferBet1
+begin
+    if (item_caps_total(dude_obj) >= 25) then begin
+        item_caps_adjust(dude_obj, -25);
+        dude_bet := 1;
+        Reply(144);
+        giq_option(4, NAME, 145, GustoferWait, NEUTRAL_REACTION);
+        giq_option(4, NAME, 146, Gustofer17, NEUTRAL_REACTION);
+    end
+    else begin
+        gsay_message(NAME, 143, NEUTRAL_REACTION);
+    end
+end
+
+procedure GustoferBet2
+begin
+    if (item_caps_total(dude_obj) >= 25) then begin
+        item_caps_adjust(dude_obj, -25);
+        dude_bet := 2;
+        Reply(144);
+        giq_option(4, NAME, 145, GustoferWait, NEUTRAL_REACTION);
+        giq_option(4, NAME, 146, Gustofer17, NEUTRAL_REACTION);
+    end
+    else begin
+        gsay_message(NAME, 143, NEUTRAL_REACTION);
+    end
+end
+
+procedure flee_dude
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    while (LVar1 < 5) do begin
+        if (tile_distance(dude_tile, tile_num_in_direction(tile_num(self_obj), LVar1, 3)) > LVar2) then begin
+            LVar0 := tile_num_in_direction(tile_num(self_obj), LVar1, 3);
+            LVar2 := tile_distance(dude_tile, LVar0);
+        end
+        LVar1 := LVar1 + 1;
+    end
+    animate_move_obj_to_tile(self_obj, LVar0, 1);
+end
+
+procedure destroy_challenger
+begin
+    destroy_object(challenger_ptr);
+    shot_challenger := 0;
+    challenger_ptr := 0;
+end
+
+procedure sleeping
+begin
+    if (local_var(1) == 1) then begin
+        if (not(night_person) and (game_time_hour >= wake_time) and (game_time_hour < sleep_time) or (night_person and ((game_time_hour >= wake_time) or (game_time_hour < sleep_time)))) then begin
+            if (((game_time_hour - wake_time) < 10) and ((game_time_hour - wake_time) > 0)) then begin
+                if (tile_num(self_obj) != home_tile) then begin
+                    animate_move_obj_to_tile(self_obj, home_tile, 0);
+                end
+                else begin
+                    set_local_var(1, 0);
+                end
+            end
+            else begin
+                move_to(self_obj, home_tile, elevation(self_obj));
+                if (tile_num(self_obj) == home_tile) then begin
+                    set_local_var(1, 0);
+                end
+            end
+        end
+    end
+    else begin
+        if (night_person and (game_time_hour >= sleep_time) and (game_time_hour < wake_time) or (not(night_person) and ((game_time_hour >= sleep_time) or (game_time_hour < wake_time)))) then begin
+            if (((game_time_hour - sleep_time) < 10) and ((game_time_hour - sleep_time) > 0)) then begin
+                if (tile_num(self_obj) != sleep_tile) then begin
+                    animate_move_obj_to_tile(self_obj, self_obj, 0);
+                end
+                else begin
+                    set_local_var(1, 1);
+                end
+            end
+            else begin
+                if (tile_num(self_obj) != sleep_tile) then begin
+                    move_to(self_obj, sleep_tile, elevation(self_obj));
+                end
+                else begin
+                    set_local_var(1, 1);
+                end
+            end
+        end
+    end
+end

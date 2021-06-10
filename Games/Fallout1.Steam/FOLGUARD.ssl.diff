@@ -1,0 +1,389 @@
+diff --git a/Games/Fallout1.Steam/Original/FOLGUARD.ssl b/Games/Fallout1.Steam/ReDefine/FOLGUARD.ssl
+index ef50850..7605de5 100644
+--- a/Games/Fallout1.Steam/Original/FOLGUARD.ssl
++++ b/Games/Fallout1.Steam/ReDefine/FOLGUARD.ssl
+@@ -41,16 +41,16 @@ import variable removal_ptr;
+ procedure start
+ begin
+     if (not(initialized)) then begin
+-        critter_add_trait(self_obj, 1, 6, 46);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 46);
+         if (local_var(0) == 0) then begin
+-            if (get_critter_stat(self_obj, 34) == 1) then begin
++            if (self_gender == 1) then begin
+                 set_local_var(0, random(100, 104));
+             end
+             else begin
+                 set_local_var(0, random(105, 109));
+             end
+         end
+-        if (global_var(129) == 2) then begin
++        if (global_var(GVAR_DESTROY_FOLLOWERS) == 2) then begin
+             if (random(0, 1)) then begin
+                 kill_critter(self_obj, 59);
+             end
+@@ -61,23 +61,23 @@ begin
+         initialized := 1;
+     end
+     else begin
+-        if (script_action == 12) then begin
++        if (script_action == critter_proc) then begin
+             call critter_p_proc();
+         end
+         else begin
+-            if (script_action == 14) then begin
++            if (script_action == damage_proc) then begin
+                 call damage_p_proc();
+             end
+             else begin
+-                if (script_action == 18) then begin
++                if (script_action == destroy_proc) then begin
+                     call destroy_p_proc();
+                 end
+                 else begin
+-                    if (script_action == 21) then begin
++                    if (script_action == look_at_proc) then begin
+                         call look_at_p_proc();
+                     end
+                     else begin
+-                        if (script_action == 11) then begin
++                        if (script_action == talk_proc) then begin
+                             call talk_p_proc();
+                         end
+                     end
+@@ -90,23 +90,23 @@ end
+ procedure critter_p_proc
+ begin
+     if (map_var(1) == 1) then begin
+-        animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(dude_obj), random(0, 6), random(3, 7)), 0);
++        animate_move_obj_to_tile(self_obj, tile_num_in_direction(dude_tile, random(0, 6), random(3, 7)), 0);
+     end
+     else begin
+         if ((map_var(1) == 2) and obj_can_see_obj(self_obj, dude_obj)) then begin
+             hostile := 1;
+         end
+     end
+-    if (global_var(129) == 2) then begin
++    if (global_var(GVAR_DESTROY_FOLLOWERS) == 2) then begin
+         removal_ptr := self_obj;
+     end
+     if (hostile) then begin
+         hostile := 0;
+-        attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++        attack(dude_obj);
+     end
+     else begin
+         if (tile_distance_objs(self_obj, dude_obj) < 8) then begin
+-            if (local_var(1) or global_var(256)) then begin
++            if (local_var(1) or global_var(GVAR_ENEMY_FOLLOWERS)) then begin
+                 hostile := 1;
+             end
+         end
+@@ -123,43 +123,43 @@ end
+ procedure destroy_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        set_global_var(256, 1);
++        set_global_var(GVAR_ENEMY_FOLLOWERS, 1);
+     end
+     if (source_obj == dude_obj) then begin
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-            set_global_var(156, 1);
+-            set_global_var(157, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+-            set_global_var(157, 1);
+-            set_global_var(156, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+         end
+-        set_global_var(159, global_var(159) + 1);
+-        if ((global_var(159) % 2) == 0) then begin
+-            set_global_var(155, global_var(155) - 1);
++        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
++        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
++            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+         end
+     end
+ end
+ 
+ procedure look_at_p_proc
+ begin
+-    display_msg(message_str(264, local_var(0)));
++    display_mstr(local_var(0));
+ end
+ 
+ procedure talk_p_proc
+ begin
+     script_overrides;
+-    if (local_var(1) or global_var(256)) then begin
+-        float_msg(self_obj, message_str(669, random(100, 105)), 0);
++    if (local_var(1) or global_var(GVAR_ENEMY_FOLLOWERS)) then begin
++        float_msg(self_obj, message_str(SCRIPT_ENEMY, random(100, 105)), FLOAT_MSG_NORMAL);
+     end
+     else begin
+         start_gdialog(264, self_obj, 4, -1, -1);
+         gsay_start;
+-        if (global_var(133) == 1) then begin
++        if (global_var(GVAR_FIND_AGENT) == 1) then begin
+             call guard16();
+         end
+         else begin
+-            if (global_var(133) == 2) then begin
++            if (global_var(GVAR_FIND_AGENT) == 2) then begin
+                 call guard22();
+             end
+             else begin
+@@ -173,121 +173,121 @@ end
+ 
+ procedure guard0
+ begin
+-    gsay_reply(264, 110);
+-    giq_option(-3, 264, 111, guard1, 50);
+-    giq_option(4, 264, message_str(264, 112) + proto_data(obj_pid(dude_obj), 1) + message_str(264, 113), guard4, 50);
+-    giq_option(4, 264, message_str(264, 114) + proto_data(obj_pid(dude_obj), 1) + message_str(264, 115), combat, 50);
+-    giq_option(6, 264, 116, guard11, 50);
++    Reply(110);
++    giq_option(-3, NAME, 111, guard1, NEUTRAL_REACTION);
++    giq_option(4, NAME, mstr(112) + proto_data(obj_pid(dude_obj), 1) + mstr(113), guard4, NEUTRAL_REACTION);
++    giq_option(4, NAME, mstr(114) + proto_data(obj_pid(dude_obj), 1) + mstr(115), combat, NEUTRAL_REACTION);
++    giq_option(6, NAME, 116, guard11, NEUTRAL_REACTION);
+ end
+ 
+ procedure guard1
+ begin
+-    gsay_reply(264, 117);
+-    giq_option(-3, 264, message_str(264, 118) + proto_data(obj_pid(dude_obj), 1) + message_str(264, 119), combat, 50);
+-    giq_option(-3, 264, message_str(264, 120) + proto_data(obj_pid(dude_obj), 1) + message_str(264, 121), guard2, 50);
+-    giq_option(-3, 264, message_str(264, 122), guard3, 50);
+-    giq_option(-3, 264, message_str(264, 123) + proto_data(obj_pid(dude_obj), 1) + message_str(264, 124), guard3, 50);
++    Reply(117);
++    giq_option(-3, NAME, mstr(118) + proto_data(obj_pid(dude_obj), 1) + mstr(119), combat, NEUTRAL_REACTION);
++    giq_option(-3, NAME, mstr(120) + proto_data(obj_pid(dude_obj), 1) + mstr(121), guard2, NEUTRAL_REACTION);
++    giq_option(-3, NAME, mstr(122), guard3, NEUTRAL_REACTION);
++    giq_option(-3, NAME, mstr(123) + proto_data(obj_pid(dude_obj), 1) + mstr(124), guard3, NEUTRAL_REACTION);
+ end
+ 
+ procedure guard2
+ begin
+-    gsay_message(264, 125, 50);
++    gsay_message(NAME, 125, NEUTRAL_REACTION);
+ end
+ 
+ procedure guard3
+ begin
+-    gsay_message(264, 126, 50);
++    gsay_message(NAME, 126, NEUTRAL_REACTION);
+ end
+ 
+ procedure guard4
+ begin
+-    gsay_reply(264, 127);
+-    giq_option(4, 264, 128, guard5, 50);
+-    giq_option(4, 264, 129, combat, 50);
+-    giq_option(4, 264, 130, guard6, 50);
+-    giq_option(4, 264, 131, guard10, 50);
++    Reply(127);
++    giq_option(4, NAME, 128, guard5, NEUTRAL_REACTION);
++    giq_option(4, NAME, 129, combat, NEUTRAL_REACTION);
++    giq_option(4, NAME, 130, guard6, NEUTRAL_REACTION);
++    giq_option(4, NAME, 131, guard10, NEUTRAL_REACTION);
+ end
+ 
+ procedure guard5
+ begin
+-    gsay_message(264, 132, 50);
++    gsay_message(NAME, 132, NEUTRAL_REACTION);
+ end
+ 
+ procedure guard6
+ begin
+-    gsay_reply(264, 133);
+-    giq_option(4, 264, 134, guard5, 50);
+-    giq_option(4, 264, 135, guard7, 50);
+-    giq_option(4, 264, 136, guard9, 50);
+-    giq_option(4, 264, 137, guard8, 50);
++    Reply(133);
++    giq_option(4, NAME, 134, guard5, NEUTRAL_REACTION);
++    giq_option(4, NAME, 135, guard7, NEUTRAL_REACTION);
++    giq_option(4, NAME, 136, guard9, NEUTRAL_REACTION);
++    giq_option(4, NAME, 137, guard8, NEUTRAL_REACTION);
+ end
+ 
+ procedure guard7
+ begin
+-    gsay_reply(264, 138);
+-    giq_option(4, 264, 139, guard5, 50);
+-    giq_option(4, 264, 140, guard8, 50);
++    Reply(138);
++    giq_option(4, NAME, 139, guard5, NEUTRAL_REACTION);
++    giq_option(4, NAME, 140, guard8, NEUTRAL_REACTION);
+ end
+ 
+ procedure guard8
+ begin
+-    gsay_message(264, 141, 50);
++    gsay_message(NAME, 141, NEUTRAL_REACTION);
+ end
+ 
+ procedure guard9
+ begin
+-    gsay_reply(264, 142);
+-    giq_option(4, 264, 143, guardend, 50);
++    Reply(142);
++    giq_option(4, NAME, 143, guardend, NEUTRAL_REACTION);
+ end
+ 
+ procedure guard10
+ begin
+-    gsay_reply(264, 144);
+-    giq_option(4, 264, 145, guard5, 50);
+-    giq_option(4, 264, 146, guard8, 50);
+-    giq_option(4, 264, 147, guard6, 50);
++    Reply(144);
++    giq_option(4, NAME, 145, guard5, NEUTRAL_REACTION);
++    giq_option(4, NAME, 146, guard8, NEUTRAL_REACTION);
++    giq_option(4, NAME, 147, guard6, NEUTRAL_REACTION);
+ end
+ 
+ procedure guard11
+ begin
+-    gsay_reply(264, 148);
+-    giq_option(6, 264, 149, guardend, 50);
+-    giq_option(6, 264, 150, guard12, 50);
+-    giq_option(6, 264, 151, guard15, 50);
++    Reply(148);
++    giq_option(6, NAME, 149, guardend, NEUTRAL_REACTION);
++    giq_option(6, NAME, 150, guard12, NEUTRAL_REACTION);
++    giq_option(6, NAME, 151, guard15, NEUTRAL_REACTION);
+ end
+ 
+ procedure guard12
+ begin
+-    gsay_reply(264, 152);
+-    giq_option(6, 264, 153, guardend, 50);
+-    giq_option(6, 264, 154, guard13, 50);
+-    giq_option(6, 264, 155, guard14, 50);
++    Reply(152);
++    giq_option(6, NAME, 153, guardend, NEUTRAL_REACTION);
++    giq_option(6, NAME, 154, guard13, NEUTRAL_REACTION);
++    giq_option(6, NAME, 155, guard14, NEUTRAL_REACTION);
+ end
+ 
+ procedure guard13
+ begin
+-    gsay_reply(264, 156);
+-    giq_option(6, 264, 157, guardend, 50);
+-    giq_option(6, 264, 158, combat, 50);
++    Reply(156);
++    giq_option(6, NAME, 157, guardend, NEUTRAL_REACTION);
++    giq_option(6, NAME, 158, combat, NEUTRAL_REACTION);
+ end
+ 
+ procedure guard14
+ begin
+-    gsay_message(264, 159, 50);
++    gsay_message(NAME, 159, NEUTRAL_REACTION);
+ end
+ 
+ procedure guard15
+ begin
+-    gsay_reply(264, 160);
+-    giq_option(6, 264, 161, guardend, 50);
++    Reply(160);
++    giq_option(6, NAME, 161, guardend, NEUTRAL_REACTION);
+ end
+ 
+ procedure guard16
+ begin
+-    gsay_reply(264, 162);
+-    giq_option(4, 264, 163, guard17, 50);
+-    giq_option(4, 264, 164, guard19, 50);
+-    giq_option(6, 264, 165, guard16a, 50);
++    Reply(162);
++    giq_option(4, NAME, 163, guard17, NEUTRAL_REACTION);
++    giq_option(4, NAME, 164, guard19, NEUTRAL_REACTION);
++    giq_option(6, NAME, 165, guard16a, NEUTRAL_REACTION);
+ end
+ 
+ procedure guard16a
+@@ -302,41 +302,41 @@ end
+ 
+ procedure guard17
+ begin
+-    gsay_reply(264, 166);
+-    giq_option(4, 264, 167, guard18, 50);
+-    giq_option(4, 264, 168, guardend, 50);
+-    giq_option(4, 264, 169, combat, 50);
++    Reply(166);
++    giq_option(4, NAME, 167, guard18, NEUTRAL_REACTION);
++    giq_option(4, NAME, 168, guardend, NEUTRAL_REACTION);
++    giq_option(4, NAME, 169, combat, NEUTRAL_REACTION);
+ end
+ 
+ procedure guard18
+ begin
+-    gsay_reply(264, 170);
+-    giq_option(4, 264, 171, guardend, 50);
++    Reply(170);
++    giq_option(4, NAME, 171, guardend, NEUTRAL_REACTION);
+ end
+ 
+ procedure guard19
+ begin
+-    gsay_message(264, 172, 50);
++    gsay_message(NAME, 172, NEUTRAL_REACTION);
+     call combat();
+ end
+ 
+ procedure guard20
+ begin
+-    gsay_message(264, 173, 50);
++    gsay_message(NAME, 173, NEUTRAL_REACTION);
+ end
+ 
+ procedure guard21
+ begin
+-    gsay_message(264, 174, 50);
++    gsay_message(NAME, 174, NEUTRAL_REACTION);
+     call combat();
+ end
+ 
+ procedure guard22
+ begin
+-    gsay_reply(264, 175);
+-    giq_option(4, 264, 176, guardend, 50);
+-    if (global_var(132) == 0) then begin
+-        giq_option(4, 264, 177, guard23, 50);
++    Reply(175);
++    giq_option(4, NAME, 176, guardend, NEUTRAL_REACTION);
++    if (global_var(GVAR_TRAIN_FOLLOWERS) == 0) then begin
++        giq_option(4, NAME, 177, guard23, NEUTRAL_REACTION);
+     end
+ end
+ 
+@@ -344,12 +344,12 @@ procedure guard23
+ begin
+     variable LVar0 := 0;
+     LVar0 := 4 * 3600;
+-    set_global_var(132, 1);
+-    gsay_reply(264, 178);
++    set_global_var(GVAR_TRAIN_FOLLOWERS, 1);
++    Reply(178);
+     game_time_advance(game_ticks(LVar0));
+     gfade_out(400);
+     gfade_in(400);
+-    giq_option(4, 264, 179, guardend, 50);
++    giq_option(4, NAME, 179, guardend, NEUTRAL_REACTION);
+ end
+ 
+ procedure combat
+@@ -360,4 +360,3 @@ end
+ procedure guardend
+ begin
+ end
+-

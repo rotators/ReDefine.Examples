@@ -1,0 +1,675 @@
+procedure start;
+procedure combat;
+procedure critter_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure destroy_p_proc;
+procedure look_at_p_proc;
+procedure advance_day;
+procedure damage_p_proc;
+procedure CarvLead00;
+procedure CarvLead01;
+procedure CarvLead02;
+procedure CarvLead03;
+procedure CarvLead04;
+procedure CarvLead05;
+procedure CarvLead06;
+procedure CarvLead07;
+procedure CarvLead09;
+procedure CarvLead10;
+procedure CarvLead11;
+procedure CarvLead12;
+
+variable hostile;
+variable Only_Once := 1;
+variable PaymentAmount;
+variable WaitForTwoHours;
+variable spawnDialogue;
+variable beenPaid := 1;
+
+procedure get_reaction;
+procedure ReactToLevel;
+procedure LevelToReact;
+procedure UpReact;
+procedure DownReact;
+procedure BottomReact;
+procedure TopReact;
+procedure BigUpReact;
+procedure BigDownReact;
+procedure UpReactLevel;
+procedure DownReactLevel;
+procedure Goodbyes;
+
+variable exit_line;
+
+
+procedure start
+begin
+    if (Only_Once) then begin
+        Only_Once := 0;
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 64);
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_MERCHANT);
+        if (local_var(5) == 1) then begin
+            if (((game_time / (10 * 60 * 60)) - local_var(6)) < 2) then begin
+                WaitForTwoHours := 1;
+                set_obj_visibility(self_obj, 0);
+            end
+            else begin
+                WaitForTwoHours := 0;
+                set_obj_visibility(self_obj, 1);
+                set_local_var(5, 0);
+            end
+        end
+        else begin
+            if (global_var(GVAR_WATER_JOB) == 1) then begin
+                set_obj_visibility(self_obj, 0);
+                PaymentAmount := 200;
+                set_local_var(7, 0);
+                set_global_var(GVAR_WATER_JOB, 4);
+                set_global_var(GVAR_WATER_MERCHANTS_STATUS, 4);
+                set_local_var(5, 1);
+                WaitForTwoHours := 1;
+                spawnDialogue := 1;
+                beenPaid := 0;
+            end
+            else begin
+                if (global_var(GVAR_FARGO_JOB) == 1) then begin
+                    set_obj_visibility(self_obj, 0);
+                    PaymentAmount := 400;
+                    set_local_var(7, 2);
+                    set_global_var(GVAR_FARGO_JOB, 4);
+                    set_global_var(GVAR_FARGO_TRADERS_STATUS, 4);
+                    set_local_var(5, 1);
+                    WaitForTwoHours := 1;
+                    spawnDialogue := 1;
+                    beenPaid := 0;
+                end
+                else begin
+                    if (global_var(GVAR_CC_JOB) == 1) then begin
+                        set_obj_visibility(self_obj, 0);
+                        PaymentAmount := 600;
+                        set_local_var(7, 1);
+                        set_global_var(GVAR_CC_JOB, 4);
+                        set_global_var(GVAR_CRIMSON_CARAVANS_STATUS, 4);
+                        set_local_var(5, 1);
+                        WaitForTwoHours := 1;
+                        spawnDialogue := 1;
+                        beenPaid := 0;
+                    end
+                    else begin
+                        WaitForTwoHours := 0;
+                        set_local_var(5, 0);
+                        set_obj_visibility(self_obj, 1);
+                    end
+                end
+            end
+        end
+    end
+    if (script_action == look_at_proc) then begin
+        call look_at_p_proc();
+    end
+    else begin
+        if (script_action == pickup_proc) then begin
+            call pickup_p_proc();
+        end
+        else begin
+            if (script_action == talk_proc) then begin
+                call talk_p_proc();
+            end
+            else begin
+                if (script_action == critter_proc) then begin
+                    call critter_p_proc();
+                end
+                else begin
+                    if (script_action == destroy_proc) then begin
+                        call destroy_p_proc();
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure combat
+begin
+    hostile := 1;
+end
+
+procedure critter_p_proc
+begin
+    if (hostile) then begin
+        hostile := 0;
+        attack(dude_obj);
+    end
+    if (spawnDialogue == 1) then begin
+        spawnDialogue := 0;
+        set_local_var(6, game_time / (10 * 60 * 60));
+        dialogue_system_enter;
+    end
+    else begin
+        if ((WaitForTwoHours == 1) and (((game_time / (10 * 60 * 60)) - local_var(6)) >= 2)) then begin
+            WaitForTwoHours := 0;
+            if (tile_distance_objs(self_obj, dude_obj) >= 24) then begin
+                set_obj_visibility(self_obj, 1);
+                set_local_var(5, 0);
+                display_mstr(151);
+            end
+            else begin
+                gfade_out(1000);
+                set_local_var(5, 0);
+                set_obj_visibility(self_obj, 1);
+                gfade_in(1000);
+                display_mstr(151);
+            end
+        end
+    end
+end
+
+procedure pickup_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        hostile := 1;
+    end
+end
+
+procedure talk_p_proc
+begin
+    call get_reaction();
+    if (cur_map_index == 36) then begin
+        set_local_var(4, 1);
+        start_gdialog(817, self_obj, 4, -1, -1);
+        gsay_start;
+        call CarvLead09();
+        gsay_end;
+        end_dialogue;
+        gfade_out(1000);
+        set_local_var(5, 0);
+        set_obj_visibility(self_obj, 1);
+        WaitForTwoHours := 0;
+        gfade_in(1000);
+    end
+    else begin
+        if (local_var(4) == 0) then begin
+            set_local_var(4, 1);
+            start_gdialog(817, self_obj, 4, -1, -1);
+            gsay_start;
+            call CarvLead00();
+            gsay_end;
+            end_dialogue;
+        end
+        else begin
+            start_gdialog(817, self_obj, 4, -1, -1);
+            gsay_start;
+            call CarvLead07();
+            gsay_end;
+            end_dialogue;
+        end
+    end
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
+            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
+            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+        end
+        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
+        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
+            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+        end
+    end
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    display_mstr(100);
+end
+
+procedure advance_day
+begin
+    variable LVar0 := 0;
+    if (global_var(GVAR_WATER_JOB) == 1) then begin
+        if (cur_map_index == 10) then begin
+            LVar0 := 3;
+        end
+        else begin
+            if (cur_map_index == 28) then begin
+                LVar0 := 3;
+            end
+            else begin
+                if (cur_map_index == 36) then begin
+                    LVar0 := 3;
+                end
+            end
+        end
+    end
+    else begin
+        if (global_var(GVAR_CC_JOB) == 1) then begin
+            if (cur_map_index == 10) then begin
+                LVar0 := 2;
+            end
+            else begin
+                if (cur_map_index == 28) then begin
+                    LVar0 := 2;
+                end
+                else begin
+                    if (cur_map_index == 13) then begin
+                        LVar0 := 4;
+                    end
+                    else begin
+                        if (cur_map_index == 4) then begin
+                            LVar0 := 2;
+                        end
+                        else begin
+                            if (cur_map_index == 36) then begin
+                                LVar0 := 2;
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        else begin
+            if (global_var(GVAR_FARGO_JOB) == 1) then begin
+                if (cur_map_index == 10) then begin
+                    LVar0 := 3;
+                end
+                else begin
+                    if (cur_map_index == 28) then begin
+                        LVar0 := 3;
+                    end
+                    else begin
+                        if (cur_map_index == 13) then begin
+                            LVar0 := 5;
+                        end
+                        else begin
+                            if (cur_map_index == 36) then begin
+                                LVar0 := 2;
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    game_time_advance(game_ticks(60 * 60 * 24 * LVar0));
+end
+
+procedure damage_p_proc
+begin
+    variable LVar0 := 0;
+    if (cur_map_index == 36) then begin
+        LVar0 := obj_pid(source_obj);
+        if (party_member_obj(LVar0) != 0) then begin
+            set_global_var(GVAR_ENEMY_HUB, 1);
+        end
+    end
+end
+
+procedure CarvLead00
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    if (PaymentAmount == 200) then begin
+        LVar0 := 146;
+    end
+    else begin
+        if (PaymentAmount == 400) then begin
+            LVar0 := 147;
+        end
+        else begin
+            if (PaymentAmount == 600) then begin
+                LVar0 := 148;
+            end
+        end
+    end
+    LVar1 := item_caps_adjust(dude_obj, PaymentAmount);
+    beenPaid := 1;
+    Reply(mstr(101) + mstr(LVar0) + mstr(102) + mstr(LVar0) + mstr(103));
+    giq_option(-3, NAME, 104, CarvLead01, NEUTRAL_REACTION);
+    giq_option(4, NAME, 105, CarvLead03, NEUTRAL_REACTION);
+    if (cur_map_index == 10) then begin
+        giq_option(4, NAME, 106, CarvLead04, NEUTRAL_REACTION);
+    end
+    else begin
+        if (cur_map_index == 28) then begin
+            giq_option(4, NAME, 107, CarvLead05, NEUTRAL_REACTION);
+        end
+        else begin
+            if (cur_map_index == 13) then begin
+                giq_option(4, NAME, 108, CarvLead06, NEUTRAL_REACTION);
+            end
+        end
+    end
+end
+
+procedure CarvLead01
+begin
+    Reply(109);
+    giq_option(-3, NAME, 110, CarvLead11, NEUTRAL_REACTION);
+    giq_option(-3, NAME, 111, CarvLead02, NEUTRAL_REACTION);
+    giq_option(-3, NAME, 112, CarvLead12, NEUTRAL_REACTION);
+end
+
+procedure CarvLead02
+begin
+    gsay_message(NAME, 113, NEUTRAL_REACTION);
+end
+
+procedure CarvLead03
+begin
+    Reply(114);
+    giq_option(4, NAME, 115, CarvLead11, NEUTRAL_REACTION);
+    giq_option(4, NAME, 116, CarvLead12, NEUTRAL_REACTION);
+    if (cur_map_index == 10) then begin
+        giq_option(4, NAME, 117, CarvLead04, NEUTRAL_REACTION);
+    end
+    else begin
+        if (cur_map_index == 28) then begin
+            giq_option(4, NAME, 118, CarvLead05, NEUTRAL_REACTION);
+        end
+        else begin
+            if (cur_map_index == 13) then begin
+                giq_option(4, NAME, 119, CarvLead06, NEUTRAL_REACTION);
+            end
+        end
+    end
+end
+
+procedure CarvLead04
+begin
+    Reply(120);
+    giq_option(4, NAME, 121, CarvLead03, NEUTRAL_REACTION);
+    giq_option(4, NAME, 122, CarvLead11, NEUTRAL_REACTION);
+end
+
+procedure CarvLead05
+begin
+    Reply(123);
+    giq_option(4, NAME, 125, CarvLead03, NEUTRAL_REACTION);
+    giq_option(4, NAME, 126, CarvLead11, NEUTRAL_REACTION);
+end
+
+procedure CarvLead06
+begin
+    Reply(127);
+    giq_option(4, NAME, 128, CarvLead03, NEUTRAL_REACTION);
+    giq_option(4, NAME, 129, CarvLead11, NEUTRAL_REACTION);
+end
+
+procedure CarvLead07
+begin
+    variable LVar0 := 0;
+    if (beenPaid == 0) then begin
+        LVar0 := item_caps_adjust(dude_obj, PaymentAmount);
+        beenPaid := 1;
+    end
+    Reply(130);
+    giq_option(-3, NAME, 131, CarvLead12, NEUTRAL_REACTION);
+    giq_option(-3, NAME, 111, CarvLead11, NEUTRAL_REACTION);
+    giq_option(4, NAME, 132, CarvLead11, NEUTRAL_REACTION);
+    giq_option(4, NAME, 133, CarvLead12, NEUTRAL_REACTION);
+end
+
+procedure CarvLead09
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    if (PaymentAmount == 200) then begin
+        LVar0 := 146;
+    end
+    else begin
+        if (PaymentAmount == 400) then begin
+            LVar0 := 147;
+        end
+        else begin
+            if (PaymentAmount == 600) then begin
+                LVar0 := 148;
+            end
+        end
+    end
+    LVar1 := item_caps_adjust(dude_obj, PaymentAmount);
+    beenPaid := 1;
+    Reply(mstr(137) + mstr(LVar0) + mstr(138));
+    giq_option(-3, NAME, 139, CarvLead11, NEUTRAL_REACTION);
+    giq_option(4, NAME, 140, CarvLead11, NEUTRAL_REACTION);
+end
+
+procedure CarvLead10
+begin
+    variable LVar0 := 0;
+    LVar0 := random(1, 2);
+    if (LVar0 == 1) then begin
+        float_msg(self_obj, mstr(141), FLOAT_MSG_RED);
+    end
+    else begin
+        float_msg(self_obj, mstr(142), FLOAT_MSG_RED);
+    end
+end
+
+procedure CarvLead11
+begin
+end
+
+procedure CarvLead12
+begin
+    variable LVar0 := 0;
+    set_local_var(5, 0);
+    if (local_var(7) == 0) then begin
+        set_global_var(GVAR_WATER_JOB, 1);
+        set_global_var(GVAR_WATER_MERCHANTS_STATUS, 1);
+        if (cur_map_index == 10) then begin
+            LVar0 := random(1, 4);
+            if (LVar0 < 4) then begin
+                load_map(64, 3);
+            end
+            else begin
+                load_map(36, 1);
+            end
+        end
+        else begin
+            if (cur_map_index == 28) then begin
+                LVar0 := random(1, 4);
+                if (LVar0 < 3) then begin
+                    load_map(63, 3);
+                end
+                else begin
+                    load_map(36, 1);
+                end
+            end
+        end
+    end
+    else begin
+        if (local_var(7) == 1) then begin
+            set_global_var(GVAR_CC_JOB, 1);
+            set_global_var(GVAR_CRIMSON_CARAVANS_STATUS, 1);
+            if (cur_map_index == 13) then begin
+                load_map(64, 3);
+            end
+            else begin
+                if (cur_map_index == 10) then begin
+                    load_map(64, 3);
+                end
+                else begin
+                    if (cur_map_index == 4) then begin
+                        load_map(63, 3);
+                    end
+                    else begin
+                        if (cur_map_index == 28) then begin
+                            load_map(63, 3);
+                        end
+                    end
+                end
+            end
+        end
+        else begin
+            if (local_var(7) == 2) then begin
+                set_global_var(GVAR_FARGO_JOB, 1);
+                set_global_var(GVAR_FARGO_TRADERS_STATUS, 1);
+                if (cur_map_index == 10) then begin
+                    LVar0 := random(1, 4);
+                    if (LVar0 < 4) then begin
+                        load_map(64, 3);
+                    end
+                    else begin
+                        load_map(36, 1);
+                    end
+                end
+                else begin
+                    if (cur_map_index == 28) then begin
+                        LVar0 := random(1, 4);
+                        if (LVar0 < 3) then begin
+                            load_map(63, 3);
+                        end
+                        else begin
+                            load_map(36, 1);
+                        end
+                    end
+                    else begin
+                        if (cur_map_index == 13) then begin
+                            LVar0 := random(1, 4);
+                            if (LVar0 < 4) then begin
+                                load_map(64, 3);
+                            end
+                            else begin
+                                load_map(36, 1);
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure get_reaction
+begin
+    if (local_var(2) == 0) then begin
+        set_local_var(0, 50);
+        set_local_var(1, 2);
+        set_local_var(2, 1);
+        set_local_var(0, local_var(0) + (5 * dude_charisma) - 25);
+        set_local_var(0, local_var(0) + (10 * has_trait(TRAIT_PERK, dude_obj, PERK_presence)));
+        if (has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality)) then begin
+            if (global_var(GVAR_PLAYER_REPUATION) > 0) then begin
+                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+            end
+            else begin
+                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+            end
+        end
+        else begin
+            if (local_var(3) == 1) then begin
+                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+            end
+            else begin
+                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+            end
+        end
+        if (global_var(GVAR_CHILDKILLER_REPUATION) > 2) then begin
+            set_local_var(0, local_var(0) - 30);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+            set_local_var(0, local_var(0) + 20);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+            set_local_var(0, local_var(0) - 20);
+        end
+        call ReactToLevel();
+    end
+end
+
+procedure ReactToLevel
+begin
+    if (local_var(0) <= 25) then begin
+        set_local_var(1, 1);
+    end
+    else begin
+        if (local_var(0) <= 75) then begin
+            set_local_var(1, 2);
+        end
+        else begin
+            set_local_var(1, 3);
+        end
+    end
+end
+
+procedure LevelToReact
+begin
+    if (local_var(1) == 1) then begin
+        set_local_var(0, random(1, 25));
+    end
+    else begin
+        if (local_var(1) == 2) then begin
+            set_local_var(0, random(26, 75));
+        end
+        else begin
+            set_local_var(0, random(76, 100));
+        end
+    end
+end
+
+procedure UpReact
+begin
+    set_local_var(0, local_var(0) + 10);
+    call ReactToLevel();
+end
+
+procedure DownReact
+begin
+    set_local_var(0, local_var(0) - 10);
+    call ReactToLevel();
+end
+
+procedure BottomReact
+begin
+    set_local_var(1, 1);
+    set_local_var(0, 1);
+end
+
+procedure TopReact
+begin
+    set_local_var(0, 100);
+    set_local_var(1, 3);
+end
+
+procedure BigUpReact
+begin
+    set_local_var(0, local_var(0) + 25);
+    call ReactToLevel();
+end
+
+procedure BigDownReact
+begin
+    set_local_var(0, local_var(0) - 25);
+    call ReactToLevel();
+end
+
+procedure UpReactLevel
+begin
+    set_local_var(1, local_var(1) + 1);
+    if (local_var(1) > 3) then begin
+        set_local_var(1, 3);
+    end
+    call LevelToReact();
+end
+
+procedure DownReactLevel
+begin
+    set_local_var(1, local_var(1) - 1);
+    if (local_var(1) < 1) then begin
+        set_local_var(1, 1);
+    end
+    call LevelToReact();
+end
+
+procedure Goodbyes
+begin
+    exit_line := message_str(SCRIPT_MODREACT, random(100, 105));
+end

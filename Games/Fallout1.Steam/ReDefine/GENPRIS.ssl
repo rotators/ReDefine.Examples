@@ -1,0 +1,129 @@
+procedure start;
+procedure combat;
+procedure critter_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure destroy_p_proc;
+procedure look_at_p_proc;
+procedure explode;
+procedure escape;
+procedure dialog_end;
+
+variable hostile;
+variable Only_Once := 1;
+variable temp;
+variable target_hex;
+
+
+procedure start
+begin
+    if (Only_Once) then begin
+        Only_Once := 0;
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 2);
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_PEASANT);
+    end
+    if (script_action == look_at_proc) then begin
+        call look_at_p_proc();
+    end
+    else begin
+        if (script_action == pickup_proc) then begin
+            call pickup_p_proc();
+        end
+        else begin
+            if (script_action == talk_proc) then begin
+                call talk_p_proc();
+            end
+            else begin
+                if (script_action == critter_proc) then begin
+                    call critter_p_proc();
+                end
+                else begin
+                    if (script_action == destroy_proc) then begin
+                        call destroy_p_proc();
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure combat
+begin
+    hostile := 1;
+end
+
+procedure critter_p_proc
+begin
+    if (tile_num(self_obj) < 25000) then begin
+        call explode();
+    end
+    else begin
+        if ((map_var(2) == 1) or (map_var(7) == 1)) then begin
+            call escape();
+        end
+        else begin
+            if (hostile == 1) then begin
+                attack(dude_obj);
+            end
+        end
+    end
+end
+
+procedure pickup_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        hostile := 1;
+    end
+end
+
+procedure talk_p_proc
+begin
+    if (obj_pid(self_obj) == 16777258) then begin
+        display_msg(message_str(SCRIPT_MLPRISON, random(102, 104)));
+    end
+    else begin
+        temp := random(102, 104);
+        if (temp == 104) then begin
+            temp := 105;
+        end
+        display_msg(message_str(SCRIPT_MLPRISON, temp));
+    end
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
+            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
+            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+        end
+        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
+        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
+            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+        end
+    end
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+end
+
+procedure explode
+begin
+    critter_dmg(self_obj, 128, DMG_explosion);
+end
+
+procedure escape
+begin
+    target_hex := 22912;
+    animate_move_obj_to_tile(self_obj, target_hex, 1);
+end
+
+procedure dialog_end
+begin
+end

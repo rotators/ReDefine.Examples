@@ -1,0 +1,135 @@
+/*******************************************************
+*      Some unreferenced imported varables found.      *
+*      Because of it it is impossible to specify       *
+*      the real names of global variables.             *
+*******************************************************/
+
+variable GVar0;
+variable GVar1;
+variable GVar2;
+variable GVar3;
+
+procedure start;
+procedure growl;
+procedure do_dialogue;
+procedure follow_player;
+
+/* ?import? variable known; */
+/* ?import? variable hostile; */
+/* ?import? variable initialized; */
+/* ?import? variable waiting_to_follow; */
+
+import variable dog_is_angry;
+import variable Phil_approaches;
+import variable growling;
+
+/* ?import? variable smartass; */
+
+import variable smartass2;
+
+
+procedure start
+begin
+    if (not(GVar2)) then begin
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 6);
+        GVar2 := 1;
+        dog_is_angry := 1;
+    end
+    else begin
+        if (script_action == talk_proc) then begin
+            call do_dialogue();
+        end
+        else begin
+            if (script_action == pickup_proc) then begin
+                attack(dude_obj);
+            end
+            else begin
+                if ((script_action == look_at_proc) or (script_action == description_proc)) then begin
+                    script_overrides;
+                    if (global_var(GVAR_DOG_EMPATHY)) then begin
+                        display_mstr(100);
+                    end
+                    else begin
+                        display_mstr(101);
+                    end
+                end
+                else begin
+                    if (script_action == critter_proc) then begin
+                        if (global_var(GVAR_DOG_EMPATHY) == 1) then begin
+                            if (tile_distance_objs(self_obj, dude_obj) > 4) then begin
+                                animate_move_obj_to_tile(self_obj, tile_num_in_direction(dude_tile, random(0, 5), 1), 1);
+                            end
+                            else begin
+                                animate_move_obj_to_tile(self_obj, tile_num_in_direction(dude_tile, random(0, 5), 3), 0);
+                            end
+                        end
+                        else begin
+                            if (Phil_approaches) then begin
+                                if (dog_is_angry) then begin
+                                    add_timer_event(self_obj, game_ticks(4), 1);
+                                end
+                                Phil_approaches := 0;
+                            end
+                        end
+                    end
+                    else begin
+                        if (script_action == destroy_proc) then begin
+                            dog_is_angry := 0;
+                        end
+                        else begin
+                            if (script_action == timed_event_proc) then begin
+                                if (fixed_param == 1) then begin
+                                    call growl();
+                                end
+                                else begin
+                                    if (fixed_param == 2) then begin
+                                        call follow_player();
+                                    end
+                                end
+                            end
+                            else begin
+                                if (script_action == use_obj_on_proc) then begin
+                                    if (obj_pid(obj_being_used_with) == 103) then begin
+                                        display_mstr(104);
+                                        give_exp_points(200);
+                                        set_global_var(GVAR_DOG_EMPATHY, 1);
+                                        set_global_var(GVAR_DOG_2, 2);
+                                        set_global_var(GVAR_DOG_1, 2);
+                                        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 0);
+                                        dog_is_angry := 0;
+                                        add_timer_event(self_obj, game_ticks(1), 2);
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure growl
+begin
+    float_msg(self_obj, mstr(103), FLOAT_MSG_NORMAL);
+    growling := 1;
+    smartass2 := 1;
+end
+
+procedure do_dialogue
+begin
+    float_msg(self_obj, mstr(102), FLOAT_MSG_NORMAL);
+end
+
+procedure follow_player
+begin
+    variable LVar0 := 0;
+    LVar0 := tile_num_in_direction(dude_tile, random(0, 5), 1);
+    if (tile_distance_objs(self_obj, dude_obj) < 8) then begin
+        animate_move_obj_to_tile(self_obj, LVar0, 0 bwor 16);
+    end
+    else begin
+        animate_move_obj_to_tile(self_obj, LVar0, 1 bwor 16);
+    end
+    add_timer_event(self_obj, game_ticks(2), 2);
+end

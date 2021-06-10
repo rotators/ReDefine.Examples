@@ -1,0 +1,354 @@
+procedure start;
+procedure do_dialogue;
+procedure guard02a;
+procedure guard02b;
+procedure guard00;
+procedure guard00i;
+procedure guard00ii;
+procedure guard01;
+procedure guard01i;
+procedure guard02;
+procedure guard02i;
+procedure guard03;
+procedure guard04;
+procedure guard05;
+procedure guardend;
+procedure weapon_check;
+
+variable Caught;
+variable armed;
+variable Scared;
+variable Occurance;
+variable Checked;
+variable hostile;
+variable rndx;
+
+procedure ReactToLevel;
+procedure LevelToReact;
+procedure ModReact;
+procedure UpReact;
+procedure DownReact;
+procedure BottomReact;
+procedure TopReact;
+procedure BigUpReact;
+procedure BigDownReact;
+procedure UpReactLevel;
+procedure DownReactLevel;
+procedure Goodbyes;
+
+variable reaction := 50;
+variable reaction_level := 2;
+variable Talk;
+variable exit_line;
+
+
+procedure start
+begin
+    if (script_action == talk_proc) then begin
+        call do_dialogue();
+    end
+    else begin
+        if (script_action == critter_proc) then begin
+            call weapon_check();
+            if (obj_can_see_obj(self_obj, dude_obj)) then begin
+                if ((global_var(GVAR_WEAPON_LOCKER) == 0) and armed and not(Scared) and not(Checked)) then begin
+                    Checked := 1;
+                    dialogue_system_enter;
+                end
+            end
+            if (hostile) then begin
+                attack(dude_obj);
+            end
+        end
+        else begin
+            if (script_action == timed_event_proc) then begin
+                if (fixed_param == 1) then begin
+                    if (obj_can_see_obj(self_obj, dude_obj)) then begin
+                        call weapon_check();
+                        if (armed) then begin
+                            attack(dude_obj);
+                        end
+                    end
+                    else begin
+                        if (script_action == destroy_proc) then begin
+                            give_exp_points(150);
+                            display_mstr(123);
+                        end
+                        else begin
+                            if ((script_action == look_at_proc) or 3) then begin
+                                script_overrides;
+                                display_mstr(100);
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure do_dialogue
+begin
+    if ((global_var(GVAR_WEAPON_LOCKER) == 0) and armed and not(Scared)) then begin
+        set_global_var(GVAR_WEAPON_LOCKER, 1);
+        start_gdialog(221, self_obj, 4, -1, -1);
+        sayStart;
+        call guard00();
+        sayEnd;
+        end_dialogue;
+        add_timer_event(self_obj, game_ticks(5), 1);
+    end
+    else begin
+        call guard02a();
+    end
+end
+
+procedure guard02a
+begin
+    rndx := random(1, 3);
+    if (rndx == 1) then begin
+        float_msg(self_obj, mstr(101), FLOAT_MSG_NORMAL);
+    end
+    else begin
+        if (rndx == 2) then begin
+            float_msg(self_obj, mstr(102), FLOAT_MSG_NORMAL);
+        end
+        else begin
+            if (rndx == 3) then begin
+                float_msg(self_obj, mstr(103), FLOAT_MSG_NORMAL);
+            end
+        end
+    end
+end
+
+procedure guard02b
+begin
+    sayReply(0, mstr(114));
+    if (dude_endurance >= 4) then begin
+        sayOption(mstr(115), guardend);
+    end
+    if (dude_endurance >= 4) then begin
+        sayOption(mstr(116), guard02i);
+    end
+end
+
+procedure guard00
+begin
+    sayReply(0, mstr(104));
+    if (dude_endurance >= 4) then begin
+        sayOption(mstr(105), guard01);
+    end
+    if (dude_endurance >= 4) then begin
+        sayOption(mstr(106), guard00i);
+    end
+    if (dude_endurance >= 5) then begin
+        sayOption(mstr(107), guard00ii);
+    end
+    if (-dude_endurance >= -3) then begin
+        sayOption(mstr(108), guard05);
+    end
+end
+
+procedure guard00i
+begin
+    call DownReact();
+    call guard02();
+end
+
+procedure guard00ii
+begin
+    call UpReact();
+    call guard04();
+end
+
+procedure guard01
+begin
+    sayReply(0, mstr(109));
+    if (dude_endurance >= 4) then begin
+        sayOption(mstr(110), guard02);
+    end
+    if (dude_endurance >= 4) then begin
+        sayOption(mstr(111), guard01i);
+    end
+end
+
+procedure guard01i
+begin
+    if (is_success(roll_vs_skill(dude_obj, 14, -20))) then begin
+        call guard03();
+    end
+    else begin
+        call guard02();
+    end
+end
+
+procedure guard02
+begin
+    sayReply(0, mstr(112));
+    if (dude_endurance >= 0) then begin
+        sayOption(mstr(113), guard02b);
+    end
+end
+
+procedure guard02i
+begin
+    hostile := 1;
+end
+
+procedure guard03
+begin
+    sayReply(0, mstr(117));
+    if (dude_endurance >= 0) then begin
+        sayOption(mstr(118), guardend);
+    end
+    Scared := 1;
+end
+
+procedure guard04
+begin
+    sayReply(0, mstr(119));
+    if (dude_endurance >= 0) then begin
+        sayOption(mstr(120), guardend);
+    end
+end
+
+procedure guard05
+begin
+    sayReply(0, mstr(121));
+    if (dude_endurance >= 0) then begin
+        sayOption(mstr(122), guardend);
+    end
+end
+
+procedure guardend
+begin
+end
+
+procedure weapon_check
+begin
+    if ((obj_item_subtype(critter_inven_obj(dude_obj, 1)) == 3) or (obj_item_subtype(critter_inven_obj(dude_obj, 2)) == 3)) then begin
+        armed := 1;
+    end
+    else begin
+        armed := 0;
+    end
+end
+
+procedure ReactToLevel
+begin
+    if (reaction < 24) then begin
+        reaction_level := 1;
+    end
+    else begin
+        if (reaction < 74) then begin
+            reaction_level := 2;
+        end
+        else begin
+            reaction_level := 3;
+        end
+    end
+end
+
+procedure LevelToReact
+begin
+    if (reaction_level == 1) then begin
+        reaction := random(1, 24);
+    end
+    else begin
+        if (reaction_level == 2) then begin
+            reaction := random(25, 74);
+        end
+        else begin
+            reaction := random(75, 100);
+        end
+    end
+end
+
+procedure ModReact
+begin
+    Talk := roll_vs_skill(dude_obj, 14, 0);
+    if (action_being_used == 14) then begin
+        if (is_success(Talk)) then begin
+            reaction_level := reaction_level + 1;
+        end
+    end
+    call LevelToReact();
+end
+
+procedure UpReact
+begin
+    reaction := reaction + 10;
+    call ReactToLevel();
+end
+
+procedure DownReact
+begin
+    reaction := reaction - 10;
+    call ReactToLevel();
+end
+
+procedure BottomReact
+begin
+    reaction_level := 1;
+    reaction := 1;
+end
+
+procedure TopReact
+begin
+    reaction := 100;
+    reaction_level := 3;
+end
+
+procedure BigUpReact
+begin
+    reaction := reaction + 25;
+    call ReactToLevel();
+end
+
+procedure BigDownReact
+begin
+    reaction := reaction - 25;
+    call ReactToLevel();
+end
+
+procedure UpReactLevel
+begin
+    reaction_level := reaction_level + 1;
+    if (reaction_level > 3) then begin
+        reaction_level := 3;
+    end
+    call LevelToReact();
+end
+
+procedure DownReactLevel
+begin
+    reaction_level := reaction_level - 1;
+    if (reaction_level < 1) then begin
+        reaction_level := 1;
+    end
+    call LevelToReact();
+end
+
+procedure Goodbyes
+begin
+    variable LVar0 := 0;
+    LVar0 := random(1, 6);
+    if (LVar0 == 1) then begin
+        exit_line := "Thanks, bye.";
+    end
+    if (LVar0 == 2) then begin
+        exit_line := "Okay, thanks.";
+    end
+    if (LVar0 == 3) then begin
+        exit_line := "Hmm. Bye.";
+    end
+    if (LVar0 == 4) then begin
+        exit_line := "See ya.";
+    end
+    if (LVar0 == 5) then begin
+        exit_line := "Thanks.";
+    end
+    if (LVar0 == 6) then begin
+        exit_line := "Okay, bye.";
+    end
+end

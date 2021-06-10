@@ -1,0 +1,176 @@
+procedure start;
+procedure critter_p_proc;
+procedure damage_p_proc;
+procedure destroy_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure flee_dude;
+procedure sleeping;
+
+variable night_person;
+variable wake_time;
+variable sleep_time;
+variable home_tile;
+variable sleep_tile;
+variable initialized;
+
+
+procedure start
+begin
+    variable LVar0 := 0;
+    if (not(initialized)) then begin
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 24);
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_PEASANT);
+        if (obj_is_carrying_obj_pid(self_obj, 41) == 0) then begin
+            LVar0 := create_object(41, 0, 0);
+            add_mult_objs_to_inven(self_obj, LVar0, random(0, 20));
+        end
+        if (local_var(3) == 0) then begin
+            set_local_var(3, tile_num(self_obj));
+        end
+        sleep_tile := 7000;
+        wake_time := random(610, 650);
+        sleep_time := random(1710, 1750);
+        initialized := 1;
+    end
+    else begin
+        if (script_action == critter_proc) then begin
+            call critter_p_proc();
+        end
+        else begin
+            if (script_action == damage_proc) then begin
+                call damage_p_proc();
+            end
+            else begin
+                if (script_action == destroy_proc) then begin
+                    call destroy_p_proc();
+                end
+                else begin
+                    if (script_action == pickup_proc) then begin
+                        call pickup_p_proc();
+                    end
+                    else begin
+                        if (script_action == talk_proc) then begin
+                            call talk_p_proc();
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure critter_p_proc
+begin
+    if (local_var(1) and tile_distance_objs(self_obj, dude_obj)) then begin
+        call flee_dude();
+    end
+end
+
+procedure damage_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_global_var(GVAR_ENEMY_JUNKTOWN, 1);
+        set_local_var(1, 1);
+    end
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
+            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
+            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+        end
+        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
+        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
+            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+        end
+    end
+    if (source_obj == dude_obj) then begin
+        if (global_var(GVAR_ENEMY_JUNKTOWN) == 0) then begin
+            set_global_var(GVAR_ENEMY_JUNKTOWN, 1);
+            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 5);
+        end
+    end
+end
+
+procedure pickup_p_proc
+begin
+    set_local_var(1, 1);
+    set_global_var(GVAR_ENEMY_JUNKTOWN, 1);
+end
+
+procedure talk_p_proc
+begin
+    if ((local_var(1) == 1) or (global_var(GVAR_ENEMY_JUNKTOWN) == 1)) then begin
+        float_msg(self_obj, message_str(SCRIPT_ENEMY, random(100, 105)), FLOAT_MSG_RED);
+    end
+    else begin
+        if (local_var(0) == 0) then begin
+            set_local_var(0, random(101, 104));
+        end
+        float_msg(self_obj, mstr(local_var(0)), FLOAT_MSG_NORMAL);
+    end
+end
+
+procedure flee_dude
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    while (LVar1 < 5) do begin
+        if (tile_distance(dude_tile, tile_num_in_direction(tile_num(self_obj), LVar1, 3)) > LVar2) then begin
+            LVar0 := tile_num_in_direction(tile_num(self_obj), LVar1, 3);
+            LVar2 := tile_distance(dude_tile, LVar0);
+        end
+        LVar1 := LVar1 + 1;
+    end
+    animate_move_obj_to_tile(self_obj, LVar0, 1);
+end
+
+procedure sleeping
+begin
+    if (local_var(2) == 1) then begin
+        if (not(night_person) and (game_time_hour >= wake_time) and (game_time_hour < sleep_time) or (night_person and ((game_time_hour >= wake_time) or (game_time_hour < sleep_time)))) then begin
+            if (((game_time_hour - wake_time) < 10) and ((game_time_hour - wake_time) > 0)) then begin
+                if (tile_num(self_obj) != home_tile) then begin
+                    animate_move_obj_to_tile(self_obj, home_tile, 0);
+                end
+                else begin
+                    set_local_var(2, 0);
+                end
+            end
+            else begin
+                move_to(self_obj, home_tile, elevation(self_obj));
+                if (tile_num(self_obj) == home_tile) then begin
+                    set_local_var(2, 0);
+                end
+            end
+        end
+    end
+    else begin
+        if (night_person and (game_time_hour >= sleep_time) and (game_time_hour < wake_time) or (not(night_person) and ((game_time_hour >= sleep_time) or (game_time_hour < wake_time)))) then begin
+            if (((game_time_hour - sleep_time) < 10) and ((game_time_hour - sleep_time) > 0)) then begin
+                if (tile_num(self_obj) != sleep_tile) then begin
+                    animate_move_obj_to_tile(self_obj, self_obj, 0);
+                end
+                else begin
+                    set_local_var(2, 1);
+                end
+            end
+            else begin
+                if (tile_num(self_obj) != sleep_tile) then begin
+                    move_to(self_obj, sleep_tile, elevation(self_obj));
+                end
+                else begin
+                    set_local_var(2, 1);
+                end
+            end
+        end
+    end
+end

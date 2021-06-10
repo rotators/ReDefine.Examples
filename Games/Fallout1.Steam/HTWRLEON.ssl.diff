@@ -1,0 +1,295 @@
+diff --git a/Games/Fallout1.Steam/Original/HTWRLEON.ssl b/Games/Fallout1.Steam/ReDefine/HTWRLEON.ssl
+index 24e623a..5b3eb66 100644
+--- a/Games/Fallout1.Steam/Original/HTWRLEON.ssl
++++ b/Games/Fallout1.Steam/ReDefine/HTWRLEON.ssl
+@@ -49,34 +49,34 @@ procedure start
+ begin
+     if (Only_Once) then begin
+         Only_Once := 0;
+-        if (global_var(111) == 5) then begin
++        if (global_var(GVAR_KILL_MERCHANT) == 5) then begin
+             set_obj_visibility(self_obj, 1);
+             visible := 0;
+         end
+-        critter_add_trait(self_obj, 1, 6, 42);
+-        critter_add_trait(self_obj, 1, 5, 16);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 42);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_GUARD_SADISTIC);
+     end
+-    if (script_action == 21) then begin
++    if (script_action == look_at_proc) then begin
+         call look_at_p_proc();
+     end
+     else begin
+-        if (script_action == 4) then begin
++        if (script_action == pickup_proc) then begin
+             call pickup_p_proc();
+         end
+         else begin
+-            if (script_action == 11) then begin
++            if (script_action == talk_proc) then begin
+                 call talk_p_proc();
+             end
+             else begin
+-                if (script_action == 12) then begin
++                if (script_action == critter_proc) then begin
+                     call critter_p_proc();
+                 end
+                 else begin
+-                    if (script_action == 18) then begin
++                    if (script_action == destroy_proc) then begin
+                         call destroy_p_proc();
+                     end
+                     else begin
+-                        if (script_action == 14) then begin
++                        if (script_action == damage_proc) then begin
+                             call damage_p_proc();
+                         end
+                     end
+@@ -99,7 +99,7 @@ begin
+     else begin
+         if (hostile) then begin
+             hostile := 0;
+-            attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++            attack(dude_obj);
+         end
+         if (map_var(5) == 1) then begin
+             if ((obj_can_hear_obj(self_obj, dude_obj) == 1) or (obj_can_see_obj(self_obj, dude_obj) == 1)) then begin
+@@ -141,11 +141,11 @@ procedure talk_p_proc
+ begin
+     call get_reaction();
+     if ((game_time_hour >= 1900) or (game_time_hour < 600)) then begin
+-        float_msg(self_obj, message_str(866, 141), 2);
++        float_msg(self_obj, mstr(141), FLOAT_MSG_RED);
+     end
+     else begin
+-        if (global_var(248) == 1) then begin
+-            float_msg(self_obj, message_str(866, 142), 2);
++        if (global_var(GVAR_ENEMY_HUB) == 1) then begin
++            float_msg(self_obj, mstr(142), FLOAT_MSG_RED);
+             call combat();
+         end
+         else begin
+@@ -171,17 +171,17 @@ end
+ procedure destroy_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-            set_global_var(156, 1);
+-            set_global_var(157, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+-            set_global_var(157, 1);
+-            set_global_var(156, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+         end
+-        set_global_var(159, global_var(159) + 1);
+-        if ((global_var(159) % 2) == 0) then begin
+-            set_global_var(155, global_var(155) - 1);
++        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
++        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
++            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+         end
+     end
+ end
+@@ -189,7 +189,7 @@ end
+ procedure look_at_p_proc
+ begin
+     script_overrides;
+-    display_msg(message_str(866, 100));
++    display_mstr(100);
+ end
+ 
+ procedure damage_p_proc
+@@ -199,14 +199,14 @@ end
+ 
+ procedure Leon01
+ begin
+-    gsay_reply(866, 101);
+-    giq_option(4, 866, 102, Leon01a, 50);
+-    giq_option(4, 866, 103, LeonCombat, 51);
+-    giq_option(4, 866, 104, Leon03, 50);
+-    if (global_var(111) == 1) then begin
+-        giq_option(4, 866, 140, Leon04, 50);
++    Reply(101);
++    giq_option(4, NAME, 102, Leon01a, NEUTRAL_REACTION);
++    giq_option(4, NAME, 103, LeonCombat, BAD_REACTION);
++    giq_option(4, NAME, 104, Leon03, NEUTRAL_REACTION);
++    if (global_var(GVAR_KILL_MERCHANT) == 1) then begin
++        giq_option(4, NAME, 140, Leon04, NEUTRAL_REACTION);
+     end
+-    giq_option(-3, 866, 138, Leon09, 50);
++    giq_option(-3, NAME, 138, Leon09, NEUTRAL_REACTION);
+ end
+ 
+ procedure Leon01a
+@@ -221,26 +221,26 @@ end
+ 
+ procedure Leon02
+ begin
+-    gsay_reply(866, 105);
+-    giq_option(4, 866, 106, LeonEnd, 50);
+-    giq_option(4, 866, 107, Leon03, 50);
++    Reply(105);
++    giq_option(4, NAME, 106, LeonEnd, NEUTRAL_REACTION);
++    giq_option(4, NAME, 107, Leon03, NEUTRAL_REACTION);
+ end
+ 
+ procedure Leon03
+ begin
+-    gsay_reply(866, 108);
+-    giq_option(4, 866, 109, LeonCombat, 51);
+-    giq_option(4, 866, 110, LeonKickOut, 50);
+-    giq_option(4, 866, 111, LeonCombat, 51);
++    Reply(108);
++    giq_option(4, NAME, 109, LeonCombat, BAD_REACTION);
++    giq_option(4, NAME, 110, LeonKickOut, NEUTRAL_REACTION);
++    giq_option(4, NAME, 111, LeonCombat, BAD_REACTION);
+ end
+ 
+ procedure Leon04
+ begin
+-    gsay_reply(866, 112);
+-    giq_option(4, 866, 113, Leon03, 50);
+-    giq_option(4, 866, 114, Leon04a, 50);
+-    if (global_var(111) == 1) then begin
+-        giq_option(4, 866, 115, Leon06, 50);
++    Reply(112);
++    giq_option(4, NAME, 113, Leon03, NEUTRAL_REACTION);
++    giq_option(4, NAME, 114, Leon04a, NEUTRAL_REACTION);
++    if (global_var(GVAR_KILL_MERCHANT) == 1) then begin
++        giq_option(4, NAME, 115, Leon06, NEUTRAL_REACTION);
+     end
+ end
+ 
+@@ -256,38 +256,38 @@ end
+ 
+ procedure Leon05
+ begin
+-    gsay_reply(866, 116);
+-    giq_option(4, 866, 117, Leon03, 50);
+-    if (global_var(111) == 1) then begin
+-        giq_option(4, 866, 118, Leon06, 50);
++    Reply(116);
++    giq_option(4, NAME, 117, Leon03, NEUTRAL_REACTION);
++    if (global_var(GVAR_KILL_MERCHANT) == 1) then begin
++        giq_option(4, NAME, 118, Leon06, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 866, 119, Leon03, 50);
+-    giq_option(4, 866, 120, LeonKickOut, 50);
++    giq_option(4, NAME, 119, Leon03, NEUTRAL_REACTION);
++    giq_option(4, NAME, 120, LeonKickOut, NEUTRAL_REACTION);
+ end
+ 
+ procedure Leon06
+ begin
+-    gsay_message(866, 121, 50);
+-    gsay_message(866, 122, 50);
+-    gsay_reply(866, 123);
+-    giq_option(4, 866, 124, Leon07, 50);
+-    giq_option(4, 866, 125, LeonCombat, 51);
+-    giq_option(4, 866, 126, Leon03, 50);
++    gsay_message(NAME, 121, NEUTRAL_REACTION);
++    gsay_message(NAME, 122, NEUTRAL_REACTION);
++    Reply(123);
++    giq_option(4, NAME, 124, Leon07, NEUTRAL_REACTION);
++    giq_option(4, NAME, 125, LeonCombat, BAD_REACTION);
++    giq_option(4, NAME, 126, Leon03, NEUTRAL_REACTION);
+ end
+ 
+ procedure Leon07
+ begin
+-    gsay_reply(866, 127);
+-    giq_option(4, 866, 128, Leon03, 50);
+-    giq_option(4, 866, 129, LeonKickOut, 50);
++    Reply(127);
++    giq_option(4, NAME, 128, Leon03, NEUTRAL_REACTION);
++    giq_option(4, NAME, 129, LeonKickOut, NEUTRAL_REACTION);
+ end
+ 
+ procedure Leon08
+ begin
+-    gsay_reply(866, 130);
+-    giq_option(4, 866, 131, LeonCombat, 51);
+-    giq_option(4, 866, 132, LeonKickOut, 50);
+-    giq_option(4, 866, 133, Leon08a, 50);
++    Reply(130);
++    giq_option(4, NAME, 131, LeonCombat, BAD_REACTION);
++    giq_option(4, NAME, 132, LeonKickOut, NEUTRAL_REACTION);
++    giq_option(4, NAME, 133, Leon08a, NEUTRAL_REACTION);
+ end
+ 
+ procedure Leon08a
+@@ -302,11 +302,11 @@ end
+ 
+ procedure Leon09
+ begin
+-    gsay_reply(866, 134);
+-    giq_option(4, 866, 135, LeonCombat, 51);
+-    giq_option(4, 866, 136, LeonKickOut, 50);
+-    giq_option(4, 866, 137, LeonKickOut, 50);
+-    giq_option(-3, 866, 139, LeonKickOut, 50);
++    Reply(134);
++    giq_option(4, NAME, 135, LeonCombat, BAD_REACTION);
++    giq_option(4, NAME, 136, LeonKickOut, NEUTRAL_REACTION);
++    giq_option(4, NAME, 137, LeonKickOut, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 139, LeonKickOut, NEUTRAL_REACTION);
+ end
+ 
+ procedure LeonEnd
+@@ -341,31 +341,31 @@ begin
+         set_local_var(0, 50);
+         set_local_var(1, 2);
+         set_local_var(2, 1);
+-        set_local_var(0, local_var(0) + (5 * get_critter_stat(dude_obj, 3)) - 25);
+-        set_local_var(0, local_var(0) + (10 * has_trait(0, dude_obj, 10)));
+-        if (has_trait(0, dude_obj, 39)) then begin
+-            if (global_var(155) > 0) then begin
+-                set_local_var(0, local_var(0) + global_var(155));
++        set_local_var(0, local_var(0) + (5 * dude_charisma) - 25);
++        set_local_var(0, local_var(0) + (10 * has_trait(TRAIT_PERK, dude_obj, PERK_presence)));
++        if (has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality)) then begin
++            if (global_var(GVAR_PLAYER_REPUATION) > 0) then begin
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+         else begin
+             if (local_var(3) == 1) then begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) + global_var(155));
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+-        if (global_var(158) > 2) then begin
++        if (global_var(GVAR_CHILDKILLER_REPUATION) > 2) then begin
+             set_local_var(0, local_var(0) - 30);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) + 20);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) - 20);
+         end
+         call ReactToLevel();
+@@ -458,6 +458,5 @@ end
+ 
+ procedure Goodbyes
+ begin
+-    exit_line := message_str(634, random(100, 105));
++    exit_line := message_str(SCRIPT_MODREACT, random(100, 105));
+ end
+-

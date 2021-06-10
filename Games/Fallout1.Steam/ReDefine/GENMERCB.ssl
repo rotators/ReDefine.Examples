@@ -1,0 +1,153 @@
+procedure start;
+procedure critter_p_proc;
+procedure damage_p_proc;
+procedure destroy_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure flee_dude;
+
+variable dude_attacked_guards;
+variable dude_attacked_raiders;
+variable initialized;
+variable raiders_left;
+variable rewarded;
+variable scared;
+
+import variable random_seed_1;
+import variable random_seed_2;
+import variable random_seed_3;
+
+
+procedure start
+begin
+    if (not(initialized)) then begin
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 35);
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_MERCHANT);
+        scared := global_var(GVAR_SAVE_TANDI_5);
+        initialized := 1;
+    end
+    else begin
+        if (script_action == critter_proc) then begin
+            call critter_p_proc();
+        end
+        else begin
+            if (script_action == damage_proc) then begin
+                call damage_p_proc();
+            end
+            else begin
+                if (script_action == destroy_proc) then begin
+                    call destroy_p_proc();
+                end
+                else begin
+                    if (script_action == pickup_proc) then begin
+                        call pickup_p_proc();
+                    end
+                    else begin
+                        if (script_action == talk_proc) then begin
+                            call talk_p_proc();
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure critter_p_proc
+begin
+    if (scared and (tile_distance_objs(dude_obj, self_obj) < 8)) then begin
+        call flee_dude();
+    end
+end
+
+procedure damage_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        scared := 1;
+        set_global_var(GVAR_SAVE_TANDI_5, 1);
+    end
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
+            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
+            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+        end
+        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
+        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
+            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+        end
+    end
+end
+
+procedure pickup_p_proc
+begin
+    scared := 1;
+    set_global_var(GVAR_SAVE_TANDI_5, 1);
+end
+
+procedure talk_p_proc
+begin
+    raiders_left := random_seed_1;
+    dude_attacked_raiders := random_seed_2;
+    dude_attacked_guards := random_seed_3;
+    if (scared) then begin
+        float_msg(self_obj, mstr(104), FLOAT_MSG_RED);
+    end
+    else begin
+        if ((raiders_left == 0) and dude_attacked_raiders) then begin
+            if (rewarded) then begin
+                float_msg(self_obj, mstr(101), FLOAT_MSG_BLUE);
+            end
+            else begin
+                if (dude_gender == 0) then begin
+                    float_msg(self_obj, mstr(106), FLOAT_MSG_BLUE);
+                end
+                else begin
+                    float_msg(self_obj, mstr(107), FLOAT_MSG_BLUE);
+                end
+                rewarded := 1;
+                move_obj_inven_to_obj(self_obj, dude_obj);
+                set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) + 3);
+                give_exp_points(50);
+                display_mstr(106);
+            end
+        end
+        else begin
+            if (dude_attacked_guards) then begin
+                float_msg(self_obj, mstr(103), FLOAT_MSG_RED);
+            end
+            else begin
+                if (raiders_left != 0) then begin
+                    if (random(0, 1)) then begin
+                        float_msg(self_obj, mstr(105), FLOAT_MSG_GREEN);
+                    end
+                    else begin
+                        float_msg(self_obj, mstr(102), FLOAT_MSG_GREEN);
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure flee_dude
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    while (LVar1 < 5) do begin
+        if (tile_distance(dude_tile, tile_num_in_direction(tile_num(self_obj), LVar1, 3)) > LVar2) then begin
+            LVar0 := tile_num_in_direction(tile_num(self_obj), LVar1, 3);
+            LVar2 := tile_distance(dude_tile, LVar0);
+        end
+        LVar1 := LVar1 + 1;
+    end
+    animate_move_obj_to_tile(self_obj, LVar0, 1);
+end

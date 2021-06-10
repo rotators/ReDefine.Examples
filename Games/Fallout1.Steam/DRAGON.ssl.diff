@@ -1,0 +1,247 @@
+diff --git a/Games/Fallout1.Steam/Original/DRAGON.ssl b/Games/Fallout1.Steam/ReDefine/DRAGON.ssl
+index 8da9fe0..d353520 100644
+--- a/Games/Fallout1.Steam/Original/DRAGON.ssl
++++ b/Games/Fallout1.Steam/ReDefine/DRAGON.ssl
+@@ -28,24 +28,24 @@ variable initialized;
+ procedure start
+ begin
+     if (not(initialized)) then begin
+-        critter_add_trait(self_obj, 1, 6, 47);
+-        critter_add_trait(self_obj, 1, 5, 27);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 47);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_BLADES);
+         initialized := 1;
+     end
+     else begin
+-        if (script_action == 12) then begin
++        if (script_action == critter_proc) then begin
+             call critter_p_proc();
+         end
+         else begin
+-            if (script_action == 18) then begin
++            if (script_action == destroy_proc) then begin
+                 call destroy_p_proc();
+             end
+             else begin
+-                if (script_action == 21) then begin
++                if (script_action == look_at_proc) then begin
+                     call look_at_p_proc();
+                 end
+                 else begin
+-                    if (script_action == 11) then begin
++                    if (script_action == talk_proc) then begin
+                         call talk_p_proc();
+                     end
+                 end
+@@ -64,45 +64,45 @@ begin
+             animate_move_obj_to_tile(self_obj, 23938, 0);
+         end
+     end
+-    if (obj_can_see_obj(self_obj, dude_obj) and (global_var(136) < 41)) then begin
++    if (obj_can_see_obj(self_obj, dude_obj) and (global_var(GVAR_BLADES_LEFT) < 41)) then begin
+         hostile := 1;
+     end
+     if (hostile) then begin
+         hostile := 0;
+-        attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++        attack(dude_obj);
+     end
+ end
+ 
+ procedure destroy_p_proc
+ begin
+-    set_global_var(136, global_var(136) - 1);
++    set_global_var(GVAR_BLADES_LEFT, global_var(GVAR_BLADES_LEFT) - 1);
+     if (source_obj == dude_obj) then begin
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-            set_global_var(156, 1);
+-            set_global_var(157, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+-            set_global_var(157, 1);
+-            set_global_var(156, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+         end
+-        set_global_var(159, global_var(159) + 1);
+-        if ((global_var(159) % 2) == 0) then begin
+-            set_global_var(155, global_var(155) - 1);
++        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
++        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
++            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+         end
+     end
+ end
+ 
+ procedure look_at_p_proc
+ begin
+-    if ((global_var(135) == 2) or (get_critter_stat(dude_obj, 6) > 6)) then begin
++    if ((global_var(GVAR_BECOME_BLADE) == 2) or (dude_luck > 6)) then begin
+         call show_true_name();
+     end
+     else begin
+-        if (get_critter_stat(dude_obj, 6) < 4) then begin
++        if (dude_luck < 4) then begin
+             call show_false_name();
+         end
+         else begin
+-            if (get_critter_stat(dude_obj, 4) < 5) then begin
++            if (dude_iq < 5) then begin
+                 call show_false_name();
+             end
+             else begin
+@@ -124,8 +124,8 @@ end
+ 
+ procedure talk_p_proc
+ begin
+-    if (get_critter_stat(dude_obj, 4) < 4) then begin
+-        display_msg(message_str(766, 175));
++    if (dude_iq < 4) then begin
++        display_msg(message_str(SCRIPT_GENCHAT, 175));
+     end
+     else begin
+         start_gdialog(284, self_obj, 4, -1, -1);
+@@ -135,11 +135,11 @@ begin
+             call Dragon00();
+         end
+         else begin
+-            if (global_var(135) == 1) then begin
++            if (global_var(GVAR_BECOME_BLADE) == 1) then begin
+                 call Dragon07();
+             end
+             else begin
+-                if (global_var(135) == 2) then begin
++                if (global_var(GVAR_BECOME_BLADE) == 2) then begin
+                     call Dragon11();
+                 end
+                 else begin
+@@ -156,76 +156,76 @@ procedure show_true_name
+ begin
+     script_overrides;
+     if (local_var(0)) then begin
+-        display_msg(message_str(284, 100));
++        display_mstr(100);
+     end
+     else begin
+-        display_msg(message_str(284, 103));
++        display_mstr(103);
+     end
+ end
+ 
+ procedure show_false_name
+ begin
+     script_overrides;
+-    display_msg(message_str(284, random(104, 110)));
++    display_mstr(random(104, 110));
+ end
+ 
+ procedure Dragon00
+ begin
+-    gsay_message(284, 111, 50);
++    gsay_message(NAME, 111, NEUTRAL_REACTION);
+ end
+ 
+ procedure Dragon01
+ begin
+-    gsay_reply(284, 112);
+-    giq_option(4, 284, 113, Dragon02, 50);
+-    giq_option(4, 284, 114, Dragon06, 50);
+-    giq_option(4, 284, 115, DragonCombat, 50);
++    Reply(112);
++    giq_option(4, NAME, 113, Dragon02, NEUTRAL_REACTION);
++    giq_option(4, NAME, 114, Dragon06, NEUTRAL_REACTION);
++    giq_option(4, NAME, 115, DragonCombat, NEUTRAL_REACTION);
+ end
+ 
+ procedure Dragon02
+ begin
+-    gsay_reply(284, 116);
+-    giq_option(4, 284, 117, Dragon03, 50);
+-    giq_option(4, 284, 118, Dragon04, 50);
+-    giq_option(4, 284, 119, Dragon05, 50);
++    Reply(116);
++    giq_option(4, NAME, 117, Dragon03, NEUTRAL_REACTION);
++    giq_option(4, NAME, 118, Dragon04, NEUTRAL_REACTION);
++    giq_option(4, NAME, 119, Dragon05, NEUTRAL_REACTION);
+ end
+ 
+ procedure Dragon03
+ begin
+-    gsay_message(284, 120, 50);
++    gsay_message(NAME, 120, NEUTRAL_REACTION);
+     call DragonCombat();
+ end
+ 
+ procedure Dragon04
+ begin
+-    gsay_message(284, 121, 50);
++    gsay_message(NAME, 121, NEUTRAL_REACTION);
+ end
+ 
+ procedure Dragon05
+ begin
+-    gsay_message(284, 122, 50);
++    gsay_message(NAME, 122, NEUTRAL_REACTION);
+     call DragonCombat();
+ end
+ 
+ procedure Dragon06
+ begin
+-    gsay_reply(284, 123);
+-    giq_option(0, 284, 124, DragonEnd, 50);
+-    giq_option(0, 284, 125, DragonCombat, 50);
++    Reply(123);
++    giq_option(0, NAME, 124, DragonEnd, NEUTRAL_REACTION);
++    giq_option(0, NAME, 125, DragonCombat, NEUTRAL_REACTION);
+ end
+ 
+ procedure Dragon07
+ begin
+-    gsay_reply(284, 126);
+-    giq_option(4, 284, 127, DragonCombat, 50);
+-    giq_option(4, 284, 128, Dragon08, 50);
+-    giq_option(4, 284, 129, Dragon10, 50);
++    Reply(126);
++    giq_option(4, NAME, 127, DragonCombat, NEUTRAL_REACTION);
++    giq_option(4, NAME, 128, Dragon08, NEUTRAL_REACTION);
++    giq_option(4, NAME, 129, Dragon10, NEUTRAL_REACTION);
+ end
+ 
+ procedure Dragon08
+ begin
+     if (obj_is_carrying_obj_pid(dude_obj, 114)) then begin
+-        gsay_message(284, 130, 50);
++        gsay_message(NAME, 130, NEUTRAL_REACTION);
+     end
+     else begin
+         call Dragon09();
+@@ -234,17 +234,17 @@ end
+ 
+ procedure Dragon09
+ begin
+-    gsay_message(284, 131, 50);
++    gsay_message(NAME, 131, NEUTRAL_REACTION);
+ end
+ 
+ procedure Dragon10
+ begin
+-    gsay_message(284, 132, 50);
++    gsay_message(NAME, 132, NEUTRAL_REACTION);
+ end
+ 
+ procedure Dragon11
+ begin
+-    gsay_message(284, 133, 50);
++    gsay_message(NAME, 133, NEUTRAL_REACTION);
+ end
+ 
+ procedure DragonCombat
+@@ -255,4 +255,3 @@ end
+ procedure DragonEnd
+ begin
+ end
+-

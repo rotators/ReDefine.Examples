@@ -1,0 +1,141 @@
+diff --git a/Games/Fallout1.Steam/Original/VALTCTZN.ssl b/Games/Fallout1.Steam/ReDefine/VALTCTZN.ssl
+index 979e9eb..d02aa89 100644
+--- a/Games/Fallout1.Steam/Original/VALTCTZN.ssl
++++ b/Games/Fallout1.Steam/ReDefine/VALTCTZN.ssl
+@@ -28,31 +28,31 @@ import variable getting_ration;
+ 
+ procedure start
+ begin
+-    if (script_action == 12) then begin
++    if (script_action == critter_proc) then begin
+         call critter_p_proc();
+     end
+     else begin
+-        if (script_action == 14) then begin
++        if (script_action == damage_proc) then begin
+             call damage_p_proc();
+         end
+         else begin
+-            if (script_action == 18) then begin
++            if (script_action == destroy_proc) then begin
+                 call destroy_p_proc();
+             end
+             else begin
+-                if (script_action == 15) then begin
++                if (script_action == map_enter_proc) then begin
+                     call map_enter_p_proc();
+                 end
+                 else begin
+-                    if (script_action == 4) then begin
++                    if (script_action == pickup_proc) then begin
+                         call pickup_p_proc();
+                     end
+                     else begin
+-                        if (script_action == 11) then begin
++                        if (script_action == talk_proc) then begin
+                             call talk_p_proc();
+                         end
+                         else begin
+-                            if (script_action == 22) then begin
++                            if (script_action == timed_event_proc) then begin
+                                 call timed_event_p_proc();
+                             end
+                         end
+@@ -67,12 +67,12 @@ procedure critter_p_proc
+ begin
+     if (hostile) then begin
+         hostile := 0;
+-        attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++        attack(dude_obj);
+     end
+     else begin
+-        if (global_var(101) == 0) then begin
++        if (global_var(GVAR_FIND_WATER_CHIP) == 0) then begin
+             if (local_var(5) == 0) then begin
+-                if ((elevation(self_obj) == elevation(WtrGrd_ptr)) and (elevation(self_obj) == elevation(dude_obj))) then begin
++                if ((elevation(self_obj) == elevation(WtrGrd_ptr)) and (elevation(self_obj) == dude_elevation)) then begin
+                     if ((game_time_hour > 700) and (game_time_hour < 900)) then begin
+                         call get_rations();
+                     end
+@@ -99,21 +99,21 @@ end
+ procedure destroy_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-            set_global_var(156, 1);
+-            set_global_var(157, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+-            set_global_var(157, 1);
+-            set_global_var(156, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+         end
+-        set_global_var(159, global_var(159) + 1);
+-        if ((global_var(159) % 2) == 0) then begin
+-            set_global_var(155, global_var(155) - 1);
++        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
++        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
++            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+         end
+     end
+     if (source_obj == dude_obj) then begin
+-        set_global_var(261, 1);
++        set_global_var(GVAR_WATER_CHIP_4, 1);
+     end
+ end
+ 
+@@ -123,7 +123,7 @@ begin
+         set_local_var(4, tile_num(self_obj));
+     end
+     home_tile := local_var(4);
+-    critter_add_trait(self_obj, 1, 6, 1);
++    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 1);
+     call set_ration_tile();
+     call set_sleep_tile();
+     sleep_time := random(1900, 1930);
+@@ -139,21 +139,21 @@ procedure talk_p_proc
+ begin
+     if (local_var(6) == 1) then begin
+         if (random(0, 1)) then begin
+-            float_msg(self_obj, message_str(185, 166), 0);
++            float_msg(self_obj, message_str(SCRIPT_GENVAULT, 166), FLOAT_MSG_NORMAL);
+         end
+         else begin
+-            display_msg(message_str(185, 167));
++            display_msg(message_str(SCRIPT_GENVAULT, 167));
+         end
+     end
+     else begin
+-        if (local_var(7) or global_var(261)) then begin
+-            float_msg(self_obj, message_str(669, 105), 0);
++        if (local_var(7) or global_var(GVAR_WATER_CHIP_4)) then begin
++            float_msg(self_obj, message_str(SCRIPT_ENEMY, 105), FLOAT_MSG_NORMAL);
+         end
+         else begin
+             if (rndx == 0) then begin
+                 rndx := random(101, 106);
+             end
+-            float_msg(self_obj, message_str(130, rndx), 0);
++            float_msg(self_obj, mstr(rndx), FLOAT_MSG_NORMAL);
+         end
+     end
+ end
+@@ -168,7 +168,7 @@ begin
+         if (fixed_param == 2) then begin
+             getting_ration := 1;
+             if (random(0, 1)) then begin
+-                float_msg(self_obj, message_str(185, 165), 0);
++                float_msg(self_obj, message_str(SCRIPT_GENVAULT, 165), FLOAT_MSG_NORMAL);
+             end
+             add_timer_event(self_obj, game_ticks(3), 3);
+         end
+@@ -277,4 +277,3 @@ begin
+         end
+     end
+ end
+-

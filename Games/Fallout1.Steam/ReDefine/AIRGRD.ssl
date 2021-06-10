@@ -1,0 +1,506 @@
+procedure start;
+procedure do_dialogue;
+procedure dialog;
+procedure airgrd00;
+procedure airgrd01;
+procedure airgrd02;
+procedure airgrd03;
+procedure airgrd03a;
+procedure airgrd04;
+procedure airgrd04a;
+procedure airgrd04b;
+procedure airgrd05;
+procedure airgrd06;
+procedure airgrd07;
+procedure airgrd08;
+procedure airgrd09;
+procedure airgrd10;
+procedure airgrd11;
+procedure airgrd12;
+procedure airgrd13;
+procedure airgrd14;
+procedure airgrd15;
+procedure bluff_end;
+procedure dialog_end;
+procedure airgrdtim;
+procedure combat;
+
+variable HOSTILE;
+variable only_once := 1;
+variable Weapons;
+variable DISGUISED;
+variable again;
+variable first;
+variable rndx;
+variable jumpcode;
+variable indialog;
+variable temp;
+
+procedure get_reaction;
+procedure ReactToLevel;
+procedure LevelToReact;
+procedure UpReact;
+procedure DownReact;
+procedure BottomReact;
+procedure TopReact;
+procedure BigUpReact;
+procedure BigDownReact;
+procedure UpReactLevel;
+procedure DownReactLevel;
+procedure Goodbyes;
+
+variable exit_line;
+
+
+procedure start
+begin
+    if (only_once) then begin
+        only_once := 0;
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 34);
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_SUPER_MUTANT_GUARD);
+    end
+    else begin
+        if (script_action == damage_proc) then begin
+            if (global_var(GVAR_ENEMY_VAULT_13) == 0) then begin
+                set_global_var(GVAR_ENEMY_VAULT_13, 1);
+            end
+        end
+        else begin
+            if (script_action == talk_proc) then begin
+                call do_dialogue();
+            end
+            else begin
+                if (script_action == pickup_proc) then begin
+                    HOSTILE := 1;
+                end
+                else begin
+                    if (script_action == timed_event_proc) then begin
+                        if ((obj_item_subtype(critter_inven_obj(dude_obj, 1)) == 3) or (obj_item_subtype(critter_inven_obj(dude_obj, 2)) == 3)) then begin
+                            call combat();
+                        end
+                    end
+                    else begin
+                        if (script_action == critter_proc) then begin
+                            if (HOSTILE) then begin
+                                HOSTILE := 0;
+                                attack(dude_obj);
+                            end
+                            if (obj_can_see_obj(self_obj, dude_obj) and (tile_distance_objs(self_obj, dude_obj) < 6)) then begin
+                                if ((obj_item_subtype(critter_inven_obj(dude_obj, 1)) == 3) or (obj_item_subtype(critter_inven_obj(dude_obj, 2)) == 3)) then begin
+                                    if (Weapons == 0) then begin
+                                        Weapons := 1;
+                                        again := 1;
+                                        dialogue_system_enter;
+                                    end
+                                end
+                                DISGUISED := 0;
+                                if (obj_pid(critter_inven_obj(dude_obj, 0)) == 113) then begin
+                                    if (party_member_count(0) > 1) then begin
+                                        DISGUISED := 0;
+                                    end
+                                    else begin
+                                        DISGUISED := 1;
+                                    end
+                                end
+                                if (DISGUISED == 0) then begin
+                                    again := 1;
+                                    dialogue_system_enter;
+                                end
+                                if (again == 0) then begin
+                                    again := 1;
+                                    dialogue_system_enter;
+                                end
+                            end
+                        end
+                        else begin
+                            if ((script_action == look_at_proc) or (script_action == description_proc)) then begin
+                                script_overrides;
+                            end
+                            else begin
+                                if (script_action == destroy_proc) then begin
+                                    if (source_obj == dude_obj) then begin
+                                        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+                                            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
+                                            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+                                        end
+                                        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+                                            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
+                                            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+                                        end
+                                        set_global_var(GVAR_BAD_MONSTER, global_var(GVAR_BAD_MONSTER) + 1);
+                                        if ((global_var(GVAR_BAD_MONSTER) % 6) == 0) then begin
+                                            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) + 1);
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure do_dialogue
+begin
+    if (obj_pid(critter_inven_obj(dude_obj, 0)) == 113) then begin
+        if (party_member_count(0) > 1) then begin
+            DISGUISED := 0;
+        end
+        else begin
+            DISGUISED := 1;
+        end
+    end
+    if ((map_var(1) == 1) and (global_var(GVAR_MASTER_FILLER_4) == 1)) then begin
+        call airgrd00();
+    end
+    else begin
+        if (DISGUISED) then begin
+            if (Weapons) then begin
+                jumpcode := 1;
+                call dialog();
+            end
+            else begin
+                if (first == 0) then begin
+                    first := 1;
+                    jumpcode := 2;
+                    call dialog();
+                end
+                else begin
+                    if (first == 1) then begin
+                        call airgrd08();
+                    end
+                end
+            end
+        end
+        else begin
+            if (Weapons) then begin
+                call airgrd15();
+            end
+            else begin
+                jumpcode := 3;
+                call dialog();
+            end
+        end
+    end
+end
+
+procedure dialog
+begin
+    set_local_var(3, 1);
+    call get_reaction();
+    start_gdialog(673, self_obj, 4, -1, -1);
+    gsay_start;
+    indialog := 1;
+    if (jumpcode < 2) then begin
+        call airgrd01();
+    end
+    else begin
+        if (jumpcode == 2) then begin
+            call airgrd03();
+        end
+        else begin
+            if (jumpcode > 2) then begin
+                call airgrd09();
+            end
+        end
+    end
+    indialog := 0;
+    gsay_end;
+    end_dialogue;
+end
+
+procedure airgrd00
+begin
+    float_msg(self_obj, mstr(random(102, 104)), FLOAT_MSG_RED);
+end
+
+procedure airgrd01
+begin
+    Reply(105);
+    giq_option(-3, NAME, 106, airgrd02, BAD_REACTION);
+    giq_option(4, NAME, 107, airgrdtim, NEUTRAL_REACTION);
+    giq_option(4, NAME, 108, airgrd02, BAD_REACTION);
+    giq_option(4, NAME, 109, airgrdtim, NEUTRAL_REACTION);
+end
+
+procedure airgrd02
+begin
+    gsay_message(NAME, 110, BAD_REACTION);
+    call combat();
+end
+
+procedure airgrd03
+begin
+    Reply(111);
+    giq_option(-3, NAME, 112, airgrd02, BAD_REACTION);
+    giq_option(4, NAME, 113, airgrd04, NEUTRAL_REACTION);
+    giq_option(4, NAME, 114, airgrd03a, NEUTRAL_REACTION);
+    giq_option(4, NAME, 115, airgrd02, BAD_REACTION);
+end
+
+procedure airgrd03a
+begin
+    if (is_success(roll_vs_skill(dude_obj, 14, 0))) then begin
+        call airgrd06();
+    end
+    else begin
+        call airgrd08();
+    end
+end
+
+procedure airgrd04
+begin
+    Reply(116);
+    giq_option(4, NAME, 117, airgrd04a, NEUTRAL_REACTION);
+    giq_option(6, NAME, 118, airgrd04b, NEUTRAL_REACTION);
+end
+
+procedure airgrd04a
+begin
+    if (is_success(roll_vs_skill(dude_obj, 14, -30))) then begin
+        call airgrd06();
+    end
+    else begin
+        call airgrd05();
+    end
+end
+
+procedure airgrd04b
+begin
+    if (is_success(roll_vs_skill(dude_obj, 14, -15))) then begin
+        call airgrd06();
+    end
+    else begin
+        call airgrd05();
+    end
+end
+
+procedure airgrd05
+begin
+    gsay_message(NAME, 119, BAD_REACTION);
+    call combat();
+end
+
+procedure airgrd06
+begin
+    Reply(120);
+    giq_option(4, NAME, 121, bluff_end, NEUTRAL_REACTION);
+    giq_option(4, NAME, 122, airgrd07, BAD_REACTION);
+    giq_option(4, NAME, 123, bluff_end, NEUTRAL_REACTION);
+end
+
+procedure airgrd07
+begin
+    gsay_message(NAME, 124, BAD_REACTION);
+    call combat();
+end
+
+procedure airgrd08
+begin
+    if (indialog == 1) then begin
+        gsay_message(NAME, random(125, 127), NEUTRAL_REACTION);
+    end
+    else begin
+        float_msg(self_obj, mstr(random(125, 127)), FLOAT_MSG_RED);
+    end
+    call bluff_end();
+end
+
+procedure airgrd09
+begin
+    Reply(128);
+    giq_option(-3, NAME, 129, airgrd10, BAD_REACTION);
+    giq_option(4, NAME, 130, airgrd10, BAD_REACTION);
+    giq_option(4, NAME, 131, airgrd11, BAD_REACTION);
+    giq_option(4, NAME, 132, airgrd02, BAD_REACTION);
+end
+
+procedure airgrd10
+begin
+    gsay_message(NAME, 133, BAD_REACTION);
+    call combat();
+end
+
+procedure airgrd11
+begin
+    Reply(134);
+    giq_option(4, NAME, 135, airgrd02, BAD_REACTION);
+    giq_option(4, NAME, 136, airgrd12, BAD_REACTION);
+end
+
+procedure airgrd12
+begin
+    Reply(137);
+    giq_option(4, NAME, 138, airgrd13, BAD_REACTION);
+    giq_option(6, NAME, 139, airgrd14, BAD_REACTION);
+end
+
+procedure airgrd13
+begin
+    gsay_message(NAME, 140, BAD_REACTION);
+    call combat();
+end
+
+procedure airgrd14
+begin
+    gsay_message(NAME, 141, BAD_REACTION);
+    call combat();
+end
+
+procedure airgrd15
+begin
+    gsay_message(NAME, 142, BAD_REACTION);
+    call combat();
+end
+
+procedure bluff_end
+begin
+    if (local_var(4) == 0) then begin
+        set_local_var(4, 1);
+        temp := 750;
+        display_msg(mstr(200) + temp + mstr(201));
+        give_exp_points(temp);
+    end
+end
+
+procedure dialog_end
+begin
+end
+
+procedure airgrdtim
+begin
+    add_timer_event(self_obj, game_ticks(10), 1);
+end
+
+procedure combat
+begin
+    HOSTILE := 1;
+end
+
+procedure get_reaction
+begin
+    if (local_var(2) == 0) then begin
+        set_local_var(0, 50);
+        set_local_var(1, 2);
+        set_local_var(2, 1);
+        set_local_var(0, local_var(0) + (5 * dude_charisma) - 25);
+        set_local_var(0, local_var(0) + (10 * has_trait(TRAIT_PERK, dude_obj, PERK_presence)));
+        if (has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality)) then begin
+            if (global_var(GVAR_PLAYER_REPUATION) > 0) then begin
+                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+            end
+            else begin
+                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+            end
+        end
+        else begin
+            if (local_var(3) == 1) then begin
+                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+            end
+            else begin
+                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+            end
+        end
+        if (global_var(GVAR_CHILDKILLER_REPUATION) > 2) then begin
+            set_local_var(0, local_var(0) - 30);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+            set_local_var(0, local_var(0) + 20);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+            set_local_var(0, local_var(0) - 20);
+        end
+        call ReactToLevel();
+    end
+end
+
+procedure ReactToLevel
+begin
+    if (local_var(0) <= 25) then begin
+        set_local_var(1, 1);
+    end
+    else begin
+        if (local_var(0) <= 75) then begin
+            set_local_var(1, 2);
+        end
+        else begin
+            set_local_var(1, 3);
+        end
+    end
+end
+
+procedure LevelToReact
+begin
+    if (local_var(1) == 1) then begin
+        set_local_var(0, random(1, 25));
+    end
+    else begin
+        if (local_var(1) == 2) then begin
+            set_local_var(0, random(26, 75));
+        end
+        else begin
+            set_local_var(0, random(76, 100));
+        end
+    end
+end
+
+procedure UpReact
+begin
+    set_local_var(0, local_var(0) + 10);
+    call ReactToLevel();
+end
+
+procedure DownReact
+begin
+    set_local_var(0, local_var(0) - 10);
+    call ReactToLevel();
+end
+
+procedure BottomReact
+begin
+    set_local_var(1, 1);
+    set_local_var(0, 1);
+end
+
+procedure TopReact
+begin
+    set_local_var(0, 100);
+    set_local_var(1, 3);
+end
+
+procedure BigUpReact
+begin
+    set_local_var(0, local_var(0) + 25);
+    call ReactToLevel();
+end
+
+procedure BigDownReact
+begin
+    set_local_var(0, local_var(0) - 25);
+    call ReactToLevel();
+end
+
+procedure UpReactLevel
+begin
+    set_local_var(1, local_var(1) + 1);
+    if (local_var(1) > 3) then begin
+        set_local_var(1, 3);
+    end
+    call LevelToReact();
+end
+
+procedure DownReactLevel
+begin
+    set_local_var(1, local_var(1) - 1);
+    if (local_var(1) < 1) then begin
+        set_local_var(1, 1);
+    end
+    call LevelToReact();
+end
+
+procedure Goodbyes
+begin
+    exit_line := message_str(SCRIPT_MODREACT, random(100, 105));
+end

@@ -1,0 +1,186 @@
+procedure start;
+procedure Nightkin01;
+procedure Nightkin01a;
+procedure Nightkin02;
+procedure Nightkin03;
+procedure Nightkin04;
+procedure Nightkin05;
+procedure Nightkin05a;
+procedure Nightkin06;
+procedure Nightkin07;
+procedure Nightkinend;
+procedure Combat;
+
+variable Hostile;
+variable Only_Once := 1;
+
+
+procedure start
+begin
+    if (Only_Once) then begin
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 20);
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_PARTY_MARCUS_COWARD);
+        Only_Once := 0;
+    end
+    if ((script_action == look_at_proc) or (script_action == description_proc)) then begin
+        script_overrides;
+        display_msg(message_str(SCRIPT_GCRGLOW, 100));
+    end
+    else begin
+        if (script_action == destroy_proc) then begin
+            if (source_obj == dude_obj) then begin
+                if (((global_var(GVAR_GECKO_SKEETER_PART) + global_var(GVAR_GECKO_REQ_FORM)) >= 25) and ((global_var(GVAR_GECKO_REQ_FORM) > (2 * global_var(GVAR_GECKO_SKEETER_PART))) or (global_var(GVAR_SIERRA_LOCKOUT) == 1))) then begin
+                    set_global_var(GVAR_SIERRA_LOCKOUT, 1);
+                    set_global_var(GVAR_SIERRA_PASSWORD, 0);
+                end
+                if (((global_var(GVAR_GECKO_SKEETER_PART) + global_var(GVAR_GECKO_REQ_FORM)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GECKO_REQ_FORM))) or (global_var(GVAR_SIERRA_PASSWORD) == 1))) then begin
+                    set_global_var(GVAR_SIERRA_PASSWORD, 1);
+                    set_global_var(GVAR_SIERRA_LOCKOUT, 0);
+                end
+                set_global_var(GVAR_GECKO_SKEETER_PART, global_var(GVAR_GECKO_SKEETER_PART) + 1);
+                if ((global_var(GVAR_GECKO_SKEETER_PART) % 6) == 0) then begin
+                    set_global_var(GVAR_BRAIN_BOT_BRAIN, global_var(GVAR_BRAIN_BOT_BRAIN) + 1);
+                end
+            end
+        end
+        else begin
+            if (script_action == damage_proc) then begin
+                set_global_var(GVAR_NCR_GENERIC_STATE, 1);
+            end
+            else begin
+                if (script_action == critter_proc) then begin
+                    if (obj_can_see_obj(self_obj, dude_obj)) then begin
+                        if (not(obj_is_carrying_obj_pid(dude_obj, 142))) then begin
+                            if (not(obj_is_carrying_obj_pid(dude_obj, 141))) then begin
+                                if (obj_pid(critter_inven_obj(dude_obj, 0)) != 113) then begin
+                                    Hostile := 1;
+                                end
+                            end
+                        end
+                    end
+                    if ((party_member_count(0) > 1) and obj_can_see_obj(self_obj, dude_obj)) then begin
+                        Hostile := 1;
+                    end
+                    if (Hostile) then begin
+                        Hostile := 0;
+                        attack(dude_obj);
+                    end
+                end
+                else begin
+                    if (script_action == pickup_proc) then begin
+                        Hostile := 1;
+                    end
+                    else begin
+                        if (script_action == talk_proc) then begin
+                            script_overrides;
+                            if (global_var(GVAR_NCR_VORTIS_QUEST_STATE) == 1) then begin
+                                float_msg(self_obj, message_str(SCRIPT_GCRGLOW, 101), FLOAT_MSG_NORMAL);
+                                Hostile := 1;
+                            end
+                            else begin
+                                start_gdialog(394, self_obj, 4, -1, -1);
+                                gsay_start;
+                                call Nightkin01();
+                                gsay_end;
+                                end_dialogue;
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure Nightkin01
+begin
+    gsay_reply(SCRIPT_GCRGLOW, 102);
+    giq_option(7, SCRIPT_GCRGLOW, 103, Nightkin01a, NEUTRAL_REACTION);
+    giq_option(4, SCRIPT_GCRGLOW, 104, Nightkin04, NEUTRAL_REACTION);
+    giq_option(4, SCRIPT_GCRGLOW, 105, Nightkin05, NEUTRAL_REACTION);
+    if (global_var(GVAR_PLAYER_SEX_LEVEL) == 1) then begin
+        giq_option(4, SCRIPT_GCRGLOW, 106, Nightkin05, NEUTRAL_REACTION);
+    end
+    if (((global_var(GVAR_GECKO_SKEETER_PART) + global_var(GVAR_GECKO_REQ_FORM)) >= 25) and ((global_var(GVAR_GECKO_REQ_FORM) > (2 * global_var(GVAR_GECKO_SKEETER_PART))) or (global_var(GVAR_SIERRA_LOCKOUT) == 1))) then begin
+        giq_option(4, SCRIPT_GCRGLOW, 107, Nightkin04, NEUTRAL_REACTION);
+    end
+    giq_option(-3, SCRIPT_GCRGLOW, 108, Nightkinend, NEUTRAL_REACTION);
+end
+
+procedure Nightkin01a
+begin
+    if (is_success(roll_vs_skill(dude_obj, 14, 0))) then begin
+        call Nightkin02();
+    end
+    else begin
+        call Nightkin03();
+    end
+end
+
+procedure Nightkin02
+begin
+    gsay_reply(SCRIPT_GCRGLOW, 109);
+    giq_option(1, SCRIPT_GCRGLOW, 125, Nightkinend, NEUTRAL_REACTION);
+end
+
+procedure Nightkin03
+begin
+    gsay_reply(SCRIPT_GCRGLOW, 110);
+    call Combat();
+end
+
+procedure Nightkin04
+begin
+    gsay_reply(SCRIPT_GCRGLOW, 111);
+    call Combat();
+end
+
+procedure Nightkin05
+begin
+    gsay_reply(SCRIPT_GCRGLOW, 112);
+    giq_option(7, SCRIPT_GCRGLOW, 113, Nightkin05a, NEUTRAL_REACTION);
+    giq_option(4, SCRIPT_GCRGLOW, 114, Nightkin04, NEUTRAL_REACTION);
+    giq_option(4, SCRIPT_GCRGLOW, 115, Nightkin07, NEUTRAL_REACTION);
+    giq_option(4, SCRIPT_GCRGLOW, 116, Nightkin07, NEUTRAL_REACTION);
+    giq_option(4, SCRIPT_GCRGLOW, 117, Nightkinend, NEUTRAL_REACTION);
+    if (((global_var(GVAR_GECKO_SKEETER_PART) + global_var(GVAR_GECKO_REQ_FORM)) >= 25) and ((global_var(GVAR_GECKO_REQ_FORM) > (2 * global_var(GVAR_GECKO_SKEETER_PART))) or (global_var(GVAR_SIERRA_LOCKOUT) == 1))) then begin
+        giq_option(4, SCRIPT_GCRGLOW, 118, Nightkin04, NEUTRAL_REACTION);
+    end
+end
+
+procedure Nightkin05a
+begin
+    if (is_success(roll_vs_skill(dude_obj, 14, 0))) then begin
+        call Nightkin06();
+    end
+    else begin
+        call Nightkin03();
+    end
+end
+
+procedure Nightkin06
+begin
+    gsay_reply(SCRIPT_GCRGLOW, 119);
+    giq_option(1, SCRIPT_GCRGLOW, 125, Nightkinend, NEUTRAL_REACTION);
+end
+
+procedure Nightkin07
+begin
+    gsay_reply(SCRIPT_GCRGLOW, 120);
+    giq_option(4, SCRIPT_GCRGLOW, 121, Nightkin04, NEUTRAL_REACTION);
+    giq_option(4, SCRIPT_GCRGLOW, 122, Nightkin04, NEUTRAL_REACTION);
+    giq_option(4, SCRIPT_GCRGLOW, 123, Nightkinend, NEUTRAL_REACTION);
+    if (((global_var(GVAR_GECKO_SKEETER_PART) + global_var(GVAR_GECKO_REQ_FORM)) >= 25) and ((global_var(GVAR_GECKO_REQ_FORM) > (2 * global_var(GVAR_GECKO_SKEETER_PART))) or (global_var(GVAR_SIERRA_LOCKOUT) == 1))) then begin
+        giq_option(4, SCRIPT_GCRGLOW, 124, Combat, NEUTRAL_REACTION);
+    end
+end
+
+procedure Nightkinend
+begin
+end
+
+procedure Combat
+begin
+    set_global_var(GVAR_NCR_VORTIS_QUEST_STATE, 1);
+    Hostile := 1;
+end

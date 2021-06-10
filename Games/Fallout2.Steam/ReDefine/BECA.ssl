@@ -1,0 +1,180 @@
+procedure start;
+procedure critter_p_proc;
+procedure destroy_p_proc;
+procedure look_at_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure show_true_name;
+procedure show_false_name;
+procedure Beca00;
+procedure Beca01;
+procedure Beca02;
+procedure BecaCombat;
+procedure BecaEnd;
+
+variable hostile;
+variable initialized;
+
+
+procedure start
+begin
+    if (not(initialized)) then begin
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 47);
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_FIGHTING_MANTIS);
+        initialized := 1;
+    end
+    else begin
+        if (script_action == critter_proc) then begin
+            call critter_p_proc();
+        end
+        else begin
+            if (script_action == destroy_proc) then begin
+                call destroy_p_proc();
+            end
+            else begin
+                if (script_action == look_at_proc) then begin
+                    call look_at_p_proc();
+                end
+                else begin
+                    if (script_action == pickup_proc) then begin
+                        call pickup_p_proc();
+                    end
+                    else begin
+                        if (script_action == talk_proc) then begin
+                            call talk_p_proc();
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure critter_p_proc
+begin
+    if (obj_can_see_obj(self_obj, dude_obj) and (global_var(GVAR_MORDINO_FAMILY_COUNTER) < 41)) then begin
+        hostile := 1;
+    end
+    if (hostile) then begin
+        hostile := 0;
+        attack(dude_obj);
+    end
+end
+
+procedure destroy_p_proc
+begin
+    set_global_var(GVAR_MORDINO_FAMILY_COUNTER, global_var(GVAR_MORDINO_FAMILY_COUNTER) - 1);
+    if (source_obj == dude_obj) then begin
+        if (((global_var(GVAR_GECKO_SKEETER_PART) + global_var(GVAR_GECKO_REQ_FORM)) >= 25) and ((global_var(GVAR_GECKO_REQ_FORM) > (2 * global_var(GVAR_GECKO_SKEETER_PART))) or (global_var(GVAR_SIERRA_LOCKOUT) == 1))) then begin
+            set_global_var(GVAR_SIERRA_LOCKOUT, 1);
+            set_global_var(GVAR_SIERRA_PASSWORD, 0);
+        end
+        if (((global_var(GVAR_GECKO_SKEETER_PART) + global_var(GVAR_GECKO_REQ_FORM)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GECKO_REQ_FORM))) or (global_var(GVAR_SIERRA_PASSWORD) == 1))) then begin
+            set_global_var(GVAR_SIERRA_PASSWORD, 1);
+            set_global_var(GVAR_SIERRA_LOCKOUT, 0);
+        end
+        set_global_var(GVAR_GECKO_REQ_FORM, global_var(GVAR_GECKO_REQ_FORM) + 1);
+        if ((global_var(GVAR_GECKO_REQ_FORM) % 2) == 0) then begin
+            set_global_var(GVAR_BRAIN_BOT_BRAIN, global_var(GVAR_BRAIN_BOT_BRAIN) - 1);
+        end
+    end
+end
+
+procedure look_at_p_proc
+begin
+    if ((global_var(GVAR_BISHOP_FAMILY_COUNTER) == 2) or (dude_luck > 6)) then begin
+        call show_true_name();
+    end
+    else begin
+        if (dude_luck < 4) then begin
+            call show_false_name();
+        end
+        else begin
+            if (dude_iq < 5) then begin
+                call show_false_name();
+            end
+            else begin
+                if (random(0, 1)) then begin
+                    call show_false_name();
+                end
+                else begin
+                    call show_true_name();
+                end
+            end
+        end
+    end
+end
+
+procedure pickup_p_proc
+begin
+    hostile := 1;
+end
+
+procedure talk_p_proc
+begin
+    if (dude_iq < 4) then begin
+        display_msg(message_str(SCRIPT_ECELRON, 175));
+    end
+    else begin
+        set_local_var(0, 1);
+        if (global_var(GVAR_BISHOP_FAMILY_COUNTER) == 2) then begin
+            call Beca02();
+        end
+        else begin
+            start_gdialog(281, self_obj, 4, -1, -1);
+            gsay_start;
+            call Beca00();
+            gsay_end;
+            end_dialogue;
+        end
+    end
+end
+
+procedure show_true_name
+begin
+    script_overrides;
+    if (local_var(0)) then begin
+        if ((game_time_hour >= 1900) or (game_time_hour < 600)) then begin
+            display_msg(message_str(SCRIPT_NCR1, 100));
+        end
+        else begin
+            display_msg(message_str(SCRIPT_NCR1, 101));
+        end
+    end
+    else begin
+        display_msg(message_str(SCRIPT_NCR1, 104));
+    end
+end
+
+procedure show_false_name
+begin
+    script_overrides;
+    display_msg(message_str(SCRIPT_NCR1, random(105, 111)));
+end
+
+procedure Beca00
+begin
+    gsay_reply(SCRIPT_NCR1, 112);
+    giq_option(4, SCRIPT_NCR1, 113, BecaCombat, NEUTRAL_REACTION);
+    giq_option(4, SCRIPT_NCR1, 114, BecaEnd, NEUTRAL_REACTION);
+    giq_option(4, SCRIPT_NCR1, 115, Beca01, NEUTRAL_REACTION);
+end
+
+procedure Beca01
+begin
+    gsay_message(SCRIPT_NCR1, 116, NEUTRAL_REACTION);
+end
+
+procedure Beca02
+begin
+    float_msg(self_obj, message_str(SCRIPT_NCR1, 117), FLOAT_MSG_RED);
+end
+
+procedure BecaCombat
+begin
+    hostile := 1;
+end
+
+procedure BecaEnd
+begin
+end

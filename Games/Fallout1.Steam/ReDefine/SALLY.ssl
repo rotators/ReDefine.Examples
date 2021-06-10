@@ -1,0 +1,104 @@
+procedure start;
+procedure do_dialogue;
+procedure Critter_Action;
+
+variable Hostile;
+variable init_teams;
+variable noevent;
+variable loopcount;
+
+
+procedure start
+begin
+    variable LVar0 := 0;
+    if (not(init_teams)) then begin
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 34);
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_SUPER_MUTANT_NECRO);
+        set_local_var(1, 0);
+        init_teams := 1;
+    end
+    if ((script_action == talk_proc) and (global_var(GVAR_SUPER_MUTANTS_KILLED) < 1)) then begin
+        if (global_var(GVAR_DESTROY_MASTER_2) == 0) then begin
+            call do_dialogue();
+        end
+        else begin
+            display_mstr(102);
+        end
+    end
+    else begin
+        if (script_action == look_at_proc) then begin
+            script_overrides;
+            display_mstr(100);
+        end
+        else begin
+            if (script_action == pickup_proc) then begin
+                Hostile := 1;
+            end
+            else begin
+                if (script_action == critter_proc) then begin
+                    call Critter_Action();
+                end
+                else begin
+                    if (script_action == destroy_proc) then begin
+                        set_global_var(GVAR_SUPER_MUTANTS_KILLED, global_var(GVAR_SUPER_MUTANTS_KILLED) + 1);
+                        if (global_var(GVAR_SUPER_MUTANTS_KILLED) > global_var(GVAR_MAX_MUTANTS)) then begin
+                            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) + 3);
+                            set_global_var(GVAR_NECROP_MUTANTS_KILLED, 2);
+                            set_global_var(GVAR_HUB_FILLER_28, game_time / (10 * 60 * 60 * 24));
+                        end
+                        if (source_obj == dude_obj) then begin
+                            if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+                                set_global_var(GVAR_BERSERKER_REPUTATION, 1);
+                                set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+                            end
+                            if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+                                set_global_var(GVAR_CHAMPION_REPUTATION, 1);
+                                set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+                            end
+                            set_global_var(GVAR_BAD_MONSTER, global_var(GVAR_BAD_MONSTER) + 1);
+                            if ((global_var(GVAR_BAD_MONSTER) % 6) == 0) then begin
+                                set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) + 1);
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure do_dialogue
+begin
+    float_msg(self_obj, mstr(101), FLOAT_MSG_GREEN);
+end
+
+procedure Critter_Action
+begin
+    if ((global_var(GVAR_SUPER_MUTANTS_KILLED) > 0) and obj_can_see_obj(self_obj, dude_obj)) then begin
+        Hostile := 1;
+    end
+    if (Hostile > 0) then begin
+        Hostile := 0;
+        attack(dude_obj);
+    end
+    else begin
+        if ((global_var(GVAR_DESTROY_MASTER_2) == 1) and (tile_num(self_obj) != 15507)) then begin
+            animate_move_obj_to_tile(self_obj, 15507, 0);
+        end
+        else begin
+            if ((global_var(GVAR_DESTROY_MASTER_2) == 1) and (tile_num(self_obj) == 15507)) then begin
+                set_global_var(GVAR_DESTROY_MASTER_2, 2);
+            end
+            else begin
+                if ((global_var(GVAR_DESTROY_MASTER_2) == 2) and (tile_num(self_obj) != 12536)) then begin
+                    animate_move_obj_to_tile(self_obj, 12536, 0);
+                end
+                else begin
+                    if ((tile_num(self_obj) == 12536) and (global_var(GVAR_DESTROY_MASTER_2) == 2)) then begin
+                        set_obj_visibility(self_obj, 1);
+                    end
+                end
+            end
+        end
+    end
+end

@@ -1,0 +1,254 @@
+diff --git a/Games/Fallout1.Steam/Original/CURTIS.ssl b/Games/Fallout1.Steam/ReDefine/CURTIS.ssl
+index 2eb4d1b..4fe93e4 100644
+--- a/Games/Fallout1.Steam/Original/CURTIS.ssl
++++ b/Games/Fallout1.Steam/ReDefine/CURTIS.ssl
+@@ -35,35 +35,35 @@ variable hostile;
+ 
+ procedure start
+ begin
+-    if (script_action == 13) then begin
++    if (script_action == combat_proc) then begin
+         call combat_p_proc();
+     end
+     else begin
+-        if (script_action == 12) then begin
++        if (script_action == critter_proc) then begin
+             call critter_p_proc();
+         end
+         else begin
+-            if (script_action == 18) then begin
++            if (script_action == destroy_proc) then begin
+                 call destroy_p_proc();
+             end
+             else begin
+-                if (script_action == 21) then begin
++                if (script_action == look_at_proc) then begin
+                     call look_at_p_proc();
+                 end
+                 else begin
+-                    if (script_action == 15) then begin
++                    if (script_action == map_enter_proc) then begin
+                         call map_enter_p_proc();
+                     end
+                     else begin
+-                        if (script_action == 4) then begin
++                        if (script_action == pickup_proc) then begin
+                             call pickup_p_proc();
+                         end
+                         else begin
+-                            if (script_action == 11) then begin
++                            if (script_action == talk_proc) then begin
+                                 call talk_p_proc();
+                             end
+                             else begin
+-                                if (script_action == 22) then begin
++                                if (script_action == timed_event_proc) then begin
+                                     call timed_event_p_proc();
+                                 end
+                             end
+@@ -81,9 +81,9 @@ begin
+         round_counter := round_counter + 1;
+     end
+     if (round_counter > 3) then begin
+-        if (global_var(246) == 0) then begin
+-            set_global_var(155, global_var(155) - 5);
+-            set_global_var(246, 1);
++        if (global_var(GVAR_ENEMY_SHADY_SANDS) == 0) then begin
++            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 5);
++            set_global_var(GVAR_ENEMY_SHADY_SANDS, 1);
+         end
+     end
+ end
+@@ -91,13 +91,13 @@ end
+ procedure critter_p_proc
+ begin
+     if (obj_can_see_obj(self_obj, dude_obj)) then begin
+-        if (global_var(246) == 1) then begin
++        if (global_var(GVAR_ENEMY_SHADY_SANDS) == 1) then begin
+             hostile := 1;
+         end
+     end
+     if (hostile) then begin
+         hostile := 0;
+-        attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++        attack(dude_obj);
+     end
+     if (local_var(5) == 1) then begin
+         if (tile_distance_objs(self_obj, dude_obj) < 8) then begin
+@@ -116,17 +116,17 @@ end
+ procedure destroy_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-            set_global_var(156, 1);
+-            set_global_var(157, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+-            set_global_var(157, 1);
+-            set_global_var(156, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+         end
+-        set_global_var(159, global_var(159) + 1);
+-        if ((global_var(159) % 2) == 0) then begin
+-            set_global_var(155, global_var(155) - 1);
++        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
++        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
++            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+         end
+     end
+ end
+@@ -134,7 +134,7 @@ end
+ procedure look_at_p_proc
+ begin
+     script_overrides;
+-    display_msg(message_str(236, 100));
++    display_mstr(100);
+ end
+ 
+ procedure map_enter_p_proc
+@@ -143,8 +143,8 @@ begin
+     wake_time := 615;
+     sleep_time := 2115;
+     sleep_tile := 27702;
+-    critter_add_trait(self_obj, 1, 6, 2);
+-    critter_add_trait(self_obj, 1, 5, 6);
++    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 2);
++    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_PEASANT);
+     add_timer_event(self_obj, game_ticks(5), 1);
+ end
+ 
+@@ -155,8 +155,8 @@ end
+ 
+ procedure talk_p_proc
+ begin
+-    if ((local_var(5) == 1) or (global_var(246) == 1)) then begin
+-        float_msg(self_obj, message_str(669, random(100, 105)), 2);
++    if ((local_var(5) == 1) or (global_var(GVAR_ENEMY_SHADY_SANDS) == 1)) then begin
++        float_msg(self_obj, message_str(SCRIPT_ENEMY, random(100, 105)), FLOAT_MSG_RED);
+     end
+     else begin
+         start_gdialog(236, self_obj, 4, -1, -1);
+@@ -173,7 +173,7 @@ begin
+     if (local_var(2) == 1) then begin
+         set_local_var(2, 2);
+         give_exp_points(500);
+-        display_msg(message_str(236, 200));
++        display_mstr(200);
+     end
+ end
+ 
+@@ -192,40 +192,40 @@ end
+ 
+ procedure Curtis01
+ begin
+-    gsay_reply(236, 101);
+-    giq_option(4, 236, 102, Curtis03, 50);
+-    giq_option(-3, 236, 103, CurtisEnd, 50);
++    Reply(101);
++    giq_option(4, NAME, 102, Curtis03, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 103, CurtisEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Curtis02
+ begin
+-    gsay_reply(236, 104);
+-    giq_option(0, 634, 106, Curtis03, 50);
++    Reply(104);
++    giq_option(0, SCRIPT_MODREACT, 106, Curtis03, NEUTRAL_REACTION);
+ end
+ 
+ procedure Curtis03
+ begin
+-    gsay_reply(236, 105);
++    Reply(105);
+     call Curtis03a();
+ end
+ 
+ procedure Curtis03a
+ begin
+     if (local_var(3) == 0) then begin
+-        gsay_option(236, 106, Curtis04, 50);
++        giq_option(1, NAME, 106, Curtis04, NEUTRAL_REACTION);
+     end
+     if (local_var(0) == 0) then begin
+-        giq_option(5, 236, 107, Curtis05, 50);
++        giq_option(5, NAME, 107, Curtis05, NEUTRAL_REACTION);
+     end
+     if (local_var(1) == 0) then begin
+-        giq_option(4, 236, 108, Curtis06, 50);
++        giq_option(4, NAME, 108, Curtis06, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 236, 109, CurtisEnd, 50);
++    giq_option(4, NAME, 109, CurtisEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Curtis04
+ begin
+-    gsay_reply(236, 110);
++    Reply(110);
+     set_local_var(3, 1);
+     call Curtis03a();
+ end
+@@ -233,30 +233,30 @@ end
+ procedure Curtis05
+ begin
+     set_local_var(0, 1);
+-    gsay_reply(236, 111);
++    Reply(111);
+     call Curtis03a();
+ end
+ 
+ procedure Curtis06
+ begin
+-    gsay_reply(236, 112);
+-    giq_option(4, 236, 113, Curtis03, 50);
+-    if ((has_skill(dude_obj, 12) >= 40) and (local_var(1) == 0)) then begin
+-        giq_option(5, 236, 114, Curtis07, 50);
++    Reply(112);
++    giq_option(4, NAME, 113, Curtis03, NEUTRAL_REACTION);
++    if ((dude_skill(SKILL_SCIENCE) >= 40) and (local_var(1) == 0)) then begin
++        giq_option(5, NAME, 114, Curtis07, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure Curtis07
+ begin
+-    gsay_reply(236, 115);
+-    giq_option(4, 236, 116, CurtisEnd, 50);
+-    giq_option(5, 236, 117, Curtis08, 50);
++    Reply(115);
++    giq_option(4, NAME, 116, CurtisEnd, NEUTRAL_REACTION);
++    giq_option(5, NAME, 117, Curtis08, NEUTRAL_REACTION);
+ end
+ 
+ procedure Curtis08
+ begin
+-    gsay_message(236, 118, 50);
+-    set_global_var(155, global_var(155) + 2);
++    gsay_message(NAME, 118, NEUTRAL_REACTION);
++    set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) + 2);
+     set_local_var(1, 1);
+     set_local_var(2, 1);
+ end
+@@ -271,9 +271,9 @@ begin
+     variable LVar1 := 0;
+     variable LVar2 := 0;
+     while (LVar1 < 5) do begin
+-        if (tile_distance(tile_num(dude_obj), tile_num_in_direction(tile_num(self_obj), LVar1, 3)) > LVar2) then begin
++        if (tile_distance(dude_tile, tile_num_in_direction(tile_num(self_obj), LVar1, 3)) > LVar2) then begin
+             LVar0 := tile_num_in_direction(tile_num(self_obj), LVar1, 3);
+-            LVar2 := tile_distance(tile_num(dude_obj), LVar0);
++            LVar2 := tile_distance(dude_tile, LVar0);
+         end
+         LVar1 := LVar1 + 1;
+     end
+@@ -331,4 +331,3 @@ begin
+         end
+     end
+ end
+-

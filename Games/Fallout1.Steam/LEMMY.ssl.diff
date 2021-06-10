@@ -1,0 +1,497 @@
+diff --git a/Games/Fallout1.Steam/Original/LEMMY.ssl b/Games/Fallout1.Steam/ReDefine/LEMMY.ssl
+index d19fbb8..14fc761 100644
+--- a/Games/Fallout1.Steam/Original/LEMMY.ssl
++++ b/Games/Fallout1.Steam/ReDefine/LEMMY.ssl
+@@ -84,31 +84,31 @@ begin
+             set_local_var(7, 1);
+             LVar0 := item_caps_adjust(self_obj, 500);
+         end
+-        critter_add_trait(self_obj, 1, 6, 41);
+-        critter_add_trait(self_obj, 1, 5, 51);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 41);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_HUB_PEASANTS);
+         LastMove := 21325;
+     end
+-    if (script_action == 21) then begin
++    if (script_action == look_at_proc) then begin
+         call look_at_p_proc();
+     end
+     else begin
+-        if (script_action == 4) then begin
++        if (script_action == pickup_proc) then begin
+             call pickup_p_proc();
+         end
+         else begin
+-            if (script_action == 11) then begin
++            if (script_action == talk_proc) then begin
+                 call talk_p_proc();
+             end
+             else begin
+-                if (script_action == 12) then begin
++                if (script_action == critter_proc) then begin
+                     call critter_p_proc();
+                 end
+                 else begin
+-                    if (script_action == 18) then begin
++                    if (script_action == destroy_proc) then begin
+                         call destroy_p_proc();
+                     end
+                     else begin
+-                        if (script_action == 22) then begin
++                        if (script_action == timed_event_proc) then begin
+                             call timed_event_p_proc();
+                         end
+                     end
+@@ -128,7 +128,7 @@ begin
+     variable LVar0 := 0;
+     if (hostile) then begin
+         hostile := 0;
+-        attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++        attack(dude_obj);
+     end
+     if (SetDayNight == 0) then begin
+         add_timer_event(self_obj, game_ticks(random(5, 20)), 1);
+@@ -137,13 +137,13 @@ begin
+     if (local_var(6) == 0) then begin
+         if ((((game_time / 10) - lastPsst) >= 10) and (tile_distance_objs(self_obj, dude_obj) <= 6)) then begin
+             lastPsst := game_time / 10;
+-            float_msg(self_obj, message_str(846, 101), 2);
++            float_msg(self_obj, mstr(101), FLOAT_MSG_RED);
+         end
+     end
+     LVar0 := tile_num(self_obj);
+     if ((LVar0 == 21917) or (LVar0 == 20116) or (LVar0 == 25318)) then begin
+         if (anim_busy(self_obj) == 0) then begin
+-            if (has_trait(1, self_obj, 10) != 3) then begin
++            if (obj_get_rot(self_obj) != 3) then begin
+                 anim(self_obj, 1000, 3);
+             end
+         end
+@@ -151,7 +151,7 @@ begin
+     else begin
+         if (LVar0 == 26327) then begin
+             if (anim_busy(self_obj) == 0) then begin
+-                if (has_trait(1, self_obj, 10) != 2) then begin
++                if (obj_get_rot(self_obj) != 2) then begin
+                     anim(self_obj, 1000, 2);
+                 end
+             end
+@@ -199,17 +199,17 @@ end
+ procedure destroy_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-            set_global_var(156, 1);
+-            set_global_var(157, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+-            set_global_var(157, 1);
+-            set_global_var(156, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+         end
+-        set_global_var(159, global_var(159) + 1);
+-        if ((global_var(159) % 2) == 0) then begin
+-            set_global_var(155, global_var(155) - 1);
++        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
++        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
++            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+         end
+     end
+ end
+@@ -219,14 +219,14 @@ begin
+     variable LVar0 := 0;
+     LVar0 := obj_pid(source_obj);
+     if (party_member_obj(LVar0) != 0) then begin
+-        set_global_var(248, 1);
++        set_global_var(GVAR_ENEMY_HUB, 1);
+     end
+ end
+ 
+ procedure look_at_p_proc
+ begin
+     script_overrides;
+-    display_msg(message_str(846, 100));
++    display_mstr(100);
+ end
+ 
+ procedure timed_event_p_proc
+@@ -299,72 +299,72 @@ end
+ 
+ procedure Lemmy01
+ begin
+-    gsay_reply(846, 102);
+-    giq_option(4, 846, 103, Lemmy03, 50);
+-    giq_option(4, 846, 104, Lemmy04, 50);
+-    giq_option(4, 846, 105, Lemmy05, 50);
+-    giq_option(-3, 846, 106, Lemmy02, 50);
++    Reply(102);
++    giq_option(4, NAME, 103, Lemmy03, NEUTRAL_REACTION);
++    giq_option(4, NAME, 104, Lemmy04, NEUTRAL_REACTION);
++    giq_option(4, NAME, 105, Lemmy05, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 106, Lemmy02, NEUTRAL_REACTION);
+ end
+ 
+ procedure Lemmy02
+ begin
+-    gsay_reply(846, 107);
+-    giq_option(-3, 846, 108, LemmyEnd, 50);
++    Reply(107);
++    giq_option(-3, NAME, 108, LemmyEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Lemmy03
+ begin
+     set_local_var(5, 1);
+-    gsay_message(846, 109, 50);
++    gsay_message(NAME, 109, NEUTRAL_REACTION);
+ end
+ 
+ procedure Lemmy04
+ begin
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        gsay_reply(846, 110);
++    if (dude_gender == 0) then begin
++        Reply(110);
+     end
+     else begin
+-        gsay_reply(846, 178);
++        Reply(178);
+     end
+-    giq_option(4, 846, 111, Lemmy06, 50);
+-    giq_option(4, 846, 112, LemmyCombat, 51);
+-    giq_option(5, 846, 113, Lemmy03, 50);
++    giq_option(4, NAME, 111, Lemmy06, NEUTRAL_REACTION);
++    giq_option(4, NAME, 112, LemmyCombat, BAD_REACTION);
++    giq_option(5, NAME, 113, Lemmy03, NEUTRAL_REACTION);
+ end
+ 
+ procedure Lemmy05
+ begin
+-    gsay_reply(846, 114);
+-    giq_option(4, 846, 116, Lemmy23, 50);
+-    giq_option(4, 846, 117, Lemmy09, 50);
+-    giq_option(4, 846, 118, Lemmy03, 50);
++    Reply(114);
++    giq_option(4, NAME, 116, Lemmy23, NEUTRAL_REACTION);
++    giq_option(4, NAME, 117, Lemmy09, NEUTRAL_REACTION);
++    giq_option(4, NAME, 118, Lemmy03, NEUTRAL_REACTION);
+ end
+ 
+ procedure Lemmy06
+ begin
+-    gsay_reply(846, 119);
+-    giq_option(4, 846, 120, Lemmy05, 50);
+-    giq_option(4, 846, 121, Lemmy09, 50);
+-    giq_option(4, 846, 123, Lemmy08, 50);
++    Reply(119);
++    giq_option(4, NAME, 120, Lemmy05, NEUTRAL_REACTION);
++    giq_option(4, NAME, 121, Lemmy09, NEUTRAL_REACTION);
++    giq_option(4, NAME, 123, Lemmy08, NEUTRAL_REACTION);
+ end
+ 
+ procedure Lemmy08
+ begin
+-    gsay_message(846, 128, 50);
++    gsay_message(NAME, 128, NEUTRAL_REACTION);
+ end
+ 
+ procedure Lemmy09
+ begin
+-    gsay_reply(846, 129);
++    Reply(129);
+     call Lemmy18();
+ end
+ 
+ procedure Lemmy10
+ begin
+-    gsay_reply(846, 130);
+-    giq_option(4, 846, 131, Lemmy10a, 50);
+-    giq_option(4, 846, 132, Lemmy10b, 50);
+-    giq_option(4, 846, 133, Lemmy10c, 50);
+-    giq_option(4, 846, 134, Lemmy08, 50);
++    Reply(130);
++    giq_option(4, NAME, 131, Lemmy10a, NEUTRAL_REACTION);
++    giq_option(4, NAME, 132, Lemmy10b, NEUTRAL_REACTION);
++    giq_option(4, NAME, 133, Lemmy10c, NEUTRAL_REACTION);
++    giq_option(4, NAME, 134, Lemmy08, NEUTRAL_REACTION);
+ end
+ 
+ procedure Lemmy10a
+@@ -408,76 +408,76 @@ end
+ 
+ procedure Lemmy11
+ begin
+-    gsay_message(846, 135, 50);
++    gsay_message(NAME, 135, NEUTRAL_REACTION);
+ end
+ 
+ procedure Lemmy12
+ begin
+     set_local_var(5, 1);
+-    gsay_message(846, 136, 51);
++    gsay_message(NAME, 136, BAD_REACTION);
+ end
+ 
+ procedure Lemmy13
+ begin
+-    gsay_message(846, 137, 50);
++    gsay_message(NAME, 137, NEUTRAL_REACTION);
+     call Lemmy16();
+ end
+ 
+ procedure Lemmy14
+ begin
+-    gsay_message(846, 138, 50);
++    gsay_message(NAME, 138, NEUTRAL_REACTION);
+     call Lemmy16();
+ end
+ 
+ procedure Lemmy15
+ begin
+-    gsay_message(846, 139, 50);
++    gsay_message(NAME, 139, NEUTRAL_REACTION);
+     call Lemmy16();
+ end
+ 
+ procedure Lemmy16
+ begin
+-    gsay_reply(846, 140);
+-    giq_option(4, 846, 141, Lemmy17, 50);
+-    giq_option(4, 846, 142, Lemmy08, 50);
++    Reply(140);
++    giq_option(4, NAME, 141, Lemmy17, NEUTRAL_REACTION);
++    giq_option(4, NAME, 142, Lemmy08, NEUTRAL_REACTION);
+ end
+ 
+ procedure Lemmy17
+ begin
+-    gsay_message(846, 143, 50);
++    gsay_message(NAME, 143, NEUTRAL_REACTION);
+     call Lemmy18();
+ end
+ 
+ procedure Lemmy18
+ begin
+-    if (global_var(101) != 2) then begin
+-        giq_option(4, 846, 144, Lemmy10, 50);
++    if (global_var(GVAR_FIND_WATER_CHIP) != 2) then begin
++        giq_option(4, NAME, 144, Lemmy10, NEUTRAL_REACTION);
+     end
+-    if (global_var(219) == 1) then begin
+-        giq_option(4, 846, 145, Lemmy19, 50);
++    if (global_var(GVAR_DECKER_KNOWN) == 1) then begin
++        giq_option(4, NAME, 145, Lemmy19, NEUTRAL_REACTION);
+     end
+     if (map_var(41) == 1) then begin
+-        giq_option(4, 846, 146, Lemmy20, 50);
++        giq_option(4, NAME, 146, Lemmy20, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 846, 147, Lemmy23, 50);
+-    giq_option(4, 846, 148, Lemmy08, 50);
+-    giq_option(-3, 846, 106, Lemmy02, 50);
++    giq_option(4, NAME, 147, Lemmy23, NEUTRAL_REACTION);
++    giq_option(4, NAME, 148, Lemmy08, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 106, Lemmy02, NEUTRAL_REACTION);
+ end
+ 
+ procedure Lemmy19
+ begin
+-    gsay_reply(846, 149);
+-    giq_option(4, 846, 150, Lemmy17, 50);
+-    giq_option(4, 846, 151, Lemmy08, 50);
++    Reply(149);
++    giq_option(4, NAME, 150, Lemmy17, NEUTRAL_REACTION);
++    giq_option(4, NAME, 151, Lemmy08, NEUTRAL_REACTION);
+ end
+ 
+ procedure Lemmy20
+ begin
+-    gsay_reply(846, 152);
+-    giq_option(4, 846, 153, Lemmy20a, 50);
+-    giq_option(4, 846, 154, Lemmy20b, 50);
+-    giq_option(4, 846, 155, Lemmy20c, 50);
+-    giq_option(4, 846, 156, Lemmy08, 50);
++    Reply(152);
++    giq_option(4, NAME, 153, Lemmy20a, NEUTRAL_REACTION);
++    giq_option(4, NAME, 154, Lemmy20b, NEUTRAL_REACTION);
++    giq_option(4, NAME, 155, Lemmy20c, NEUTRAL_REACTION);
++    giq_option(4, NAME, 156, Lemmy08, NEUTRAL_REACTION);
+ end
+ 
+ procedure Lemmy20a
+@@ -521,52 +521,52 @@ end
+ 
+ procedure Lemmy20d
+ begin
+-    gsay_message(846, 137, 50);
++    gsay_message(NAME, 137, NEUTRAL_REACTION);
+     call Lemmy21();
+ end
+ 
+ procedure Lemmy20e
+ begin
+-    gsay_message(846, 138, 50);
++    gsay_message(NAME, 138, NEUTRAL_REACTION);
+     call Lemmy21();
+ end
+ 
+ procedure Lemmy20f
+ begin
+-    gsay_message(846, 139, 50);
++    gsay_message(NAME, 139, NEUTRAL_REACTION);
+     call Lemmy21();
+ end
+ 
+ procedure Lemmy21
+ begin
+-    gsay_reply(846, 157);
+-    giq_option(4, 846, 158, Lemmy22, 50);
+-    giq_option(4, 846, 159, Lemmy17, 50);
+-    giq_option(4, 846, 160, Lemmy08, 50);
++    Reply(157);
++    giq_option(4, NAME, 158, Lemmy22, NEUTRAL_REACTION);
++    giq_option(4, NAME, 159, Lemmy17, NEUTRAL_REACTION);
++    giq_option(4, NAME, 160, Lemmy08, NEUTRAL_REACTION);
+ end
+ 
+ procedure Lemmy22
+ begin
+-    gsay_reply(846, 161);
+-    giq_option(4, 846, 162, Lemmy17, 50);
+-    giq_option(4, 846, 163, LemmyCombat, 51);
+-    giq_option(4, 846, 164, Lemmy08, 50);
++    Reply(161);
++    giq_option(4, NAME, 162, Lemmy17, NEUTRAL_REACTION);
++    giq_option(4, NAME, 163, LemmyCombat, BAD_REACTION);
++    giq_option(4, NAME, 164, Lemmy08, NEUTRAL_REACTION);
+ end
+ 
+ procedure Lemmy23
+ begin
+-    gsay_reply(846, 165);
+-    giq_option(4, 846, 166, Lemmy24, 50);
+-    giq_option(4, 846, 167, Lemmy08, 50);
++    Reply(165);
++    giq_option(4, NAME, 166, Lemmy24, NEUTRAL_REACTION);
++    giq_option(4, NAME, 167, Lemmy08, NEUTRAL_REACTION);
+ end
+ 
+ procedure Lemmy24
+ begin
+-    gsay_reply(846, 168);
+-    giq_option(4, 846, 169, Lemmy24a, 50);
+-    giq_option(4, 846, 170, Lemmy24b, 50);
+-    giq_option(4, 846, 171, Lemmy24c, 50);
+-    giq_option(4, 846, 172, Lemmy08, 50);
++    Reply(168);
++    giq_option(4, NAME, 169, Lemmy24a, NEUTRAL_REACTION);
++    giq_option(4, NAME, 170, Lemmy24b, NEUTRAL_REACTION);
++    giq_option(4, NAME, 171, Lemmy24c, NEUTRAL_REACTION);
++    giq_option(4, NAME, 172, Lemmy08, NEUTRAL_REACTION);
+ end
+ 
+ procedure Lemmy24a
+@@ -610,38 +610,38 @@ end
+ 
+ procedure Lemmy24d
+ begin
+-    gsay_message(846, 137, 50);
++    gsay_message(NAME, 137, NEUTRAL_REACTION);
+     call Lemmy25();
+ end
+ 
+ procedure Lemmy24e
+ begin
+-    gsay_message(846, 138, 50);
++    gsay_message(NAME, 138, NEUTRAL_REACTION);
+     call Lemmy25();
+ end
+ 
+ procedure Lemmy24f
+ begin
+-    gsay_message(846, 139, 50);
++    gsay_message(NAME, 139, NEUTRAL_REACTION);
+     call Lemmy25();
+ end
+ 
+ procedure Lemmy25
+ begin
+-    set_global_var(236, 1);
+-    gsay_reply(846, 173);
+-    giq_option(4, 846, 174, Lemmy17, 50);
+-    giq_option(4, 846, 175, Lemmy08, 50);
++    set_global_var(GVAR_MASTER_FILLER_9, 1);
++    Reply(173);
++    giq_option(4, NAME, 174, Lemmy17, NEUTRAL_REACTION);
++    giq_option(4, NAME, 175, Lemmy08, NEUTRAL_REACTION);
+ end
+ 
+ procedure Lemmy26
+ begin
+-    gsay_message(846, 176, 50);
++    gsay_message(NAME, 176, NEUTRAL_REACTION);
+ end
+ 
+ procedure Lemmy27
+ begin
+-    gsay_reply(846, 177);
++    Reply(177);
+     call Lemmy18();
+ end
+ 
+@@ -661,31 +661,31 @@ begin
+         set_local_var(0, 50);
+         set_local_var(1, 2);
+         set_local_var(2, 1);
+-        set_local_var(0, local_var(0) + (5 * get_critter_stat(dude_obj, 3)) - 25);
+-        set_local_var(0, local_var(0) + (10 * has_trait(0, dude_obj, 10)));
+-        if (has_trait(0, dude_obj, 39)) then begin
+-            if (global_var(155) > 0) then begin
+-                set_local_var(0, local_var(0) + global_var(155));
++        set_local_var(0, local_var(0) + (5 * dude_charisma) - 25);
++        set_local_var(0, local_var(0) + (10 * has_trait(TRAIT_PERK, dude_obj, PERK_presence)));
++        if (has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality)) then begin
++            if (global_var(GVAR_PLAYER_REPUATION) > 0) then begin
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+         else begin
+             if (local_var(3) == 1) then begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) + global_var(155));
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+-        if (global_var(158) > 2) then begin
++        if (global_var(GVAR_CHILDKILLER_REPUATION) > 2) then begin
+             set_local_var(0, local_var(0) - 30);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) + 20);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) - 20);
+         end
+         call ReactToLevel();
+@@ -778,6 +778,5 @@ end
+ 
+ procedure Goodbyes
+ begin
+-    exit_line := message_str(634, random(100, 105));
++    exit_line := message_str(SCRIPT_MODREACT, random(100, 105));
+ end
+-

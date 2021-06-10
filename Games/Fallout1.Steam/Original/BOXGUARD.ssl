@@ -1,0 +1,126 @@
+procedure start;
+procedure critter_p_proc;
+procedure destroy_p_proc;
+procedure map_enter_p_proc;
+procedure talk_p_proc;
+procedure timed_event_p_proc;
+
+variable home_tile := 7000;
+variable hostile;
+variable sfx_name;
+
+import variable challenger_ptr;
+import variable Saul_loses;
+import variable Saul_wins;
+import variable shot_challenger;
+
+
+procedure start
+begin
+    if (script_action == 12) then begin
+        call critter_p_proc();
+    end
+    else begin
+        if (script_action == 18) then begin
+            call destroy_p_proc();
+        end
+        else begin
+            if (script_action == 11) then begin
+                call talk_p_proc();
+            end
+            else begin
+                if (script_action == 22) then begin
+                    call timed_event_p_proc();
+                end
+            end
+        end
+    end
+end
+
+procedure critter_p_proc
+begin
+    if (hostile) then begin
+        hostile := 0;
+        attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
+    end
+    else begin
+        if (Saul_loses) then begin
+            if ((obj_pid(challenger_ptr) == 16777227) or (obj_pid(challenger_ptr) == 16777226)) then begin
+                if (shot_challenger == 0) then begin
+                    Saul_loses := 0;
+                    anim(self_obj, 1000, 5);
+                    float_msg(self_obj, message_str(835, random(100, 103)), 0);
+                    reg_anim_func(2, self_obj);
+                    reg_anim_func(1, 1);
+                    reg_anim_animate(self_obj, 43, -1);
+                    reg_anim_animate(self_obj, 45, -1);
+                    sfx_name := sfx_build_weapon_name(1, obj_carrying_pid_obj(self_obj, 8), 2, challenger_ptr);
+                    reg_anim_play_sfx(dude_obj, sfx_name, -1);
+                    reg_anim_animate(challenger_ptr, 14, 4);
+                    reg_anim_animate(self_obj, 43, -1);
+                    reg_anim_animate(self_obj, 45, -1);
+                    sfx_name := sfx_build_weapon_name(1, obj_carrying_pid_obj(self_obj, 8), 2, challenger_ptr);
+                    reg_anim_play_sfx(dude_obj, sfx_name, -1);
+                    reg_anim_animate(challenger_ptr, 34, 4);
+                    reg_anim_animate(self_obj, 44, -1);
+                    reg_anim_func(3, 0);
+                    rm_timer_event(self_obj);
+                    add_timer_event(self_obj, game_ticks(5), 1);
+                end
+            end
+            else begin
+                shot_challenger := 1;
+            end
+        end
+        else begin
+            if (Saul_wins) then begin
+                shot_challenger := 1;
+            end
+        end
+    end
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+            set_global_var(156, 1);
+            set_global_var(157, 0);
+        end
+        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+            set_global_var(157, 1);
+            set_global_var(156, 0);
+        end
+        set_global_var(160, global_var(160) + 1);
+        if ((global_var(160) % 6) == 0) then begin
+            set_global_var(155, global_var(155) + 1);
+        end
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    if (global_var(15) == 1) then begin
+        kill_critter(self_obj, 49);
+    end
+    if (local_var(0) == 0) then begin
+        set_local_var(0, tile_num(self_obj));
+    end
+    home_tile := local_var(0);
+    critter_add_trait(self_obj, 1, 6, 25);
+    if (item_caps_total(self_obj) == 0) then begin
+        item_caps_adjust(self_obj, random(10, 25));
+    end
+end
+
+procedure talk_p_proc
+begin
+    float_msg(self_obj, message_str(835, random(106, 107)), 0);
+end
+
+procedure timed_event_p_proc
+begin
+    Saul_loses := 1;
+    shot_challenger := 1;
+end
+

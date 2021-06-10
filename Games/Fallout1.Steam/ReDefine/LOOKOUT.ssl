@@ -1,0 +1,92 @@
+procedure start;
+procedure spies;
+procedure guilt;
+procedure talk_p_proc;
+
+variable Hostile;
+variable init_teams;
+
+
+procedure start
+begin
+    if (not(init_teams)) then begin
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 31);
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_GHOUL_NORMAL);
+        init_teams := 1;
+    end
+    if (script_action == talk_proc) then begin
+        call talk_p_proc();
+    end
+    else begin
+        if ((script_action == look_at_proc) or (script_action == description_proc)) then begin
+            script_overrides;
+            display_mstr(100);
+        end
+        else begin
+            if (script_action == pickup_proc) then begin
+                Hostile := 1;
+            end
+            else begin
+                if (script_action == critter_proc) then begin
+                    if (Hostile) then begin
+                        Hostile := 0;
+                        attack(dude_obj);
+                    end
+                    else begin
+                        if (local_var(0) == 0) then begin
+                            if ((global_var(GVAR_NECROP_WATER_CHIP_TAKEN) == 1) and (global_var(GVAR_NECROP_WATER_PUMP_FIXED) != 2)) then begin
+                                if (obj_can_see_obj(self_obj, dude_obj) and (tile_distance_objs(self_obj, dude_obj) < 5)) then begin
+                                    set_local_var(0, 1);
+                                    call guilt();
+                                end
+                            end
+                        end
+                    end
+                end
+                else begin
+                    if (script_action == destroy_proc) then begin
+                        if (source_obj == dude_obj) then begin
+                            if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+                                set_global_var(GVAR_BERSERKER_REPUTATION, 1);
+                                set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+                            end
+                            if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+                                set_global_var(GVAR_CHAMPION_REPUTATION, 1);
+                                set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+                            end
+                            set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
+                            if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
+                                set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure spies
+begin
+    float_msg(self_obj, mstr(101), FLOAT_MSG_NORMAL);
+end
+
+procedure guilt
+begin
+    if (random(0, 1)) then begin
+        float_msg(self_obj, mstr(200), FLOAT_MSG_NORMAL);
+    end
+    else begin
+        float_msg(self_obj, mstr(201), FLOAT_MSG_NORMAL);
+    end
+end
+
+procedure talk_p_proc
+begin
+    if ((global_var(GVAR_NECROP_WATER_CHIP_TAKEN) == 1) and (global_var(GVAR_NECROP_WATER_PUMP_FIXED) != 2)) then begin
+        call guilt();
+    end
+    else begin
+        call spies();
+    end
+end

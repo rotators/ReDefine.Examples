@@ -1,0 +1,117 @@
+procedure start;
+procedure combat;
+procedure critter_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure destroy_p_proc;
+procedure look_at_p_proc;
+
+variable hostile;
+variable only_once := 1;
+variable rndx;
+
+
+procedure start
+begin
+    if (only_once) then begin
+        only_once := 0;
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 32);
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_GHOUL_NASTY);
+    end
+    if (script_action == look_at_proc) then begin
+        call look_at_p_proc();
+    end
+    else begin
+        if (script_action == pickup_proc) then begin
+            call pickup_p_proc();
+        end
+        else begin
+            if (script_action == talk_proc) then begin
+                call talk_p_proc();
+            end
+            else begin
+                if (script_action == combat_proc) then begin
+                    if (fixed_param == 2) then begin
+                        rndx := random(1, 6) - 5;
+                        if (rndx < 0) then begin
+                            rndx := 0;
+                        end
+                        if (rndx > 0) then begin
+                            radiation_inc(target_obj, rndx);
+                        end
+                    end
+                end
+                else begin
+                    if (script_action == critter_proc) then begin
+                        call critter_p_proc();
+                    end
+                    else begin
+                        if (script_action == destroy_proc) then begin
+                            call destroy_p_proc();
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure combat
+begin
+    hostile := 1;
+end
+
+procedure critter_p_proc
+begin
+    if ((global_var(GVAR_NECROP_WATER_CHIP_TAKEN) != 0) and (global_var(GVAR_NECROP_WATER_PUMP_FIXED) != 2)) then begin
+        if (obj_can_see_obj(self_obj, dude_obj) and (tile_distance_objs(self_obj, dude_obj) < 9)) then begin
+            float_msg(self_obj, mstr(102), FLOAT_MSG_RED);
+            hostile := 1;
+        end
+    end
+    if (hostile) then begin
+        hostile := 0;
+        attack(dude_obj);
+    end
+end
+
+procedure pickup_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        hostile := 1;
+    end
+end
+
+procedure talk_p_proc
+begin
+    if (global_var(GVAR_NECROP_WATER_CHIP_TAKEN) != 0) then begin
+        float_msg(self_obj, mstr(102), FLOAT_MSG_RED);
+    end
+    else begin
+        float_msg(self_obj, mstr(101), FLOAT_MSG_RED);
+    end
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
+            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
+            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+        end
+        set_global_var(GVAR_BAD_MONSTER, global_var(GVAR_BAD_MONSTER) + 1);
+        if ((global_var(GVAR_BAD_MONSTER) % 6) == 0) then begin
+            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) + 1);
+        end
+    end
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    display_mstr(100);
+end

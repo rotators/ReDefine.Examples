@@ -1,0 +1,135 @@
+procedure start;
+procedure critter_p_proc;
+procedure destroy_p_proc;
+procedure look_at_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure ScSupMut0;
+procedure ScSupMut1;
+procedure ScSupMut2;
+procedure ScSupMut3;
+procedure combat;
+
+variable herebefore;
+variable hostile;
+variable initialized;
+
+
+procedure start
+begin
+    if (not(initialized)) then begin
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 34);
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_SUPER_MUTANT);
+        initialized := 1;
+    end
+    else begin
+        if (script_action == critter_proc) then begin
+            call critter_p_proc();
+        end
+        else begin
+            if (script_action == destroy_proc) then begin
+                call destroy_p_proc();
+            end
+            else begin
+                if (script_action == look_at_proc) then begin
+                    call look_at_p_proc();
+                end
+                else begin
+                    if (script_action == pickup_proc) then begin
+                        call pickup_p_proc();
+                    end
+                    else begin
+                        if (script_action == talk_proc) then begin
+                            call talk_p_proc();
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure critter_p_proc
+begin
+    if (hostile) then begin
+        hostile := 0;
+        attack(dude_obj);
+    end
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        if (((global_var(GVAR_GECKO_SKEETER_PART) + global_var(GVAR_GECKO_REQ_FORM)) >= 25) and ((global_var(GVAR_GECKO_REQ_FORM) > (2 * global_var(GVAR_GECKO_SKEETER_PART))) or (global_var(GVAR_SIERRA_LOCKOUT) == 1))) then begin
+            set_global_var(GVAR_SIERRA_LOCKOUT, 1);
+            set_global_var(GVAR_SIERRA_PASSWORD, 0);
+        end
+        if (((global_var(GVAR_GECKO_SKEETER_PART) + global_var(GVAR_GECKO_REQ_FORM)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GECKO_REQ_FORM))) or (global_var(GVAR_SIERRA_PASSWORD) == 1))) then begin
+            set_global_var(GVAR_SIERRA_PASSWORD, 1);
+            set_global_var(GVAR_SIERRA_LOCKOUT, 0);
+        end
+        set_global_var(GVAR_GECKO_SKEETER_PART, global_var(GVAR_GECKO_SKEETER_PART) + 1);
+        if ((global_var(GVAR_GECKO_SKEETER_PART) % 6) == 0) then begin
+            set_global_var(GVAR_BRAIN_BOT_BRAIN, global_var(GVAR_BRAIN_BOT_BRAIN) + 1);
+        end
+    end
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    display_msg(message_str(SCRIPT_MBASE12, 100));
+end
+
+procedure pickup_p_proc
+begin
+    hostile := 1;
+end
+
+procedure talk_p_proc
+begin
+    script_overrides;
+    if (herebefore) then begin
+        call ScSupMut3();
+    end
+    else begin
+        herebefore := 1;
+        start_gdialog(277, self_obj, 4, -1, -1);
+        gsay_start;
+        call ScSupMut0();
+        gsay_end;
+        end_dialogue;
+    end
+end
+
+procedure ScSupMut0
+begin
+    gsay_reply(SCRIPT_MBASE12, 101);
+    giq_option(-3, SCRIPT_MBASE12, 102, combat, NEUTRAL_REACTION);
+    giq_option(4, SCRIPT_MBASE12, 103, combat, NEUTRAL_REACTION);
+    giq_option(4, SCRIPT_MBASE12, 104, ScSupMut1, NEUTRAL_REACTION);
+    giq_option(4, SCRIPT_MBASE12, 105, combat, NEUTRAL_REACTION);
+end
+
+procedure ScSupMut1
+begin
+    gsay_reply(SCRIPT_MBASE12, 106);
+    giq_option(4, SCRIPT_MBASE12, 107, combat, NEUTRAL_REACTION);
+    giq_option(4, SCRIPT_MBASE12, 108, ScSupMut2, NEUTRAL_REACTION);
+    giq_option(4, SCRIPT_MBASE12, 109, combat, NEUTRAL_REACTION);
+end
+
+procedure ScSupMut2
+begin
+    gsay_message(SCRIPT_MBASE12, 110, NEUTRAL_REACTION);
+end
+
+procedure ScSupMut3
+begin
+    float_msg(self_obj, message_str(SCRIPT_MBASE12, 111), FLOAT_MSG_NORMAL);
+end
+
+procedure combat
+begin
+    hostile := 1;
+end

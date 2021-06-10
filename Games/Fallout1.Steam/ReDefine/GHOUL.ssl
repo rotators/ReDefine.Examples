@@ -1,0 +1,209 @@
+procedure start;
+procedure timeforwhat;
+procedure do_dialogue;
+procedure pre_dialogue;
+procedure ghoulend;
+procedure ghoulcbt;
+procedure ghoul00;
+procedure ghoul01;
+procedure ghoul02;
+procedure ghoul03;
+procedure ghoul04;
+procedure ghoul05;
+procedure ghoul05a;
+procedure ghoul06;
+procedure ghoul07;
+procedure ghoul08;
+
+variable Hostile;
+variable initialized;
+variable noevent;
+variable loopcount;
+
+
+procedure start
+begin
+    if (not(initialized)) then begin
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 30);
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_GHOUL_NASTY);
+        initialized := 1;
+    end
+    else begin
+        if (script_action == timed_event_proc) then begin
+            call timeforwhat();
+        end
+        else begin
+            if (script_action == talk_proc) then begin
+                call pre_dialogue();
+            end
+            else begin
+                if (script_action == pickup_proc) then begin
+                    Hostile := 1;
+                end
+                else begin
+                    if (script_action == critter_proc) then begin
+                        if (Hostile) then begin
+                            Hostile := 0;
+                            attack(dude_obj);
+                        end
+                        else begin
+                            if ((game_time_hour >= 1900) or (game_time_hour < 600) and (tile_num(self_obj) != 22531)) then begin
+                                animate_move_obj_to_tile(self_obj, 22531, 0);
+                            end
+                            if ((game_time_hour >= 700) and (game_time_hour < 1800) and (tile_num(self_obj) != 24730)) then begin
+                                animate_move_obj_to_tile(self_obj, 24730, 0);
+                            end
+                            loopcount := loopcount + 1;
+                            if (loopcount > 40) then begin
+                                loopcount := 0;
+                                if (tile_distance_objs(self_obj, dude_obj) < 7) then begin
+                                    if (obj_can_see_obj(self_obj, dude_obj)) then begin
+                                        if (noevent == 0) then begin
+                                            noevent := 1;
+                                            add_timer_event(self_obj, game_ticks(5), 0);
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    else begin
+                        if ((script_action == look_at_proc) or (script_action == description_proc)) then begin
+                            script_overrides;
+                            display_mstr(100);
+                        end
+                        else begin
+                            if (script_action == destroy_proc) then begin
+                                if (source_obj == dude_obj) then begin
+                                    if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+                                        set_global_var(GVAR_BERSERKER_REPUTATION, 1);
+                                        set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+                                    end
+                                    if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+                                        set_global_var(GVAR_CHAMPION_REPUTATION, 1);
+                                        set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+                                    end
+                                    set_global_var(GVAR_BAD_MONSTER, global_var(GVAR_BAD_MONSTER) + 1);
+                                    if ((global_var(GVAR_BAD_MONSTER) % 6) == 0) then begin
+                                        set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) + 1);
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure timeforwhat
+begin
+    if (fixed_param == 1) then begin
+        Hostile := 1;
+    end
+    else begin
+        if (local_var(0) == 0) then begin
+            dialogue_system_enter;
+        end
+    end
+end
+
+procedure do_dialogue
+begin
+    start_gdialog(30, self_obj, 4, -1, -1);
+    gsay_start;
+    set_local_var(0, 1);
+    call ghoul00();
+    gsay_end;
+    end_dialogue;
+end
+
+procedure pre_dialogue
+begin
+    if (local_var(0)) then begin
+        call ghoul08();
+    end
+    else begin
+        call do_dialogue();
+    end
+end
+
+procedure ghoulend
+begin
+end
+
+procedure ghoulcbt
+begin
+    add_timer_event(self_obj, game_ticks(2), 1);
+end
+
+procedure ghoul00
+begin
+    Reply(101);
+    giq_option(6, NAME, 102, ghoul01, NEUTRAL_REACTION);
+    giq_option(4, NAME, 103, ghoul04, NEUTRAL_REACTION);
+    giq_option(4, NAME, 104, ghoul05, NEUTRAL_REACTION);
+    giq_option(-3, NAME, 105, ghoulend, NEUTRAL_REACTION);
+end
+
+procedure ghoul01
+begin
+    Reply(106);
+    giq_option(6, NAME, 107, ghoul02, NEUTRAL_REACTION);
+    giq_option(6, NAME, 108, ghoul03, NEUTRAL_REACTION);
+end
+
+procedure ghoul02
+begin
+    gsay_message(NAME, 109, NEUTRAL_REACTION);
+    call ghoulend();
+end
+
+procedure ghoul03
+begin
+    gsay_message(NAME, 110, NEUTRAL_REACTION);
+    call ghoulend();
+end
+
+procedure ghoul04
+begin
+    gsay_message(NAME, 111, NEUTRAL_REACTION);
+    call ghoulend();
+end
+
+procedure ghoul05
+begin
+    Reply(112);
+    giq_option(4, NAME, 113, ghoul07, NEUTRAL_REACTION);
+    giq_option(4, NAME, 114, ghoul05a, NEUTRAL_REACTION);
+    call ghoulend();
+end
+
+procedure ghoul05a
+begin
+    if (is_success(do_check(dude_obj, 14, 0))) then begin
+        call ghoul06();
+    end
+    else begin
+        call ghoul07();
+    end
+end
+
+procedure ghoul06
+begin
+    gsay_message(NAME, 115, NEUTRAL_REACTION);
+    call ghoulend();
+end
+
+procedure ghoul07
+begin
+    gsay_message(NAME, 116, NEUTRAL_REACTION);
+    call ghoulcbt();
+end
+
+procedure ghoul08
+begin
+    float_msg(self_obj, mstr(117), FLOAT_MSG_LIGHT_RED);
+    call ghoulend();
+end

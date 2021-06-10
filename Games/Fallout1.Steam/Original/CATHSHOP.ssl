@@ -1,0 +1,435 @@
+procedure start;
+procedure combat;
+procedure critter_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure destroy_p_proc;
+procedure look_at_p_proc;
+procedure timed_event_p_proc;
+procedure BarterGuy00;
+procedure BarterGuy00a;
+procedure BarterGuy01;
+procedure BarterGuy02;
+procedure BarterGuy02a;
+procedure BarterGuy03;
+procedure BarterGuy04;
+procedure BarterGuy05;
+procedure BarterGuy06;
+procedure BarterGuy07;
+procedure BarterGuy08;
+procedure BarterGuy09;
+procedure BarterGuy10;
+procedure BarterGuy11;
+procedure BarterGuy12;
+procedure BarterGuy13;
+procedure BarterGuy14;
+procedure BarterGuyEnd;
+
+variable hostile;
+variable Only_Once := 1;
+variable Caught_Stealing;
+variable Here_To_Shop;
+variable Go_Balistic;
+
+import variable Shop_Ptr;
+import variable Shopkepper_Ptr;
+
+procedure get_reaction;
+procedure ReactToLevel;
+procedure LevelToReact;
+procedure UpReact;
+procedure DownReact;
+procedure BottomReact;
+procedure TopReact;
+procedure BigUpReact;
+procedure BigDownReact;
+procedure UpReactLevel;
+procedure DownReactLevel;
+procedure Goodbyes;
+
+variable exit_line;
+
+
+procedure start
+begin
+    if (Only_Once) then begin
+        Only_Once := 0;
+        critter_add_trait(self_obj, 1, 6, 20);
+        critter_add_trait(self_obj, 1, 5, 69);
+        Shopkepper_Ptr := self_obj;
+    end
+    if (script_action == 21) then begin
+        call look_at_p_proc();
+    end
+    else begin
+        if (script_action == 22) then begin
+            call timed_event_p_proc();
+        end
+        else begin
+            if (script_action == 4) then begin
+                call pickup_p_proc();
+            end
+            else begin
+                if (script_action == 11) then begin
+                    call talk_p_proc();
+                end
+                else begin
+                    if (script_action == 12) then begin
+                        call critter_p_proc();
+                    end
+                    else begin
+                        if (script_action == 18) then begin
+                            call destroy_p_proc();
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure combat
+begin
+    hostile := 1;
+end
+
+procedure critter_p_proc
+begin
+    if (hostile) then begin
+        hostile := 0;
+        attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
+    end
+end
+
+procedure pickup_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        hostile := 1;
+    end
+end
+
+procedure talk_p_proc
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    call get_reaction();
+    LVar1 := obj_carrying_pid_obj(self_obj, 113);
+    rm_obj_from_inven(self_obj, LVar1);
+    move_obj_inven_to_obj(Shop_Ptr, self_obj);
+    start_gdialog(843, self_obj, 4, -1, -1);
+    gsay_start;
+    if (Caught_Stealing) then begin
+        call BarterGuy00();
+    end
+    else begin
+        if ((obj_item_subtype(critter_inven_obj(dude_obj, 1)) == 3) or (obj_item_subtype(critter_inven_obj(dude_obj, 2)) == 3) or (global_var(195) == 1)) then begin
+            call BarterGuy02();
+        end
+        else begin
+            if (obj_pid(critter_inven_obj(dude_obj, 0)) == 113) then begin
+                call BarterGuy07();
+            end
+            else begin
+                call BarterGuy10();
+            end
+        end
+    end
+    gsay_end;
+    end_dialogue;
+    move_obj_inven_to_obj(self_obj, Shop_Ptr);
+    add_obj_to_inven(self_obj, LVar1);
+    wield_obj_critter(self_obj, LVar1);
+    if (Go_Balistic) then begin
+        LVar0 := create_object_sid(12, 0, 0, -1);
+        add_obj_to_inven(self_obj, LVar0);
+        wield_obj_critter(self_obj, LVar0);
+    end
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+            set_global_var(156, 1);
+            set_global_var(157, 0);
+        end
+        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+            set_global_var(157, 1);
+            set_global_var(156, 0);
+        end
+        set_global_var(159, global_var(159) + 1);
+        if ((global_var(159) % 2) == 0) then begin
+            set_global_var(155, global_var(155) - 1);
+        end
+    end
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    display_msg(message_str(843, 100));
+end
+
+procedure timed_event_p_proc
+begin
+    if (fixed_param == 1) then begin
+        Here_To_Shop := 1;
+        dialogue_system_enter;
+    end
+    else begin
+        if (fixed_param == 2) then begin
+            Caught_Stealing := 1;
+            dialogue_system_enter;
+        end
+    end
+end
+
+procedure BarterGuy00
+begin
+    gsay_reply(843, 101);
+    giq_option(-3, 843, 102, BarterGuy01, 50);
+    giq_option(4, 843, 103, BarterGuy01, 50);
+    giq_option(5, 843, 104, BarterGuy00a, 50);
+end
+
+procedure BarterGuy00a
+begin
+    if (is_success(roll_vs_skill(dude_obj, 14, 0))) then begin
+        call combat();
+    end
+    else begin
+        call BarterGuy01();
+    end
+end
+
+procedure BarterGuy01
+begin
+    gsay_message(843, 105, 51);
+    call combat();
+end
+
+procedure BarterGuy02
+begin
+    gsay_reply(843, 106);
+    giq_option(-3, 843, 107, BarterGuyEnd, 50);
+    giq_option(4, 843, 108, BarterGuy03, 50);
+    giq_option(6, 843, 109, BarterGuy02a, 50);
+end
+
+procedure BarterGuy02a
+begin
+    if (global_var(195) == 1) then begin
+        call BarterGuy04();
+    end
+    else begin
+        call BarterGuy05();
+    end
+end
+
+procedure BarterGuy03
+begin
+    gsay_message(843, 110, 50);
+end
+
+procedure BarterGuy04
+begin
+    gsay_reply(843, 111);
+    giq_option(6, 843, 112, BarterGuy01, 50);
+    giq_option(6, 843, 113, BarterGuyEnd, 50);
+end
+
+procedure BarterGuy05
+begin
+    gsay_reply(843, 114);
+    giq_option(6, 843, 115, BarterGuy00a, 50);
+    giq_option(6, 843, 116, BarterGuy06, 50);
+end
+
+procedure BarterGuy06
+begin
+    gsay_message(843, 117, 50);
+end
+
+procedure BarterGuy07
+begin
+    gsay_reply(843, 118);
+    giq_option(-3, 843, 119, BarterGuy08, 50);
+    giq_option(4, 843, 120, BarterGuy12, 50);
+    giq_option(4, 843, 121, BarterGuy09, 50);
+end
+
+procedure BarterGuy08
+begin
+    gsay_reply(843, 122);
+    giq_option(-3, 843, 123, BarterGuyEnd, 50);
+end
+
+procedure BarterGuy09
+begin
+    gsay_message(843, 124, 50);
+end
+
+procedure BarterGuy10
+begin
+    gsay_reply(843, 125);
+    giq_option(-3, 843, 126, BarterGuy08, 50);
+    giq_option(4, 843, 127, BarterGuy13, 50);
+    giq_option(5, 843, 128, BarterGuy11, 50);
+end
+
+procedure BarterGuy11
+begin
+    gsay_reply(843, 129);
+    giq_option(4, 843, 130, BarterGuyEnd, 50);
+    giq_option(4, 843, 131, BarterGuy01, 50);
+    giq_option(4, 843, 132, BarterGuy13, 50);
+end
+
+procedure BarterGuy12
+begin
+    gsay_reply(843, 133);
+    giq_option(4, 843, 134, BarterGuyEnd, 50);
+end
+
+procedure BarterGuy13
+begin
+    gsay_reply(843, 135);
+    giq_option(4, 843, 136, BarterGuy14, 50);
+end
+
+procedure BarterGuy14
+begin
+    gdialog_mod_barter(-10);
+    gsay_message(843, 137, 50);
+end
+
+procedure BarterGuyEnd
+begin
+end
+
+procedure get_reaction
+begin
+    if (local_var(2) == 0) then begin
+        set_local_var(0, 50);
+        set_local_var(1, 2);
+        set_local_var(2, 1);
+        set_local_var(0, local_var(0) + (5 * get_critter_stat(dude_obj, 3)) - 25);
+        set_local_var(0, local_var(0) + (10 * has_trait(0, dude_obj, 10)));
+        if (has_trait(0, dude_obj, 39)) then begin
+            if (global_var(155) > 0) then begin
+                set_local_var(0, local_var(0) + global_var(155));
+            end
+            else begin
+                set_local_var(0, local_var(0) - global_var(155));
+            end
+        end
+        else begin
+            if (local_var(3) == 1) then begin
+                set_local_var(0, local_var(0) - global_var(155));
+            end
+            else begin
+                set_local_var(0, local_var(0) + global_var(155));
+            end
+        end
+        if (global_var(158) > 2) then begin
+            set_local_var(0, local_var(0) - 30);
+        end
+        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+            set_local_var(0, local_var(0) + 20);
+        end
+        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+            set_local_var(0, local_var(0) - 20);
+        end
+        call ReactToLevel();
+    end
+end
+
+procedure ReactToLevel
+begin
+    if (local_var(0) <= 25) then begin
+        set_local_var(1, 1);
+    end
+    else begin
+        if (local_var(0) <= 75) then begin
+            set_local_var(1, 2);
+        end
+        else begin
+            set_local_var(1, 3);
+        end
+    end
+end
+
+procedure LevelToReact
+begin
+    if (local_var(1) == 1) then begin
+        set_local_var(0, random(1, 25));
+    end
+    else begin
+        if (local_var(1) == 2) then begin
+            set_local_var(0, random(26, 75));
+        end
+        else begin
+            set_local_var(0, random(76, 100));
+        end
+    end
+end
+
+procedure UpReact
+begin
+    set_local_var(0, local_var(0) + 10);
+    call ReactToLevel();
+end
+
+procedure DownReact
+begin
+    set_local_var(0, local_var(0) - 10);
+    call ReactToLevel();
+end
+
+procedure BottomReact
+begin
+    set_local_var(1, 1);
+    set_local_var(0, 1);
+end
+
+procedure TopReact
+begin
+    set_local_var(0, 100);
+    set_local_var(1, 3);
+end
+
+procedure BigUpReact
+begin
+    set_local_var(0, local_var(0) + 25);
+    call ReactToLevel();
+end
+
+procedure BigDownReact
+begin
+    set_local_var(0, local_var(0) - 25);
+    call ReactToLevel();
+end
+
+procedure UpReactLevel
+begin
+    set_local_var(1, local_var(1) + 1);
+    if (local_var(1) > 3) then begin
+        set_local_var(1, 3);
+    end
+    call LevelToReact();
+end
+
+procedure DownReactLevel
+begin
+    set_local_var(1, local_var(1) - 1);
+    if (local_var(1) < 1) then begin
+        set_local_var(1, 1);
+    end
+    call LevelToReact();
+end
+
+procedure Goodbyes
+begin
+    exit_line := message_str(634, random(100, 105));
+end
+

@@ -1,0 +1,212 @@
+diff --git a/Games/Fallout1.Steam/Original/BYGREG.ssl b/Games/Fallout1.Steam/ReDefine/BYGREG.ssl
+index 09160f1..f1b04a0 100644
+--- a/Games/Fallout1.Steam/Original/BYGREG.ssl
++++ b/Games/Fallout1.Steam/ReDefine/BYGREG.ssl
+@@ -36,8 +36,8 @@ variable exit_line;
+ procedure Start
+ begin
+     if (Initialize) then begin
+-        critter_add_trait(self_obj, 1, 6, 47);
+-        critter_add_trait(self_obj, 1, 5, 27);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 47);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_BLADES);
+         Initialize := 0;
+     end
+ end
+@@ -46,10 +46,10 @@ procedure look_at_p_proc
+ begin
+     script_overrides;
+     if (local_var(4) == 1) then begin
+-        display_msg(message_str(925, 101));
++        display_mstr(101);
+     end
+     else begin
+-        display_msg(message_str(925, 100));
++        display_mstr(100);
+     end
+ end
+ 
+@@ -57,21 +57,21 @@ procedure description_p_proc
+ begin
+     script_overrides;
+     if (local_var(4) == 1) then begin
+-        display_msg(message_str(925, 101));
++        display_mstr(101);
+     end
+     else begin
+-        display_msg(message_str(925, 100));
++        display_mstr(100);
+     end
+ end
+ 
+ procedure talk_p_proc
+ begin
+-    if (global_var(253) == 1) then begin
+-        float_msg(self_obj, message_str(669, random(100, 105)), 2);
++    if (global_var(GVAR_ENEMY_BLADES) == 1) then begin
++        float_msg(self_obj, message_str(SCRIPT_ENEMY, random(100, 105)), FLOAT_MSG_RED);
+     end
+     else begin
+-        if ((local_var(5) == 1) and (get_critter_stat(dude_obj, 4) < 4)) then begin
+-            float_msg(self_obj, message_str(925, random(115, 119)), 0);
++        if ((local_var(5) == 1) and (dude_iq < 4)) then begin
++            float_msg(self_obj, mstr(random(115, 119)), FLOAT_MSG_NORMAL);
+         end
+         else begin
+             call get_reaction();
+@@ -93,12 +93,12 @@ end
+ procedure critter_p_proc
+ begin
+     if ((((game_time / 10) - PsstTime) >= 30) and (tile_distance_objs(self_obj, dude_obj) <= 4) and (local_var(5) == 1)) then begin
+-        float_msg(self_obj, message_str(925, random(115, 119)), 0);
++        float_msg(self_obj, mstr(random(115, 119)), FLOAT_MSG_NORMAL);
+         PsstTime := game_time / 10;
+     end
+     if (obj_can_see_obj(self_obj, dude_obj)) then begin
+-        if (global_var(253) == 1) then begin
+-            attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++        if (global_var(GVAR_ENEMY_BLADES) == 1) then begin
++            attack(dude_obj);
+         end
+     end
+ end
+@@ -106,26 +106,26 @@ end
+ procedure damage_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        set_global_var(253, 1);
++        set_global_var(GVAR_ENEMY_BLADES, 1);
+     end
+ end
+ 
+ procedure destroy_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        set_global_var(253, 1);
++        set_global_var(GVAR_ENEMY_BLADES, 1);
+         if (source_obj == dude_obj) then begin
+-            if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-                set_global_var(156, 1);
+-                set_global_var(157, 0);
++            if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++                set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++                set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+             end
+-            if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+-                set_global_var(157, 1);
+-                set_global_var(156, 0);
++            if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
++                set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++                set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+             end
+-            set_global_var(159, global_var(159) + 1);
+-            if ((global_var(159) % 2) == 0) then begin
+-                set_global_var(155, global_var(155) - 1);
++            set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
++            if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
++                set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+             end
+         end
+     end
+@@ -133,18 +133,18 @@ end
+ 
+ procedure pickup_p_proc
+ begin
+-    set_global_var(253, 1);
++    set_global_var(GVAR_ENEMY_BLADES, 1);
+ end
+ 
+ procedure BYGreg03
+ begin
+-    gsay_reply(925, DisplayMessage);
++    Reply(DisplayMessage);
+     if (local_var(4) == 0) then begin
+-        gsay_option(925, 105, BYGreg04, 50);
++        giq_option(1, NAME, 105, BYGreg04, NEUTRAL_REACTION);
+     end
+-    gsay_option(925, 106, BYGreg05, 50);
+-    gsay_option(925, 107, BYGreg07, 50);
+-    gsay_option(925, 108, BYGregEnd, 50);
++    giq_option(1, NAME, 106, BYGreg05, NEUTRAL_REACTION);
++    giq_option(1, NAME, 107, BYGreg07, NEUTRAL_REACTION);
++    giq_option(1, NAME, 108, BYGregEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure BYGreg04
+@@ -156,20 +156,20 @@ end
+ 
+ procedure BYGreg05
+ begin
+-    gsay_reply(925, 110);
+-    gsay_option(925, 111, BYGreg06, 50);
+-    gsay_option(925, 112, BYGregEnd, 50);
++    Reply(110);
++    giq_option(1, NAME, 111, BYGreg06, NEUTRAL_REACTION);
++    giq_option(1, NAME, 112, BYGregEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure BYGreg06
+ begin
+-    gsay_reply(925, 113);
++    Reply(113);
+     set_local_var(5, 1);
+ end
+ 
+ procedure BYGreg07
+ begin
+-    gsay_reply(925, 114);
++    Reply(114);
+     set_local_var(5, 1);
+ end
+ 
+@@ -183,31 +183,31 @@ begin
+         set_local_var(0, 50);
+         set_local_var(1, 2);
+         set_local_var(2, 1);
+-        set_local_var(0, local_var(0) + (5 * get_critter_stat(dude_obj, 3)) - 25);
+-        set_local_var(0, local_var(0) + (10 * has_trait(0, dude_obj, 10)));
+-        if (has_trait(0, dude_obj, 39)) then begin
+-            if (global_var(155) > 0) then begin
+-                set_local_var(0, local_var(0) + global_var(155));
++        set_local_var(0, local_var(0) + (5 * dude_charisma) - 25);
++        set_local_var(0, local_var(0) + (10 * has_trait(TRAIT_PERK, dude_obj, PERK_presence)));
++        if (has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality)) then begin
++            if (global_var(GVAR_PLAYER_REPUATION) > 0) then begin
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+         else begin
+             if (local_var(3) == 1) then begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) + global_var(155));
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+-        if (global_var(158) > 2) then begin
++        if (global_var(GVAR_CHILDKILLER_REPUATION) > 2) then begin
+             set_local_var(0, local_var(0) - 30);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) + 20);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) - 20);
+         end
+         call ReactToLevel();
+@@ -300,6 +300,5 @@ end
+ 
+ procedure Goodbyes
+ begin
+-    exit_line := message_str(634, random(100, 105));
++    exit_line := message_str(SCRIPT_MODREACT, random(100, 105));
+ end
+-

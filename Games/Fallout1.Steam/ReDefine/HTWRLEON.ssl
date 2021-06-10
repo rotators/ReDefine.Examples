@@ -1,0 +1,462 @@
+procedure start;
+procedure combat;
+procedure critter_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure destroy_p_proc;
+procedure look_at_p_proc;
+procedure damage_p_proc;
+procedure Leon01;
+procedure Leon01a;
+procedure Leon02;
+procedure Leon03;
+procedure Leon04;
+procedure Leon04a;
+procedure Leon05;
+procedure Leon06;
+procedure Leon07;
+procedure Leon08;
+procedure Leon08a;
+procedure Leon09;
+procedure LeonEnd;
+procedure LeonKickOut;
+procedure LeonPerformDump;
+procedure LeonCombat;
+
+variable hostile;
+variable Only_Once := 1;
+variable visible := 1;
+
+import variable Front_Door_Ptr;
+
+procedure get_reaction;
+procedure ReactToLevel;
+procedure LevelToReact;
+procedure UpReact;
+procedure DownReact;
+procedure BottomReact;
+procedure TopReact;
+procedure BigUpReact;
+procedure BigDownReact;
+procedure UpReactLevel;
+procedure DownReactLevel;
+procedure Goodbyes;
+
+variable exit_line;
+
+
+procedure start
+begin
+    if (Only_Once) then begin
+        Only_Once := 0;
+        if (global_var(GVAR_KILL_MERCHANT) == 5) then begin
+            set_obj_visibility(self_obj, 1);
+            visible := 0;
+        end
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 42);
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_GUARD_SADISTIC);
+    end
+    if (script_action == look_at_proc) then begin
+        call look_at_p_proc();
+    end
+    else begin
+        if (script_action == pickup_proc) then begin
+            call pickup_p_proc();
+        end
+        else begin
+            if (script_action == talk_proc) then begin
+                call talk_p_proc();
+            end
+            else begin
+                if (script_action == critter_proc) then begin
+                    call critter_p_proc();
+                end
+                else begin
+                    if (script_action == destroy_proc) then begin
+                        call destroy_p_proc();
+                    end
+                    else begin
+                        if (script_action == damage_proc) then begin
+                            call damage_p_proc();
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure combat
+begin
+    hostile := 1;
+end
+
+procedure critter_p_proc
+begin
+    if (visible == 0) then begin
+        script_overrides;
+    end
+    else begin
+        if (hostile) then begin
+            hostile := 0;
+            attack(dude_obj);
+        end
+        if (map_var(5) == 1) then begin
+            if ((obj_can_hear_obj(self_obj, dude_obj) == 1) or (obj_can_see_obj(self_obj, dude_obj) == 1)) then begin
+                call combat();
+            end
+        end
+        else begin
+            if (map_var(1) == 1) then begin
+                call LeonPerformDump();
+            end
+        end
+        if ((game_time_hour >= 600) and (game_time_hour < 700) or ((game_time_hour >= 700) and (game_time_hour < 1800))) then begin
+            if (tile_num(self_obj) != 22120) then begin
+                animate_move_obj_to_tile(self_obj, 22120, 0);
+            end
+        end
+        else begin
+            if (tile_num(self_obj) != 16519) then begin
+                animate_move_obj_to_tile(self_obj, 16519, 0);
+            end
+        end
+        if (tile_distance_objs(self_obj, dude_obj) < 6) then begin
+            if ((local_var(5) == 0) and (tile_num(self_obj) == 22120)) then begin
+                set_local_var(5, 1);
+                dialogue_system_enter;
+            end
+        end
+    end
+end
+
+procedure pickup_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        hostile := 1;
+    end
+end
+
+procedure talk_p_proc
+begin
+    call get_reaction();
+    if ((game_time_hour >= 1900) or (game_time_hour < 600)) then begin
+        float_msg(self_obj, mstr(141), FLOAT_MSG_RED);
+    end
+    else begin
+        if (global_var(GVAR_ENEMY_HUB) == 1) then begin
+            float_msg(self_obj, mstr(142), FLOAT_MSG_RED);
+            call combat();
+        end
+        else begin
+            if (local_var(4) == 0) then begin
+                set_local_var(4, 1);
+                start_gdialog(866, self_obj, 4, -1, -1);
+                gsay_start;
+                call Leon01();
+                gsay_end;
+                end_dialogue;
+            end
+            else begin
+                start_gdialog(866, self_obj, 4, -1, -1);
+                gsay_start;
+                call Leon08();
+                gsay_end;
+                end_dialogue;
+            end
+        end
+    end
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
+            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
+            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+        end
+        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
+        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
+            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+        end
+    end
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    display_mstr(100);
+end
+
+procedure damage_p_proc
+begin
+    set_map_var(5, 1);
+end
+
+procedure Leon01
+begin
+    Reply(101);
+    giq_option(4, NAME, 102, Leon01a, NEUTRAL_REACTION);
+    giq_option(4, NAME, 103, LeonCombat, BAD_REACTION);
+    giq_option(4, NAME, 104, Leon03, NEUTRAL_REACTION);
+    if (global_var(GVAR_KILL_MERCHANT) == 1) then begin
+        giq_option(4, NAME, 140, Leon04, NEUTRAL_REACTION);
+    end
+    giq_option(-3, NAME, 138, Leon09, NEUTRAL_REACTION);
+end
+
+procedure Leon01a
+begin
+    if (is_success(roll_vs_skill(dude_obj, 14, 0))) then begin
+        call Leon02();
+    end
+    else begin
+        call Leon04();
+    end
+end
+
+procedure Leon02
+begin
+    Reply(105);
+    giq_option(4, NAME, 106, LeonEnd, NEUTRAL_REACTION);
+    giq_option(4, NAME, 107, Leon03, NEUTRAL_REACTION);
+end
+
+procedure Leon03
+begin
+    Reply(108);
+    giq_option(4, NAME, 109, LeonCombat, BAD_REACTION);
+    giq_option(4, NAME, 110, LeonKickOut, NEUTRAL_REACTION);
+    giq_option(4, NAME, 111, LeonCombat, BAD_REACTION);
+end
+
+procedure Leon04
+begin
+    Reply(112);
+    giq_option(4, NAME, 113, Leon03, NEUTRAL_REACTION);
+    giq_option(4, NAME, 114, Leon04a, NEUTRAL_REACTION);
+    if (global_var(GVAR_KILL_MERCHANT) == 1) then begin
+        giq_option(4, NAME, 115, Leon06, NEUTRAL_REACTION);
+    end
+end
+
+procedure Leon04a
+begin
+    if (is_success(roll_vs_skill(dude_obj, 14, 0))) then begin
+        call Leon02();
+    end
+    else begin
+        call Leon05();
+    end
+end
+
+procedure Leon05
+begin
+    Reply(116);
+    giq_option(4, NAME, 117, Leon03, NEUTRAL_REACTION);
+    if (global_var(GVAR_KILL_MERCHANT) == 1) then begin
+        giq_option(4, NAME, 118, Leon06, NEUTRAL_REACTION);
+    end
+    giq_option(4, NAME, 119, Leon03, NEUTRAL_REACTION);
+    giq_option(4, NAME, 120, LeonKickOut, NEUTRAL_REACTION);
+end
+
+procedure Leon06
+begin
+    gsay_message(NAME, 121, NEUTRAL_REACTION);
+    gsay_message(NAME, 122, NEUTRAL_REACTION);
+    Reply(123);
+    giq_option(4, NAME, 124, Leon07, NEUTRAL_REACTION);
+    giq_option(4, NAME, 125, LeonCombat, BAD_REACTION);
+    giq_option(4, NAME, 126, Leon03, NEUTRAL_REACTION);
+end
+
+procedure Leon07
+begin
+    Reply(127);
+    giq_option(4, NAME, 128, Leon03, NEUTRAL_REACTION);
+    giq_option(4, NAME, 129, LeonKickOut, NEUTRAL_REACTION);
+end
+
+procedure Leon08
+begin
+    Reply(130);
+    giq_option(4, NAME, 131, LeonCombat, BAD_REACTION);
+    giq_option(4, NAME, 132, LeonKickOut, NEUTRAL_REACTION);
+    giq_option(4, NAME, 133, Leon08a, NEUTRAL_REACTION);
+end
+
+procedure Leon08a
+begin
+    if (is_success(roll_vs_skill(dude_obj, 14, -20))) then begin
+        call Leon02();
+    end
+    else begin
+        call Leon04();
+    end
+end
+
+procedure Leon09
+begin
+    Reply(134);
+    giq_option(4, NAME, 135, LeonCombat, BAD_REACTION);
+    giq_option(4, NAME, 136, LeonKickOut, NEUTRAL_REACTION);
+    giq_option(4, NAME, 137, LeonKickOut, NEUTRAL_REACTION);
+    giq_option(-3, NAME, 139, LeonKickOut, NEUTRAL_REACTION);
+end
+
+procedure LeonEnd
+begin
+end
+
+procedure LeonKickOut
+begin
+    set_map_var(1, 1);
+end
+
+procedure LeonPerformDump
+begin
+    set_map_var(1, 0);
+    set_map_var(3, 0);
+    gfade_out(1000);
+    obj_close(Front_Door_Ptr);
+    set_local_var(5, 0);
+    move_to(dude_obj, 21931, 0);
+    gfade_in(1000);
+end
+
+procedure LeonCombat
+begin
+    set_local_var(5, 1);
+    call combat();
+end
+
+procedure get_reaction
+begin
+    if (local_var(2) == 0) then begin
+        set_local_var(0, 50);
+        set_local_var(1, 2);
+        set_local_var(2, 1);
+        set_local_var(0, local_var(0) + (5 * dude_charisma) - 25);
+        set_local_var(0, local_var(0) + (10 * has_trait(TRAIT_PERK, dude_obj, PERK_presence)));
+        if (has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality)) then begin
+            if (global_var(GVAR_PLAYER_REPUATION) > 0) then begin
+                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+            end
+            else begin
+                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+            end
+        end
+        else begin
+            if (local_var(3) == 1) then begin
+                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+            end
+            else begin
+                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+            end
+        end
+        if (global_var(GVAR_CHILDKILLER_REPUATION) > 2) then begin
+            set_local_var(0, local_var(0) - 30);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+            set_local_var(0, local_var(0) + 20);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+            set_local_var(0, local_var(0) - 20);
+        end
+        call ReactToLevel();
+    end
+end
+
+procedure ReactToLevel
+begin
+    if (local_var(0) <= 25) then begin
+        set_local_var(1, 1);
+    end
+    else begin
+        if (local_var(0) <= 75) then begin
+            set_local_var(1, 2);
+        end
+        else begin
+            set_local_var(1, 3);
+        end
+    end
+end
+
+procedure LevelToReact
+begin
+    if (local_var(1) == 1) then begin
+        set_local_var(0, random(1, 25));
+    end
+    else begin
+        if (local_var(1) == 2) then begin
+            set_local_var(0, random(26, 75));
+        end
+        else begin
+            set_local_var(0, random(76, 100));
+        end
+    end
+end
+
+procedure UpReact
+begin
+    set_local_var(0, local_var(0) + 10);
+    call ReactToLevel();
+end
+
+procedure DownReact
+begin
+    set_local_var(0, local_var(0) - 10);
+    call ReactToLevel();
+end
+
+procedure BottomReact
+begin
+    set_local_var(1, 1);
+    set_local_var(0, 1);
+end
+
+procedure TopReact
+begin
+    set_local_var(0, 100);
+    set_local_var(1, 3);
+end
+
+procedure BigUpReact
+begin
+    set_local_var(0, local_var(0) + 25);
+    call ReactToLevel();
+end
+
+procedure BigDownReact
+begin
+    set_local_var(0, local_var(0) - 25);
+    call ReactToLevel();
+end
+
+procedure UpReactLevel
+begin
+    set_local_var(1, local_var(1) + 1);
+    if (local_var(1) > 3) then begin
+        set_local_var(1, 3);
+    end
+    call LevelToReact();
+end
+
+procedure DownReactLevel
+begin
+    set_local_var(1, local_var(1) - 1);
+    if (local_var(1) < 1) then begin
+        set_local_var(1, 1);
+    end
+    call LevelToReact();
+end
+
+procedure Goodbyes
+begin
+    exit_line := message_str(SCRIPT_MODREACT, random(100, 105));
+end

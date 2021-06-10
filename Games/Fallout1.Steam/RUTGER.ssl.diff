@@ -1,0 +1,1102 @@
+diff --git a/Games/Fallout1.Steam/Original/RUTGER.ssl b/Games/Fallout1.Steam/ReDefine/RUTGER.ssl
+index 4a45aa7..b8d4fde 100644
+--- a/Games/Fallout1.Steam/Original/RUTGER.ssl
++++ b/Games/Fallout1.Steam/ReDefine/RUTGER.ssl
+@@ -120,26 +120,26 @@ procedure start
+ begin
+     if (Only_Once) then begin
+         Only_Once := 0;
+-        critter_add_trait(self_obj, 1, 6, 36);
+-        critter_add_trait(self_obj, 1, 5, 17);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 36);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_GUARD_HUMOROUS);
+     end
+-    if (script_action == 21) then begin
++    if (script_action == look_at_proc) then begin
+         call look_at_p_proc();
+     end
+     else begin
+-        if (script_action == 4) then begin
++        if (script_action == pickup_proc) then begin
+             call pickup_p_proc();
+         end
+         else begin
+-            if (script_action == 11) then begin
++            if (script_action == talk_proc) then begin
+                 call talk_p_proc();
+             end
+             else begin
+-                if (script_action == 12) then begin
++                if (script_action == critter_proc) then begin
+                     call critter_p_proc();
+                 end
+                 else begin
+-                    if (script_action == 18) then begin
++                    if (script_action == destroy_proc) then begin
+                         call destroy_p_proc();
+                     end
+                 end
+@@ -157,7 +157,7 @@ procedure critter_p_proc
+ begin
+     if (hostile) then begin
+         hostile := 0;
+-        attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++        attack(dude_obj);
+     end
+ end
+ 
+@@ -171,12 +171,12 @@ end
+ procedure talk_p_proc
+ begin
+     call get_reaction();
+-    if (get_critter_stat(dude_obj, 4) < 4) then begin
+-        float_msg(dude_obj, message_str(401, 314), 3);
+-        float_msg(self_obj, message_str(401, 315), 2);
++    if (dude_iq < 4) then begin
++        float_msg(dude_obj, mstr(314), FLOAT_MSG_GREEN);
++        float_msg(self_obj, mstr(315), FLOAT_MSG_RED);
+     end
+     else begin
+-        if ((global_var(18) == 1) and (global_var(17) != 1) and (local_var(8) == 0)) then begin
++        if ((global_var(GVAR_MASTER_BLOWN) == 1) and (global_var(GVAR_VATS_BLOWN) != 1) and (local_var(8) == 0)) then begin
+             set_local_var(8, 1);
+             set_local_var(4, 1);
+             start_gdialog(401, self_obj, 4, -1, -1);
+@@ -186,7 +186,7 @@ begin
+             end_dialogue;
+         end
+         else begin
+-            if ((global_var(18) != 1) and (global_var(17) == 1) and (local_var(8) == 0)) then begin
++            if ((global_var(GVAR_MASTER_BLOWN) != 1) and (global_var(GVAR_VATS_BLOWN) == 1) and (local_var(8) == 0)) then begin
+                 set_local_var(8, 1);
+                 set_local_var(4, 1);
+                 start_gdialog(401, self_obj, 4, -1, -1);
+@@ -297,17 +297,17 @@ end
+ procedure destroy_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-            set_global_var(156, 1);
+-            set_global_var(157, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+-            set_global_var(157, 1);
+-            set_global_var(156, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+         end
+-        set_global_var(159, global_var(159) + 1);
+-        if ((global_var(159) % 2) == 0) then begin
+-            set_global_var(155, global_var(155) - 1);
++        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
++        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
++            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+         end
+     end
+ end
+@@ -317,44 +317,44 @@ begin
+     variable LVar0 := 0;
+     LVar0 := obj_pid(source_obj);
+     if (party_member_obj(LVar0) != 0) then begin
+-        set_global_var(248, 1);
++        set_global_var(GVAR_ENEMY_HUB, 1);
+     end
+ end
+ 
+ procedure look_at_p_proc
+ begin
+     script_overrides;
+-    display_msg(message_str(401, 100));
++    display_mstr(100);
+ end
+ 
+ procedure Rutger00
+ begin
+-    gsay_reply(401, 101);
+-    if (global_var(101) != 2) then begin
+-        giq_option(4, 401, 102, Rutger03, 50);
++    Reply(101);
++    if (global_var(GVAR_FIND_WATER_CHIP) != 2) then begin
++        giq_option(4, NAME, 102, Rutger03, NEUTRAL_REACTION);
+     end
+     if (map_var(43) == 1) then begin
+-        giq_option(4, 401, 103, Rutger00a, 50);
++        giq_option(4, NAME, 103, Rutger00a, NEUTRAL_REACTION);
+     end
+     else begin
+-        giq_option(4, 401, 104, Rutger00a, 50);
++        giq_option(4, NAME, 104, Rutger00a, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 401, 105, Rutger07, 50);
+-    giq_option(4, 401, 106, RutgerEnd, 50);
+-    giq_option(-3, 401, 107, Rutger00b, 50);
++    giq_option(4, NAME, 105, Rutger07, NEUTRAL_REACTION);
++    giq_option(4, NAME, 106, RutgerEnd, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 107, Rutger00b, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger00a
+ begin
+-    if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
++    if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+         call Rutger10();
+     end
+     else begin
+-        if (global_var(158) > 2) then begin
++        if (global_var(GVAR_CHILDKILLER_REPUATION) > 2) then begin
+             call Rutger11();
+         end
+         else begin
+-            if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
++            if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+                 call Rutger15();
+             end
+             else begin
+@@ -371,7 +371,7 @@ end
+ 
+ procedure Rutger00b
+ begin
+-    if (get_critter_stat(dude_obj, 0) <= 6) then begin
++    if (dude_strength <= 6) then begin
+         call Rutger01();
+     end
+     else begin
+@@ -381,103 +381,103 @@ end
+ 
+ procedure Rutger01
+ begin
+-    gsay_message(401, 108, 51);
++    gsay_message(NAME, 108, BAD_REACTION);
+ end
+ 
+ procedure Rutger02
+ begin
+-    gsay_message(401, 109, 50);
++    gsay_message(NAME, 109, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger03
+ begin
+-    gsay_reply(401, 110);
+-    if (global_var(71) > 0) then begin
+-        giq_option(4, 401, 111, Rutger04, 50);
++    Reply(110);
++    if (global_var(GVAR_JUNKTOWN) > 0) then begin
++        giq_option(4, NAME, 111, Rutger04, NEUTRAL_REACTION);
+     end
+     else begin
+-        giq_option(4, 401, 112, Rutger04, 50);
++        giq_option(4, NAME, 112, Rutger04, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 401, 113, RutgerEnd, 50);
++    giq_option(4, NAME, 113, RutgerEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger04
+ begin
+-    gsay_reply(401, 114);
+-    giq_option(4, 401, 115, Rutger05, 50);
++    Reply(114);
++    giq_option(4, NAME, 115, Rutger05, NEUTRAL_REACTION);
+     if (map_var(43) == 1) then begin
+-        giq_option(4, 401, 116, Rutger00a, 50);
++        giq_option(4, NAME, 116, Rutger00a, NEUTRAL_REACTION);
+     end
+     else begin
+-        giq_option(4, 401, 117, Rutger00a, 50);
++        giq_option(4, NAME, 117, Rutger00a, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 401, 118, RutgerEnd, 50);
++    giq_option(4, NAME, 118, RutgerEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger05
+ begin
+-    gsay_reply(401, 119);
+-    giq_option(4, 401, 120, Rutger06, 50);
+-    giq_option(4, 401, 121, RutgerEnd, 50);
++    Reply(119);
++    giq_option(4, NAME, 120, Rutger06, NEUTRAL_REACTION);
++    giq_option(4, NAME, 121, RutgerEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger06
+ begin
+-    gsay_reply(401, 122);
+-    giq_option(4, 401, 123, Rutger07, 50);
+-    giq_option(4, 401, 124, RutgerEnd, 50);
++    Reply(122);
++    giq_option(4, NAME, 123, Rutger07, NEUTRAL_REACTION);
++    giq_option(4, NAME, 124, RutgerEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger07
+ begin
+     if (local_var(5) == 0) then begin
+         set_local_var(5, 1);
+-        gsay_reply(401, 125);
++        Reply(125);
+     end
+     else begin
+-        gsay_reply(401, 126);
++        Reply(126);
+     end
+-    giq_option(4, 401, 127, Rutger08, 50);
+-    giq_option(4, 401, 128, RutgerEnd, 50);
++    giq_option(4, NAME, 127, Rutger08, NEUTRAL_REACTION);
++    giq_option(4, NAME, 128, RutgerEnd, NEUTRAL_REACTION);
+     if (map_var(43) == 1) then begin
+-        giq_option(4, 401, 129, Rutger00a, 50);
++        giq_option(4, NAME, 129, Rutger00a, NEUTRAL_REACTION);
+     end
+     else begin
+-        giq_option(4, 401, 130, Rutger00a, 50);
++        giq_option(4, NAME, 130, Rutger00a, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure Rutger08
+ begin
+-    gsay_reply(401, 131);
+-    giq_option(4, 401, 132, Rutger09, 50);
+-    giq_option(4, 401, 133, RutgerEnd, 50);
++    Reply(131);
++    giq_option(4, NAME, 132, Rutger09, NEUTRAL_REACTION);
++    giq_option(4, NAME, 133, RutgerEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger09
+ begin
+-    gsay_reply(401, 134);
+-    giq_option(4, 401, 135, RutgerEndBad, 50);
+-    giq_option(4, 401, 136, RutgerEnd, 50);
++    Reply(134);
++    giq_option(4, NAME, 135, RutgerEndBad, NEUTRAL_REACTION);
++    giq_option(4, NAME, 136, RutgerEnd, NEUTRAL_REACTION);
+     if (map_var(43) == 1) then begin
+-        giq_option(4, 401, 129, Rutger00a, 50);
++        giq_option(4, NAME, 129, Rutger00a, NEUTRAL_REACTION);
+     end
+     else begin
+-        giq_option(4, 401, 130, Rutger00a, 50);
++        giq_option(4, NAME, 130, Rutger00a, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure Rutger10
+ begin
+     set_map_var(34, 1);
+-    gsay_message(401, 139, 50);
++    gsay_message(NAME, 139, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger11
+ begin
+-    gsay_reply(401, 140);
+-    giq_option(4, 401, 141, Rutger11a, 50);
+-    giq_option(4, 401, 142, Rutger14, 50);
++    Reply(140);
++    giq_option(4, NAME, 141, Rutger11a, NEUTRAL_REACTION);
++    giq_option(4, NAME, 142, Rutger14, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger11a
+@@ -493,45 +493,45 @@ end
+ procedure Rutger12
+ begin
+     set_map_var(34, 1);
+-    gsay_message(401, 143, 50);
++    gsay_message(NAME, 143, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger13
+ begin
+     set_map_var(34, 1);
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        gsay_message(401, 144, 51);
++    if (dude_gender == 0) then begin
++        gsay_message(NAME, 144, BAD_REACTION);
+     end
+     else begin
+-        gsay_message(401, 145, 51);
++        gsay_message(NAME, 145, BAD_REACTION);
+     end
+ end
+ 
+ procedure Rutger14
+ begin
+     set_map_var(34, 1);
+-    gsay_message(401, 146, 50);
++    gsay_message(NAME, 146, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger15
+ begin
+     set_map_var(34, 1);
+-    gsay_message(401, 147, 50);
++    gsay_message(NAME, 147, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger16
+ begin
+     set_map_var(34, 1);
+-    gsay_message(401, 148, 50);
++    gsay_message(NAME, 148, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger17
+ begin
+-    gsay_reply(401, 149);
+-    giq_option(4, 401, 150, RutgerEndBad, 50);
+-    giq_option(4, 401, 151, Rutger17a, 50);
+-    giq_option(4, 401, 152, RutgerEnd, 50);
+-    giq_option(-3, 401, 153, Rutger18, 50);
++    Reply(149);
++    giq_option(4, NAME, 150, RutgerEndBad, NEUTRAL_REACTION);
++    giq_option(4, NAME, 151, Rutger17a, NEUTRAL_REACTION);
++    giq_option(4, NAME, 152, RutgerEnd, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 153, Rutger18, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger17a
+@@ -546,16 +546,16 @@ end
+ 
+ procedure Rutger18
+ begin
+-    gsay_message(401, 154, 51);
++    gsay_message(NAME, 154, BAD_REACTION);
+ end
+ 
+ procedure Rutger19
+ begin
+     set_map_var(41, 1);
+-    set_global_var(106, 1);
++    set_global_var(GVAR_MISSING_CARAVAN, 1);
+     set_map_var(10, 1);
+     set_map_var(56, 1);
+-    gsay_message(401, 155, 50);
++    gsay_message(NAME, 155, NEUTRAL_REACTION);
+     call Rutger25();
+ end
+ 
+@@ -565,29 +565,29 @@ begin
+     set_map_var(40, 1);
+     set_map_var(10, 0);
+     call BottomReact();
+-    gsay_message(401, 156, 51);
++    gsay_message(NAME, 156, BAD_REACTION);
+ end
+ 
+ procedure Rutger21
+ begin
+-    float_msg(self_obj, message_str(401, 157), 2);
++    float_msg(self_obj, mstr(157), FLOAT_MSG_RED);
+ end
+ 
+ procedure Rutger22
+ begin
+-    gsay_reply(401, 159);
+-    if ((global_var(78) == 2) or (obj_is_carrying_obj_pid(dude_obj, 196) >= 1)) then begin
+-        giq_option(4, 401, 312, Rutger76, 50);
++    Reply(159);
++    if ((global_var(GVAR_THE_VATS) == 2) or (obj_is_carrying_obj_pid(dude_obj, 196) >= 1)) then begin
++        giq_option(4, NAME, 312, Rutger76, NEUTRAL_REACTION);
+     end
+     else begin
+-        giq_option(4, 401, 160, Rutger23, 50);
++        giq_option(4, NAME, 160, Rutger23, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 401, 161, Rutger26, 50);
++    giq_option(4, NAME, 161, Rutger26, NEUTRAL_REACTION);
+     if (map_var(35) == 0) then begin
+-        giq_option(4, 401, 162, Rutger22a, 50);
++        giq_option(4, NAME, 162, Rutger22a, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 401, 163, RutgerEnd, 50);
+-    giq_option(-3, 401, 164, Rutger24, 50);
++    giq_option(4, NAME, 163, RutgerEnd, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 164, Rutger24, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger22a
+@@ -604,55 +604,55 @@ end
+ 
+ procedure Rutger23
+ begin
+-    gsay_message(401, 165, 50);
++    gsay_message(NAME, 165, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger24
+ begin
+-    gsay_message(401, 166, 51);
++    gsay_message(NAME, 166, BAD_REACTION);
+ end
+ 
+ procedure Rutger25
+ begin
+     set_local_var(6, 1);
+-    set_global_var(226, 1);
++    set_global_var(GVAR_HUB_FILLER_29, 1);
+     set_map_var(33, 1);
+-    gsay_reply(401, 167);
++    Reply(167);
+     call Rutger29();
+ end
+ 
+ procedure Rutger26
+ begin
+-    gsay_message(401, 168, 50);
++    gsay_message(NAME, 168, NEUTRAL_REACTION);
+     call Rutger25();
+ end
+ 
+ procedure Rutger27
+ begin
+-    gsay_reply(401, 169);
+-    giq_option(4, 401, 170, Rutger28, 50);
+-    giq_option(4, 401, 171, Rutger30, 50);
++    Reply(169);
++    giq_option(4, NAME, 170, Rutger28, NEUTRAL_REACTION);
++    giq_option(4, NAME, 171, Rutger30, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger28
+ begin
+-    gsay_reply(401, 172);
++    Reply(172);
+     call Rutger29();
+ end
+ 
+ procedure Rutger29
+ begin
+-    if (global_var(108) != 2) then begin
+-        giq_option(4, 401, 173, Rutger29a, 50);
++    if (global_var(GVAR_BECOME_AN_INITIATE) != 2) then begin
++        giq_option(4, NAME, 173, Rutger29a, NEUTRAL_REACTION);
+     end
+     else begin
+-        giq_option(4, 401, 174, Rutger29b, 50);
++        giq_option(4, NAME, 174, Rutger29b, NEUTRAL_REACTION);
+     end
+     if (map_var(8) == 1) then begin
+-        giq_option(4, 401, 175, Rutger38, 50);
++        giq_option(4, NAME, 175, Rutger38, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 401, 176, Rutger37, 50);
+-    giq_option(4, 401, 177, RutgerEnd, 50);
++    giq_option(4, NAME, 176, Rutger37, NEUTRAL_REACTION);
++    giq_option(4, NAME, 177, RutgerEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger29a
+@@ -677,68 +677,68 @@ end
+ 
+ procedure Rutger30
+ begin
+-    gsay_reply(401, 178);
++    Reply(178);
+     call Rutger29();
+ end
+ 
+ procedure Rutger31
+ begin
+-    gsay_reply(401, 179);
++    Reply(179);
+     call Rutger29();
+ end
+ 
+ procedure Rutger32
+ begin
+-    gsay_reply(401, 180);
++    Reply(180);
+     call Rutger29();
+ end
+ 
+ procedure Rutger33
+ begin
+-    gsay_reply(401, 181);
+-    giq_option(4, 401, 182, Rutger34, 50);
+-    giq_option(4, 401, 183, Rutger35, 50);
+-    giq_option(4, 401, 184, Rutger36, 50);
++    Reply(181);
++    giq_option(4, NAME, 182, Rutger34, NEUTRAL_REACTION);
++    giq_option(4, NAME, 183, Rutger35, NEUTRAL_REACTION);
++    giq_option(4, NAME, 184, Rutger36, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger34
+ begin
+-    gsay_reply(401, 185);
++    Reply(185);
+     call Rutger29();
+ end
+ 
+ procedure Rutger35
+ begin
+-    gsay_reply(401, 186);
++    Reply(186);
+     call Rutger29();
+ end
+ 
+ procedure Rutger36
+ begin
+-    gsay_reply(401, 187);
++    Reply(187);
+     call Rutger29();
+ end
+ 
+ procedure Rutger37
+ begin
+     set_map_var(10, 1);
+-    gsay_reply(401, 188);
++    Reply(188);
+     call Rutger29();
+ end
+ 
+ procedure Rutger38
+ begin
+-    gsay_reply(401, 189);
++    Reply(189);
+     call Rutger29();
+ end
+ 
+ procedure Rutger39
+ begin
+-    gsay_reply(401, 190);
+-    giq_option(4, 401, 191, Rutger39a, 50);
+-    giq_option(4, 401, 192, RutgerEnd, 50);
+-    giq_option(-3, 401, 193, Rutger24, 50);
+-    giq_option(-3, 401, 194, Rutger24, 50);
++    Reply(190);
++    giq_option(4, NAME, 191, Rutger39a, NEUTRAL_REACTION);
++    giq_option(4, NAME, 192, RutgerEnd, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 193, Rutger24, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 194, Rutger24, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger39a
+@@ -763,11 +763,11 @@ end
+ 
+ procedure Rutger40
+ begin
+-    gsay_reply(401, 195);
+-    giq_option(4, 401, 196, Rutger40a, 50);
+-    giq_option(4, 401, 197, Rutger47, 50);
+-    giq_option(4, 401, 198, Rutger40b, 50);
+-    giq_option(4, 401, 199, Rutger41, 50);
++    Reply(195);
++    giq_option(4, NAME, 196, Rutger40a, NEUTRAL_REACTION);
++    giq_option(4, NAME, 197, Rutger47, NEUTRAL_REACTION);
++    giq_option(4, NAME, 198, Rutger40b, NEUTRAL_REACTION);
++    giq_option(4, NAME, 199, Rutger41, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger40a
+@@ -792,60 +792,60 @@ end
+ 
+ procedure Rutger41
+ begin
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        gsay_message(401, 200, 51);
++    if (dude_gender == 0) then begin
++        gsay_message(NAME, 200, BAD_REACTION);
+     end
+     else begin
+-        gsay_message(401, 201, 51);
++        gsay_message(NAME, 201, BAD_REACTION);
+     end
+ end
+ 
+ procedure Rutger42
+ begin
+-    gsay_reply(401, 202);
+-    giq_option(4, 401, 203, Rutger43, 50);
+-    giq_option(4, 401, 204, Rutger47, 50);
+-    giq_option(4, 401, 205, RutgerEnd, 50);
++    Reply(202);
++    giq_option(4, NAME, 203, Rutger43, NEUTRAL_REACTION);
++    giq_option(4, NAME, 204, Rutger47, NEUTRAL_REACTION);
++    giq_option(4, NAME, 205, RutgerEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger43
+ begin
+-    gsay_message(401, 206, 50);
++    gsay_message(NAME, 206, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger44
+ begin
+-    gsay_message(401, 207, 51);
++    gsay_message(NAME, 207, BAD_REACTION);
+ end
+ 
+ procedure Rutger45
+ begin
+-    gsay_reply(401, 208);
+-    giq_option(4, 401, 209, Rutger47, 50);
+-    giq_option(4, 401, 210, Rutger44, 50);
++    Reply(208);
++    giq_option(4, NAME, 209, Rutger47, NEUTRAL_REACTION);
++    giq_option(4, NAME, 210, Rutger44, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger46
+ begin
+-    gsay_message(401, 211, 51);
++    gsay_message(NAME, 211, BAD_REACTION);
+ end
+ 
+ procedure Rutger47
+ begin
+-    gsay_reply(401, 212);
++    Reply(212);
+     if (obj_is_carrying_obj_pid(dude_obj, 196) >= 1) then begin
+-        if (global_var(100) == 2) then begin
+-            giq_option(4, 401, 213, Rutger48, 50);
++        if (global_var(GVAR_KILL_DEATHCLAW) == 2) then begin
++            giq_option(4, NAME, 213, Rutger48, NEUTRAL_REACTION);
+         end
+         else begin
+-            giq_option(4, 401, 214, Rutger48, 50);
++            giq_option(4, NAME, 214, Rutger48, NEUTRAL_REACTION);
+         end
+     end
+     else begin
+-        giq_option(4, 401, 215, RutgerEnd, 50);
++        giq_option(4, NAME, 215, RutgerEnd, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 401, 216, RutgerEnd, 50);
+-    giq_option(4, 401, 217, RutgerEnd, 50);
++    giq_option(4, NAME, 216, RutgerEnd, NEUTRAL_REACTION);
++    giq_option(4, NAME, 217, RutgerEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger48
+@@ -860,90 +860,90 @@ begin
+     set_map_var(10, 1);
+     set_map_var(41, 4);
+     give_exp_points(1000);
+-    display_msg(message_str(766, 103) + 1000 + message_str(766, 104));
+-    set_global_var(155, global_var(155) + 5);
+-    gsay_message(401, 218, 49);
++    display_msg(message_str(SCRIPT_GENCHAT, 103) + 1000 + message_str(SCRIPT_GENCHAT, 104));
++    set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) + 5);
++    gsay_message(NAME, 218, GOOD_REACTION);
+ end
+ 
+ procedure Rutger49
+ begin
+-    gsay_reply(401, 219);
+-    giq_option(4, 401, 220, Rutger40a, 50);
+-    giq_option(4, 401, 221, Rutger47, 50);
+-    giq_option(4, 401, 222, Rutger40b, 50);
+-    giq_option(4, 401, 223, Rutger41, 50);
++    Reply(219);
++    giq_option(4, NAME, 220, Rutger40a, NEUTRAL_REACTION);
++    giq_option(4, NAME, 221, Rutger47, NEUTRAL_REACTION);
++    giq_option(4, NAME, 222, Rutger40b, NEUTRAL_REACTION);
++    giq_option(4, NAME, 223, Rutger41, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger50
+ begin
+-    gsay_reply(401, 224);
+-    giq_option(4, 401, 225, Rutger40a, 50);
+-    giq_option(4, 401, 226, Rutger47, 50);
+-    giq_option(4, 401, 227, Rutger40b, 50);
+-    giq_option(4, 401, 228, Rutger41, 50);
++    Reply(224);
++    giq_option(4, NAME, 225, Rutger40a, NEUTRAL_REACTION);
++    giq_option(4, NAME, 226, Rutger47, NEUTRAL_REACTION);
++    giq_option(4, NAME, 227, Rutger40b, NEUTRAL_REACTION);
++    giq_option(4, NAME, 228, Rutger41, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger51
+ begin
+-    gsay_reply(401, 229);
++    Reply(229);
+     if (obj_is_carrying_obj_pid(dude_obj, 196) >= 1) then begin
+-        if (global_var(100) == 2) then begin
+-            giq_option(4, 401, 230, Rutger48, 50);
++        if (global_var(GVAR_KILL_DEATHCLAW) == 2) then begin
++            giq_option(4, NAME, 230, Rutger48, NEUTRAL_REACTION);
+         end
+         else begin
+-            giq_option(4, 401, 231, Rutger48, 50);
++            giq_option(4, NAME, 231, Rutger48, NEUTRAL_REACTION);
+         end
+     end
+     else begin
+-        giq_option(4, 401, 232, RutgerEnd, 50);
++        giq_option(4, NAME, 232, RutgerEnd, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 401, 233, RutgerEnd, 50);
++    giq_option(4, NAME, 233, RutgerEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger52
+ begin
+-    gsay_reply(401, 234);
++    Reply(234);
+     if (obj_is_carrying_obj_pid(dude_obj, 196) >= 1) then begin
+-        giq_option(4, 401, 235, Rutger48, 50);
++        giq_option(4, NAME, 235, Rutger48, NEUTRAL_REACTION);
+     end
+     else begin
+-        if (global_var(100) == 2) then begin
+-            giq_option(4, 401, 236, Rutger53, 50);
++        if (global_var(GVAR_KILL_DEATHCLAW) == 2) then begin
++            giq_option(4, NAME, 236, Rutger53, NEUTRAL_REACTION);
+         end
+     end
+-    giq_option(4, 401, 237, RutgerEnd, 50);
+-    giq_option(-3, 401, 238, Rutger24, 50);
++    giq_option(4, NAME, 237, RutgerEnd, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 238, Rutger24, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger53
+ begin
+-    gsay_message(401, 239, 50);
++    gsay_message(NAME, 239, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger54
+ begin
+-    gsay_reply(401, 240);
+-    giq_option(4, 401, 241, Rutger39a, 50);
+-    giq_option(4, 401, 242, RutgerEnd, 50);
++    Reply(240);
++    giq_option(4, NAME, 241, Rutger39a, NEUTRAL_REACTION);
++    giq_option(4, NAME, 242, RutgerEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger55
+ begin
+-    gsay_reply(401, 243);
+-    if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-        giq_option(4, 401, 244, Rutger59, 50);
++    Reply(243);
++    if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++        giq_option(4, NAME, 244, Rutger59, NEUTRAL_REACTION);
+     end
+     else begin
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+-            giq_option(4, 401, 245, Rutger59, 50);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
++            giq_option(4, NAME, 245, Rutger59, NEUTRAL_REACTION);
+         end
+         else begin
+-            giq_option(4, 401, 246, Rutger59, 50);
++            giq_option(4, NAME, 246, Rutger59, NEUTRAL_REACTION);
+         end
+     end
+-    giq_option(4, 401, 247, Rutger55a, 50);
+-    giq_option(4, 401, 248, RutgerEnd, 50);
+-    giq_option(-3, 401, 249, RutgerEnd, 50);
++    giq_option(4, NAME, 247, Rutger55a, NEUTRAL_REACTION);
++    giq_option(4, NAME, 248, RutgerEnd, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 249, RutgerEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger55a
+@@ -963,25 +963,25 @@ end
+ 
+ procedure Rutger56
+ begin
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        gsay_reply(401, 250);
++    if (dude_gender == 0) then begin
++        Reply(250);
+     end
+     else begin
+-        if (get_critter_stat(dude_obj, 3) >= 7) then begin
+-            gsay_reply(401, 252);
++        if (dude_charisma >= 7) then begin
++            Reply(252);
+         end
+         else begin
+-            gsay_reply(401, 253);
++            Reply(253);
+         end
+     end
+-    giq_option(4, 401, 254, Rutger55a, 50);
+-    giq_option(4, 401, 255, Rutger56a, 50);
+-    giq_option(-3, 401, 256, Rutger24, 50);
++    giq_option(4, NAME, 254, Rutger55a, NEUTRAL_REACTION);
++    giq_option(4, NAME, 255, Rutger56a, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 256, Rutger24, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger56a
+ begin
+-    if ((global_var(18) == 1) or (global_var(17) == 1)) then begin
++    if ((global_var(GVAR_MASTER_BLOWN) == 1) or (global_var(GVAR_VATS_BLOWN) == 1)) then begin
+         call Rutger57();
+     end
+     else begin
+@@ -991,153 +991,153 @@ end
+ 
+ procedure Rutger57
+ begin
+-    gsay_message(401, 257, 49);
++    gsay_message(NAME, 257, GOOD_REACTION);
+ end
+ 
+ procedure Rutger58
+ begin
+-    gsay_reply(401, 258);
+-    if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-        giq_option(4, 401, 259, Rutger60, 50);
++    Reply(258);
++    if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++        giq_option(4, NAME, 259, Rutger60, NEUTRAL_REACTION);
+     end
+     else begin
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+-            giq_option(4, 401, 260, Rutger60, 50);
+-            giq_option(4, 401, 261, Rutger60, 50);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
++            giq_option(4, NAME, 260, Rutger60, NEUTRAL_REACTION);
++            giq_option(4, NAME, 261, Rutger60, NEUTRAL_REACTION);
+         end
+         else begin
+-            giq_option(4, 401, 262, Rutger61, 50);
++            giq_option(4, NAME, 262, Rutger61, NEUTRAL_REACTION);
+         end
+     end
+-    giq_option(4, 401, 263, Rutger55a, 50);
+-    giq_option(4, 401, 248, RutgerEnd, 50);
+-    giq_option(-3, 401, 264, RutgerEnd, 50);
++    giq_option(4, NAME, 263, Rutger55a, NEUTRAL_REACTION);
++    giq_option(4, NAME, 248, RutgerEnd, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 264, RutgerEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger59
+ begin
+-    gsay_message(401, 265, 50);
++    gsay_message(NAME, 265, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger60
+ begin
+-    gsay_message(401, 266, 50);
++    gsay_message(NAME, 266, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger61
+ begin
+-    gsay_message(401, 267, 50);
++    gsay_message(NAME, 267, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger62
+ begin
+-    gsay_reply(401, 268);
+-    giq_option(4, 401, 269, Rutger65, 50);
+-    giq_option(4, 401, 270, Rutger64, 50);
++    Reply(268);
++    giq_option(4, NAME, 269, Rutger65, NEUTRAL_REACTION);
++    giq_option(4, NAME, 270, Rutger64, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger63
+ begin
+-    gsay_reply(401, 271);
+-    giq_option(4, 401, 272, Rutger68, 50);
+-    giq_option(4, 401, 273, Rutger70, 50);
+-    giq_option(4, 401, 274, RutgerEnd, 50);
++    Reply(271);
++    giq_option(4, NAME, 272, Rutger68, NEUTRAL_REACTION);
++    giq_option(4, NAME, 273, Rutger70, NEUTRAL_REACTION);
++    giq_option(4, NAME, 274, RutgerEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger64
+ begin
+-    gsay_message(401, 275, 50);
++    gsay_message(NAME, 275, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger65
+ begin
+     set_map_var(36, 1);
+-    gsay_message(401, 276, 50);
++    gsay_message(NAME, 276, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger67
+ begin
+     if (local_var(7) == 0) then begin
+         set_local_var(7, 1);
+-        gsay_message(401, 279, 50);
++        gsay_message(NAME, 279, NEUTRAL_REACTION);
+     end
+-    gsay_message(401, 280, 50);
++    gsay_message(NAME, 280, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger68
+ begin
+-    gsay_reply(401, 281);
+-    giq_option(4, 401, 282, Rutger72, 50);
+-    giq_option(4, 401, 283, Rutger69, 50);
+-    giq_option(4, 401, 284, Rutger70, 50);
++    Reply(281);
++    giq_option(4, NAME, 282, Rutger72, NEUTRAL_REACTION);
++    giq_option(4, NAME, 283, Rutger69, NEUTRAL_REACTION);
++    giq_option(4, NAME, 284, Rutger70, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger69
+ begin
+-    gsay_message(401, 285, 50);
++    gsay_message(NAME, 285, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger70
+ begin
+     set_map_var(36, 1);
+-    gsay_message(401, 286, 50);
++    gsay_message(NAME, 286, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger71
+ begin
+     set_map_var(36, 1);
+-    gsay_message(401, 287, 50);
++    gsay_message(NAME, 287, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger72
+ begin
+-    gsay_reply(401, 289);
+-    giq_option(4, 401, 290, RutgerEnd, 50);
+-    giq_option(4, 401, 291, Rutger70, 50);
++    Reply(289);
++    giq_option(4, NAME, 290, RutgerEnd, NEUTRAL_REACTION);
++    giq_option(4, NAME, 291, Rutger70, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger73
+ begin
+-    gsay_reply(401, 292);
+-    if (global_var(101) != 2) then begin
+-        giq_option(4, 401, 294, Rutger03, 50);
++    Reply(292);
++    if (global_var(GVAR_FIND_WATER_CHIP) != 2) then begin
++        giq_option(4, NAME, 294, Rutger03, NEUTRAL_REACTION);
+     end
+     if (map_var(43) == 1) then begin
+-        giq_option(4, 401, 295, Rutger00a, 50);
++        giq_option(4, NAME, 295, Rutger00a, NEUTRAL_REACTION);
+     end
+     else begin
+-        giq_option(4, 401, 296, Rutger00a, 50);
++        giq_option(4, NAME, 296, Rutger00a, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 401, 297, Rutger07, 50);
+-    giq_option(4, 401, 298, RutgerEnd, 50);
+-    giq_option(-3, 401, 299, Rutger00b, 50);
++    giq_option(4, NAME, 297, Rutger07, NEUTRAL_REACTION);
++    giq_option(4, NAME, 298, RutgerEnd, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 299, Rutger00b, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger74
+ begin
+-    gsay_reply(401, random(300, 303));
+-    if (global_var(101) != 2) then begin
+-        giq_option(4, 401, 305, Rutger03, 50);
++    Reply(random(300, 303));
++    if (global_var(GVAR_FIND_WATER_CHIP) != 2) then begin
++        giq_option(4, NAME, 305, Rutger03, NEUTRAL_REACTION);
+     end
+     if (map_var(43) == 1) then begin
+-        giq_option(4, 401, 306, Rutger00a, 50);
++        giq_option(4, NAME, 306, Rutger00a, NEUTRAL_REACTION);
+     end
+     else begin
+-        giq_option(4, 401, 307, Rutger00a, 50);
++        giq_option(4, NAME, 307, Rutger00a, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 401, 308, Rutger07, 50);
+-    giq_option(4, 401, 309, RutgerEnd, 50);
+-    giq_option(-3, 401, 310, Rutger00b, 50);
++    giq_option(4, NAME, 308, Rutger07, NEUTRAL_REACTION);
++    giq_option(4, NAME, 309, RutgerEnd, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 310, Rutger00b, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger75
+ begin
+-    gsay_message(401, 311, 50);
++    gsay_message(NAME, 311, NEUTRAL_REACTION);
+ end
+ 
+ procedure Rutger76
+ begin
+-    gsay_message(401, 313, 50);
++    gsay_message(NAME, 313, NEUTRAL_REACTION);
+ end
+ 
+ procedure RutgerEnd
+@@ -1155,31 +1155,31 @@ begin
+         set_local_var(0, 50);
+         set_local_var(1, 2);
+         set_local_var(2, 1);
+-        set_local_var(0, local_var(0) + (5 * get_critter_stat(dude_obj, 3)) - 25);
+-        set_local_var(0, local_var(0) + (10 * has_trait(0, dude_obj, 10)));
+-        if (has_trait(0, dude_obj, 39)) then begin
+-            if (global_var(155) > 0) then begin
+-                set_local_var(0, local_var(0) + global_var(155));
++        set_local_var(0, local_var(0) + (5 * dude_charisma) - 25);
++        set_local_var(0, local_var(0) + (10 * has_trait(TRAIT_PERK, dude_obj, PERK_presence)));
++        if (has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality)) then begin
++            if (global_var(GVAR_PLAYER_REPUATION) > 0) then begin
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+         else begin
+             if (local_var(3) == 1) then begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) + global_var(155));
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+-        if (global_var(158) > 2) then begin
++        if (global_var(GVAR_CHILDKILLER_REPUATION) > 2) then begin
+             set_local_var(0, local_var(0) - 30);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) + 20);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) - 20);
+         end
+         call ReactToLevel();
+@@ -1272,6 +1272,5 @@ end
+ 
+ procedure Goodbyes
+ begin
+-    exit_line := message_str(634, random(100, 105));
++    exit_line := message_str(SCRIPT_MODREACT, random(100, 105));
+ end
+-

@@ -1,0 +1,141 @@
+procedure start;
+procedure do_dialogue;
+procedure timeforwhat;
+procedure genericend;
+procedure genericcbt;
+
+variable Hostile;
+variable init_teams;
+variable noevent;
+variable loopcount;
+variable rndx;
+variable rndy;
+variable rndz;
+variable dist;
+variable time;
+variable maxsight;
+variable maxleash := 9;
+variable new_tile;
+
+
+procedure start
+begin
+    if (not(init_teams)) then begin
+        critter_add_trait(self_obj, 1, 6, 34);
+        init_teams := 1;
+    end
+    if (script_action == 22) then begin
+        call timeforwhat();
+    end
+    else begin
+        if (local_var(2) == 0) then begin
+            set_local_var(2, tile_num(self_obj));
+        end
+        if (script_action == 11) then begin
+            call do_dialogue();
+        end
+        else begin
+            if (script_action == 4) then begin
+                Hostile := 1;
+            end
+            else begin
+                if (script_action == 12) then begin
+                    if (global_var(13) == 0) then begin
+                        set_obj_visibility(self_obj, 1);
+                    end
+                    else begin
+                        maxsight := get_critter_stat(self_obj, 1);
+                        time := game_time_hour;
+                        if ((time > 2300) or (time < 600)) then begin
+                            maxsight := 4;
+                        end
+                        if ((tile_distance_objs(self_obj, dude_obj) <= maxsight) and obj_can_see_obj(self_obj, dude_obj)) then begin
+                            if ((Hostile > 0) or (local_var(0) > 0)) then begin
+                                Hostile := 0;
+                                attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
+                            end
+                            else begin
+                                call do_dialogue();
+                            end
+                        end
+                        loopcount := loopcount + 1;
+                        if (loopcount > 40) then begin
+                            loopcount := 0;
+                            if (noevent == 0) then begin
+                                noevent := 1;
+                                rndx := 5 + random(1, 10);
+                                add_timer_event(self_obj, game_ticks(rndx), 0);
+                            end
+                        end
+                    end
+                end
+                else begin
+                    if (script_action == 18) then begin
+                        set_global_var(35, global_var(35) + 1);
+                        if (source_obj == dude_obj) then begin
+                            if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+                                set_global_var(156, 1);
+                                set_global_var(157, 0);
+                            end
+                            if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+                                set_global_var(157, 1);
+                                set_global_var(156, 0);
+                            end
+                            set_global_var(160, global_var(160) + 1);
+                            if ((global_var(160) % 6) == 0) then begin
+                                set_global_var(155, global_var(155) + 1);
+                            end
+                        end
+                    end
+                    else begin
+                        if (script_action == 21) then begin
+                            display_msg(message_str(13, 100));
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure do_dialogue
+begin
+    start_gdialog(13, self_obj, 4, -1, -1);
+    gsay_start;
+    set_local_var(0, 1);
+    if (get_critter_stat(dude_obj, 34) == 0) then begin
+        gsay_message(13, 101, 50);
+    end
+    else begin
+        gsay_message(13, 102, 50);
+    end
+    gsay_end;
+    end_dialogue;
+end
+
+procedure timeforwhat
+begin
+    noevent := 0;
+    rndy := random(1, 6);
+    if (rndy > 1) then begin
+        dist := 2;
+    end
+    if (rndy > 5) then begin
+        dist := 3;
+    end
+    rndz := random(0, 5);
+    set_local_var(3, tile_num(self_obj));
+    new_tile := tile_num_in_direction(local_var(3), rndz, dist);
+    if (tile_distance(local_var(2), new_tile) < maxleash) then begin
+        animate_move_obj_to_tile(self_obj, new_tile, 0);
+    end
+end
+
+procedure genericend
+begin
+end
+
+procedure genericcbt
+begin
+end
+

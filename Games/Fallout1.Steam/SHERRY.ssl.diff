@@ -1,0 +1,504 @@
+diff --git a/Games/Fallout1.Steam/Original/SHERRY.ssl b/Games/Fallout1.Steam/ReDefine/SHERRY.ssl
+index cdbb3b0..debca29 100644
+--- a/Games/Fallout1.Steam/Original/SHERRY.ssl
++++ b/Games/Fallout1.Steam/ReDefine/SHERRY.ssl
+@@ -71,27 +71,27 @@ variable exit_line;
+ 
+ procedure start
+ begin
+-    if (script_action == 12) then begin
++    if (script_action == critter_proc) then begin
+         call critter_p_proc();
+     end
+     else begin
+-        if (script_action == 18) then begin
++        if (script_action == destroy_proc) then begin
+             call destroy_p_proc();
+         end
+         else begin
+-            if (script_action == 21) then begin
++            if (script_action == look_at_proc) then begin
+                 call look_at_p_proc();
+             end
+             else begin
+-                if (script_action == 15) then begin
++                if (script_action == map_enter_proc) then begin
+                     call map_enter_p_proc();
+                 end
+                 else begin
+-                    if (script_action == 4) then begin
++                    if (script_action == pickup_proc) then begin
+                         call pickup_p_proc();
+                     end
+                     else begin
+-                        if (script_action == 11) then begin
++                        if (script_action == talk_proc) then begin
+                             call talk_p_proc();
+                         end
+                     end
+@@ -105,13 +105,13 @@ procedure critter_p_proc
+ begin
+     if (hostile) then begin
+         hostile := 0;
+-        attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++        attack(dude_obj);
+     end
+     else begin
+-        if (global_var(556) == 1) then begin
++        if (global_var(GVAR_SHERRY_TURNS) == 1) then begin
+             if (((game_time / (10 * 60 * 60 * 24)) - local_var(6)) > 1) then begin
+-                critter_add_trait(self_obj, 1, 6, 26);
+-                set_global_var(556, 2);
++                critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 26);
++                set_global_var(GVAR_SHERRY_TURNS, 2);
+                 set_local_var(6, 0);
+                 home_tile := 18125;
+                 sleep_tile := 17924;
+@@ -124,9 +124,9 @@ begin
+         end
+         call sleeping();
+     end
+-    if (global_var(247) == 1) then begin
++    if (global_var(GVAR_ENEMY_JUNKTOWN) == 1) then begin
+         if (obj_can_see_obj(self_obj, dude_obj)) then begin
+-            attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++            attack(dude_obj);
+         end
+     end
+ end
+@@ -134,26 +134,26 @@ end
+ procedure damage_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        set_global_var(247, 1);
++        set_global_var(GVAR_ENEMY_JUNKTOWN, 1);
+     end
+ end
+ 
+ procedure destroy_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        set_global_var(247, 1);
++        set_global_var(GVAR_ENEMY_JUNKTOWN, 1);
+         if (source_obj == dude_obj) then begin
+-            if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-                set_global_var(156, 1);
+-                set_global_var(157, 0);
++            if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++                set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++                set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+             end
+-            if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+-                set_global_var(157, 1);
+-                set_global_var(156, 0);
++            if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
++                set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++                set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+             end
+-            set_global_var(159, global_var(159) + 1);
+-            if ((global_var(159) % 2) == 0) then begin
+-                set_global_var(155, global_var(155) - 1);
++            set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
++            if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
++                set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+             end
+         end
+     end
+@@ -163,10 +163,10 @@ procedure look_at_p_proc
+ begin
+     script_overrides;
+     if (local_var(4)) then begin
+-        display_msg(message_str(388, 100));
++        display_mstr(100);
+     end
+     else begin
+-        display_msg(message_str(388, 101));
++        display_mstr(101);
+     end
+ end
+ 
+@@ -174,13 +174,13 @@ procedure map_enter_p_proc
+ begin
+     sleep_time := 2000;
+     wake_time := 630;
+-    if (global_var(556) == 0) then begin
+-        critter_add_trait(self_obj, 1, 6, 14);
++    if (global_var(GVAR_SHERRY_TURNS) == 0) then begin
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 14);
+         home_tile := 15513;
+         sleep_tile := 13494;
+     end
+     else begin
+-        critter_add_trait(self_obj, 1, 6, 26);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 26);
+         home_tile := 18125;
+         sleep_tile := 17924;
+     end
+@@ -188,20 +188,20 @@ end
+ 
+ procedure pickup_p_proc
+ begin
+-    float_msg(self_obj, message_str(388, 102), 0);
++    float_msg(self_obj, mstr(102), FLOAT_MSG_NORMAL);
+     hostile := 1;
+ end
+ 
+ procedure talk_p_proc
+ begin
+     if (local_var(5) == 1) then begin
+-        float_msg(self_obj, message_str(185, 166), 0);
++        float_msg(self_obj, message_str(SCRIPT_GENVAULT, 166), FLOAT_MSG_NORMAL);
+     end
+     else begin
+         call get_reaction();
+         start_gdialog(388, self_obj, 4, -1, -1);
+         gsay_start;
+-        if (global_var(556) == 2) then begin
++        if (global_var(GVAR_SHERRY_TURNS) == 2) then begin
+             call Sherry22();
+         end
+         else begin
+@@ -223,139 +223,139 @@ end
+ procedure Sherry01
+ begin
+     set_local_var(4, 1);
+-    gsay_reply(388, 103);
+-    giq_option(4, 388, message_str(388, 104) + proto_data(obj_pid(dude_obj), 1) + message_str(388, 105), Sherry02, 50);
+-    giq_option(4, 388, 106, Sherry03, 50);
+-    giq_option(-3, 388, 107, Sherry04, 50);
++    Reply(103);
++    giq_option(4, NAME, mstr(104) + proto_data(obj_pid(dude_obj), 1) + mstr(105), Sherry02, NEUTRAL_REACTION);
++    giq_option(4, NAME, 106, Sherry03, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 107, Sherry04, NEUTRAL_REACTION);
+ end
+ 
+ procedure Sherry02
+ begin
+-    gsay_reply(388, 108);
+-    giq_option(4, 388, 109, SherryCombat, 51);
+-    giq_option(4, 388, 110, SherryEnd, 50);
+-    giq_option(5, 388, 111, Sherry05, 50);
+-    giq_option(6, 388, 112, Sherry07, 50);
++    Reply(108);
++    giq_option(4, NAME, 109, SherryCombat, BAD_REACTION);
++    giq_option(4, NAME, 110, SherryEnd, NEUTRAL_REACTION);
++    giq_option(5, NAME, 111, Sherry05, NEUTRAL_REACTION);
++    giq_option(6, NAME, 112, Sherry07, NEUTRAL_REACTION);
+ end
+ 
+ procedure Sherry03
+ begin
+     call DownReact();
+-    gsay_reply(388, 113);
+-    giq_option(4, 388, 114, SherryEnd, 50);
+-    giq_option(4, 388, 115, SherryCombat, 50);
++    Reply(113);
++    giq_option(4, NAME, 114, SherryEnd, NEUTRAL_REACTION);
++    giq_option(4, NAME, 115, SherryCombat, NEUTRAL_REACTION);
+ end
+ 
+ procedure Sherry04
+ begin
+-    gsay_message(388, 116, 50);
++    gsay_message(NAME, 116, NEUTRAL_REACTION);
+ end
+ 
+ procedure Sherry05
+ begin
+-    gsay_reply(388, 117);
+-    giq_option(4, 388, 118, Sherry11, 50);
+-    giq_option(4, 388, 119, SherryEnd, 50);
++    Reply(117);
++    giq_option(4, NAME, 118, Sherry11, NEUTRAL_REACTION);
++    giq_option(4, NAME, 119, SherryEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Sherry06
+ begin
+-    gsay_reply(388, 120);
+-    giq_option(4, 388, 121, Sherry07, 50);
+-    giq_option(4, 388, 122, Sherry08, 50);
+-    giq_option(4, 388, 123, SherryEnd, 50);
++    Reply(120);
++    giq_option(4, NAME, 121, Sherry07, NEUTRAL_REACTION);
++    giq_option(4, NAME, 122, Sherry08, NEUTRAL_REACTION);
++    giq_option(4, NAME, 123, SherryEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Sherry07
+ begin
+-    gsay_message(388, 124, 51);
++    gsay_message(NAME, 124, BAD_REACTION);
+ end
+ 
+ procedure Sherry08
+ begin
+-    gsay_reply(388, 125);
++    Reply(125);
+     call Sherry13();
+ end
+ 
+ procedure Sherry09
+ begin
+     set_local_var(7, 1);
+-    gsay_reply(388, 126);
+-    giq_option(4, 388, 127, Sherry10, 50);
++    Reply(126);
++    giq_option(4, NAME, 127, Sherry10, NEUTRAL_REACTION);
+     call Sherry13();
+ end
+ 
+ procedure Sherry10
+ begin
+-    gsay_reply(388, 128);
++    Reply(128);
+     call Sherry13();
+ end
+ 
+ procedure Sherry11
+ begin
+-    gsay_reply(388, 129);
++    Reply(129);
+     call Sherry13();
+ end
+ 
+ procedure Sherry12
+ begin
+     set_local_var(8, 1);
+-    gsay_reply(388, 130);
+-    giq_option(4, 388, 131, Sherry26, 50);
++    Reply(130);
++    giq_option(4, NAME, 131, Sherry26, NEUTRAL_REACTION);
+     call Sherry13();
+ end
+ 
+ procedure Sherry13
+ begin
+     if (not(local_var(7))) then begin
+-        giq_option(5, 388, 133, Sherry09, 50);
++        giq_option(5, NAME, 133, Sherry09, NEUTRAL_REACTION);
+     end
+     if (not(local_var(8))) then begin
+-        giq_option(4, 388, 132, Sherry12, 50);
++        giq_option(4, NAME, 132, Sherry12, NEUTRAL_REACTION);
+     end
+     if (not(local_var(9))) then begin
+-        giq_option(6, 388, 134, Sherry14, 50);
++        giq_option(6, NAME, 134, Sherry14, NEUTRAL_REACTION);
+     end
+     call Goodbyes();
+-    giq_option(4, 388, exit_line, SherryEnd, 50);
++    giq_option(4, NAME, exit_line, SherryEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Sherry14
+ begin
+     set_local_var(9, 1);
+-    gsay_reply(388, 135);
++    Reply(135);
+     call Sherry13();
+ end
+ 
+ procedure Sherry15
+ begin
+-    gsay_reply(388, 136);
+-    giq_option(4, 388, 137, Sherry16, 50);
++    Reply(136);
++    giq_option(4, NAME, 137, Sherry16, NEUTRAL_REACTION);
+     if (local_var(6) == 0) then begin
+-        giq_option(5, 388, 138, Sherry17, 50);
++        giq_option(5, NAME, 138, Sherry17, NEUTRAL_REACTION);
+     end
+     call Goodbyes();
+-    giq_option(4, 388, exit_line, SherryEnd, 50);
++    giq_option(4, NAME, exit_line, SherryEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Sherry16
+ begin
+-    gsay_message(388, 139, 51);
++    gsay_message(NAME, 139, BAD_REACTION);
+     call SherryCombat();
+ end
+ 
+ procedure Sherry17
+ begin
+-    gsay_reply(388, 140);
+-    giq_option(4, 388, 141, SherryEnd, 50);
+-    giq_option(6, 388, 142, Sherry18, 50);
++    Reply(140);
++    giq_option(4, NAME, 141, SherryEnd, NEUTRAL_REACTION);
++    giq_option(6, NAME, 142, Sherry18, NEUTRAL_REACTION);
+ end
+ 
+ procedure Sherry18
+ begin
+-    gsay_reply(388, 143);
+-    giq_option(4, 388, 144, SherryEnd, 50);
+-    giq_option(6, 388, 145, Sherry18a, 50);
++    Reply(143);
++    giq_option(4, NAME, 144, SherryEnd, NEUTRAL_REACTION);
++    giq_option(6, NAME, 145, Sherry18a, NEUTRAL_REACTION);
+ end
+ 
+ procedure Sherry18a
+@@ -370,44 +370,44 @@ end
+ 
+ procedure Sherry19
+ begin
+-    gsay_reply(388, 146);
+-    giq_option(6, 388, 147, Sherry21, 50);
++    Reply(146);
++    giq_option(6, NAME, 147, Sherry21, NEUTRAL_REACTION);
+ end
+ 
+ procedure Sherry20
+ begin
+     call DownReact();
+-    gsay_message(388, 148, 51);
++    gsay_message(NAME, 148, BAD_REACTION);
+ end
+ 
+ procedure Sherry21
+ begin
+     set_local_var(6, game_time / (10 * 60 * 60 * 24));
+-    set_global_var(556, 1);
+-    gsay_message(388, 149, 50);
++    set_global_var(GVAR_SHERRY_TURNS, 1);
++    gsay_message(NAME, 149, NEUTRAL_REACTION);
+ end
+ 
+ procedure Sherry22
+ begin
+-    gsay_reply(388, 150);
+-    giq_option(4, 388, 151, SherryEnd, 50);
+-    giq_option(4, 388, 152, Sherry23, 50);
+-    giq_option(4, 388, 153, Sherry24, 50);
+-    if ((local_var(10) == 0) and global_var(555)) then begin
+-        giq_option(4, 388, 166, Sherry27, 50);
++    Reply(150);
++    giq_option(4, NAME, 151, SherryEnd, NEUTRAL_REACTION);
++    giq_option(4, NAME, 152, Sherry23, NEUTRAL_REACTION);
++    giq_option(4, NAME, 153, Sherry24, NEUTRAL_REACTION);
++    if ((local_var(10) == 0) and global_var(GVAR_BUST_SKULZ)) then begin
++        giq_option(4, NAME, 166, Sherry27, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure Sherry23
+ begin
+-    gsay_reply(388, 154);
+-    giq_option(4, 388, 155, Sherry25, 50);
+-    giq_option(4, 388, 156, SherryEnd, 50);
++    Reply(154);
++    giq_option(4, NAME, 155, Sherry25, NEUTRAL_REACTION);
++    giq_option(4, NAME, 156, SherryEnd, NEUTRAL_REACTION);
+ end
+ 
+ procedure Sherry24
+ begin
+-    gsay_message(388, 157, 50);
++    gsay_message(NAME, 157, NEUTRAL_REACTION);
+ end
+ 
+ procedure Sherry25
+@@ -417,17 +417,17 @@ end
+ 
+ procedure Sherry26
+ begin
+-    gsay_reply(388, 159);
++    Reply(159);
+     call Sherry13();
+ end
+ 
+ procedure Sherry27
+ begin
+     set_local_var(10, 1);
+-    gsay_reply(388, 160);
+-    giq_option(4, 388, 161, Sherry27a, 50);
+-    giq_option(4, 388, 162, SherryEnd, 50);
+-    giq_option(6, 388, 163, Sherry28, 50);
++    Reply(160);
++    giq_option(4, NAME, 161, Sherry27a, NEUTRAL_REACTION);
++    giq_option(4, NAME, 162, SherryEnd, NEUTRAL_REACTION);
++    giq_option(6, NAME, 163, Sherry28, NEUTRAL_REACTION);
+ end
+ 
+ procedure Sherry27a
+@@ -442,13 +442,13 @@ end
+ 
+ procedure Sherry28
+ begin
+-    gsay_message(388, 164, 50);
+-    set_global_var(257, 1);
++    gsay_message(NAME, 164, NEUTRAL_REACTION);
++    set_global_var(GVAR_GENERIC_FILLER_20, 1);
+ end
+ 
+ procedure Sherry29
+ begin
+-    gsay_message(388, 165, 50);
++    gsay_message(NAME, 165, NEUTRAL_REACTION);
+ end
+ 
+ procedure SherryCombat
+@@ -459,7 +459,7 @@ end
+ procedure SherryCook
+ begin
+     use_obj(dude_obj);
+-    float_msg(self_obj, message_str(388, 158), 0);
++    float_msg(self_obj, mstr(158), FLOAT_MSG_NORMAL);
+     critter_heal(dude_obj, 1);
+     feed_dude := 0;
+ end
+@@ -516,31 +516,31 @@ begin
+         set_local_var(0, 50);
+         set_local_var(1, 2);
+         set_local_var(2, 1);
+-        set_local_var(0, local_var(0) + (5 * get_critter_stat(dude_obj, 3)) - 25);
+-        set_local_var(0, local_var(0) + (10 * has_trait(0, dude_obj, 10)));
+-        if (has_trait(0, dude_obj, 39)) then begin
+-            if (global_var(155) > 0) then begin
+-                set_local_var(0, local_var(0) + global_var(155));
++        set_local_var(0, local_var(0) + (5 * dude_charisma) - 25);
++        set_local_var(0, local_var(0) + (10 * has_trait(TRAIT_PERK, dude_obj, PERK_presence)));
++        if (has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality)) then begin
++            if (global_var(GVAR_PLAYER_REPUATION) > 0) then begin
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+         else begin
+             if (local_var(3) == 1) then begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) + global_var(155));
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+-        if (global_var(158) > 2) then begin
++        if (global_var(GVAR_CHILDKILLER_REPUATION) > 2) then begin
+             set_local_var(0, local_var(0) - 30);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) + 20);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) - 20);
+         end
+         call ReactToLevel();
+@@ -633,6 +633,5 @@ end
+ 
+ procedure Goodbyes
+ begin
+-    exit_line := message_str(634, random(100, 105));
++    exit_line := message_str(SCRIPT_MODREACT, random(100, 105));
+ end
+-

@@ -1,0 +1,147 @@
+procedure start;
+procedure dude_use_door;
+procedure Officer_use_door;
+procedure map_enter_p_proc;
+procedure use_p_proc;
+procedure use_obj_on_p_proc;
+procedure use_skill_on_p_proc;
+procedure give_exps;
+
+variable test;
+
+import variable SecDoor_ptr;
+import variable armory_access;
+import variable Officer_ptr;
+
+
+procedure start
+begin
+    if (script_action == map_enter_proc) then begin
+        call map_enter_p_proc();
+    end
+    else begin
+        if (script_action == use_proc) then begin
+            call use_p_proc();
+        end
+        else begin
+            if (script_action == use_obj_on_proc) then begin
+                call use_obj_on_p_proc();
+            end
+            else begin
+                if (script_action == use_skill_on_proc) then begin
+                    call use_skill_on_p_proc();
+                end
+            end
+        end
+    end
+end
+
+procedure dude_use_door
+begin
+    if (obj_is_locked(self_obj)) then begin
+        script_overrides;
+        display_mstr(100);
+    end
+end
+
+procedure Officer_use_door
+begin
+    if (obj_is_open(self_obj)) then begin
+        obj_close(self_obj);
+        obj_lock(self_obj);
+    end
+    else begin
+        obj_unlock(self_obj);
+        obj_open(self_obj);
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    SecDoor_ptr := self_obj;
+end
+
+procedure use_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        call dude_use_door();
+    end
+    else begin
+        if (source_obj == Officer_ptr) then begin
+            call Officer_use_door();
+        end
+    end
+end
+
+procedure use_obj_on_p_proc
+begin
+    if (obj_pid(obj_being_used_with) == 77) then begin
+        script_overrides;
+        if (not(obj_is_locked(self_obj))) then begin
+            display_mstr(101);
+        end
+        else begin
+            test := roll_vs_skill(source_obj, 9, 0);
+            if (is_success(test)) then begin
+                display_mstr(102);
+                obj_unlock(self_obj);
+                call give_exps();
+            end
+            else begin
+                if (is_critical(test)) then begin
+                    jam_lock(self_obj);
+                    display_mstr(104);
+                end
+                else begin
+                    display_mstr(103);
+                end
+            end
+        end
+        if (tile_distance_objs(Officer_ptr, dude_obj) < 4) then begin
+            if (not(armory_access)) then begin
+                armory_access := 2;
+            end
+        end
+    end
+end
+
+procedure use_skill_on_p_proc
+begin
+    if (action_being_used == 9) then begin
+        script_overrides;
+        if (not(obj_is_locked(self_obj))) then begin
+            display_mstr(101);
+        end
+        else begin
+            test := roll_vs_skill(source_obj, 9, -20);
+            if (is_success(test)) then begin
+                display_mstr(102);
+                obj_unlock(self_obj);
+                call give_exps();
+            end
+            else begin
+                if (is_critical(test)) then begin
+                    jam_lock(self_obj);
+                    display_mstr(104);
+                end
+                else begin
+                    display_mstr(103);
+                end
+            end
+        end
+        if (tile_distance_objs(Officer_ptr, dude_obj) < 4) then begin
+            if (not(armory_access)) then begin
+                armory_access := 2;
+            end
+        end
+    end
+end
+
+procedure give_exps
+begin
+    if (local_var(0) == 0) then begin
+        display_mstr(105);
+        give_exp_points(25);
+        set_local_var(0, 1);
+    end
+end

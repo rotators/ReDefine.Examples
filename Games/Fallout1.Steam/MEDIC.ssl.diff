@@ -1,0 +1,452 @@
+diff --git a/Games/Fallout1.Steam/Original/MEDIC.ssl b/Games/Fallout1.Steam/ReDefine/MEDIC.ssl
+index 8897e5a..3fe464a 100644
+--- a/Games/Fallout1.Steam/Original/MEDIC.ssl
++++ b/Games/Fallout1.Steam/ReDefine/MEDIC.ssl
+@@ -65,31 +65,31 @@ variable exit_line;
+ procedure start
+ begin
+     if (not(initialized)) then begin
+-        critter_add_trait(self_obj, 1, 6, 1);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 1);
+         initialized := 1;
+     end
+     else begin
+-        if (script_action == 12) then begin
++        if (script_action == critter_proc) then begin
+             call critter_p_proc();
+         end
+         else begin
+-            if (script_action == 14) then begin
++            if (script_action == damage_proc) then begin
+                 call damage_p_proc();
+             end
+             else begin
+-                if (script_action == 18) then begin
++                if (script_action == destroy_proc) then begin
+                     call destroy_p_proc();
+                 end
+                 else begin
+-                    if (script_action == 21) then begin
++                    if (script_action == look_at_proc) then begin
+                         call look_at_p_proc();
+                     end
+                     else begin
+-                        if (script_action == 4) then begin
++                        if (script_action == pickup_proc) then begin
+                             call pickup_p_proc();
+                         end
+                         else begin
+-                            if (script_action == 11) then begin
++                            if (script_action == talk_proc) then begin
+                                 call talk_p_proc();
+                             end
+                         end
+@@ -107,7 +107,7 @@ begin
+             call flee_dude();
+         end
+         else begin
+-            if (tile_distance(tile_num(dude_obj), home_tile) > 4) then begin
++            if (tile_distance(dude_tile, home_tile) > 4) then begin
+                 animate_move_obj_to_tile(self_obj, home_tile, 0);
+             end
+         end
+@@ -130,33 +130,33 @@ end
+ procedure destroy_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-            set_global_var(156, 1);
+-            set_global_var(157, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+-            set_global_var(157, 1);
+-            set_global_var(156, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+         end
+-        set_global_var(159, global_var(159) + 1);
+-        if ((global_var(159) % 2) == 0) then begin
+-            set_global_var(155, global_var(155) - 1);
++        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
++        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
++            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+         end
+     end
+     if (source_obj == dude_obj) then begin
+-        set_global_var(261, 1);
++        set_global_var(GVAR_WATER_CHIP_4, 1);
+     end
+ end
+ 
+ procedure look_at_p_proc
+ begin
+     script_overrides;
+-    display_msg(message_str(184, 136));
++    display_mstr(136);
+ end
+ 
+ procedure pickup_p_proc
+ begin
+-    float_msg(self_obj, message_str(184, 160), 0);
++    float_msg(self_obj, mstr(160), FLOAT_MSG_NORMAL);
+     set_local_var(5, 1);
+ end
+ 
+@@ -166,9 +166,9 @@ begin
+         call get_reaction();
+         start_gdialog(184, self_obj, 4, -1, -1);
+         gsay_start;
+-        player_hits := get_critter_stat(dude_obj, 35);
+-        player_max_hits := get_critter_stat(dude_obj, 7);
+-        if ((local_var(5) == 1) or (global_var(261) == 1)) then begin
++        player_hits := get_critter_stat(dude_obj, STAT_current_hp);
++        player_max_hits := get_critter_stat(dude_obj, STAT_max_hp);
++        if ((local_var(5) == 1) or (global_var(GVAR_WATER_CHIP_4) == 1)) then begin
+             call Medic00();
+         end
+         else begin
+@@ -177,7 +177,7 @@ begin
+                 call Medic03();
+             end
+             else begin
+-                if (global_var(101) == 2) then begin
++                if (global_var(GVAR_FIND_WATER_CHIP) == 2) then begin
+                     call Medic24();
+                 end
+                 else begin
+@@ -189,41 +189,41 @@ begin
+         end_dialogue;
+     end
+     else begin
+-        display_msg(message_str(184, 159));
++        display_mstr(159);
+     end
+ end
+ 
+ procedure Medic00
+ begin
+-    gsay_reply(184, 100);
+-    giq_option(4, 184, 101, Medic01, -10);
+-    giq_option(-3, 184, 102, Medic02, -10);
++    Reply(100);
++    giq_option(4, NAME, 101, Medic01, -10);
++    giq_option(-3, NAME, 102, Medic02, -10);
+ end
+ 
+ procedure Medic01
+ begin
+     set_local_var(4, 1);
+-    gsay_message(184, 103, -10);
++    gsay_message(NAME, 103, -10);
+ end
+ 
+ procedure Medic02
+ begin
+     set_local_var(4, 1);
+-    gsay_message(184, 104, -10);
++    gsay_message(NAME, 104, -10);
+ end
+ 
+ procedure Medic03
+ begin
+-    gsay_message(184, 105, 0);
++    gsay_message(NAME, 105, 0);
+     call Medic16();
+ end
+ 
+ procedure Medic04
+ begin
+-    gsay_reply(184, message_str(184, 106) + proto_data(obj_pid(dude_obj), 1) + message_str(184, 107));
+-    giq_option(4, 184, 108, Medic06, 0);
+-    giq_option(4, 184, 109, Medic04a, 0);
+-    giq_option(-3, 184, 110, Medic05, 0);
++    Reply(mstr(106) + proto_data(obj_pid(dude_obj), 1) + mstr(107));
++    giq_option(4, NAME, 108, Medic06, 0);
++    giq_option(4, NAME, 109, Medic04a, 0);
++    giq_option(-3, NAME, 110, Medic05, 0);
+ end
+ 
+ procedure Medic04a
+@@ -238,30 +238,30 @@ end
+ 
+ procedure Medic05
+ begin
+-    gsay_message(184, 111, 0);
++    gsay_message(NAME, 111, 0);
+     call pushdrugs();
+ end
+ 
+ procedure Medic06
+ begin
+-    gsay_message(184, 112, 0);
++    gsay_message(NAME, 112, 0);
+ end
+ 
+ procedure Medic07
+ begin
+-    gsay_reply(184, 113);
+-    giq_option(4, 184, 114, Medic04a, 0);
+-    giq_option(4, 184, 115, Medic08, 0);
+-    giq_option(4, 184, 116, Medic11, 0);
+-    giq_option(-3, 184, 117, Medic12, 0);
+-    giq_option(-3, 184, 118, Medic15, 0);
++    Reply(113);
++    giq_option(4, NAME, 114, Medic04a, 0);
++    giq_option(4, NAME, 115, Medic08, 0);
++    giq_option(4, NAME, 116, Medic11, 0);
++    giq_option(-3, NAME, 117, Medic12, 0);
++    giq_option(-3, NAME, 118, Medic15, 0);
+ end
+ 
+ procedure Medic08
+ begin
+-    gsay_reply(184, 119);
+-    giq_option(4, 184, 120, medicend, 0);
+-    giq_option(6, 184, 121, Medic08a, 0);
++    Reply(119);
++    giq_option(4, NAME, 120, medicend, 0);
++    giq_option(6, NAME, 121, Medic08a, 0);
+ end
+ 
+ procedure Medic08a
+@@ -276,45 +276,45 @@ end
+ 
+ procedure Medic09
+ begin
+-    gsay_message(184, 122, 0);
++    gsay_message(NAME, 122, 0);
+ end
+ 
+ procedure Medic10
+ begin
+-    gsay_reply(184, 123);
+-    giq_option(4, 184, 124, pushdrugs, 0);
++    Reply(123);
++    giq_option(4, NAME, 124, pushdrugs, 0);
+ end
+ 
+ procedure Medic11
+ begin
+-    gsay_message(184, 125, 0);
++    gsay_message(NAME, 125, 0);
+ end
+ 
+ procedure Medic12
+ begin
+-    gsay_reply(184, 126);
++    Reply(126);
+     call Medic04a();
+ end
+ 
+ procedure Medic13
+ begin
+-    gsay_message(184, 127, 0);
++    gsay_message(NAME, 127, 0);
+ end
+ 
+ procedure Medic14
+ begin
+-    gsay_message(184, 128, 0);
++    gsay_message(NAME, 128, 0);
+     call Medic16();
+ end
+ 
+ procedure Medic15
+ begin
+-    gsay_message(184, 129, 0);
++    gsay_message(NAME, 129, 0);
+ end
+ 
+ procedure Medic16
+ begin
+-    gsay_reply(184, 130);
++    Reply(130);
+     call Medic17();
+ end
+ 
+@@ -324,8 +324,8 @@ begin
+     game_time_advance(game_ticks(damage * 10));
+     critter_heal(dude_obj, damage);
+     gfade_in(600);
+-    gsay_message(184, 131, 0);
+-    if (get_critter_stat(dude_obj, 37) > 30) then begin
++    gsay_message(NAME, 131, 0);
++    if (get_critter_stat(dude_obj, STAT_current_rad) > 30) then begin
+         call Medic18();
+     end
+ end
+@@ -333,57 +333,57 @@ end
+ procedure Medic18
+ begin
+     removal := 70 + random(1, 6) + random(1, 6) + random(1, 6);
+-    rads := get_critter_stat(dude_obj, 37);
++    rads := get_critter_stat(dude_obj, STAT_current_rad);
+     rndx := rads * 20;
+     if (rads > 400) then begin
+-        intensity := message_str(184, 132);
++        intensity := mstr(132);
+     end
+     else begin
+         if (rads > 200) then begin
+-            intensity := message_str(184, 133);
++            intensity := mstr(133);
+         end
+         else begin
+             if (rads > 100) then begin
+-                intensity := message_str(184, 134);
++                intensity := mstr(134);
+             end
+             else begin
+                 if (rads > 30) then begin
+-                    intensity := message_str(184, 135);
++                    intensity := mstr(135);
+                 end
+             end
+         end
+     end
+-    gsay_reply(184, intensity);
+-    giq_option(4, 184, 138, Medic19, 0);
+-    giq_option(4, 184, 139, Medic22, 0);
+-    giq_option(4, 184, 140, Medic20, 0);
+-    giq_option(6, 184, 141, Medic21, 0);
+-    giq_option(-3, 184, 142, Medic19, 0);
+-    giq_option(-3, 184, 143, Medic22, 0);
++    Reply(intensity);
++    giq_option(4, NAME, 138, Medic19, 0);
++    giq_option(4, NAME, 139, Medic22, 0);
++    giq_option(4, NAME, 140, Medic20, 0);
++    giq_option(6, NAME, 141, Medic21, 0);
++    giq_option(-3, NAME, 142, Medic19, 0);
++    giq_option(-3, NAME, 143, Medic22, 0);
+ end
+ 
+ procedure Medic19
+ begin
+-    gsay_message(184, 144, 0);
++    gsay_message(NAME, 144, 0);
+ end
+ 
+ procedure Medic20
+ begin
+-    gsay_reply(184, message_str(184, 145) + rndx + message_str(184, 146));
+-    giq_option(4, 184, 147, Medic19, 0);
+-    giq_option(4, 184, 148, Medic22, 0);
++    Reply(mstr(145) + rndx + mstr(146));
++    giq_option(4, NAME, 147, Medic19, 0);
++    giq_option(4, NAME, 148, Medic22, 0);
+ end
+ 
+ procedure Medic21
+ begin
+-    gsay_reply(184, message_str(184, 149) + rndx + message_str(184, 150) + removal + message_str(184, 151));
+-    giq_option(4, 184, 152, Medic19, 0);
+-    giq_option(4, 184, 153, Medic22, 0);
++    Reply(mstr(149) + rndx + mstr(150) + removal + mstr(151));
++    giq_option(4, NAME, 152, Medic19, 0);
++    giq_option(4, NAME, 153, Medic22, 0);
+ end
+ 
+ procedure Medic22
+ begin
+-    gsay_message(184, random(154, 155), 0);
++    gsay_message(NAME, random(154, 155), 0);
+     call Medic23();
+     radiation_inc(dude_obj, -removal);
+ end
+@@ -393,15 +393,15 @@ begin
+     gfade_out(600);
+     game_time_advance(game_ticks(rndx));
+     gfade_in(600);
+-    gsay_message(184, 156, 0);
++    gsay_message(NAME, 156, 0);
+ end
+ 
+ procedure Medic24
+ begin
+-    gsay_reply(184, 157);
+-    giq_option(4, 184, 109, Medic04a, 50);
+-    giq_option(4, 634, 103, medicend, 50);
+-    giq_option(-3, 184, 110, Medic05, 50);
++    Reply(157);
++    giq_option(4, NAME, 109, Medic04a, NEUTRAL_REACTION);
++    giq_option(4, SCRIPT_MODREACT, 103, medicend, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 110, Medic05, NEUTRAL_REACTION);
+ end
+ 
+ procedure flee_dude
+@@ -410,9 +410,9 @@ begin
+     variable LVar1 := 0;
+     variable LVar2 := 0;
+     while (LVar1 < 5) do begin
+-        if (tile_distance(tile_num(dude_obj), tile_num_in_direction(tile_num(self_obj), LVar1, 3)) > LVar2) then begin
++        if (tile_distance(dude_tile, tile_num_in_direction(tile_num(self_obj), LVar1, 3)) > LVar2) then begin
+             LVar0 := tile_num_in_direction(tile_num(self_obj), LVar1, 3);
+-            LVar2 := tile_distance(tile_num(dude_obj), LVar0);
++            LVar2 := tile_distance(dude_tile, LVar0);
+         end
+         LVar1 := LVar1 + 1;
+     end
+@@ -422,7 +422,7 @@ end
+ procedure pushdrugs
+ begin
+     variable LVar0 := 0;
+-    LVar0 := create_object_sid(40, 0, 0, -1);
++    LVar0 := create_object(40, 0, 0);
+     add_obj_to_inven(dude_obj, LVar0);
+ end
+ 
+@@ -436,31 +436,31 @@ begin
+         set_local_var(0, 50);
+         set_local_var(1, 2);
+         set_local_var(2, 1);
+-        set_local_var(0, local_var(0) + (5 * get_critter_stat(dude_obj, 3)) - 25);
+-        set_local_var(0, local_var(0) + (10 * has_trait(0, dude_obj, 10)));
+-        if (has_trait(0, dude_obj, 39)) then begin
+-            if (global_var(155) > 0) then begin
+-                set_local_var(0, local_var(0) + global_var(155));
++        set_local_var(0, local_var(0) + (5 * dude_charisma) - 25);
++        set_local_var(0, local_var(0) + (10 * has_trait(TRAIT_PERK, dude_obj, PERK_presence)));
++        if (has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality)) then begin
++            if (global_var(GVAR_PLAYER_REPUATION) > 0) then begin
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+         else begin
+             if (local_var(3) == 1) then begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) + global_var(155));
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+-        if (global_var(158) > 2) then begin
++        if (global_var(GVAR_CHILDKILLER_REPUATION) > 2) then begin
+             set_local_var(0, local_var(0) - 30);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) + 20);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) - 20);
+         end
+         call ReactToLevel();
+@@ -553,6 +553,5 @@ end
+ 
+ procedure Goodbyes
+ begin
+-    exit_line := message_str(634, random(100, 105));
++    exit_line := message_str(SCRIPT_MODREACT, random(100, 105));
+ end
+-

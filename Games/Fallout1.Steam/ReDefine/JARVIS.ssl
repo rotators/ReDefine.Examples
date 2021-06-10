@@ -1,0 +1,285 @@
+procedure start;
+procedure look_at_p_proc;
+procedure map_enter_p_proc;
+procedure talk_p_proc;
+procedure use_skill_on_p_proc;
+procedure use_obj_on_p_proc;
+procedure destroy_p_proc;
+procedure combat_p_proc;
+procedure Jarvis01;
+procedure Jarvis02;
+procedure Jarvis03;
+procedure Jarvis04;
+procedure Jarvis05;
+procedure Jarvis06;
+procedure Jarvisend;
+procedure description_p_proc;
+procedure critter_p_proc;
+procedure pickup_p_proc;
+procedure timed_event_p_proc;
+procedure map_exit_p_proc;
+
+variable use_skill;
+variable initialized;
+variable hostile;
+
+
+procedure start
+begin
+    if (script_action == talk_proc) then begin
+        call talk_p_proc();
+    end
+    else begin
+        if (script_action == map_exit_proc) then begin
+            call map_exit_p_proc();
+        end
+        else begin
+            if (script_action == map_enter_proc) then begin
+                call map_enter_p_proc();
+            end
+            else begin
+                if ((script_action == look_at_proc) or (script_action == description_proc)) then begin
+                    call look_at_p_proc();
+                end
+                else begin
+                    if (script_action == use_obj_on_proc) then begin
+                        call use_obj_on_p_proc();
+                    end
+                    else begin
+                        if (script_action == pickup_proc) then begin
+                            call pickup_p_proc();
+                        end
+                        else begin
+                            if (script_action == destroy_proc) then begin
+                                call destroy_p_proc();
+                            end
+                            else begin
+                                if (script_action == combat_proc) then begin
+                                    call combat_p_proc();
+                                end
+                                else begin
+                                    if (script_action == use_skill_on_proc) then begin
+                                        call use_skill_on_p_proc();
+                                    end
+                                    else begin
+                                        if (script_action == destroy_proc) then begin
+                                            call destroy_p_proc();
+                                        end
+                                        else begin
+                                            if (script_action == critter_proc) then begin
+                                                call critter_p_proc();
+                                            end
+                                            else begin
+                                                if (script_action == timed_event_proc) then begin
+                                                    call timed_event_p_proc();
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    if (local_var(4) == 0) then begin
+        display_mstr(102);
+    end
+    else begin
+        display_mstr(103);
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    if (local_var(5) == 0) then begin
+        anim(self_obj, 48, 0);
+        add_timer_event(self_obj, game_ticks(3600), 1);
+    end
+    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 2);
+    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_PEASANT);
+end
+
+procedure talk_p_proc
+begin
+    if (local_var(5) == 0) then begin
+        call Jarvis01();
+    end
+    else begin
+        start_gdialog(440, self_obj, 4, -1, -1);
+        gsay_start;
+        if (local_var(4) == 0) then begin
+            call Jarvis02();
+        end
+        else begin
+            call Jarvis03();
+        end
+        gsay_end;
+        end_dialogue;
+    end
+end
+
+procedure use_skill_on_p_proc
+begin
+    variable LVar0 := 0;
+    LVar0 := roll_vs_skill(dude_obj, action_being_used, 0);
+    if (local_var(5) == 0) then begin
+        script_overrides;
+        if (action_being_used == 6) then begin
+            if (is_success(LVar0)) then begin
+                display_mstr(112);
+            end
+            else begin
+                display_mstr(113);
+            end
+        end
+        else begin
+            if (action_being_used == 7) then begin
+                if (is_success(LVar0)) then begin
+                    display_mstr(114);
+                end
+                else begin
+                    display_mstr(115);
+                end
+            end
+            else begin
+                display_mstr(116);
+            end
+        end
+    end
+end
+
+procedure use_obj_on_p_proc
+begin
+    if ((obj_pid(obj_being_used_with) == 49) and (local_var(5) == 0)) then begin
+        script_overrides;
+        rm_timer_event(self_obj);
+        set_local_var(5, 1);
+        rm_obj_from_inven(dude_obj, obj_being_used_with);
+        destroy_object(obj_being_used_with);
+        display_mstr(117);
+        give_exp_points(400);
+        set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) + 1);
+        display_mstr(200);
+    end
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_global_var(GVAR_ENEMY_SHADY_SANDS, 1);
+    end
+    if (source_obj == dude_obj) then begin
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
+            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
+            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+        end
+        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
+        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
+            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+        end
+    end
+    rm_timer_event(self_obj);
+end
+
+procedure combat_p_proc
+begin
+    if ((fixed_param == 4) and (local_var(5) == 0)) then begin
+        script_overrides;
+    end
+end
+
+procedure Jarvis01
+begin
+    float_msg(self_obj, mstr(104), FLOAT_MSG_GREEN);
+end
+
+procedure Jarvis02
+begin
+    Reply(105);
+    set_local_var(4, 1);
+    call Jarvis04();
+end
+
+procedure Jarvis03
+begin
+    Reply(106);
+    call Jarvis04();
+end
+
+procedure Jarvis04
+begin
+    giq_option(4, NAME, 107, Jarvis05, NEUTRAL_REACTION);
+    giq_option(4, NAME, 108, Jarvis06, NEUTRAL_REACTION);
+    giq_option(4, NAME, 109, Jarvisend, NEUTRAL_REACTION);
+    giq_option(-3, NAME, 118, Jarvis05, NEUTRAL_REACTION);
+    giq_option(-3, NAME, 119, Jarvis06, NEUTRAL_REACTION);
+    giq_option(-3, NAME, 120, Jarvisend, NEUTRAL_REACTION);
+end
+
+procedure Jarvis05
+begin
+    Reply(110);
+    call Jarvis04();
+end
+
+procedure Jarvis06
+begin
+    Reply(111);
+    call Jarvis04();
+end
+
+procedure Jarvisend
+begin
+end
+
+procedure description_p_proc
+begin
+    script_overrides;
+    if (local_var(4) == 0) then begin
+        display_mstr(102);
+    end
+    else begin
+        display_mstr(103);
+    end
+end
+
+procedure critter_p_proc
+begin
+    if (hostile) then begin
+        hostile := 0;
+        attack(dude_obj);
+    end
+end
+
+procedure pickup_p_proc
+begin
+    hostile := 1;
+end
+
+procedure timed_event_p_proc
+begin
+    if (local_var(5) == 0) then begin
+        add_timer_event(self_obj, game_ticks(7200), 1);
+    end
+    if (tile_distance_objs(dude_obj, self_obj) < dude_perception) then begin
+        display_mstr(100);
+        float_msg(self_obj, mstr(101), FLOAT_MSG_NORMAL);
+    end
+end
+
+procedure map_exit_p_proc
+begin
+    rm_timer_event(self_obj);
+end

@@ -1,0 +1,336 @@
+procedure start;
+procedure do_dialogue;
+procedure ghoulend;
+procedure ghoulcbt;
+procedure ghoul00a;
+procedure ghoul00b;
+procedure ghoul01;
+procedure ghoul02;
+procedure ghoul03;
+procedure ghoul03a;
+procedure ghoul05;
+procedure Critter_Action;
+procedure timetomove;
+
+variable Hostile;
+variable init;
+variable maxleash := 9;
+variable noevent;
+variable loopcount;
+variable new_tile;
+
+procedure get_reaction;
+procedure ReactToLevel;
+procedure LevelToReact;
+procedure UpReact;
+procedure DownReact;
+procedure BottomReact;
+procedure TopReact;
+procedure BigUpReact;
+procedure BigDownReact;
+procedure UpReactLevel;
+procedure DownReactLevel;
+procedure Goodbyes;
+
+variable exit_line;
+
+
+procedure start
+begin
+    if (not(init)) then begin
+        if (local_var(7) == 0) then begin
+            set_local_var(7, tile_num(self_obj));
+            set_local_var(5, 0);
+        end
+        critter_add_trait(self_obj, 1, 6, 30);
+        critter_add_trait(self_obj, 1, 5, 40);
+        init := 1;
+    end
+    else begin
+        if (script_action == 11) then begin
+            if (global_var(249)) then begin
+                attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
+            end
+            else begin
+                call do_dialogue();
+            end
+        end
+        else begin
+            if (script_action == 21) then begin
+                script_overrides;
+                display_msg(message_str(70, 100));
+            end
+            else begin
+                if (script_action == 4) then begin
+                    Hostile := 1;
+                end
+                else begin
+                    if (script_action == 12) then begin
+                        if (obj_can_see_obj(self_obj, dude_obj) and global_var(249)) then begin
+                            Hostile := 1;
+                        end
+                        call Critter_Action();
+                    end
+                    else begin
+                        if (script_action == 18) then begin
+                            if (source_obj == dude_obj) then begin
+                                if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+                                    set_global_var(156, 1);
+                                    set_global_var(157, 0);
+                                end
+                                if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+                                    set_global_var(157, 1);
+                                    set_global_var(156, 0);
+                                end
+                                set_global_var(160, global_var(160) + 1);
+                                if ((global_var(160) % 6) == 0) then begin
+                                    set_global_var(155, global_var(155) + 1);
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure do_dialogue
+begin
+    start_gdialog(70, self_obj, 4, -1, -1);
+    gsay_start;
+    if (local_var(4)) then begin
+        call ghoul02();
+    end
+    if ((game_time_hour >= 1900) or (game_time_hour < 600)) then begin
+        if (local_var(1) >= 3) then begin
+            call ghoul00b();
+        end
+        else begin
+            set_local_var(4, 1);
+            call ghoul03();
+        end
+    end
+    else begin
+        if (local_var(1) >= 3) then begin
+            call ghoul01();
+        end
+        else begin
+            set_local_var(4, 1);
+            call ghoul03();
+        end
+    end
+    gsay_end;
+    end_dialogue;
+end
+
+procedure ghoulend
+begin
+end
+
+procedure ghoulcbt
+begin
+    Hostile := 1;
+end
+
+procedure ghoul00a
+begin
+    gsay_reply(70, 111);
+    giq_option(4, 70, 102, ghoulend, 50);
+    giq_option(-3, 70, 103, ghoulend, 50);
+end
+
+procedure ghoul00b
+begin
+    gsay_message(70, 104, 50);
+    call ghoulend();
+end
+
+procedure ghoul01
+begin
+    gsay_reply(70, 105);
+    giq_option(4, 70, 106, ghoulend, 50);
+    giq_option(-3, 70, 107, ghoulend, 50);
+end
+
+procedure ghoul02
+begin
+    gsay_reply(70, 108);
+    giq_option(4, 70, 109, ghoulend, 50);
+    giq_option(-3, 70, 110, ghoulend, 50);
+end
+
+procedure ghoul03
+begin
+    gsay_reply(70, 101);
+    giq_option(5, 70, 112, ghoul03a, 50);
+    giq_option(4, 70, 113, ghoulend, 50);
+    giq_option(-3, 70, 114, ghoulend, 50);
+end
+
+procedure ghoul03a
+begin
+    call ghoul02();
+end
+
+procedure ghoul05
+begin
+    gsay_message(70, 116, 50);
+end
+
+procedure Critter_Action
+begin
+    if (Hostile > 0) then begin
+        Hostile := 0;
+        attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
+    end
+    else begin
+        if (local_var(5)) then begin
+            loopcount := loopcount + 1;
+            if (loopcount > 40) then begin
+                loopcount := 0;
+                if (noevent == 0) then begin
+                    noevent := 1;
+                    add_timer_event(self_obj, game_ticks(random(5, 13)), 0);
+                end
+            end
+        end
+    end
+end
+
+procedure timetomove
+begin
+    noevent := 0;
+    set_local_var(6, tile_num(self_obj));
+    new_tile := tile_num_in_direction(local_var(6), random(0, 5), 2);
+    if (tile_distance(local_var(7), new_tile) < maxleash) then begin
+        animate_move_obj_to_tile(self_obj, new_tile, 0);
+    end
+end
+
+procedure get_reaction
+begin
+    if (local_var(2) == 0) then begin
+        set_local_var(0, 50);
+        set_local_var(1, 2);
+        set_local_var(2, 1);
+        set_local_var(0, local_var(0) + (5 * get_critter_stat(dude_obj, 3)) - 25);
+        set_local_var(0, local_var(0) + (10 * has_trait(0, dude_obj, 10)));
+        if (has_trait(0, dude_obj, 39)) then begin
+            if (global_var(155) > 0) then begin
+                set_local_var(0, local_var(0) + global_var(155));
+            end
+            else begin
+                set_local_var(0, local_var(0) - global_var(155));
+            end
+        end
+        else begin
+            if (local_var(3) == 1) then begin
+                set_local_var(0, local_var(0) - global_var(155));
+            end
+            else begin
+                set_local_var(0, local_var(0) + global_var(155));
+            end
+        end
+        if (global_var(158) > 2) then begin
+            set_local_var(0, local_var(0) - 30);
+        end
+        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+            set_local_var(0, local_var(0) + 20);
+        end
+        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+            set_local_var(0, local_var(0) - 20);
+        end
+        call ReactToLevel();
+    end
+end
+
+procedure ReactToLevel
+begin
+    if (local_var(0) <= 25) then begin
+        set_local_var(1, 1);
+    end
+    else begin
+        if (local_var(0) <= 75) then begin
+            set_local_var(1, 2);
+        end
+        else begin
+            set_local_var(1, 3);
+        end
+    end
+end
+
+procedure LevelToReact
+begin
+    if (local_var(1) == 1) then begin
+        set_local_var(0, random(1, 25));
+    end
+    else begin
+        if (local_var(1) == 2) then begin
+            set_local_var(0, random(26, 75));
+        end
+        else begin
+            set_local_var(0, random(76, 100));
+        end
+    end
+end
+
+procedure UpReact
+begin
+    set_local_var(0, local_var(0) + 10);
+    call ReactToLevel();
+end
+
+procedure DownReact
+begin
+    set_local_var(0, local_var(0) - 10);
+    call ReactToLevel();
+end
+
+procedure BottomReact
+begin
+    set_local_var(1, 1);
+    set_local_var(0, 1);
+end
+
+procedure TopReact
+begin
+    set_local_var(0, 100);
+    set_local_var(1, 3);
+end
+
+procedure BigUpReact
+begin
+    set_local_var(0, local_var(0) + 25);
+    call ReactToLevel();
+end
+
+procedure BigDownReact
+begin
+    set_local_var(0, local_var(0) - 25);
+    call ReactToLevel();
+end
+
+procedure UpReactLevel
+begin
+    set_local_var(1, local_var(1) + 1);
+    if (local_var(1) > 3) then begin
+        set_local_var(1, 3);
+    end
+    call LevelToReact();
+end
+
+procedure DownReactLevel
+begin
+    set_local_var(1, local_var(1) - 1);
+    if (local_var(1) < 1) then begin
+        set_local_var(1, 1);
+    end
+    call LevelToReact();
+end
+
+procedure Goodbyes
+begin
+    exit_line := message_str(634, random(100, 105));
+end
+

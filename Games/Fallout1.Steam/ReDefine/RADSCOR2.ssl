@@ -1,0 +1,114 @@
+procedure start;
+procedure combat_p_proc;
+procedure critter_p_proc;
+procedure destroy_p_proc;
+procedure timed_event_p_proc;
+procedure use_skill_on_p_proc;
+
+variable critter_tile;
+variable hostile;
+variable initialized;
+
+
+procedure start
+begin
+    if (script_action == combat_proc) then begin
+        call combat_p_proc();
+    end
+    else begin
+        if (script_action == critter_proc) then begin
+            call critter_p_proc();
+        end
+        else begin
+            if (script_action == destroy_proc) then begin
+                call destroy_p_proc();
+            end
+            else begin
+                if (script_action == use_skill_on_proc) then begin
+                    call use_skill_on_p_proc();
+                end
+            end
+        end
+    end
+end
+
+procedure combat_p_proc
+begin
+    if (fixed_param == 2) then begin
+        if (target_obj == dude_obj) then begin
+            if (not(is_success(do_check(dude_obj, 6, -1)))) then begin
+                poison(target_obj, random(1, 6));
+            end
+        end
+    end
+end
+
+procedure critter_p_proc
+begin
+    variable LVar0 := 0;
+    if (not(initialized)) then begin
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_RADSCORPION);
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 5);
+        add_timer_event(self_obj, game_ticks(random(1, 5)), 1);
+        initialized := 1;
+    end
+    else begin
+        if (hostile) then begin
+            hostile := 0;
+            attack(dude_obj);
+        end
+        else begin
+            if (tile_distance_objs(dude_obj, self_obj) <= 2) then begin
+                if (has_trait(TRAIT_PERK, dude_obj, PERK_animal_friend) == 0) then begin
+                    hostile := 1;
+                end
+            end
+        end
+    end
+end
+
+procedure destroy_p_proc
+begin
+    variable LVar0 := 0;
+    if (cur_map_index == 83) then begin
+        set_global_var(GVAR_NUM_RADSCORPIONS, global_var(GVAR_NUM_RADSCORPIONS) - 1);
+        if (global_var(GVAR_NUM_RADSCORPIONS) < 0) then begin
+            set_global_var(GVAR_NUM_RADSCORPIONS, 0);
+        end
+    end
+    LVar0 := create_object(92, 0, 0);
+    add_obj_to_inven(self_obj, LVar0);
+    if (source_obj == dude_obj) then begin
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
+            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
+            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+        end
+        set_global_var(GVAR_BAD_MONSTER, global_var(GVAR_BAD_MONSTER) + 1);
+        if ((global_var(GVAR_BAD_MONSTER) % 6) == 0) then begin
+            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) + 1);
+        end
+    end
+end
+
+procedure timed_event_p_proc
+begin
+    if (not(combat_is_initialized)) then begin
+        critter_tile := tile_num_in_direction(tile_num(self_obj), random(0, 5), 3);
+        reg_anim_func(2, self_obj);
+        reg_anim_func(1, 1);
+        reg_anim_obj_move_to_tile(self_obj, critter_tile, -1);
+        reg_anim_func(3, 0);
+    end
+    add_timer_event(self_obj, game_ticks(random(3, 5)), 1);
+end
+
+procedure use_skill_on_p_proc
+begin
+    if (action_being_used == 10) then begin
+        script_overrides;
+    end
+end

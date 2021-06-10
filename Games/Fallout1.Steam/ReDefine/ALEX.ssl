@@ -1,0 +1,215 @@
+procedure start;
+procedure critter_p_proc;
+procedure destroy_p_proc;
+procedure look_at_p_proc;
+procedure talk_p_proc;
+procedure Alex01;
+procedure Alex02;
+procedure Alex03;
+procedure Alex04;
+procedure Alex05;
+procedure Alex06;
+procedure Alex07;
+procedure sleeping;
+
+variable night_person;
+variable wake_time;
+variable sleep_time;
+variable home_tile;
+variable sleep_tile;
+variable hostile;
+variable initialized;
+
+
+procedure start
+begin
+    if (not(initialized)) then begin
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 49);
+        sleep_tile := 14275;
+        home_tile := 11300;
+        wake_time := 2030;
+        sleep_time := 730;
+        night_person := 1;
+        if (obj_is_carrying_obj_pid(self_obj, 41) == 0) then begin
+            item_caps_adjust(self_obj, random(0, 20));
+        end
+        initialized := 1;
+    end
+    else begin
+        if (script_action == critter_proc) then begin
+            call critter_p_proc();
+        end
+        else begin
+            if (script_action == destroy_proc) then begin
+                call destroy_p_proc();
+            end
+            else begin
+                if (script_action == look_at_proc) then begin
+                    call look_at_p_proc();
+                end
+                else begin
+                    if (script_action == talk_proc) then begin
+                        call talk_p_proc();
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure critter_p_proc
+begin
+    if (obj_can_see_obj(self_obj, dude_obj)) then begin
+        if (hostile) then begin
+            hostile := 0;
+            attack(dude_obj);
+        end
+        else begin
+            if (local_var(0) == 0) then begin
+                if (tile_distance_objs(self_obj, dude_obj) < 12) then begin
+                    dialogue_system_enter;
+                end
+            end
+            if (tile_distance(dude_tile, 10700) > tile_distance(dude_tile, 11900)) then begin
+                if (global_var(GVAR_GANG_WAR) < 2) then begin
+                    hostile := 1;
+                end
+            end
+        end
+    end
+    else begin
+        call sleeping();
+    end
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
+            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
+            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+        end
+        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
+        if ((global_var(GVAR_GOOD_MONSTER) % 2) == 0) then begin
+            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+        end
+    end
+end
+
+procedure look_at_p_proc
+begin
+    if (local_var(0)) then begin
+        script_overrides;
+        display_mstr(100);
+    end
+end
+
+procedure talk_p_proc
+begin
+    if (global_var(GVAR_GANG_WAR) == 2) then begin
+        float_msg(self_obj, mstr(101) + proto_data(obj_pid(dude_obj), 1), FLOAT_MSG_NORMAL);
+    end
+    else begin
+        if (local_var(0)) then begin
+            call Alex01();
+        end
+        else begin
+            start_gdialog(670, self_obj, 4, -1, -1);
+            gsay_start;
+            call Alex02();
+            gsay_end;
+            end_dialogue;
+        end
+    end
+end
+
+procedure Alex01
+begin
+    float_msg(self_obj, mstr(102), FLOAT_MSG_NORMAL);
+end
+
+procedure Alex02
+begin
+    set_local_var(0, 1);
+    Reply(103);
+    giq_option(4, NAME, 104, Alex03, NEUTRAL_REACTION);
+    giq_option(4, NAME, 105, Alex05, BAD_REACTION);
+    giq_option(4, NAME, 106, Alex06, NEUTRAL_REACTION);
+    giq_option(-3, NAME, 114, Alex06, NEUTRAL_REACTION);
+end
+
+procedure Alex03
+begin
+    Reply(107);
+    giq_option(4, NAME, 108, Alex04, NEUTRAL_REACTION);
+    giq_option(4, NAME, 106, Alex06, NEUTRAL_REACTION);
+end
+
+procedure Alex04
+begin
+    gsay_message(NAME, 109, NEUTRAL_REACTION);
+end
+
+procedure Alex05
+begin
+    Reply(110);
+    giq_option(4, NAME, 106, Alex06, NEUTRAL_REACTION);
+    giq_option(4, NAME, 111, Alex07, NEUTRAL_REACTION);
+end
+
+procedure Alex06
+begin
+    gsay_message(NAME, 112, NEUTRAL_REACTION);
+end
+
+procedure Alex07
+begin
+    hostile := 1;
+    gsay_message(NAME, 113, BAD_REACTION);
+end
+
+procedure sleeping
+begin
+    if (local_var(1) == 1) then begin
+        if (not(night_person) and (game_time_hour >= wake_time) and (game_time_hour < sleep_time) or (night_person and ((game_time_hour >= wake_time) or (game_time_hour < sleep_time)))) then begin
+            if (((game_time_hour - wake_time) < 10) and ((game_time_hour - wake_time) > 0)) then begin
+                if (tile_num(self_obj) != home_tile) then begin
+                    animate_move_obj_to_tile(self_obj, home_tile, 0);
+                end
+                else begin
+                    set_local_var(1, 0);
+                end
+            end
+            else begin
+                move_to(self_obj, home_tile, elevation(self_obj));
+                if (tile_num(self_obj) == home_tile) then begin
+                    set_local_var(1, 0);
+                end
+            end
+        end
+    end
+    else begin
+        if (night_person and (game_time_hour >= sleep_time) and (game_time_hour < wake_time) or (not(night_person) and ((game_time_hour >= sleep_time) or (game_time_hour < wake_time)))) then begin
+            if (((game_time_hour - sleep_time) < 10) and ((game_time_hour - sleep_time) > 0)) then begin
+                if (tile_num(self_obj) != sleep_tile) then begin
+                    animate_move_obj_to_tile(self_obj, self_obj, 0);
+                end
+                else begin
+                    set_local_var(1, 1);
+                end
+            end
+            else begin
+                if (tile_num(self_obj) != sleep_tile) then begin
+                    move_to(self_obj, sleep_tile, elevation(self_obj));
+                end
+                else begin
+                    set_local_var(1, 1);
+                end
+            end
+        end
+    end
+end

@@ -1,0 +1,221 @@
+procedure start;
+procedure weapon_check;
+procedure prepare_for_combat;
+procedure do_combat;
+procedure recover_from_combat;
+
+import variable Student_ptr;
+
+variable initialized;
+variable armed;
+variable v;
+variable x;
+variable student_armed;
+variable instructor_armed;
+variable st_manuver0;
+variable st_manuver1;
+variable st_manuver2;
+variable in_manuver0;
+variable in_manuver1;
+variable in_manuver2;
+variable outcome;
+variable sequence;
+variable atk;
+variable who;
+variable fall;
+
+
+procedure start
+begin
+    if (not(initialized)) then begin
+        critter_add_trait(self_obj, 1, 6, 30);
+        critter_add_trait(self_obj, 1, 5, 62);
+        initialized := 1;
+        call prepare_for_combat();
+    end
+    if (script_action == 22) then begin
+        call do_combat();
+    end
+    else begin
+        if ((script_action == 12) and (v != 1)) then begin
+            v := 1;
+            add_timer_event(self_obj, game_ticks(5), 0);
+        end
+    end
+end
+
+procedure weapon_check
+begin
+    if ((obj_item_subtype(critter_inven_obj(Student_ptr, 1)) == 3) or (obj_item_subtype(critter_inven_obj(Student_ptr, 2)) == 3)) then begin
+        armed := 1;
+    end
+    else begin
+        armed := 0;
+    end
+end
+
+procedure prepare_for_combat
+begin
+    if (student_armed) then begin
+        st_manuver0 := 41;
+        st_manuver1 := 42;
+        st_manuver2 := 40;
+    end
+    else begin
+        st_manuver0 := 16;
+        st_manuver1 := 17;
+        st_manuver2 := 13;
+    end
+    if (instructor_armed) then begin
+        in_manuver0 := 41;
+        in_manuver1 := 42;
+        in_manuver2 := 40;
+    end
+    else begin
+        in_manuver0 := 16;
+        in_manuver1 := 17;
+        in_manuver2 := 13;
+    end
+end
+
+procedure do_combat
+begin
+    if (fall > 0) then begin
+        call recover_from_combat();
+    end
+    else begin
+        atk := random(0, 1);
+        if (atk) then begin
+            atk := 3;
+        end
+        x := random(1, 6);
+        if (who == 0) then begin
+            if (x < 3) then begin
+                outcome := 0;
+            end
+            else begin
+                if (x < 5) then begin
+                    outcome := 1;
+                end
+                else begin
+                    outcome := 2;
+                end
+            end
+        end
+        else begin
+            if (x < 4) then begin
+                outcome := 0;
+            end
+            else begin
+                if (x < 6) then begin
+                    outcome := 1;
+                end
+                else begin
+                    outcome := 2;
+                end
+            end
+        end
+        sequence := atk + outcome;
+        reg_anim_func(2, self_obj);
+        reg_anim_func(2, Student_ptr);
+        reg_anim_func(1, 1);
+        if (who == 0) then begin
+            if (sequence == 0) then begin
+                reg_anim_animate(Student_ptr, st_manuver0, -1);
+                reg_anim_animate(self_obj, in_manuver2, 4);
+            end
+            else begin
+                if (sequence == 1) then begin
+                    reg_anim_animate(Student_ptr, st_manuver0, -1);
+                    reg_anim_animate(self_obj, 14, 4);
+                end
+                else begin
+                    if (sequence == 2) then begin
+                        fall := 1;
+                        reg_anim_animate(Student_ptr, st_manuver0, -1);
+                        reg_anim_animate(self_obj, 20, 4);
+                    end
+                    else begin
+                        if (sequence == 3) then begin
+                            reg_anim_animate(Student_ptr, st_manuver1, -1);
+                            reg_anim_animate(self_obj, in_manuver2, 6);
+                        end
+                        else begin
+                            if (sequence == 4) then begin
+                                reg_anim_animate(Student_ptr, st_manuver1, -1);
+                                reg_anim_animate(self_obj, 14, 6);
+                            end
+                            else begin
+                                if (sequence == 5) then begin
+                                    fall := 1;
+                                    reg_anim_animate(Student_ptr, st_manuver1, -1);
+                                    reg_anim_animate(self_obj, 20, 6);
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        else begin
+            if (sequence == 0) then begin
+                reg_anim_animate(self_obj, in_manuver0, -1);
+                reg_anim_animate(Student_ptr, st_manuver2, 4);
+            end
+            else begin
+                if (sequence == 1) then begin
+                    reg_anim_animate(self_obj, in_manuver0, -1);
+                    reg_anim_animate(Student_ptr, 14, 4);
+                end
+                else begin
+                    if (sequence == 2) then begin
+                        fall := 2;
+                        reg_anim_animate(self_obj, in_manuver0, -1);
+                        reg_anim_animate(Student_ptr, 20, 4);
+                    end
+                    else begin
+                        if (sequence == 3) then begin
+                            reg_anim_animate(self_obj, in_manuver1, -1);
+                            reg_anim_animate(Student_ptr, st_manuver2, 6);
+                        end
+                        else begin
+                            if (sequence == 4) then begin
+                                reg_anim_animate(self_obj, in_manuver1, -1);
+                                reg_anim_animate(Student_ptr, 14, 6);
+                            end
+                            else begin
+                                if (sequence == 5) then begin
+                                    fall := 2;
+                                    reg_anim_animate(self_obj, in_manuver1, -1);
+                                    reg_anim_animate(Student_ptr, 20, 6);
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        reg_anim_func(3, 0);
+        who := 1 - who;
+        add_timer_event(self_obj, game_ticks(2), 0);
+    end
+end
+
+procedure recover_from_combat
+begin
+    reg_anim_func(2, self_obj);
+    reg_anim_func(2, Student_ptr);
+    reg_anim_func(1, 1);
+    if (fall == 1) then begin
+        reg_anim_animate(Student_ptr, 0, -1);
+        reg_anim_animate(self_obj, 37, -1);
+    end
+    else begin
+        reg_anim_animate(self_obj, 0, -1);
+        reg_anim_animate(Student_ptr, 37, -1);
+    end
+    reg_anim_func(3, 0);
+    fall := 0;
+    v := 0;
+end
+

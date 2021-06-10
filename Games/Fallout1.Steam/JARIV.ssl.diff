@@ -1,0 +1,364 @@
+diff --git a/Games/Fallout1.Steam/Original/JARIV.ssl b/Games/Fallout1.Steam/ReDefine/JARIV.ssl
+index 257da55..4d7fd3c 100644
+--- a/Games/Fallout1.Steam/Original/JARIV.ssl
++++ b/Games/Fallout1.Steam/ReDefine/JARIV.ssl
+@@ -57,8 +57,8 @@ variable exit_line;
+ procedure start
+ begin
+     if (not(initialized)) then begin
+-        critter_add_trait(self_obj, 1, 6, 2);
+-        critter_add_trait(self_obj, 1, 5, 4);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 2);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_GUARD);
+         if (local_var(10) == 0) then begin
+             set_local_var(10, tile_num(self_obj));
+         end
+@@ -66,31 +66,31 @@ begin
+         initialized := 1;
+     end
+     else begin
+-        if (script_action == 13) then begin
++        if (script_action == combat_proc) then begin
+             call combat_p_proc();
+         end
+         else begin
+-            if (script_action == 12) then begin
++            if (script_action == critter_proc) then begin
+                 call critter_p_proc();
+             end
+             else begin
+-                if (script_action == 18) then begin
++                if (script_action == destroy_proc) then begin
+                     call destroy_p_proc();
+                 end
+                 else begin
+-                    if (script_action == 21) then begin
++                    if (script_action == look_at_proc) then begin
+                         call look_at_p_proc();
+                     end
+                     else begin
+-                        if (script_action == 4) then begin
++                        if (script_action == pickup_proc) then begin
+                             call pickup_p_proc();
+                         end
+                         else begin
+-                            if (script_action == 11) then begin
++                            if (script_action == talk_proc) then begin
+                                 call talk_p_proc();
+                             end
+                             else begin
+-                                if (script_action == 22) then begin
++                                if (script_action == timed_event_proc) then begin
+                                     call timed_event_p_proc();
+                                 end
+                             end
+@@ -108,9 +108,9 @@ begin
+         round_counter := round_counter + 1;
+     end
+     if (round_counter > 3) then begin
+-        if (global_var(246) == 0) then begin
+-            set_global_var(246, 1);
+-            set_global_var(155, global_var(155) - 5);
++        if (global_var(GVAR_ENEMY_SHADY_SANDS) == 0) then begin
++            set_global_var(GVAR_ENEMY_SHADY_SANDS, 1);
++            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 5);
+         end
+     end
+ end
+@@ -118,13 +118,13 @@ end
+ procedure critter_p_proc
+ begin
+     if (obj_can_see_obj(self_obj, dude_obj)) then begin
+-        if (global_var(246) == 1) then begin
++        if (global_var(GVAR_ENEMY_SHADY_SANDS) == 1) then begin
+             hostile := 1;
+         end
+     end
+     if (hostile) then begin
+         hostile := 0;
+-        attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++        attack(dude_obj);
+     end
+     else begin
+         if (obj_can_see_obj(self_obj, dude_obj)) then begin
+@@ -133,12 +133,12 @@ begin
+                     call guard11();
+                 end
+             end
+-            if (global_var(246)) then begin
++            if (global_var(GVAR_ENEMY_SHADY_SANDS)) then begin
+                 hostile := 1;
+             end
+         end
+         if (local_var(7) == 1) then begin
+-            if (tile_distance(tile_num(self_obj), tile_num(dude_obj)) < tile_distance(tile_num(self_obj), Warned_Tile)) then begin
++            if (tile_distance(tile_num(self_obj), dude_tile) < tile_distance(tile_num(self_obj), Warned_Tile)) then begin
+                 hostile := 1;
+             end
+         end
+@@ -148,26 +148,26 @@ end
+ procedure description_p_proc
+ begin
+     script_overrides;
+-    display_msg(message_str(113, 100));
++    display_msg(message_str(SCRIPT_TGUARD, 100));
+ end
+ 
+ procedure destroy_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        set_global_var(246, 1);
++        set_global_var(GVAR_ENEMY_SHADY_SANDS, 1);
+     end
+     if (source_obj == dude_obj) then begin
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-            set_global_var(156, 1);
+-            set_global_var(157, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+-            set_global_var(157, 1);
+-            set_global_var(156, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+         end
+-        set_global_var(159, global_var(159) + 1);
+-        if ((global_var(159) % 5) == 0) then begin
+-            set_global_var(155, global_var(155) - 1);
++        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
++        if ((global_var(GVAR_GOOD_MONSTER) % 5) == 0) then begin
++            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) - 1);
+         end
+     end
+ end
+@@ -175,7 +175,7 @@ end
+ procedure look_at_p_proc
+ begin
+     script_overrides;
+-    display_msg(message_str(113, 100));
++    display_msg(message_str(SCRIPT_TGUARD, 100));
+ end
+ 
+ procedure pickup_p_proc
+@@ -185,31 +185,31 @@ end
+ 
+ procedure talk_p_proc
+ begin
+-    if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-        set_global_var(156, 1);
+-        set_global_var(157, 0);
++    if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++        set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++        set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+     end
+     call get_reaction();
+     if (local_var(9) == 1) then begin
+-        float_msg(self_obj, message_str(185, 166), 0);
++        float_msg(self_obj, message_str(SCRIPT_GENVAULT, 166), FLOAT_MSG_NORMAL);
+     end
+     else begin
+-        if (global_var(246)) then begin
++        if (global_var(GVAR_ENEMY_SHADY_SANDS)) then begin
+             set_local_var(4, 1);
+             call guard00();
+         end
+         else begin
+-            if (global_var(26) == 1) then begin
++            if (global_var(GVAR_TANDI_STATUS) == 1) then begin
+                 set_local_var(4, 1);
+                 call guard01();
+             end
+             else begin
+-                if ((global_var(26) == 2) and (local_var(8) == 0)) then begin
++                if ((global_var(GVAR_TANDI_STATUS) == 2) and (local_var(8) == 0)) then begin
+                     set_local_var(4, 1);
+                     call guard02();
+                 end
+                 else begin
+-                    if (global_var(26) == 3) then begin
++                    if (global_var(GVAR_TANDI_STATUS) == 3) then begin
+                         set_local_var(4, 1);
+                         call guard03();
+                     end
+@@ -254,90 +254,90 @@ end
+ 
+ procedure guard00
+ begin
+-    float_msg(self_obj, message_str(113, 101), 7);
+-    Warned_Tile := tile_num(dude_obj);
++    float_msg(self_obj, message_str(SCRIPT_TGUARD, 101), FLOAT_MSG_LIGHT_RED);
++    Warned_Tile := dude_tile;
+     set_local_var(7, 1);
+ end
+ 
+ procedure guard01
+ begin
+-    float_msg(self_obj, message_str(113, 102), 7);
++    float_msg(self_obj, message_str(SCRIPT_TGUARD, 102), FLOAT_MSG_LIGHT_RED);
+ end
+ 
+ procedure guard02
+ begin
+-    float_msg(self_obj, message_str(113, 103), 7);
++    float_msg(self_obj, message_str(SCRIPT_TGUARD, 103), FLOAT_MSG_LIGHT_RED);
+     set_local_var(8, 1);
+     call TopReact();
+ end
+ 
+ procedure guard03
+ begin
+-    float_msg(self_obj, message_str(113, 104), 7);
++    float_msg(self_obj, message_str(SCRIPT_TGUARD, 104), FLOAT_MSG_LIGHT_RED);
+ end
+ 
+ procedure guard04
+ begin
+-    gsay_reply(113, 105);
+-    giq_option(4, 113, 106, guard05, 50);
+-    giq_option(5, 113, 107, guard07, 50);
+-    giq_option(-3, 113, 108, guard05, 50);
++    gsay_reply(SCRIPT_TGUARD, 105);
++    giq_option(4, SCRIPT_TGUARD, 106, guard05, NEUTRAL_REACTION);
++    giq_option(5, SCRIPT_TGUARD, 107, guard07, NEUTRAL_REACTION);
++    giq_option(-3, SCRIPT_TGUARD, 108, guard05, NEUTRAL_REACTION);
+ end
+ 
+ procedure guard05
+ begin
+-    gsay_reply(113, 109);
+-    giq_option(4, 113, 110, guard06, 50);
+-    giq_option(-3, 113, 111, guardend, 50);
++    gsay_reply(SCRIPT_TGUARD, 109);
++    giq_option(4, SCRIPT_TGUARD, 110, guard06, NEUTRAL_REACTION);
++    giq_option(-3, SCRIPT_TGUARD, 111, guardend, NEUTRAL_REACTION);
+ end
+ 
+ procedure guard06
+ begin
+-    gsay_reply(113, 112);
+-    giq_option(4, 113, 113, guardend, 50);
+-    giq_option(4, 113, 114, guard06a, 50);
++    gsay_reply(SCRIPT_TGUARD, 112);
++    giq_option(4, SCRIPT_TGUARD, 113, guardend, NEUTRAL_REACTION);
++    giq_option(4, SCRIPT_TGUARD, 114, guard06a, NEUTRAL_REACTION);
+ end
+ 
+ procedure guard07
+ begin
+-    gsay_reply(113, 115);
+-    gsay_option(113, 126, guard07_1, 50);
++    gsay_reply(SCRIPT_TGUARD, 115);
++    giq_option(1, SCRIPT_TGUARD, 126, guard07_1, NEUTRAL_REACTION);
+ end
+ 
+ procedure guard08
+ begin
+-    gsay_reply(113, 118);
+-    giq_option(4, 113, 119, guardend, 50);
+-    giq_option(4, 113, 120, DownReact, 50);
++    gsay_reply(SCRIPT_TGUARD, 118);
++    giq_option(4, SCRIPT_TGUARD, 119, guardend, NEUTRAL_REACTION);
++    giq_option(4, SCRIPT_TGUARD, 120, DownReact, NEUTRAL_REACTION);
+ end
+ 
+ procedure guard09
+ begin
+-    gsay_reply(113, 121);
++    gsay_reply(SCRIPT_TGUARD, 121);
+     call Goodbyes();
+-    giq_option(4, 113, exit_line, guardend, 50);
++    giq_option(4, SCRIPT_TGUARD, exit_line, guardend, NEUTRAL_REACTION);
+ end
+ 
+ procedure guard10
+ begin
+-    float_msg(self_obj, message_str(113, 122), 7);
++    float_msg(self_obj, message_str(SCRIPT_TGUARD, 122), FLOAT_MSG_LIGHT_RED);
+ end
+ 
+ procedure guard11
+ begin
+-    float_msg(self_obj, message_str(113, 123), 7);
++    float_msg(self_obj, message_str(SCRIPT_TGUARD, 123), FLOAT_MSG_LIGHT_RED);
+     add_timer_event(self_obj, game_ticks(10), 1);
+     set_map_var(0, 1);
+ end
+ 
+ procedure guard12
+ begin
+-    float_msg(self_obj, message_str(113, 124), 7);
++    float_msg(self_obj, message_str(SCRIPT_TGUARD, 124), FLOAT_MSG_LIGHT_RED);
+ end
+ 
+ procedure guard13
+ begin
+-    float_msg(self_obj, message_str(113, 125), 7);
++    float_msg(self_obj, message_str(SCRIPT_TGUARD, 125), FLOAT_MSG_LIGHT_RED);
+ end
+ 
+ procedure guard06a
+@@ -358,8 +358,8 @@ end
+ 
+ procedure guard07_1
+ begin
+-    gsay_reply(113, 116);
+-    giq_option(5, 113, 117, guard07a, 50);
++    gsay_reply(SCRIPT_TGUARD, 116);
++    giq_option(5, SCRIPT_TGUARD, 117, guard07a, NEUTRAL_REACTION);
+ end
+ 
+ procedure guardend
+@@ -433,31 +433,31 @@ begin
+         set_local_var(0, 50);
+         set_local_var(1, 2);
+         set_local_var(2, 1);
+-        set_local_var(0, local_var(0) + (5 * get_critter_stat(dude_obj, 3)) - 25);
+-        set_local_var(0, local_var(0) + (10 * has_trait(0, dude_obj, 10)));
+-        if (has_trait(0, dude_obj, 39)) then begin
+-            if (global_var(155) > 0) then begin
+-                set_local_var(0, local_var(0) + global_var(155));
++        set_local_var(0, local_var(0) + (5 * dude_charisma) - 25);
++        set_local_var(0, local_var(0) + (10 * has_trait(TRAIT_PERK, dude_obj, PERK_presence)));
++        if (has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality)) then begin
++            if (global_var(GVAR_PLAYER_REPUATION) > 0) then begin
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+         else begin
+             if (local_var(3) == 1) then begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) + global_var(155));
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+-        if (global_var(158) > 2) then begin
++        if (global_var(GVAR_CHILDKILLER_REPUATION) > 2) then begin
+             set_local_var(0, local_var(0) - 30);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) + 20);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) - 20);
+         end
+         call ReactToLevel();
+@@ -550,6 +550,5 @@ end
+ 
+ procedure Goodbyes
+ begin
+-    exit_line := message_str(634, random(100, 105));
++    exit_line := message_str(SCRIPT_MODREACT, random(100, 105));
+ end
+-

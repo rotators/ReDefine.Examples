@@ -1,0 +1,200 @@
+procedure start;
+procedure description_p_proc;
+procedure use_p_proc;
+procedure use_obj_on_p_proc;
+procedure use_skill_on_p_proc;
+procedure Command01;
+procedure use_all_fields_on;
+procedure use_all_fields_off;
+
+variable skill_roll;
+variable stat_roll;
+variable initialized;
+
+import variable field_change;
+
+
+procedure start
+begin
+    if (not(initialized)) then begin
+        if (global_var(GVAR_ENEMY_VAULT_VILLAGE)) then begin
+            set_local_var(0, 1);
+        end
+        initialized := 1;
+    end
+    else begin
+        if (script_action == description_proc) then begin
+            call description_p_proc();
+        end
+        else begin
+            if (script_action == use_proc) then begin
+                call use_p_proc();
+            end
+            else begin
+                if (script_action == use_obj_on_proc) then begin
+                    call use_obj_on_p_proc();
+                end
+                else begin
+                    if (script_action == use_skill_on_proc) then begin
+                        call use_skill_on_p_proc();
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure description_p_proc
+begin
+    script_overrides;
+    display_msg(message_str(SCRIPT_NCKEIWRI, 100));
+    display_msg(message_str(SCRIPT_NCKEIWRI, 101));
+    if (local_var(0) and not(local_var(2))) then begin
+        call Command01();
+    end
+end
+
+procedure use_p_proc
+begin
+    variable LVar0 := 0;
+    if (local_var(0) and not(local_var(1))) then begin
+        script_overrides;
+        LVar0 := roll_vs_skill(dude_obj, 16, 0);
+        if (is_success(LVar0)) then begin
+            display_msg(message_str(SCRIPT_NCKEIWRI, 109));
+            set_local_var(1, 1);
+            display_msg(message_str(SCRIPT_NCKEIWRI, 116));
+            give_exp_points(800);
+        end
+        else begin
+            display_msg(message_str(SCRIPT_NCKEIWRI, 110));
+        end
+        game_time_advance(game_ticks(1200));
+    end
+end
+
+procedure use_obj_on_p_proc
+begin
+    if (obj_pid(obj_being_used_with) == 100) then begin
+        if (not(global_var(GVAR_SPECIAL_ENCOUNTER_WHALE))) then begin
+            script_overrides;
+            if (is_success(roll_vs_skill(dude_obj, 13, 0))) then begin
+                display_msg(message_str(SCRIPT_NCKEIWRI, 117));
+                set_global_var(GVAR_SPECIAL_ENCOUNTER_WHALE, 1);
+            end
+            else begin
+                display_msg(message_str(SCRIPT_NCKEIWRI, 118));
+            end
+            game_time_advance(game_ticks(600));
+        end
+    end
+end
+
+procedure use_skill_on_p_proc
+begin
+    variable LVar0 := 0;
+    if (action_being_used == 12) then begin
+        script_overrides;
+        LVar0 := roll_vs_skill(dude_obj, action_being_used, 0);
+        if (not(local_var(0))) then begin
+            if (is_success(LVar0)) then begin
+                display_msg(message_str(SCRIPT_NCKEIWRI, 102));
+                field_change := "on";
+                call use_all_fields_on();
+                set_local_var(0, 1);
+            end
+            else begin
+                display_msg(message_str(SCRIPT_NCKEIWRI, 103));
+            end
+            game_time_advance(game_ticks(300));
+        end
+        else begin
+            if (not(local_var(1))) then begin
+                if (is_success(LVar0)) then begin
+                    display_msg(message_str(SCRIPT_NCKEIWRI, 104));
+                end
+                else begin
+                    display_msg(message_str(SCRIPT_NCKEIWRI, 105));
+                end
+                game_time_advance(game_ticks(300));
+                call Command01();
+            end
+            else begin
+                if (not(local_var(2))) then begin
+                    if (is_success(LVar0)) then begin
+                        if (is_critical(LVar0)) then begin
+                            display_msg(message_str(SCRIPT_NCKEIWRI, 106));
+                            field_change := "off";
+                            call use_all_fields_off();
+                        end
+                        else begin
+                            display_msg(message_str(SCRIPT_NCKEIWRI, 107));
+                            field_change := "off";
+                            set_map_var(16, 0);
+                            set_map_var(17, 0);
+                            set_map_var(18, 0);
+                            set_map_var(19, 0);
+                            set_map_var(20, 0);
+                            set_map_var(21, 0);
+                        end
+                    end
+                    else begin
+                        display_msg(message_str(SCRIPT_NCKEIWRI, 108));
+                    end
+                    game_time_advance(game_ticks(1800));
+                    set_local_var(2, 1);
+                end
+            end
+        end
+    end
+end
+
+procedure Command01
+begin
+    stat_roll := do_check(dude_obj, 1, has_trait(TRAIT_PERK, dude_obj, PERK_bonus_awareness));
+    if (not(local_var(1))) then begin
+        if (is_success(stat_roll)) then begin
+            if (is_critical(stat_roll)) then begin
+                display_msg(message_str(SCRIPT_NCKEIWRI, 111));
+            end
+            else begin
+                display_msg(message_str(SCRIPT_NCKEIWRI, 112));
+            end
+        end
+        else begin
+            if (is_critical(stat_roll)) then begin
+                display_msg(message_str(SCRIPT_NCKEIWRI, 113));
+            end
+            else begin
+                display_msg(message_str(SCRIPT_NCKEIWRI, 114));
+            end
+        end
+    end
+    else begin
+        display_msg(message_str(SCRIPT_NCKEIWRI, 115));
+    end
+end
+
+procedure use_all_fields_on
+begin
+    set_map_var(16, 1);
+    set_map_var(17, 1);
+    set_map_var(18, 1);
+    set_map_var(19, 1);
+    set_map_var(20, 1);
+    set_map_var(21, 1);
+    set_map_var(22, 1);
+    set_map_var(23, 1);
+end
+
+procedure use_all_fields_off
+begin
+    set_map_var(16, 0);
+    set_map_var(17, 0);
+    set_map_var(18, 0);
+    set_map_var(19, 0);
+    set_map_var(20, 0);
+    set_map_var(21, 0);
+    set_map_var(22, 0);
+    set_map_var(23, 0);
+end
