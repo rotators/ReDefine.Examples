@@ -1,0 +1,85 @@
+variable ini := "sfall-mods.ini";
+
+procedure GetConfigStr(variable arg0, variable arg1, variable arg2);
+procedure start;
+procedure map_enter_p_proc;
+
+variable iniAmmo := "";
+variable ammoData;
+variable enabled;
+
+
+procedure GetConfigStr(variable arg0, variable arg1, variable arg2)
+begin
+    variable LVar3 := 0;
+    LVar3 := get_ini_string(ini + "|" + arg0 + "|" + arg1);
+    if ((LVar3 == -1) orElse (LVar3 == "")) then begin
+        LVar3 := arg2;
+    end
+    return LVar3;
+end
+
+procedure start
+begin
+    variable LVar0 := 1;
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    if (game_loaded) then begin
+        enabled := get_ini_setting("ddraw.ini|Misc|DamageFormula");
+        if ((enabled == 1) orElse (enabled == 2)) then begin
+            iniAmmo := "AmmoGlovz.ini";
+        end
+        else begin
+            if (enabled == 5) then begin
+                iniAmmo := "AmmoYAAM.ini";
+            end
+            else begin
+                iniAmmo := GetConfigStr("Misc", "AmmoFile", "");
+            end
+        end
+        if (iniAmmo == "") then begin
+            enabled := 0;
+            return 0;
+        end
+        enabled := get_ini_setting(iniAmmo + "|1|pid");
+        if (enabled <= 0) then begin
+            return 0;
+        end
+        ammoData := create_array(-1, 0);
+        LVar1 := sfall_func2("get_ini_section", iniAmmo, "" + LVar0);
+        while (get_array(LVar1, "pid")) do begin
+            LVar2 := create_array(-1, 0);
+            set_array(LVar2, "dam_mult", atoi(get_array(LVar1, "dam_mult")));
+            set_array(LVar2, "dam_div", atoi(get_array(LVar1, "dam_div")));
+            set_array(LVar2, "dr_adjust", atoi(get_array(LVar1, "dr_adjust")));
+            set_array(LVar2, "ac_adjust", atoi(get_array(LVar1, "ac_adjust")));
+            set_array(ammoData, atoi(get_array(LVar1, "pid")), LVar2);
+            LVar0 := LVar0 + 1;
+            LVar1 := sfall_func2("get_ini_section", iniAmmo, "" + LVar0);
+        end
+        call map_enter_p_proc();
+        debug_msg("AmmoMod: Applying modificators to ammo prototypes.");
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    variable LVar3 := 0;
+    if (enabled > 0) then begin
+        LVar3 := 0;
+        LVar2 := len_array(ammoData);
+        while (LVar3 < LVar2) do begin
+            LVar1 := array_key(ammoData, LVar3);
+            LVar0 := get_array(ammoData, LVar1);
+            set_proto_data(LVar1, 52, get_array(LVar0, "dam_mult"));
+            set_proto_data(LVar1, 56, get_array(LVar0, "dam_div"));
+            set_proto_data(LVar1, 48, get_array(LVar0, "dr_adjust"));
+            set_proto_data(LVar1, 44, get_array(LVar0, "ac_adjust"));
+            LVar3 := LVar3 + 1;
+        end
+    end
+end
+

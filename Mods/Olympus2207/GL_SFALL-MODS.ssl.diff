@@ -1,0 +1,129 @@
+diff --git a/Mods/Olympus2207/Original/GL_SFALL-MODS.ssl b/Mods/Olympus2207/ReDefine/GL_SFALL-MODS.ssl
+index 7c6302f..b842f5b 100644
+--- a/Mods/Olympus2207/Original/GL_SFALL-MODS.ssl
++++ b/Mods/Olympus2207/ReDefine/GL_SFALL-MODS.ssl
+@@ -112,9 +112,9 @@ begin
+             if (get_sfall_global_int("AutoSave") == 0) then begin
+                 set_sfall_global("AutoSave", game_time);
+             end
+-            dudeElevation := elevation(dude_obj);
++            dudeElevation := dude_elevation;
+         end
+-        if (has_trait(0, dude_obj, 9)) then begin
++        if (has_trait(TRAIT_PERK, dude_obj, PERK_night_vision)) then begin
+             temp := get_light_level;
+             if (temp > 65535) then begin
+                 return 0;
+@@ -152,13 +152,13 @@ begin
+             tap_key(64);
+             call sfx_enable in (1);
+         end
+-        dudeElevation := elevation(dude_obj);
++        dudeElevation := dude_elevation;
+     end
+ end
+ 
+ procedure map_update_p_proc
+ begin
+-    if (autoSaveIsEnabled andAlso (elevation(dude_obj) != dudeElevation)) then begin
++    if (autoSaveIsEnabled andAlso (dude_elevation != dudeElevation)) then begin
+         if (unsigned_comp(autoSaveTime + get_sfall_global_int("AutoSave"), game_time) <= 0) then begin
+             set_sfall_global("AutoSave", game_time);
+             if (bakupMem == 0) then begin
+@@ -168,7 +168,7 @@ begin
+             tap_key(64);
+             call sfx_enable in (1);
+         end
+-        dudeElevation := elevation(dude_obj);
++        dudeElevation := dude_elevation;
+     end
+ end
+ 
+@@ -201,7 +201,7 @@ begin
+             return 0;
+         end
+         set_weapon_ammo_count(LVar2, 0);
+-        LVar5 := create_object_sid(LVar4, 0, 0, -1);
++        LVar5 := create_object(LVar4, 0, 0);
+         set_weapon_ammo_count(LVar5, LVar3);
+         add_obj_to_inven(LVar6, LVar5);
+     end
+@@ -314,10 +314,10 @@ begin
+         LVar3 := array_key(LVar5, LVar7);
+         LVar0 := get_array(LVar5, LVar3);
+         if (LVar3 > 1) then begin
+-            if (obj_blocking_line(LVar0, tile_num(dude_obj), 3)) then begin
++            if (obj_blocking_line(LVar0, dude_tile, 3)) then begin
+                 continue;
+             end
+-            LVar4 := len_array(path_find_to(LVar0, tile_num(dude_obj), 0));
++            LVar4 := len_array(path_find_to(LVar0, dude_tile, 0));
+             if ((LVar4 == 0) orElse (LVar4 > 6)) then begin
+                 continue;
+             end
+@@ -325,7 +325,7 @@ begin
+         LVar1 := obj_pid(LVar0);
+         if ((LVar1 != 206) andAlso (LVar1 != 209)) then begin
+             LVar2 := sfall_func1("item_weight", LVar0);
+-            if ((LVar2 + has_trait(1, dude_obj, 669)) > get_critter_stat(dude_obj, 12)) then begin
++            if ((LVar2 + has_trait(TRAIT_OBJECT, dude_obj, OBJECT_CUR_WEIGHT)) > get_critter_stat(dude_obj, STAT_carry_amt)) then begin
+                 LVar2 := -1;
+                 continue;
+             end
+@@ -383,7 +383,7 @@ begin
+             return 0;
+         end
+         LVar3 := elevation(LVar0);
+-        LVar2 := critter_inven_obj(LVar0, 1);
++        LVar2 := critter_inven_obj(LVar0, INVEN_TYPE_RIGHT_HAND);
+         if (LVar2) then begin
+             sfall_func2("set_flags", LVar2, sfall_func1("get_flags", LVar2) bwand -33554433);
+             rm_obj_from_inven(LVar0, LVar2);
+@@ -393,7 +393,7 @@ begin
+             end
+             move_to(LVar2, LVar1, LVar3);
+         end
+-        LVar2 := critter_inven_obj(LVar0, 2);
++        LVar2 := critter_inven_obj(LVar0, INVEN_TYPE_LEFT_HAND);
+         if (LVar2) then begin
+             sfall_func2("set_flags", LVar2, sfall_func1("get_flags", LVar2) bwand -16777217);
+             rm_obj_from_inven(LVar0, LVar2);
+@@ -446,7 +446,7 @@ begin
+     variable LVar10 := 0;
+     variable LVar11 := 0;
+     variable LVar12 := 0;
+-    if ((metarule(16, 0) == 0) orElse (get_sfall_arg != dude_obj)) then begin
++    if ((party_member_count(DONT_LIST_HIDDEN_MEMBERS) == 0) orElse (get_sfall_arg != dude_obj)) then begin
+         return 0;
+     end
+     debug_msg("Party member skill...");
+@@ -466,7 +466,7 @@ begin
+     if (((LVar2 == 9) orElse (LVar2 == 11)) andAlso (obj_type(LVar0) == 1)) then begin
+         return 0;
+     end
+-    LVar3 := has_skill(dude_obj, LVar2);
++    LVar3 := dude_skill(LVar2);
+     LVar9 := party_member_list(0);
+     LVar10 := len_array(LVar9);
+     while (LVar11 < LVar10) do begin
+@@ -489,7 +489,7 @@ begin
+             LVar8 := tile_distance_objs(dude_obj, LVar0) > 2;
+         end
+         if (LVar8) then begin
+-            float_msg(LVar5, message_str_game(15, random(1000, 1005)), 0);
++            float_msg(LVar5, message_str_game(15, random(1000, 1005)), FLOAT_MSG_NORMAL);
+             set_sfall_arg(0, LVar5);
+             set_sfall_return(LVar5);
+             debug_msg("> forced use of the party member: " + obj_name(LVar5) + "\n");
+@@ -497,10 +497,9 @@ begin
+         end
+         else begin
+             if ((LVar7 orElse (random(0, 10) == 0)) andAlso (anim_busy(LVar5) == 0)) then begin
+-                float_msg(LVar5, message_str_game(15, random(1100, 1104)), 0);
++                float_msg(LVar5, message_str_game(15, random(1100, 1104)), FLOAT_MSG_NORMAL);
+             end
+         end
+     end
+     set_sfall_return(dude_obj);
+ end
+-

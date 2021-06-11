@@ -1,0 +1,235 @@
+variable dude_objective_reputation;
+variable self_subjective_reaction;
+variable z_critter_search;
+variable critter_is_detected;
+variable detected_critter;
+variable persuade_chance;
+variable steal_perk;
+variable steal_gloves;
+variable animation_is_called;
+variable max_distance;
+variable big_gun;
+variable combat_count;
+variable def_test_door;
+
+procedure start;
+procedure critter_p_proc;
+procedure combat_p_proc;
+procedure description_p_proc;
+procedure look_at_p_proc;
+procedure pickup_p_proc;
+procedure push_p_proc;
+procedure talk_p_proc;
+procedure destroy_p_proc;
+procedure use_skill_on_p_proc;
+procedure damage_p_proc;
+procedure map_enter_p_proc;
+procedure timed_event_p_proc;
+
+
+procedure start
+begin
+    if (local_var(1) == 0) then begin
+        set_local_var(3, tile_num(self_obj));
+        set_local_var(1, 1);
+        set_local_var(7, has_trait(1, self_obj, 10));
+        set_local_var(4, random(70, 80));
+        set_local_var(5, random(0, 100));
+        set_local_var(6, random(-5, 5));
+        critter_add_trait(self_obj, 1, 6, 601);
+        critter_add_trait(self_obj, 1, 5, 62);
+        set_critter_stat(self_obj, 0, 5);
+        critter_mod_skill(self_obj, 1, 200);
+        max_distance := random(10, 15);
+        if (global_var(190) == 2) then begin
+            big_gun := create_object_sid(93, 1, 1, -1);
+            add_obj_to_inven(self_obj, big_gun);
+            wield_obj_critter(self_obj, big_gun);
+        end
+        else begin
+            big_gun := create_object_sid(193, 1, 1, -1);
+            add_obj_to_inven(self_obj, big_gun);
+            wield_obj_critter(self_obj, big_gun);
+        end
+    end
+end
+
+procedure critter_p_proc
+begin
+    if ((animation_is_called == 0) and (anim_busy(self_obj) == 0)) then begin
+        animation_is_called := 1;
+        add_timer_event(self_obj, random(59, 126), 1);
+    end
+    if (obj_can_see_obj(self_obj, dude_obj) == 1) then begin
+        if (not((obj_pid(critter_inven_obj(dude_obj, 0)) == 120) or (obj_pid(critter_inven_obj(dude_obj, 0)) == 121) or (obj_pid(critter_inven_obj(dude_obj, 0)) == 122) or (obj_pid(critter_inven_obj(dude_obj, 0)) == 123) or (obj_pid(critter_inven_obj(dude_obj, 0)) == 129) or (obj_pid(critter_inven_obj(dude_obj, 0)) == 391)) and not(obj_pid(critter_inven_obj(dude_obj, 0)) == 394)) then begin
+            set_local_var(2, 1);
+            float_msg(self_obj, message_str(394, random(97, 99)), 2);
+        end
+    end
+    if ((tile_num(dude_obj) == 17049) and (local_var(8) == 0) and (map_var(0) == 1)) then begin
+        set_local_var(8, 1);
+        def_test_door := tile_contains_pid_obj(18252, 0, 33555964);
+        if (obj_is_open(def_test_door)) then begin
+            obj_close(def_test_door);
+        end
+        game_ui_enable;
+        anim(dude_obj, 1000, 4);
+        attack_setup(self_obj, dude_obj);
+    end
+    if (obj_can_see_obj(self_obj, dude_obj)) then begin
+        if ((local_var(2) == 1) or (global_var(59) <= -31)) then begin
+            set_local_var(2, 0);
+            attack_setup(self_obj, dude_obj);
+        end
+    end
+end
+
+procedure combat_p_proc
+begin
+    if (combat_is_initialized) then begin
+        combat_count := combat_count + 1;
+        if ((combat_count >= 4) or critter_is_fleeing(self_obj) and (map_var(0) == 1)) then begin
+            set_map_var(0, 2);
+            terminate_combat;
+            float_msg(self_obj, message_str(452, 122), 0);
+            game_ui_disable;
+            add_timer_event(self_obj, 10, 2);
+        end
+    end
+end
+
+procedure description_p_proc
+begin
+    script_overrides;
+    display_msg(message_str(394, random(6, 9)));
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    display_msg(message_str(394, random(1, 5)));
+end
+
+procedure pickup_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_local_var(2, 1);
+    end
+end
+
+procedure push_p_proc
+begin
+    script_overrides;
+end
+
+procedure talk_p_proc
+begin
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_global_var(0, global_var(0) - 1);
+        if ((59 == 50) or (59 == 59)) then begin
+            set_global_var(59, global_var(59) - 3);
+        end
+        else begin
+            set_global_var(59, global_var(59) - 6);
+        end
+    end
+end
+
+procedure use_skill_on_p_proc
+begin
+    if (action_being_used == 10) then begin
+        if ((get_sfall_global_int(1) == 6) and (get_sfall_global_int(13) == 0)) then begin
+            script_overrides;
+            set_sfall_global(13, 1);
+        end
+        else begin
+            if (has_trait(2, dude_obj, 13)) then begin
+                if (global_var(81) < get_pc_stat(1)) then begin
+                    if (is_success(roll_vs_skill(dude_obj, 10, 0))) then begin
+                        set_global_var(98, global_var(98) + 3);
+                    end
+                    else begin
+                        set_global_var(98, global_var(98) + 1);
+                    end
+                    if (global_var(98) >= (2 * get_pc_stat(1))) then begin
+                        set_global_var(98, 0);
+                        set_global_var(81, global_var(81) + 1);
+                        critter_mod_skill(dude_obj, 10, 1);
+                        display_msg(message_str(10, 410));
+                    end
+                end
+            end
+            steal_perk := 0;
+            steal_gloves := 0;
+            if (has_trait(0, dude_obj, 37) != 0) then begin
+                steal_perk := steal_perk + 15;
+            end
+            if (has_trait(0, dude_obj, 33) != 0) then begin
+                steal_perk := steal_perk + 30;
+            end
+            if ((obj_pid(critter_inven_obj(dude_obj, 1)) == 245) or (obj_pid(critter_inven_obj(dude_obj, 2)) == 245)) then begin
+                steal_gloves := 10;
+            end
+            if (random(0, 100) <= ((has_skill(dude_obj, 10) / 2) + (((3 * get_critter_stat(dude_obj, 5)) + (((get_critter_stat(dude_obj, 6) - 4) * 4) - (difficulty_level * 4)) + (2 * steal_perk) + steal_gloves) / (local_var(4) / 25)))) then begin
+                display_msg(message_str(10, random(145, 148)));
+            end
+            else begin
+                script_overrides;
+                if (random(0, 100) <= (25 - floor((((get_critter_stat(dude_obj, 6) - 4) * 4) - (difficulty_level * 4)) / 3))) then begin
+                    float_msg(self_obj, message_str(10, random(206, 209)), 2);
+                    set_local_var(2, 1);
+                end
+                else begin
+                    display_msg(message_str(10, random(200, 203)));
+                end
+            end
+        end
+    end
+    if (action_being_used == 12) then begin
+        script_overrides;
+        display_msg(message_str(10, 204) + ((has_skill(dude_obj, 10) / 2) + (((3 * get_critter_stat(dude_obj, 5)) + (((get_critter_stat(dude_obj, 6) - 4) * 4) - (difficulty_level * 4)) + (2 * steal_perk) + steal_gloves) / (local_var(4) / 25))) + message_str(10, 205));
+    end
+end
+
+procedure damage_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        critter_add_trait(self_obj, 1, 6, 38);
+        set_map_var(0, 0);
+        set_local_var(2, 1);
+    end
+end
+
+procedure map_enter_p_proc
+begin
+end
+
+procedure timed_event_p_proc
+begin
+    if (fixed_param == 1) then begin
+        animation_is_called := 0;
+    end
+    if (fixed_param == 2) then begin
+        def_test_door := tile_contains_pid_obj(18252, 0, 33555964);
+        if (not(obj_is_open(def_test_door))) then begin
+            obj_open(def_test_door);
+        end
+        reg_anim_func(2, dude_obj);
+        reg_anim_func(1, 1);
+        reg_anim_obj_move_to_tile(dude_obj, 18276, -1);
+        reg_anim_func(3, 0);
+        add_timer_event(self_obj, 20, 3);
+    end
+    if (fixed_param == 3) then begin
+        animate_move_obj_to_tile(self_obj, 17049, 0);
+        fadeOut(1000);
+        move_to(self_obj, 2, 2);
+        anim(dude_obj, 1000, 5);
+        move_to(dude_obj, 18276, 0);
+    end
+end
+

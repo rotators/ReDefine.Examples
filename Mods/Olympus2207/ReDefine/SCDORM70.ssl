@@ -1,0 +1,329 @@
+variable dude_objective_reputation;
+variable self_subjective_reaction;
+variable z_critter_search;
+variable critter_is_detected;
+variable detected_critter;
+variable persuade_chance;
+variable steal_perk;
+variable steal_gloves;
+variable z_weapon_class;
+variable critter_source;
+variable used_item;
+variable level_modifikator;
+variable sucsess_modifikator;
+
+procedure start;
+procedure description_p_proc;
+procedure look_at_p_proc;
+procedure damage_p_proc;
+procedure use_p_proc;
+procedure use_obj_on_p_proc;
+procedure use_skill_on_p_proc;
+procedure map_enter_p_proc;
+procedure open_with_skill;
+procedure study;
+procedure map_update_p_proc;
+procedure KA_BOOM;
+
+
+procedure start
+begin
+    if (local_var(3) == 0) then begin
+        set_local_var(3, 1);
+        set_local_var(1, random(70, 80));
+        set_local_var(8, random(40, 60));
+        set_local_var(7, random(40, 50));
+        set_local_var(0, 0);
+        set_local_var(2, 0);
+        set_local_var(5, 0);
+        set_local_var(10, 1);
+    end
+end
+
+procedure description_p_proc
+begin
+end
+
+procedure look_at_p_proc
+begin
+end
+
+procedure damage_p_proc
+begin
+    if (weapon_dmg_type(target_obj) == 6) then begin
+        set_local_var(7, local_var(7) - fixed_param);
+        if ((local_var(7) <= 0) and (local_var(4) == 0)) then begin
+            set_local_var(0, 1);
+            obj_unlock(self_obj);
+            if (not(obj_is_open(self_obj))) then begin
+                obj_open(self_obj);
+                display_msg(message_str(SCRIPT_STTEXT, random(80, 81)));
+            end
+            else begin
+                display_msg(message_str(SCRIPT_STTEXT, random(36, 37)));
+            end
+            set_local_var(4, 1);
+        end
+        else begin
+            if (local_var(4) == 0) then begin
+                display_msg(message_str(SCRIPT_STTEXT, 89));
+            end
+        end
+    end
+end
+
+procedure use_p_proc
+begin
+    critter_source := source_obj;
+    if ((local_var(4) == 1) and (source_obj == dude_obj)) then begin
+        script_overrides;
+        display_msg(message_str(SCRIPT_STTEXT, random(96, 99)));
+    end
+    else begin
+        if (local_var(9) == 1) then begin
+            if (source_obj != dude_obj) then begin
+                if (has_skill(critter_source, SKILL_TRAPS) >= local_var(8)) then begin
+                    set_local_var(9, 0);
+                    add_obj_to_inven(critter_source, create_object(49, 1, 2));
+                    display_msg(message_str(SCRIPT_STTEXT, 35) + obj_name(critter_source));
+                end
+                else begin
+                    call KA_BOOM();
+                end
+            end
+            else begin
+                set_local_var(9, 0);
+                add_obj_to_inven(dude_obj, create_object(49, 1, 2));
+                display_msg(message_str(SCRIPT_STTEXT, 32));
+            end
+        end
+        if (local_var(5) == 1) then begin
+            script_overrides;
+            call KA_BOOM();
+        end
+        else begin
+            if (local_var(0) == 0) then begin
+                script_overrides;
+                if (source_obj == dude_obj) then begin
+                    display_msg(message_str(SCRIPT_STTEXT, random(110, 113)));
+                end
+                else begin
+                    float_msg(source_obj, message_str(SCRIPT_STTEXT, random(40, 43)), FLOAT_MSG_LIGHT_GREY);
+                    animate_move_obj_to_tile(critter_source, tile_num_in_direction(tile_num(critter_source), (obj_get_rot(critter_source) + 3) % 6, 1), 0 bwor 16);
+                end
+            end
+        end
+    end
+end
+
+procedure use_obj_on_p_proc
+begin
+    variable LVar0 := 0;
+    LVar0 := random(15, 22) - dude_endurance;
+    if (not(obj_is_open(self_obj))) then begin
+        script_overrides;
+        used_item := obj_pid(obj_being_used_with);
+        if (local_var(0) == 0) then begin
+            if (used_item == 55) then begin
+                level_modifikator := 5;
+                sucsess_modifikator := 10;
+                call open_with_skill();
+            end
+            if (used_item == 56) then begin
+                level_modifikator := 15;
+                sucsess_modifikator := 25;
+                call open_with_skill();
+            end
+            if (used_item == 104) then begin
+                if (random(0, 100) <= (20 - floor((((dude_luck - 4) * 4) - (difficulty_level * 4)) / 3))) then begin
+                    if (get_critter_stat(dude_obj, STAT_current_hp) <= LVar0) then begin
+                        LVar0 := get_critter_stat(dude_obj, STAT_current_hp) - 1;
+                        if (LVar0 > 0) then begin
+                            critter_dmg(dude_obj, LVar0, 0 bwor 256);
+                        end
+                    end
+                    else begin
+                        critter_dmg(dude_obj, LVar0, 0 bwor 256);
+                    end
+                    display_msg(message_str(SCRIPT_STTEXT, random(83, 85)));
+                end
+                else begin
+                    display_msg(message_str(SCRIPT_STTEXT, random(70, 74)));
+                end
+            end
+        end
+        if (used_item == 49) then begin
+            if (local_var(0) == 0) then begin
+                display_msg(message_str(SCRIPT_STTEXT, 86));
+            end
+            else begin
+                if ((local_var(9) == 1) or (local_var(5) == 1)) then begin
+                    display_msg(message_str(SCRIPT_STTEXT, 88));
+                end
+                else begin
+                    set_local_var(9, 1);
+                    set_local_var(8, random(dude_skill(SKILL_TRAPS) - 5, dude_skill(SKILL_TRAPS) + 5));
+                    rm_obj_from_inven(dude_obj, obj_carrying_pid_obj(dude_obj, 49));
+                    display_msg(message_str(SCRIPT_STTEXT, 87));
+                end
+            end
+        end
+    end
+end
+
+procedure use_skill_on_p_proc
+begin
+    variable LVar0 := 0;
+    LVar0 := random(40, 60) * 2;
+    if (action_being_used == 9) then begin
+        script_overrides;
+        call open_with_skill();
+    end
+    if ((action_being_used == 12) and (local_var(0) == 0)) then begin
+        script_overrides;
+        call study();
+    end
+    if (action_being_used == 11) then begin
+        if (local_var(9) == 1) then begin
+            script_overrides;
+            set_local_var(9, 0);
+            add_obj_to_inven(dude_obj, create_object(49, 1, 2));
+            display_msg(message_str(SCRIPT_STTEXT, 32));
+        end
+        if (local_var(5) == 1) then begin
+            if ((dude_skill(SKILL_TRAPS) + dude_perception) >= (local_var(8) - (((dude_luck - 4) * 4) - (difficulty_level * 4)))) then begin
+                script_overrides;
+                set_local_var(5, 0);
+                add_obj_to_inven(dude_obj, create_object(49, 1, 2));
+                display_msg(message_str(SCRIPT_STTEXT, 32));
+                if (local_var(10) == 0) then begin
+                    set_local_var(10, 1);
+                    give_exp_points(floor(LVar0 / 5) + (dude_iq * floor(LVar0 / 12)) + (dude_luck * floor(LVar0 / 30)) + (floor(LVar0 / 75) * (((dude_luck - 4) * 4) - (difficulty_level * 4))));
+                    display_msg(message_str(SCRIPT_STTEXT, random(140, 143)) + (floor(LVar0 / 5) + (dude_iq * floor(LVar0 / 12)) + (dude_luck * floor(LVar0 / 30)) + (floor(LVar0 / 75) * (((dude_luck - 4) * 4) - (difficulty_level * 4)))) + message_str(SCRIPT_STTEXT, 144));
+                    if (has_trait(TRAIT_TRAIT, dude_obj, TRAIT_sex_appeal) and (global_var(GVAR_VAULT_GECKO_PLANT) < get_pc_stat(PCSTAT_level))) then begin
+                        set_global_var(GVAR_MODOC_KILL_ALL_BRAHMIN_TIME, global_var(GVAR_MODOC_KILL_ALL_BRAHMIN_TIME) + 4);
+                        if (global_var(GVAR_MODOC_KILL_ALL_BRAHMIN_TIME) >= (2 * get_pc_stat(PCSTAT_level))) then begin
+                            set_global_var(GVAR_MODOC_KILL_ALL_BRAHMIN_TIME, 0);
+                            set_global_var(GVAR_VAULT_GECKO_PLANT, global_var(GVAR_VAULT_GECKO_PLANT) + 1);
+                            critter_mod_skill(dude_obj, SKILL_TRAPS, 1);
+                            display_msg(message_str(SCRIPT_STTEXT, 411));
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    if (local_var(0) == 0) then begin
+        obj_lock(self_obj);
+    end
+    else begin
+        obj_unlock(self_obj);
+    end
+end
+
+procedure open_with_skill
+begin
+    variable LVar0 := 0;
+    LVar0 := random(70, 80) * 2;
+    if (source_obj != dude_obj) then begin
+        if (has_skill(source_obj, SKILL_LOCKPICK) >= local_var(1)) then begin
+            obj_unlock(self_obj);
+            set_local_var(0, 1);
+        end
+    end
+    else begin
+        if (local_var(0) == 1) then begin
+            if (obj_is_open(self_obj)) then begin
+                display_msg(message_str(SCRIPT_STTEXT, 94));
+            end
+            else begin
+                if (local_var(6) == 1) then begin
+                    display_msg(message_str(SCRIPT_STTEXT, 88));
+                end
+                else begin
+                    set_local_var(0, 0);
+                    set_local_var(1, random(dude_skill(SKILL_LOCKPICK) - 10, dude_skill(SKILL_LOCKPICK) - 1));
+                    display_msg(message_str(SCRIPT_STTEXT, 95));
+                    float_msg(self_obj, message_str(SCRIPT_STTEXT, 119), FLOAT_MSG_WHITE);
+                end
+            end
+        end
+        else begin
+            if (dude_skill(SKILL_LOCKPICK) >= (local_var(1) - level_modifikator)) then begin
+                if (random(0, 100) < (4 + floor(dude_skill(SKILL_LOCKPICK) / 2) + (2 * ((2 * get_critter_stat(dude_obj, STAT_ag)) - 9)) + (2 * (dude_iq - 5)) + floor(dude_skill(SKILL_REPAIR) / 3) + (((dude_luck - 4) * 4) - (difficulty_level * 4)) + sucsess_modifikator)) then begin
+                    obj_unlock(self_obj);
+                    float_msg(self_obj, message_str(SCRIPT_STTEXT, random(100, 109)), FLOAT_MSG_WHITE);
+                    set_local_var(0, 1);
+                    if (local_var(2) == 0) then begin
+                        set_local_var(2, 1);
+                        give_exp_points(floor(LVar0 / 5) + (dude_iq * floor(LVar0 / 12)) + (dude_luck * floor(LVar0 / 30)) + (floor(LVar0 / 75) * (((dude_luck - 4) * 4) - (difficulty_level * 4))));
+                        display_msg(message_str(SCRIPT_STTEXT, random(140, 143)) + (floor(LVar0 / 5) + (dude_iq * floor(LVar0 / 12)) + (dude_luck * floor(LVar0 / 30)) + (floor(LVar0 / 75) * (((dude_luck - 4) * 4) - (difficulty_level * 4)))) + message_str(SCRIPT_STTEXT, 144));
+                        if (has_trait(TRAIT_TRAIT, dude_obj, TRAIT_sex_appeal) and (global_var(GVAR_VAULT_PLOW_PROBLEM) < get_pc_stat(PCSTAT_level))) then begin
+                            set_global_var(GVAR_QUEST_DELIVER_HOLODISK, global_var(GVAR_QUEST_DELIVER_HOLODISK) + 4);
+                            if (global_var(GVAR_QUEST_DELIVER_HOLODISK) >= (2 * get_pc_stat(PCSTAT_level))) then begin
+                                set_global_var(GVAR_QUEST_DELIVER_HOLODISK, 0);
+                                set_global_var(GVAR_VAULT_PLOW_PROBLEM, global_var(GVAR_VAULT_PLOW_PROBLEM) + 1);
+                                critter_mod_skill(dude_obj, SKILL_LOCKPICK, 1);
+                                display_msg(message_str(SCRIPT_STTEXT, 409));
+                            end
+                        end
+                    end
+                end
+                else begin
+                    if (random(1, 100) <= (random(15, 25) - (((dude_luck - 4) * 4) - (difficulty_level * 4)))) then begin
+                        display_msg(message_str(SCRIPT_STTEXT, random(90, 93)));
+                        jam_lock(self_obj);
+                    end
+                    else begin
+                        display_msg(message_str(SCRIPT_STTEXT, 114));
+                    end
+                end
+            end
+            else begin
+                display_msg(message_str(SCRIPT_STTEXT, random(120, 123)));
+            end
+        end
+    end
+    level_modifikator := 0;
+    sucsess_modifikator := 0;
+end
+
+procedure study
+begin
+    if ((dude_iq >= 7) or ((dude_skill(SKILL_REPAIR) + floor((((dude_luck - 4) * 4) - (difficulty_level * 4)) / 2)) >= local_var(1))) then begin
+        display_msg(message_str(SCRIPT_STTEXT, 124) + local_var(1) + message_str(SCRIPT_STTEXT, 125));
+    end
+    else begin
+        display_msg(message_str(SCRIPT_STTEXT, 126));
+    end
+end
+
+procedure map_update_p_proc
+begin
+    if (local_var(0) == 0) then begin
+        obj_lock(self_obj);
+    end
+    else begin
+        obj_unlock(self_obj);
+    end
+end
+
+procedure KA_BOOM
+begin
+    if (local_var(5) == 1) then begin
+        set_local_var(5, 0);
+    end
+    if (local_var(9) == 1) then begin
+        set_local_var(9, 0);
+    end
+    if (critter_source == dude_obj) then begin
+        explosion(tile_num(critter_source), elevation(self_obj), random(60, 110));
+    end
+    else begin
+        explosion(tile_num(self_obj), elevation(self_obj), random(60, 110));
+    end
+end

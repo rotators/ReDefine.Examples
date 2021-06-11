@@ -1,0 +1,181 @@
+variable dude_objective_reputation;
+variable self_subjective_reaction;
+variable z_critter_search;
+variable critter_is_detected;
+variable detected_critter;
+variable persuade_chance;
+variable steal_perk;
+variable steal_gloves;
+variable max_distance;
+variable animation_is_called;
+variable distance_to_walk;
+variable stuff_container;
+variable spec_weapon;
+
+procedure start;
+procedure critter_p_proc;
+procedure combat_p_proc;
+procedure description_p_proc;
+procedure look_at_p_proc;
+procedure pickup_p_proc;
+procedure push_p_proc;
+procedure talk_p_proc;
+procedure destroy_p_proc;
+procedure use_skill_on_p_proc;
+procedure damage_p_proc;
+procedure map_enter_p_proc;
+procedure timed_event_p_proc;
+
+
+procedure start
+begin
+    if (local_var(1) == 0) then begin
+        set_local_var(3, tile_num(self_obj));
+        set_local_var(1, 1);
+        if ((obj_pid(self_obj) == 16777413) or (obj_pid(self_obj) == 16777414) or (obj_pid(self_obj) == 16777415) or (obj_pid(self_obj) == 16777416)) then begin
+            critter_add_trait(self_obj, 1, 6, 203);
+            critter_add_trait(self_obj, 1, 5, 66);
+            add_obj_to_inven(self_obj, create_object_sid(518, 1, 2, -1));
+            wield_obj_critter(self_obj, obj_carrying_pid_obj(self_obj, 518));
+        end
+        max_distance := random(4, 8);
+    end
+    set_local_var(2, 1);
+end
+
+procedure critter_p_proc
+begin
+    if ((animation_is_called == 0) and (anim_busy(self_obj) == 0)) then begin
+        animation_is_called := 1;
+        add_timer_event(self_obj, random(29, 76), 1);
+    end
+    if (obj_can_see_obj(self_obj, dude_obj)) then begin
+        if (local_var(2) == 1) then begin
+            set_local_var(2, 0);
+            attack_setup(self_obj, dude_obj);
+        end
+    end
+    if (obj_on_screen(self_obj) and (global_var(244) != 3)) then begin
+        set_global_var(244, 3);
+        set_local_var(3, tile_num(dude_obj));
+    end
+end
+
+procedure combat_p_proc
+begin
+end
+
+procedure description_p_proc
+begin
+    script_overrides;
+    display_msg(message_str(413, 7));
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    display_msg(message_str(413, random(3, 4)));
+end
+
+procedure pickup_p_proc
+begin
+    script_overrides;
+end
+
+procedure push_p_proc
+begin
+    script_overrides;
+    set_local_var(2, 1);
+end
+
+procedure talk_p_proc
+begin
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_global_var(0, global_var(0) + 50);
+    end
+    if (not(tile_contains_obj_pid(2, 2, 250))) then begin
+        stuff_container := create_object_sid(250, 2, 2, -1);
+    end
+    else begin
+        stuff_container := tile_contains_pid_obj(2, 2, 250);
+    end
+    move_obj_inven_to_obj(self_obj, stuff_container);
+    set_global_var(244, 2);
+    if (global_var(245) >= 15) then begin
+        display_msg(message_str(413, 12));
+    end
+    else begin
+        display_msg(message_str(413, 11));
+    end
+    play_sfx("LEVELUP");
+end
+
+procedure use_skill_on_p_proc
+begin
+    if (action_being_used == 10) then begin
+        script_overrides;
+    end
+end
+
+procedure damage_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_local_var(2, 1);
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    if (not(metarule(22, 0)) == 1) then begin
+        max_distance := random(2, 6);
+        if (cur_map_index == 36) then begin
+            if ((global_var(244) == 3) and (local_var(4) == 0)) then begin
+                set_local_var(4, 1);
+            end
+            else begin
+                if ((global_var(244) == 3) and (local_var(4) == 1) and (elevation(self_obj) != 0)) then begin
+                    move_to(self_obj, tile_num(self_obj), 0);
+                    set_global_var(244, 1);
+                end
+            end
+        end
+        else begin
+            if (cur_map_index == 37) then begin
+                if (global_var(244) == 2) then begin
+                    move_to(self_obj, tile_num(self_obj), 2);
+                end
+                else begin
+                    if ((global_var(244) == 3) and (local_var(4) == 0)) then begin
+                        set_local_var(4, 1);
+                        move_to(self_obj, 13073, elevation(self_obj));
+                    end
+                    else begin
+                        if ((global_var(244) == 3) and (local_var(4) == 1) and (elevation(self_obj) != 2)) then begin
+                            move_to(self_obj, tile_num(self_obj), 2);
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure timed_event_p_proc
+begin
+    if (fixed_param == 1) then begin
+        if (not(combat_is_initialized)) then begin
+            if (tile_distance(tile_num(self_obj), local_var(3)) < max_distance) then begin
+                animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), random(0, 5), random(floor(max_distance / 2), max_distance)), 0);
+            end
+            else begin
+                animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), rotation_to_tile(tile_num(self_obj), local_var(3)), random(floor(max_distance / 2), max_distance)), 0);
+            end
+        end
+        animation_is_called := 0;
+    end
+end
+

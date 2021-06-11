@@ -1,0 +1,225 @@
+variable dude_objective_reputation;
+variable self_subjective_reaction;
+variable z_critter_search;
+variable critter_is_detected;
+variable detected_critter;
+variable persuade_chance;
+variable steal_perk;
+variable steal_gloves;
+variable z_weapon_class;
+variable used_item;
+variable level_modifikator;
+variable sucsess_modifikator;
+variable critter_source;
+
+procedure start;
+procedure description_p_proc;
+procedure look_at_p_proc;
+procedure damage_p_proc;
+procedure use_p_proc;
+procedure use_obj_on_p_proc;
+procedure use_skill_on_p_proc;
+procedure map_enter_p_proc;
+procedure open_with_skill;
+procedure study;
+procedure map_update_p_proc;
+procedure KA_BOOM;
+
+
+procedure start
+begin
+    if (local_var(3) == 0) then begin
+        set_local_var(3, 1);
+        set_local_var(1, random(50, 60));
+        set_local_var(5, random(50, 60));
+        set_local_var(4, 0);
+        set_local_var(7, 1);
+        set_local_var(0, 0);
+        set_local_var(2, 0);
+    end
+end
+
+procedure description_p_proc
+begin
+end
+
+procedure look_at_p_proc
+begin
+end
+
+procedure damage_p_proc
+begin
+end
+
+procedure use_p_proc
+begin
+    critter_source := source_obj;
+    if (local_var(4) == 1) then begin
+        script_overrides;
+        call KA_BOOM();
+    end
+    else begin
+        if (local_var(0) == 0) then begin
+            script_overrides;
+            if (source_obj == dude_obj) then begin
+                display_msg(message_str(10, random(110, 113)));
+            end
+            else begin
+                float_msg(source_obj, message_str(10, random(40, 43)), 12);
+                animate_move_obj_to_tile(critter_source, tile_num_in_direction(tile_num(critter_source), (has_trait(1, critter_source, 10) + 3) % 6, 1), 0 bwor 16);
+            end
+        end
+    end
+end
+
+procedure use_obj_on_p_proc
+begin
+    if (not(obj_is_open(self_obj))) then begin
+        script_overrides;
+        used_item := obj_pid(obj_being_used_with);
+        if (local_var(0) == 0) then begin
+            if (used_item == 55) then begin
+                level_modifikator := 5;
+                sucsess_modifikator := 10;
+                call open_with_skill();
+            end
+            if (used_item == 56) then begin
+                level_modifikator := 15;
+                sucsess_modifikator := 25;
+                call open_with_skill();
+            end
+        end
+    end
+end
+
+procedure use_skill_on_p_proc
+begin
+    variable LVar0 := 0;
+    LVar0 := random(50, 60) * 2;
+    if ((action_being_used == 9) or (action_being_used == 10)) then begin
+        script_overrides;
+        call open_with_skill();
+    end
+    if ((action_being_used == 12) and (local_var(0) == 0)) then begin
+        script_overrides;
+        call study();
+    end
+    if ((action_being_used == 11) and (local_var(4) == 1)) then begin
+        if ((has_skill(dude_obj, 11) + get_critter_stat(dude_obj, 1)) >= local_var(5)) then begin
+            script_overrides;
+            set_local_var(4, 0);
+            add_obj_to_inven(dude_obj, create_object_sid(48, 1, 2, -1));
+            display_msg(message_str(10, 32));
+            if (local_var(7) == 0) then begin
+                set_local_var(7, 1);
+                give_exp_points(floor(LVar0 / 5) + (get_critter_stat(dude_obj, 4) * floor(LVar0 / 12)) + (get_critter_stat(dude_obj, 6) * floor(LVar0 / 30)) + (floor(LVar0 / 75) * (((get_critter_stat(dude_obj, 6) - 4) * 4) - (difficulty_level * 4))));
+                display_msg(message_str(10, random(140, 143)) + (floor(LVar0 / 5) + (get_critter_stat(dude_obj, 4) * floor(LVar0 / 12)) + (get_critter_stat(dude_obj, 6) * floor(LVar0 / 30)) + (floor(LVar0 / 75) * (((get_critter_stat(dude_obj, 6) - 4) * 4) - (difficulty_level * 4)))) + message_str(10, 144));
+                if (has_trait(2, dude_obj, 13) and (global_var(82) < get_pc_stat(1))) then begin
+                    set_global_var(99, global_var(99) + 4);
+                    if (global_var(99) >= (2 * get_pc_stat(1))) then begin
+                        set_global_var(99, 0);
+                        set_global_var(82, global_var(82) + 1);
+                        critter_mod_skill(dude_obj, 11, 1);
+                        display_msg(message_str(10, 411));
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    if (local_var(0) == 0) then begin
+        obj_lock(self_obj);
+    end
+    else begin
+        obj_unlock(self_obj);
+    end
+end
+
+procedure open_with_skill
+begin
+    variable LVar0 := 0;
+    LVar0 := random(50, 60) * 2;
+    if (local_var(0) == 1) then begin
+        if (not(obj_is_open(self_obj))) then begin
+            set_local_var(0, 0);
+            set_local_var(1, random(has_skill(dude_obj, 9) - 10, has_skill(dude_obj, 9) - 1));
+            display_msg(message_str(10, 95));
+            float_msg(self_obj, message_str(10, 119), 9);
+        end
+    end
+    else begin
+        if (has_skill(dude_obj, 9) >= (local_var(1) - level_modifikator)) then begin
+            if (random(0, 100) < (4 + floor(has_skill(dude_obj, 9) / 2) + (2 * ((2 * get_critter_stat(dude_obj, 5)) - 9)) + (2 * (get_critter_stat(dude_obj, 4) - 5)) + floor(has_skill(dude_obj, 13) / 3) + (((get_critter_stat(dude_obj, 6) - 4) * 4) - (difficulty_level * 4)) + sucsess_modifikator)) then begin
+                obj_unlock(self_obj);
+                float_msg(self_obj, message_str(10, random(100, 109)), 9);
+                set_local_var(0, 1);
+                if (local_var(2) == 0) then begin
+                    set_local_var(2, 1);
+                    give_exp_points(floor(LVar0 / 5) + (get_critter_stat(dude_obj, 4) * floor(LVar0 / 12)) + (get_critter_stat(dude_obj, 6) * floor(LVar0 / 30)) + (floor(LVar0 / 75) * (((get_critter_stat(dude_obj, 6) - 4) * 4) - (difficulty_level * 4))));
+                    display_msg(message_str(10, random(140, 143)) + (floor(LVar0 / 5) + (get_critter_stat(dude_obj, 4) * floor(LVar0 / 12)) + (get_critter_stat(dude_obj, 6) * floor(LVar0 / 30)) + (floor(LVar0 / 75) * (((get_critter_stat(dude_obj, 6) - 4) * 4) - (difficulty_level * 4)))) + message_str(10, 144));
+                    if (has_trait(2, dude_obj, 13) and (global_var(80) < get_pc_stat(1))) then begin
+                        set_global_var(97, global_var(97) + 4);
+                        if (global_var(97) >= (2 * get_pc_stat(1))) then begin
+                            set_global_var(97, 0);
+                            set_global_var(80, global_var(80) + 1);
+                            critter_mod_skill(dude_obj, 9, 1);
+                            display_msg(message_str(10, 409));
+                        end
+                    end
+                end
+            end
+            else begin
+                if (random(1, 100) <= (random(15, 25) - (((get_critter_stat(dude_obj, 6) - 4) * 4) - (difficulty_level * 4)))) then begin
+                    critter_dmg(dude_obj, random(12, 20) - get_critter_stat(dude_obj, 6), 0);
+                    display_msg(message_str(10, random(162, 163)));
+                end
+                else begin
+                    display_msg(message_str(10, 114));
+                end
+            end
+        end
+        else begin
+            display_msg(message_str(10, random(120, 123)));
+        end
+    end
+    level_modifikator := 0;
+    sucsess_modifikator := 0;
+end
+
+procedure study
+begin
+    if ((get_critter_stat(dude_obj, 4) >= 7) or ((floor(has_skill(dude_obj, 12) / 2) + floor(has_skill(dude_obj, 13) / 2) + floor((((get_critter_stat(dude_obj, 6) - 4) * 4) - (difficulty_level * 4)) / 2)) >= local_var(1))) then begin
+        display_msg(message_str(10, 124) + local_var(1) + message_str(10, 125));
+    end
+    else begin
+        display_msg(message_str(10, 126));
+    end
+end
+
+procedure map_update_p_proc
+begin
+    if (local_var(0) == 0) then begin
+        obj_lock(self_obj);
+    end
+    else begin
+        obj_unlock(self_obj);
+    end
+end
+
+procedure KA_BOOM
+begin
+    set_local_var(4, 0);
+    if (critter_source == dude_obj) then begin
+        critter_dmg(critter_source, local_var(5) - (((get_critter_stat(dude_obj, 6) - 4) * 4) - (difficulty_level * 4)), 4);
+    end
+    else begin
+        critter_dmg(critter_source, local_var(5) + (((get_critter_stat(dude_obj, 6) - 4) * 4) - (difficulty_level * 4)), 4);
+    end
+    if (not(obj_is_open(self_obj)) and (local_var(0) == 1)) then begin
+        obj_open(self_obj);
+    end
+end
+

@@ -1,0 +1,304 @@
+procedure GetIniConfig(variable arg0, variable arg1, variable arg2, variable arg3);
+procedure GetConfig(variable arg0, variable arg1, variable arg2);
+procedure GetConfigStr(variable arg0, variable arg1, variable arg2);
+procedure GetConfigList(variable arg0, variable arg1);
+procedure GetConfigListInt(variable arg0, variable arg1);
+procedure start;
+procedure AllowControl(variable arg0);
+procedure CombaTurn_Handler;
+procedure InventoryMove_Handler;
+procedure GameModeChange_Handler;
+procedure KeyPress_Handler;
+procedure InvenWield_Handler;
+procedure SetGlobalVar_Handler;
+
+variable controlMode;
+variable toggleControlKey;
+variable toggleControl := 1;
+variable noCheckArray;
+variable pidList;
+variable perksList;
+variable lightInt;
+variable lightDist;
+variable npcControl;
+variable displayName;
+variable displayNameColor;
+variable isShowTag;
+variable inControl;
+
+
+procedure GetIniConfig(variable arg0, variable arg1, variable arg2, variable arg3)
+begin
+    variable LVar4 := 0;
+    LVar4 := get_ini_setting(arg3 + "|" + arg0 + "|" + arg1);
+    if (LVar4 == -1) then begin
+        LVar4 := arg2;
+    end
+    return LVar4;
+end
+
+procedure GetConfig(variable arg0, variable arg1, variable arg2)
+begin
+    variable LVar3 := 0;
+    LVar3 := get_ini_setting("sfall-mods.ini" + "|" + arg0 + "|" + arg1);
+    if (LVar3 == -1) then begin
+        LVar3 := arg2;
+    end
+    return LVar3;
+end
+
+procedure GetConfigStr(variable arg0, variable arg1, variable arg2)
+begin
+    variable LVar3 := 0;
+    LVar3 := get_ini_string("sfall-mods.ini" + "|" + arg0 + "|" + arg1);
+    if ((LVar3 == -1) orElse (LVar3 == "")) then begin
+        LVar3 := arg2;
+    end
+    return LVar3;
+end
+
+procedure GetConfigList(variable arg0, variable arg1)
+begin
+    variable LVar2 := 0;
+    LVar2 := get_ini_string("sfall-mods.ini" + "|" + arg0 + "|" + arg1);
+    if ((LVar2 == -1) orElse (LVar2 == "")) then begin
+        return temp_array(0, 0);
+    end
+    return string_split(LVar2, ",");
+end
+
+procedure GetConfigListInt(variable arg0, variable arg1)
+begin
+    variable LVar2 := 0;
+    variable LVar3 := 0;
+    LVar2 := GetConfigList(arg0, arg1);
+    while (LVar3 < len_array(LVar2)) do begin
+        set_array(LVar2, LVar3, atoi(get_array(LVar2, LVar3)));
+        LVar3 := LVar3 + 1;
+    end
+    return LVar2;
+end
+
+procedure start
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    if (game_loaded andAlso (sfall_ver_major >= 4)) then begin
+        controlMode := GetConfig("CombatControl", "Mode", 0);
+        if (controlMode > 2) then begin
+            controlMode := 0;
+        end
+        else begin
+            if ((controlMode == 1) andAlso (GetIniConfig("Debugging", "Enable", 0, "ddraw.ini") == 0)) then begin
+                controlMode := 2;
+            end
+        end
+        if (controlMode > 0) then begin
+            toggleControlKey := GetConfig("CombatControl", "Key", 0);
+            displayName := GetConfig("CombatControl", "DisplayName", 0);
+            if (displayName) then begin
+                LVar0 := sfall_func0("add_iface_tag");
+                debug_msg("NPC control - added new box: " + LVar0);
+                if (LVar0 <= 0) then begin
+                    LVar1 := get_ini_setting("ddraw.ini|Misc|BoxBarCount");
+                    if (LVar1 < 0) then begin
+                        LVar1 := 9;
+                    end
+                    else begin
+                        LVar1 := LVar1 + 4;
+                    end
+                    if ((displayName < 5) orElse (displayName > LVar1)) then begin
+                        displayName := 0;
+                    end
+                end
+                else begin
+                    displayName := LVar0;
+                end
+                displayNameColor := GetConfig("CombatControl", "DisplayNameColor", 0);
+            end
+            set_perk_ranks(73, 1);
+            set_perk_level(73, 999);
+            pidList := GetConfigListInt("CombatControl", "PIDList");
+            fix_array(pidList);
+            noCheckArray := len_array(pidList) == 0;
+            perksList := GetConfigListInt("CombatControl", "PerksList");
+            fix_array(perksList);
+            register_hook_proc(19, KeyPress_Handler);
+            register_hook_proc(27, CombaTurn_Handler);
+            register_hook_proc(31, GameModeChange_Handler);
+            register_hook_proc(24, InventoryMove_Handler);
+            register_hook_proc(25, InvenWield_Handler);
+            if (GetConfig("CombatControl", "GainReputation", 0) == 0) then begin
+                register_hook_proc(29, SetGlobalVar_Handler);
+            end
+        end
+    end
+end
+
+procedure AllowControl(variable arg0)
+begin
+    if ((noCheckArray orElse (scan_array(pidList, arg0 bwand 16777215) != -1)) andAlso party_member_obj(arg0)) then begin
+        return 1;
+    end
+end
+
+procedure CombaTurn_Handler
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    variable LVar3 := 0;
+    variable LVar4 := 0;
+    variable LVar5 := 0;
+    variable LVar6 := 0;
+    variable LVar7 := 0;
+    variable LVar8 := 0;
+    variable LVar9 := 0;
+    variable LVar10 := 0;
+    LVar0 := get_sfall_arg;
+    LVar1 := get_sfall_arg;
+    if (not(toggleControl)) then begin
+        return 0;
+    end
+    if (npcControl) then begin
+        if (lightInt) then begin
+            lightInt := round(lightInt / 65536.00000 * 100);
+        end
+        obj_set_light_level(npcControl, lightInt, lightDist);
+    end
+    LVar2 := obj_pid(LVar1);
+    if ((LVar0 == 1) andAlso (AllowControl(LVar2) orElse (controlMode == 1))) then begin
+        sfall_func1("set_dude_obj", LVar1);
+        if (LVar1 != sfall_func0("real_dude_obj")) then begin
+            if (not(npcControl)) then begin
+                obj_set_light_level(sfall_func0("real_dude_obj"), 0, 0);
+            end
+            npcControl := LVar1;
+            LVar6 := 0;
+            LVar5 := len_array(perksList);
+            while (LVar6 < LVar5) do begin
+                LVar7 := array_key(perksList, LVar6);
+                LVar3 := get_array(perksList, LVar7);
+                LVar4 := has_trait(0, sfall_func0("real_dude_obj"), LVar3);
+                if (LVar4) then begin
+                    critter_add_trait(LVar1, 0, LVar3, LVar4);
+                end
+                LVar6 := LVar6 + 1;
+            end
+            sfall_func0("intface_redraw");
+            lightDist := sfall_func2("get_object_data", LVar1, 108);
+            lightInt := sfall_func2("get_object_data", LVar1, 112);
+            obj_set_light_level(LVar1, 100, 4);
+            inControl := 1;
+        end
+        else begin
+            if (npcControl) then begin
+                obj_set_light_level(dude_obj, 100, 4);
+                npcControl := 0;
+            end
+        end
+        if (inControl) then begin
+            if (read_byte(5690252)) then begin
+                sfall_func2("set_outline", LVar1, 4);
+            end
+            move_to(dude_obj, tile_num(dude_obj), elevation(dude_obj));
+            if (displayName andAlso (LVar1 != sfall_func0("real_dude_obj"))) then begin
+                sfall_func3("set_iface_tag_text", displayName, obj_name(LVar1), displayNameColor);
+                show_iface_tag(displayName);
+                isShowTag := 1;
+            end
+        end
+    end
+    else begin
+        if (inControl) then begin
+            if (dude_obj != sfall_func0("real_dude_obj")) then begin
+                LVar9 := 0;
+                LVar8 := len_array(perksList);
+                while (LVar9 < LVar8) do begin
+                    LVar10 := array_key(perksList, LVar9);
+                    LVar3 := get_array(perksList, LVar10);
+                    LVar4 := has_trait(0, sfall_func0("real_dude_obj"), LVar3);
+                    if (LVar4) then begin
+                        critter_rm_trait(LVar1, 0, LVar3, LVar4);
+                    end
+                    LVar9 := LVar9 + 1;
+                end
+            end
+            if (isShowTag) then begin
+                hide_iface_tag(displayName);
+                isShowTag := 0;
+            end
+            if ((LVar0 < 0) orElse (AllowControl(LVar2) == 0)) then begin
+                if (dude_obj != sfall_func0("real_dude_obj")) then begin
+                    sfall_func1("set_dude_obj", sfall_func0("real_dude_obj"));
+                    obj_set_light_level(dude_obj, 100, 4);
+                    npcControl := 0;
+                end
+            end
+        end
+    end
+end
+
+procedure InventoryMove_Handler
+begin
+    if (npcControl andAlso (get_sfall_arg == 3)) then begin
+        if ((obj_pid(dude_obj) == 16777377) orElse (proto_data(obj_pid(dude_obj), 11) != 0)) then begin
+            display_msg(message_str_game(13, 675));
+            set_sfall_return(1);
+        end
+    end
+end
+
+procedure GameModeChange_Handler
+begin
+    if (inControl andAlso not(get_game_mode bwand 64)) then begin
+        inControl := 0;
+        npcControl := 0;
+        move_to(dude_obj, tile_num(dude_obj), elevation(dude_obj));
+    end
+end
+
+procedure KeyPress_Handler
+begin
+    if ((get_sfall_arg == 0) andAlso (get_sfall_arg == toggleControlKey)) then begin
+        if (combat_is_initialized andAlso (sfall_func0("real_dude_obj") != dude_obj)) then begin
+            display_msg(GetConfigStr("CombatControl", "MsgControl", "Error"));
+            return 0;
+        end
+        toggleControl := not(toggleControl);
+        if (toggleControl) then begin
+            display_msg(GetConfigStr("CombatControl", "MsgControlOn", "Error"));
+        end
+        else begin
+            display_msg(GetConfigStr("CombatControl", "MsgControlOff", "Error"));
+        end
+    end
+end
+
+procedure InvenWield_Handler
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    variable LVar3 := 0;
+    LVar0 := get_sfall_arg;
+    LVar1 := get_sfall_arg;
+    LVar2 := get_sfall_arg;
+    LVar3 := get_sfall_arg;
+    if ((LVar3 andAlso (LVar2 == 1)) andAlso AllowControl(obj_pid(LVar0))) then begin
+        sfall_func2("set_flags", LVar1, sfall_func1("get_flags", LVar1) bwand -16777217);
+    end
+end
+
+procedure SetGlobalVar_Handler
+begin
+    variable LVar0 := 0;
+    if ((npcControl andAlso (get_sfall_arg == 0)) andAlso (obj_pid(dude_obj) != 16777216)) then begin
+        LVar0 := global_var(0);
+        if (get_sfall_arg > LVar0) then begin
+            set_sfall_arg(1, LVar0);
+            set_sfall_return(LVar0);
+        end
+    end
+end
+

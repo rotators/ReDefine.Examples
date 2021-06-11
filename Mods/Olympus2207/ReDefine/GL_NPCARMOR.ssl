@@ -1,0 +1,379 @@
+procedure GetIniConfig(variable arg0, variable arg1, variable arg2, variable arg3);
+procedure update_armor_apperance;
+
+variable modIni := "npcArmor.ini";
+variable defaultFids;
+variable armorPidMap;
+variable npcMap;
+variable altWeapon;
+variable unWieldWeapon;
+variable simpleMode;
+
+procedure check_armor_change(variable arg0, variable arg1, variable arg2);
+procedure check_weapon_change(variable arg0, variable arg1, variable arg2);
+procedure search_alt_weapon(variable arg0);
+procedure check_active_slot(variable arg0, variable arg1);
+procedure invenwield_handler;
+procedure adjustfid_handler;
+procedure inventorymove_handler;
+procedure start;
+
+
+procedure GetIniConfig(variable arg0, variable arg1, variable arg2, variable arg3)
+begin
+    variable LVar4 := 0;
+    LVar4 := get_ini_setting(arg3 + "|" + arg0 + "|" + arg1);
+    if (LVar4 == -1) then begin
+        LVar4 := arg2;
+    end
+    return LVar4;
+end
+
+procedure update_armor_apperance
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    variable LVar3 := 0;
+    variable LVar4 := 0;
+    variable LVar5 := 0;
+    variable LVar6 := 0;
+    LVar3 := party_member_list(0);
+    for (LVar4 := len_array(LVar3); LVar5 < LVar4; LVar5 := LVar5 + 1) begin
+        LVar6 := array_key(LVar3, LVar5);
+        LVar0 := get_array(LVar3, LVar6);
+        if (LVar0 == dude_obj) then begin
+            continue;
+        end
+        LVar1 := critter_inven_obj(LVar0, INVEN_TYPE_WORN);
+        if (LVar1) then begin
+            if (simpleMode) then begin
+                if (get_critter_stat(LVar0, STAT_gender) == 1) then begin
+                    LVar2 := get_proto_data(obj_pid(LVar1), 104);
+                end
+                else begin
+                    LVar2 := get_proto_data(obj_pid(LVar1), 100);
+                end
+            end
+            else begin
+                LVar2 := check_armor_change(LVar0, LVar1, 1);
+                if ((LVar2 == -1) orElse (art_exists(LVar2) == 0)) then begin
+                    continue;
+                end
+            end
+            art_change_fid_num(LVar0, LVar2);
+        end
+    end
+end
+
+procedure check_armor_change(variable arg0, variable arg1, variable arg2)
+begin
+    variable LVar3 := 0;
+    variable LVar4 := 0;
+    variable LVar5 := 0;
+    LVar3 := get_array(npcMap, obj_pid(arg0));
+    if (LVar3) then begin
+        if (arg2 == 0) then begin
+            return get_array(LVar3, "Default");
+        end
+        else begin
+            if (arg1) then begin
+                LVar4 := get_array(armorPidMap, obj_pid(arg1));
+                LVar5 := get_array(LVar3, LVar4) orElse get_array(defaultFids, LVar4);
+                if ((LVar5 == 0) orElse (LVar5 == -1)) then begin
+                    LVar5 := get_array(LVar3, "Default");
+                end
+                return LVar5;
+            end
+        end
+    end
+    return -1;
+end
+
+procedure check_weapon_change(variable arg0, variable arg1, variable arg2)
+begin
+    variable LVar3 := 0;
+    variable LVar4 := 0;
+    variable LVar5 := 0;
+    variable LVar6 := 0;
+    variable LVar7 := 0;
+    variable LVar8 := 0;
+    variable LVar9 := 0;
+    variable LVar10 := 0;
+    LVar3 := get_array(npcMap, obj_pid(arg0));
+    if (LVar3) then begin
+        if (arg2) then begin
+            LVar4 := get_proto_data(obj_pid(arg1), 36);
+            if (LVar4) then begin
+                LVar5 := get_array(LVar3, "WeaponAnims");
+                if (LVar5 != 0) then begin
+                    LVar7 := string_split(LVar5, ",");
+                    LVar9 := 0;
+                    LVar8 := len_array(LVar7);
+                    while (LVar9 < LVar8) do begin
+                        LVar10 := array_key(LVar7, LVar9);
+                        LVar6 := get_array(LVar7, LVar10);
+                        if (LVar4 == atoi(LVar6)) then begin
+                            return -1;
+                        end
+                        LVar9 := LVar9 + 1;
+                    end
+                end
+                return 0;
+            end
+        end
+        else begin
+            unWieldWeapon := obj_pid(arg1);
+        end
+    end
+    return -1;
+end
+
+procedure search_alt_weapon(variable arg0)
+begin
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    variable LVar3 := 0;
+    LVar1 := inven_ptr(arg0, 0);
+    while (LVar1) do begin
+        if (obj_item_subtype(LVar1) == 3) then begin
+            if ((unWieldWeapon == 0) orElse (unWieldWeapon != obj_pid(LVar1))) then begin
+                LVar2 := check_weapon_change(arg0, LVar1, 1);
+                if (LVar2 == -1) then begin
+                    altWeapon := LVar1;
+                    wield_obj_critter(arg0, LVar1);
+                    altWeapon := 0;
+                    break;
+                end
+            end
+        end
+        LVar3 := LVar3 + 1;
+        LVar1 := inven_ptr(arg0, LVar3);
+    end
+    unWieldWeapon := 0;
+end
+
+procedure check_active_slot(variable arg0, variable arg1)
+begin
+    variable LVar2 := 0;
+    variable LVar3 := 0;
+    variable LVar4 := 0;
+    variable LVar5 := 0;
+    LVar4 := 1 if active_hand else 2;
+    LVar5 := critter_inven_obj(arg0, LVar4);
+    if (LVar5 andAlso (obj_item_subtype(LVar5) == 3)) then begin
+        LVar2 := get_proto_data(obj_pid(LVar5), 36);
+        if (LVar2 == 0) then begin
+            return 0;
+        end
+        LVar3 := arg1 bwand -61441 bwor (LVar2 * 4096);
+        if (art_exists(LVar3) == 0) then begin
+            sfall_func2("unwield_slot", arg0, LVar4);
+            return 1;
+        end
+    end
+end
+
+procedure invenwield_handler
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    variable LVar3 := 0;
+    variable LVar4 := 0;
+    variable LVar5 := 0;
+    LVar0 := get_sfall_arg;
+    LVar1 := get_sfall_arg;
+    LVar3 := get_sfall_arg;
+    LVar4 := get_sfall_arg;
+    if (LVar1 andAlso (LVar3 == 0)) then begin
+        if (simpleMode) then begin
+            if (LVar4) then begin
+                if (get_critter_stat(LVar0, STAT_gender) == 1) then begin
+                    LVar2 := get_proto_data(obj_pid(LVar1), 104);
+                end
+                else begin
+                    LVar2 := get_proto_data(obj_pid(LVar1), 100);
+                end
+            end
+            else begin
+                LVar2 := get_proto_data(obj_pid(LVar0), 8);
+            end
+            art_change_fid_num(LVar0, LVar2);
+            return 0;
+        end
+        LVar2 := check_armor_change(LVar0, LVar1, LVar4);
+        if (LVar2 != -1) then begin
+            if (art_exists(LVar2)) then begin
+                art_change_fid_num(LVar0, LVar2);
+            end
+            else begin
+                debug_msg("[Error] NPC armor mod. Invenwield missing FID: " + LVar2);
+            end
+        end
+    end
+    else begin
+        if (LVar1 andAlso (LVar3 == 1)) then begin
+            if (altWeapon == LVar1) then begin
+                return 0;
+            end
+            LVar5 := check_weapon_change(LVar0, LVar1, LVar4);
+            set_sfall_return(LVar5);
+            if (LVar5 != -1) then begin
+                call search_alt_weapon(LVar0);
+            end
+        end
+    end
+end
+
+procedure adjustfid_handler
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    variable LVar3 := 0;
+    variable LVar4 := 0;
+    if (dude_obj != sfall_func0("real_dude_obj")) then begin
+        LVar3 := get_sfall_arg;
+        if ((LVar3 bwand 251658240) != 16777216) then begin
+            return 0;
+        end
+        LVar1 := critter_inven_obj(dude_obj, INVEN_TYPE_WORN);
+        if (simpleMode) then begin
+            if (LVar1) then begin
+                if (dude_gender == 1) then begin
+                    LVar0 := get_proto_data(obj_pid(LVar1), 104);
+                end
+                else begin
+                    LVar0 := get_proto_data(obj_pid(LVar1), 100);
+                end
+            end
+            else begin
+                LVar0 := get_proto_data(obj_pid(dude_obj), 8);
+                if (check_active_slot(dude_obj, LVar0)) then begin
+                    set_sfall_arg(0, LVar0);
+                    set_sfall_return(LVar0);
+                    return 0;
+                end
+            end
+            LVar2 := LVar3 bwand 61440;
+            LVar4 := LVar0 bwand -61441 bwor LVar2;
+            set_sfall_arg(0, LVar4);
+            set_sfall_return(LVar4);
+            return 0;
+        end
+        LVar0 := check_armor_change(dude_obj, LVar1, LVar1 != 0);
+        if (LVar0 != -1) then begin
+            LVar2 := LVar3 bwand 61440;
+            LVar4 := LVar0 bwand -61441 bwor LVar2;
+            if (art_exists(LVar4)) then begin
+                set_sfall_arg(0, LVar4);
+                set_sfall_return(LVar4);
+            end
+            else begin
+                debug_msg("[Error] NPC armor mod. Adjust FID missing: " + LVar4);
+            end
+        end
+    end
+end
+
+procedure inventorymove_handler
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    LVar0 := get_sfall_arg;
+    LVar1 := get_sfall_arg;
+    if (dude_obj != sfall_func0("real_dude_obj")) then begin
+        if (((LVar0 == 1) orElse (LVar0 == 2)) andAlso ((obj_type(LVar1) == 0) andAlso (obj_item_subtype(LVar1) == 3))) then begin
+            LVar2 := check_weapon_change(dude_obj, LVar1, LVar1 != 0);
+            set_sfall_return(LVar2);
+        end
+    end
+end
+
+procedure start
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    variable LVar3 := 0;
+    variable LVar4 := 0;
+    variable LVar5 := 0;
+    variable LVar6 := 0;
+    variable LVar7 := 0;
+    variable LVar8 := 0;
+    variable LVar9 := 0;
+    variable LVar10 := 0;
+    variable LVar11 := 0;
+    variable LVar12 := 0;
+    variable LVar13 := 0;
+    variable LVar14 := 0;
+    variable LVar15 := 0;
+    if (game_loaded andAlso (sfall_ver_major >= 4)) then begin
+        if (((sfall_ver_major >= 4) andAlso (sfall_ver_minor >= 2)) andAlso (sfall_ver_build >= 1)) then begin
+            simpleMode := GetIniConfig("Options", "SimpleMode", 0, modIni);
+        end
+        LVar1 := sfall_func2("get_ini_section", modIni, "ArmorTypes");
+        if ((simpleMode == 0) andAlso (len_array(LVar1) == 0)) then begin
+            modIni := "npcArmorRP.ini";
+            LVar1 := sfall_func2("get_ini_section", modIni, "ArmorTypes");
+            if (len_array(LVar1) == 0) then begin
+                return 0;
+            end
+        end
+        armorPidMap := create_array(-1, 0);
+        LVar8 := 0;
+        LVar7 := len_array(LVar1);
+        while (LVar8 < LVar7) do begin
+            LVar2 := array_key(LVar1, LVar8);
+            LVar5 := get_array(LVar1, LVar2);
+            LVar5 := string_split(LVar5, ",");
+            LVar10 := 0;
+            LVar9 := len_array(LVar5);
+            while (LVar10 < LVar9) do begin
+                LVar11 := array_key(LVar5, LVar10);
+                LVar4 := get_array(LVar5, LVar11);
+                set_array(armorPidMap, atoi(LVar4), LVar2);
+                LVar10 := LVar10 + 1;
+            end
+            LVar8 := LVar8 + 1;
+        end
+        defaultFids := sfall_func2("get_ini_section", modIni, "Default");
+        fix_array(defaultFids);
+        LVar13 := 0;
+        LVar12 := len_array(defaultFids);
+        while (LVar13 < LVar12) do begin
+            LVar2 := array_key(defaultFids, LVar13);
+            LVar6 := get_array(defaultFids, LVar2);
+            set_array(defaultFids, LVar2, atoi(LVar6));
+            LVar13 := LVar13 + 1;
+        end
+        npcMap := create_array(-1, 0);
+        LVar6 := 1;
+        LVar0 := sfall_func2("get_ini_section", modIni, "" + LVar6);
+        while (get_array(LVar0, "PID")) do begin
+            LVar3 := create_array(-1, 0);
+            set_array(LVar3, "WeaponAnims", get_array(LVar0, "WeaponAnims"));
+            set_array(LVar3, "Default", atoi(get_array(LVar0, "Default")));
+            LVar15 := 0;
+            LVar14 := len_array(LVar1);
+            while (LVar15 < LVar14) do begin
+                LVar2 := array_key(LVar1, LVar15);
+                LVar5 := get_array(LVar1, LVar2);
+                if (get_array(LVar0, LVar2)) then begin
+                    set_array(LVar3, LVar2, atoi(get_array(LVar0, LVar2)));
+                end
+                LVar15 := LVar15 + 1;
+            end
+            set_array(npcMap, atoi(get_array(LVar0, "PID")), LVar3);
+            LVar6 := LVar6 + 1;
+            LVar0 := sfall_func2("get_ini_section", modIni, "" + LVar6);
+        end
+        call update_armor_apperance();
+        register_hook_proc(25, invenwield_handler);
+        register_hook_proc(26, adjustfid_handler);
+        register_hook_proc(24, inventorymove_handler);
+        debug_msg("NPC appearance armor mod: Done.");
+    end
+end

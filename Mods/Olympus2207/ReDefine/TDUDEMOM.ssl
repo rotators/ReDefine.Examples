@@ -1,0 +1,629 @@
+variable dude_objective_reputation;
+variable self_subjective_reaction;
+variable z_critter_search;
+variable critter_is_detected;
+variable detected_critter;
+variable persuade_chance;
+variable steal_perk;
+variable steal_gloves;
+variable max_distance;
+variable animation_is_called;
+variable distance_to_walk;
+variable time_to_work;
+variable time_to_repose;
+variable work_tile_chois;
+variable repose_tile_chois;
+
+procedure start;
+procedure critter_p_proc;
+procedure combat_p_proc;
+procedure description_p_proc;
+procedure look_at_p_proc;
+procedure pickup_p_proc;
+procedure push_p_proc;
+procedure talk_p_proc;
+procedure destroy_p_proc;
+procedure use_skill_on_p_proc;
+procedure damage_p_proc;
+procedure map_enter_p_proc;
+procedure timed_event_p_proc;
+procedure GrowUp;
+procedure LoadMap;
+procedure Node010;
+procedure Node011a;
+procedure Node011b;
+procedure Node012a;
+procedure Node012b;
+procedure Node014;
+procedure Node015;
+procedure Node016a;
+procedure Node016b;
+procedure Node017;
+procedure Node018a;
+procedure Node018b;
+procedure Node019;
+procedure Node020;
+procedure Node021;
+procedure Node022a;
+procedure Node022b;
+procedure Node023;
+procedure Node999;
+procedure NodeGoToBad;
+
+variable talk_start;
+variable about_gods;
+variable about_purgatoir;
+variable about_childrens;
+
+
+procedure start
+begin
+    if (local_var(1) == 0) then begin
+        set_local_var(3, tile_num(self_obj));
+        set_local_var(1, 1);
+        set_local_var(4, random(40, 70));
+        set_local_var(5, random(60, 90));
+        set_local_var(6, random(40, 45));
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 0);
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_TARTAR_WOMEN);
+        max_distance := random(6, 8);
+    end
+end
+
+procedure critter_p_proc
+begin
+    if ((animation_is_called == 0) and (anim_busy(self_obj) == 0)) then begin
+        animation_is_called := 1;
+        add_timer_event(self_obj, random(29, 76), 1);
+    end
+    if ((global_var(GVAR_LOAD_MAP_INDEX) == 2) and (global_var(GVAR_VIC_DEVICE) == 2) and (global_var(GVAR_RUNNING_BURNING_GUY) >= 2) and (local_var(8) == 0) and (get_sfall_global_int(7) != 3)) then begin
+        set_local_var(8, 1);
+        create_message_window(message_str(SCRIPT_STTEXT, 900));
+    end
+    if (obj_can_see_obj(self_obj, dude_obj)) then begin
+        if ((local_var(2) == 1) or (global_var(GVAR_TOWN_REP_ARROYO) <= -31)) then begin
+            set_local_var(2, 0);
+            attack_setup(self_obj, dude_obj);
+        end
+    end
+end
+
+procedure combat_p_proc
+begin
+end
+
+procedure description_p_proc
+begin
+    script_overrides;
+    if (local_var(7) == 0) then begin
+        display_mstr(2);
+    end
+    else begin
+        display_mstr(4);
+    end
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    if (local_var(7) == 0) then begin
+        display_mstr(1);
+    end
+    else begin
+        display_mstr(3);
+    end
+end
+
+procedure pickup_p_proc
+begin
+end
+
+procedure push_p_proc
+begin
+end
+
+procedure talk_p_proc
+begin
+    if (not(anim_busy(self_obj))) then begin
+        anim(self_obj, 1000, rotation_to_tile(tile_num(self_obj), dude_tile));
+    end
+    if ((global_var(GVAR_LOAD_MAP_INDEX) == 2) and (global_var(GVAR_RUNNING_BURNING_GUY) >= 2) and (global_var(GVAR_VIC_DEVICE) >= 2)) then begin
+        start_gdialog(64, self_obj, 4, 5, -1);
+        gsay_start;
+        call Node015();
+        gsay_end;
+        end_dialogue;
+    end
+    else begin
+        start_gdialog(64, self_obj, 4, 5, -1);
+        gsay_start;
+        call Node010();
+        gsay_end;
+        end_dialogue;
+    end
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_global_var(GVAR_PLAYER_REPUTATION, global_var(GVAR_PLAYER_REPUTATION) - 1);
+        if ((47 == 50) or (47 == 59)) then begin
+            set_global_var(GVAR_TOWN_REP_ARROYO, global_var(GVAR_TOWN_REP_ARROYO) - 3);
+        end
+        else begin
+            set_global_var(GVAR_TOWN_REP_ARROYO, global_var(GVAR_TOWN_REP_ARROYO) - 6);
+        end
+    end
+end
+
+procedure use_skill_on_p_proc
+begin
+    if (action_being_used == 10) then begin
+        steal_perk := 0;
+        steal_gloves := 0;
+        if (has_trait(TRAIT_PERK, dude_obj, PERK_pickpocket) != 0) then begin
+            steal_perk := steal_perk + 15;
+        end
+        if (has_trait(TRAIT_PERK, dude_obj, PERK_master_thief) != 0) then begin
+            steal_perk := steal_perk + 30;
+        end
+        if ((obj_pid(critter_inven_obj(dude_obj, INVEN_TYPE_RIGHT_HAND)) == 245) or (obj_pid(critter_inven_obj(dude_obj, INVEN_TYPE_LEFT_HAND)) == 245)) then begin
+            steal_gloves := 10;
+        end
+        if (random(0, 100) <= ((dude_skill(SKILL_STEAL) / 2) + (((3 * get_critter_stat(dude_obj, STAT_ag)) + (((dude_luck - 4) * 4) - (difficulty_level * 4)) + (2 * steal_perk) + steal_gloves) / (local_var(4) / 25)))) then begin
+            display_msg(message_str(SCRIPT_STTEXT, random(145, 148)));
+        end
+        else begin
+            script_overrides;
+            display_msg(message_str(SCRIPT_STTEXT, random(200, 203)));
+        end
+    end
+    if (action_being_used == 12) then begin
+        script_overrides;
+        display_msg(message_str(SCRIPT_STTEXT, 204) + ((dude_skill(SKILL_STEAL) / 2) + (((3 * get_critter_stat(dude_obj, STAT_ag)) + (((dude_luck - 4) * 4) - (difficulty_level * 4)) + (2 * steal_perk) + steal_gloves) / (local_var(4) / 25))) + message_str(SCRIPT_STTEXT, 205));
+    end
+end
+
+procedure damage_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_local_var(2, 1);
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    max_distance := random(6, 8);
+    if (random(1, 2) == 1) then begin
+        time_to_work := game_time_hour % 100;
+        time_to_repose := time_to_work + random(5, 15);
+        if (time_to_repose >= 60) then begin
+            time_to_repose := random(0, 5);
+        end
+    end
+    else begin
+        time_to_repose := game_time_hour % 100;
+        time_to_work := time_to_repose + random(2, 6);
+        if (time_to_work >= 60) then begin
+            time_to_work := random(0, 5);
+        end
+    end
+    if (map_first_run) then begin
+        dialogue_system_enter;
+        game_time_advance(10 * 60 * 60 * 2);
+    end
+end
+
+procedure timed_event_p_proc
+begin
+    if (fixed_param == 2) then begin
+        call GrowUp();
+    end
+    if (fixed_param == 3) then begin
+        call LoadMap();
+    end
+    if (fixed_param == 4) then begin
+        set_local_var(9, 1);
+        if ((dude_iq <= 5) and (dude_endurance >= 8) and (dude_strength >= 8)) then begin
+            set_global_var(GVAR_NEW_RENO_WRIGHT_FLAGS, 1);
+        end
+        else begin
+            if ((dude_iq >= 7) and (dude_charisma >= 8) and (dude_strength <= 5)) then begin
+                set_global_var(GVAR_NEW_RENO_WRIGHT_FLAGS, 2);
+            end
+            else begin
+                if ((dude_is_stupid) and (dude_luck >= 9)) then begin
+                    set_global_var(GVAR_NEW_RENO_WRIGHT_FLAGS, 3);
+                    critter_add_trait(dude_obj, TRAIT_PERK, PERK_bonus_move, 1);
+                end
+            end
+        end
+        if (global_var(GVAR_NEW_RENO_WRIGHT_FLAGS) == 1) then begin
+            display_msg(message_str(SCRIPT_STTEXT, 1));
+        end
+        else begin
+            if (global_var(GVAR_NEW_RENO_WRIGHT_FLAGS) == 2) then begin
+                display_msg(message_str(SCRIPT_STTEXT, 2));
+            end
+            else begin
+                if (global_var(GVAR_NEW_RENO_WRIGHT_FLAGS) == 3) then begin
+                    display_msg(message_str(SCRIPT_STTEXT, 3));
+                end
+                else begin
+                    display_msg(message_str(SCRIPT_STTEXT, 4));
+                end
+            end
+        end
+        add_timer_event(self_obj, 10, 5);
+    end
+    if (fixed_param == 5) then begin
+        if (get_sfall_global_int(1) == 0) then begin
+            set_sfall_global(1, 1);
+        end
+    end
+    if ((fixed_param == 1) and not(combat_is_initialized)) then begin
+        if (((game_time_hour % 100) >= time_to_work) and ((game_time_hour % 100) < time_to_repose) or (((game_time_hour % 100) >= time_to_work) and (time_to_work > time_to_repose)) or (((game_time_hour % 100) < time_to_work) and (time_to_work > time_to_repose))) then begin
+            if ((game_time_hour % 100) >= time_to_repose) then begin
+                time_to_repose := time_to_work + random(5, 15);
+                if (time_to_repose >= 60) then begin
+                    time_to_repose := random(0, 5);
+                end
+                repose_tile_chois := 0;
+            end
+            if ((tile_num(self_obj) != 16550) and (tile_num(self_obj) != 16136) and (tile_num(self_obj) != 18129)) then begin
+                work_tile_chois := random(1, 3);
+                reg_anim_func(2, self_obj);
+                reg_anim_func(1, 1);
+                if (work_tile_chois == 1) then begin
+                    if (tile_num(self_obj) != 16550) then begin
+                        reg_anim_func(2, self_obj);
+                        reg_anim_func(1, 1);
+                        if (tile_distance(tile_num(self_obj), 16550) >= 25) then begin
+                            reg_anim_obj_move_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), rotation_to_tile(tile_num(self_obj), 16550), random(12, 22)), -1);
+                        end
+                        else begin
+                            reg_anim_obj_move_to_tile(self_obj, 16550, -1);
+                        end
+                        reg_anim_func(3, 0);
+                    end
+                end
+                if (work_tile_chois == 2) then begin
+                    if (tile_num(self_obj) != 16136) then begin
+                        reg_anim_func(2, self_obj);
+                        reg_anim_func(1, 1);
+                        if (tile_distance(tile_num(self_obj), 16136) >= 25) then begin
+                            reg_anim_obj_move_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), rotation_to_tile(tile_num(self_obj), 16136), random(12, 22)), -1);
+                        end
+                        else begin
+                            reg_anim_obj_move_to_tile(self_obj, 16136, -1);
+                        end
+                        reg_anim_func(3, 0);
+                    end
+                end
+                if (work_tile_chois == 3) then begin
+                    if (tile_num(self_obj) != 18129) then begin
+                        reg_anim_func(2, self_obj);
+                        reg_anim_func(1, 1);
+                        if (tile_distance(tile_num(self_obj), 18129) >= 25) then begin
+                            reg_anim_obj_move_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), rotation_to_tile(tile_num(self_obj), 18129), random(12, 22)), -1);
+                        end
+                        else begin
+                            reg_anim_obj_move_to_tile(self_obj, 18129, -1);
+                        end
+                        reg_anim_func(3, 0);
+                    end
+                end
+                reg_anim_func(3, 0);
+            end
+            else begin
+                if (tile_num(self_obj) == 16550) then begin
+                    anim(self_obj, 1000, 0);
+                end
+                if (tile_num(self_obj) == 16136) then begin
+                    anim(self_obj, 1000, 5);
+                end
+                if (tile_num(self_obj) == 18129) then begin
+                    anim(self_obj, 1000, 0);
+                end
+                reg_anim_func(2, self_obj);
+                reg_anim_func(1, 1);
+                if (random(1, 2) == 1) then begin
+                    reg_anim_animate(self_obj, 0, -1);
+                end
+                if (random(1, 3) == 1) then begin
+                    reg_anim_animate(self_obj, 10, -1);
+                end
+                reg_anim_animate(self_obj, 11, -1);
+                if (random(1, 4) == 1) then begin
+                    reg_anim_animate(self_obj, 16, -1);
+                    reg_anim_animate(self_obj, 0, -1);
+                end
+                if (random(1, 2) == 1) then begin
+                    reg_anim_animate(self_obj, 0, -1);
+                end
+                reg_anim_func(3, 0);
+            end
+        end
+        else begin
+            if ((game_time_hour % 100) >= time_to_work) then begin
+                time_to_work := time_to_repose + random(2, 6);
+            end
+            if (time_to_work >= 60) then begin
+                time_to_work := random(0, 2);
+            end
+            if (repose_tile_chois == 0) then begin
+                repose_tile_chois := random(1, 2);
+            end
+            if (repose_tile_chois == 1) then begin
+                if (tile_distance(tile_num(self_obj), 17149) >= max_distance) then begin
+                    if (tile_num(self_obj) != tile_num_in_direction(17149, random(0, 5), random(3, 9))) then begin
+                        reg_anim_func(2, self_obj);
+                        reg_anim_func(1, 1);
+                        if (tile_distance(tile_num(self_obj), tile_num_in_direction(17149, random(0, 5), random(3, 9))) >= 25) then begin
+                            reg_anim_obj_move_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), rotation_to_tile(tile_num(self_obj), tile_num_in_direction(17149, random(0, 5), random(3, 9))), random(12, 22)), -1);
+                        end
+                        else begin
+                            reg_anim_obj_move_to_tile(self_obj, tile_num_in_direction(17149, random(0, 5), random(3, 9)), -1);
+                        end
+                        reg_anim_func(3, 0);
+                    end
+                end
+                else begin
+                    reg_anim_func(2, self_obj);
+                    reg_anim_func(1, 1);
+                    reg_anim_obj_move_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), random(0, 5), random(floor(max_distance / 3), max_distance)), -1);
+                    reg_anim_func(3, 0);
+                end
+            end
+            if (repose_tile_chois == 2) then begin
+                if (tile_distance(tile_num(self_obj), 17751) >= max_distance) then begin
+                    if (tile_num(self_obj) != tile_num_in_direction(17751, random(0, 5), random(3, 9))) then begin
+                        reg_anim_func(2, self_obj);
+                        reg_anim_func(1, 1);
+                        if (tile_distance(tile_num(self_obj), tile_num_in_direction(17751, random(0, 5), random(3, 9))) >= 25) then begin
+                            reg_anim_obj_move_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), rotation_to_tile(tile_num(self_obj), tile_num_in_direction(17751, random(0, 5), random(3, 9))), random(12, 22)), -1);
+                        end
+                        else begin
+                            reg_anim_obj_move_to_tile(self_obj, tile_num_in_direction(17751, random(0, 5), random(3, 9)), -1);
+                        end
+                        reg_anim_func(3, 0);
+                    end
+                end
+                else begin
+                    reg_anim_func(2, self_obj);
+                    reg_anim_func(1, 1);
+                    reg_anim_obj_move_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), random(0, 5), random(floor(max_distance / 3), max_distance)), -1);
+                    reg_anim_func(3, 0);
+                end
+            end
+        end
+        animation_is_called := 0;
+    end
+end
+
+procedure GrowUp
+begin
+    game_ui_disable;
+    animate_move_obj_to_tile(dude_obj, 18350, 0);
+    add_timer_event(self_obj, 25, 3);
+end
+
+procedure LoadMap
+begin
+    fadeOut(1500);
+    load_map("tartar12", 1);
+end
+
+procedure Node010
+begin
+    if (local_var(7) == 0) then begin
+        set_local_var(7, 1);
+        add_obj_to_inven(dude_obj, create_object(393, 1, 2));
+        Reply(100);
+        giq_option(1, NAME, 101, Node011a, GOOD_REACTION);
+        giq_option(1, NAME, 102, Node011a, GOOD_REACTION);
+        if (dude_iq >= 7) then begin
+            giq_option(1, NAME, 103, Node011b, GOOD_REACTION);
+        end
+        else begin
+            giq_option(1, NAME, 104, Node011a, GOOD_REACTION);
+        end
+    end
+    else begin
+        Reply(130);
+        giq_option(1, NAME, 131, Node999, NEUTRAL_REACTION);
+        if ((global_var(GVAR_LOAD_MAP_INDEX) == 1) and (obj_carrying_pid_obj(dude_obj, 290) == 0)) then begin
+            giq_option(1, NAME, 132, Node014, GOOD_REACTION);
+        end
+        giq_option(1, NAME, 133, Node999, GOOD_REACTION);
+        if ((global_var(GVAR_LOAD_MAP_INDEX) == 0) or (global_var(GVAR_RUNNING_BURNING_GUY) == 0) or (global_var(GVAR_VIC_DEVICE) == 0)) then begin
+            giq_option(1, NAME, 134, Node023, GOOD_REACTION);
+        end
+    end
+end
+
+procedure Node011a
+begin
+    Reply(1101);
+    giq_option(1, NAME, 111, Node012a, NEUTRAL_REACTION);
+    giq_option(1, NAME, 112, Node012b, NEUTRAL_REACTION);
+end
+
+procedure Node011b
+begin
+    Reply(1102);
+    giq_option(1, NAME, 111, Node012a, NEUTRAL_REACTION);
+    giq_option(1, NAME, 112, Node012b, NEUTRAL_REACTION);
+end
+
+procedure Node012a
+begin
+    add_obj_to_inven(dude_obj, create_object(434, 1, 2));
+    Reply(1201);
+    giq_option(1, NAME, 121, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node012b
+begin
+    add_obj_to_inven(dude_obj, create_object(434, 1, 2));
+    Reply(1202);
+    giq_option(1, NAME, 121, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node014
+begin
+    Reply(140);
+    giq_option(1, NAME, 141, Node999, NEUTRAL_REACTION);
+    giq_option(1, NAME, 142, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node015
+begin
+    Reply(150);
+    giq_option(1, NAME, 151, Node016a, NEUTRAL_REACTION);
+    giq_option(1, NAME, 152, Node016b, NEUTRAL_REACTION);
+end
+
+procedure Node016a
+begin
+    if ((about_gods == 1) and (about_purgatoir == 1) and (about_childrens == 1)) then begin
+        Reply(1604);
+        giq_option(1, NAME, 1605, NodeGoToBad, NEUTRAL_REACTION);
+    end
+    else begin
+        if (talk_start == 0) then begin
+            talk_start := 1;
+            Reply(1601);
+        end
+        else begin
+            Reply(1603);
+        end
+        if (about_gods == 0) then begin
+            giq_option(1, NAME, 161, Node017, NEUTRAL_REACTION);
+        end
+        if (about_purgatoir == 0) then begin
+            giq_option(1, NAME, 162, Node019, NEUTRAL_REACTION);
+        end
+        if (about_childrens == 0) then begin
+            giq_option(1, NAME, 163, Node021, NEUTRAL_REACTION);
+        end
+        giq_option(1, NAME, 164, NodeGoToBad, NEUTRAL_REACTION);
+    end
+end
+
+procedure Node016b
+begin
+    if ((about_gods == 1) and (about_purgatoir == 1) and (about_childrens == 1)) then begin
+        Reply(1604);
+        giq_option(1, NAME, 1605, NodeGoToBad, NEUTRAL_REACTION);
+    end
+    else begin
+        if (talk_start == 0) then begin
+            talk_start := 1;
+            Reply(1602);
+        end
+        else begin
+            Reply(1603);
+        end
+        if (about_gods == 0) then begin
+            giq_option(1, NAME, 161, Node017, NEUTRAL_REACTION);
+        end
+        if (about_purgatoir == 0) then begin
+            giq_option(1, NAME, 162, Node019, NEUTRAL_REACTION);
+        end
+        if (about_childrens == 0) then begin
+            giq_option(1, NAME, 163, Node021, NEUTRAL_REACTION);
+        end
+        giq_option(1, NAME, 164, NodeGoToBad, NEUTRAL_REACTION);
+    end
+end
+
+procedure Node017
+begin
+    about_gods := 1;
+    Reply(170);
+    giq_option(1, NAME, 171, Node018a, NEUTRAL_REACTION);
+    giq_option(1, NAME, 172, Node018b, NEUTRAL_REACTION);
+end
+
+procedure Node018a
+begin
+    Reply(1801);
+    giq_option(1, NAME, 181, Node016a, NEUTRAL_REACTION);
+    giq_option(1, NAME, 182, NodeGoToBad, NEUTRAL_REACTION);
+end
+
+procedure Node018b
+begin
+    Reply(1802);
+    giq_option(1, NAME, 181, Node016a, NEUTRAL_REACTION);
+    giq_option(1, NAME, 182, NodeGoToBad, NEUTRAL_REACTION);
+end
+
+procedure Node019
+begin
+    about_purgatoir := 1;
+    Reply(190);
+    giq_option(1, NAME, 191, Node020, NEUTRAL_REACTION);
+end
+
+procedure Node020
+begin
+    Reply(200);
+    giq_option(1, NAME, 201, Node016a, NEUTRAL_REACTION);
+    giq_option(1, NAME, 202, NodeGoToBad, NEUTRAL_REACTION);
+end
+
+procedure Node021
+begin
+    about_childrens := 1;
+    Reply(210);
+    giq_option(1, NAME, 211, Node022a, NEUTRAL_REACTION);
+    giq_option(1, NAME, 212, Node022b, NEUTRAL_REACTION);
+end
+
+procedure Node022a
+begin
+    Reply(2201);
+    giq_option(1, NAME, 221, Node016a, NEUTRAL_REACTION);
+    giq_option(1, NAME, 222, NodeGoToBad, NEUTRAL_REACTION);
+end
+
+procedure Node022b
+begin
+    Reply(2202);
+    giq_option(1, NAME, 221, Node016a, NEUTRAL_REACTION);
+    giq_option(1, NAME, 222, NodeGoToBad, NEUTRAL_REACTION);
+end
+
+procedure Node023
+begin
+    if (global_var(GVAR_LOAD_MAP_INDEX) == 0) then begin
+        Reply(2301);
+        giq_option(1, NAME, 231, Node999, NEUTRAL_REACTION);
+    end
+    else begin
+        if (global_var(GVAR_RUNNING_BURNING_GUY) == 0) then begin
+            Reply(2302);
+            giq_option(1, NAME, 232, Node999, NEUTRAL_REACTION);
+        end
+        else begin
+            if (global_var(GVAR_VIC_DEVICE) == 0) then begin
+                Reply(2303);
+                giq_option(1, NAME, 233, Node999, NEUTRAL_REACTION);
+            end
+        end
+    end
+end
+
+procedure Node999
+begin
+    if (local_var(9) == 0) then begin
+        add_timer_event(self_obj, 5, 4);
+    end
+end
+
+procedure NodeGoToBad
+begin
+    add_timer_event(self_obj, 5, 2);
+end

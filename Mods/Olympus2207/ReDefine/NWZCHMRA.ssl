@@ -1,0 +1,151 @@
+variable max_distance;
+variable animation_is_called;
+
+procedure start;
+procedure critter_p_proc;
+procedure combat_p_proc;
+procedure description_p_proc;
+procedure look_at_p_proc;
+procedure pickup_p_proc;
+procedure push_p_proc;
+procedure talk_p_proc;
+procedure destroy_p_proc;
+procedure use_skill_on_p_proc;
+procedure damage_p_proc;
+procedure map_enter_p_proc;
+procedure timed_event_p_proc;
+
+
+procedure start
+begin
+    if (local_var(1) == 0) then begin
+        set_local_var(3, tile_num(self_obj));
+        set_local_var(1, 1);
+        if ((obj_pid(self_obj) == 16777413) or (obj_pid(self_obj) == 16777414) or (obj_pid(self_obj) == 16777415) or (obj_pid(self_obj) == 16777416)) then begin
+            critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 201);
+            critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_GENERIC_CHIMERA);
+            add_obj_to_inven(self_obj, create_object(514, 1, 2));
+            add_obj_to_inven(self_obj, create_object(515, 1, 2));
+            wield_obj(obj_carrying_pid_obj(self_obj, 515));
+        end
+        max_distance := 4;
+    end
+    set_local_var(2, 1);
+end
+
+procedure critter_p_proc
+begin
+    if ((animation_is_called == 0) and (anim_busy(self_obj) == 0)) then begin
+        animation_is_called := 1;
+        add_timer_event(self_obj, random(22, 45), 1);
+    end
+    if (obj_can_see_obj(self_obj, dude_obj)) then begin
+        if (local_var(2) == 1) then begin
+            set_local_var(2, 0);
+            attack_setup(self_obj, dude_obj);
+        end
+    end
+    if ((global_var(GVAR_BH_RANK_KILLED) == 0) and obj_on_screen(self_obj) and (tile_distance(tile_num(self_obj), dude_tile) < 8)) then begin
+        set_global_var(GVAR_BH_RANK_KILLED, 1);
+        display_mstr(10);
+        play_sfx("LEVELUP");
+    end
+    if ((global_var(GVAR_SIERRA_BASE_CONTAMINATION_TIMER) > 0) and (global_var(GVAR_BH_RANK_KILLED) < 2)) then begin
+        if ((game_time_hour > 2300) or (game_time_hour < 100) and (local_var(4) == 0)) then begin
+            move_to(self_obj, 22314, 0);
+            set_local_var(4, 1);
+        end
+        if ((game_time_hour < 2300) and (game_time_hour > 100) and (local_var(4) == 1) and not(combat_is_initialized)) then begin
+            move_to(self_obj, local_var(3), 2);
+            set_local_var(4, 0);
+        end
+    end
+end
+
+procedure combat_p_proc
+begin
+end
+
+procedure description_p_proc
+begin
+end
+
+procedure look_at_p_proc
+begin
+    if ((global_var(GVAR_BH_RANK_KILLED) == 0) and obj_on_screen(self_obj) and (tile_distance(tile_num(self_obj), dude_tile) < 15)) then begin
+        set_global_var(GVAR_BH_RANK_KILLED, 1);
+        display_mstr(10);
+        play_sfx("LEVELUP");
+    end
+end
+
+procedure pickup_p_proc
+begin
+    script_overrides;
+end
+
+procedure push_p_proc
+begin
+    script_overrides;
+    set_local_var(2, 1);
+end
+
+procedure talk_p_proc
+begin
+end
+
+procedure destroy_p_proc
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    LVar0 := obj_carrying_pid_obj(self_obj, 514);
+    LVar1 := obj_carrying_pid_obj(self_obj, 515);
+    if (LVar0) then begin
+        rm_obj_from_inven(self_obj, LVar0);
+        destroy_object(LVar0);
+    end
+    if (LVar1) then begin
+        rm_obj_from_inven(self_obj, LVar1);
+        destroy_object(LVar1);
+    end
+    if (source_obj == dude_obj) then begin
+        give_exp_points(floor(450 / 5) + (dude_iq * floor(450 / 12)) + (dude_luck * floor(450 / 30)) + (floor(450 / 75) * (((dude_luck - 4) * 4) - (difficulty_level * 4))));
+    end
+    display_msg(message_str(SCRIPT_STTEXT, random(140, 143)) + (floor(450 / 5) + (dude_iq * floor(450 / 12)) + (dude_luck * floor(450 / 30)) + (floor(450 / 75) * (((dude_luck - 4) * 4) - (difficulty_level * 4)))) + message_str(SCRIPT_STTEXT, 144));
+    set_global_var(GVAR_BH_RANK_KILLED, 2);
+end
+
+procedure use_skill_on_p_proc
+begin
+    if (action_being_used == 10) then begin
+        script_overrides;
+        set_local_var(2, 1);
+    end
+end
+
+procedure damage_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_local_var(2, 1);
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    move_to(self_obj, local_var(3), 2);
+end
+
+procedure timed_event_p_proc
+begin
+    if (fixed_param == 1) then begin
+        if (not(combat_is_initialized) and (elevation(self_obj) == 0)) then begin
+            if (tile_distance(tile_num(self_obj), 20903) < 3) then begin
+                animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), random(0, 5), random(floor(max_distance / 2), max_distance)), 0);
+            end
+            else begin
+                animate_move_obj_to_tile(self_obj, tile_num_in_direction(20903, random(0, 5), 1), 0);
+            end
+        end
+        animation_is_called := 0;
+    end
+end

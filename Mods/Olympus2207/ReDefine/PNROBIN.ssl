@@ -1,0 +1,546 @@
+variable dude_objective_reputation;
+variable self_subjective_reaction;
+variable z_critter_search;
+variable critter_is_detected;
+variable detected_critter;
+variable persuade_chance;
+variable steal_perk;
+variable steal_gloves;
+variable animation_is_called;
+variable float_is_called;
+variable already_talk;
+variable want_to_know;
+variable apples_qty;
+
+procedure start;
+procedure critter_p_proc;
+procedure combat_p_proc;
+procedure description_p_proc;
+procedure look_at_p_proc;
+procedure pickup_p_proc;
+procedure push_p_proc;
+procedure talk_p_proc;
+procedure destroy_p_proc;
+procedure use_skill_on_p_proc;
+procedure damage_p_proc;
+procedure map_enter_p_proc;
+procedure timed_event_p_proc;
+procedure Node001;
+procedure Node002;
+procedure Node003;
+procedure Node004;
+procedure Node005;
+procedure Node006;
+procedure Node010;
+procedure Node011;
+procedure Node012;
+procedure Node013;
+procedure Node014;
+procedure Node020;
+procedure Node030;
+procedure Node031;
+procedure Node040;
+procedure Node050;
+procedure Node051;
+procedure NodeQA;
+procedure Node060;
+procedure Node061;
+procedure Node062;
+procedure Node063;
+procedure Node064;
+procedure NodeRenessance;
+procedure Node999;
+procedure Node998;
+procedure NodeBarter;
+
+
+procedure start
+begin
+    if (local_var(1) == 0) then begin
+        set_local_var(3, tile_num(self_obj));
+        set_local_var(1, 1);
+        set_local_var(4, random(80, 90));
+        set_local_var(5, random(30, 40));
+        set_local_var(6, random(-30, 20));
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 5);
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_MAN_BERSERK);
+    end
+end
+
+procedure critter_p_proc
+begin
+    if ((animation_is_called == 0) and (anim_busy(self_obj) == 0)) then begin
+        animation_is_called := 1;
+        add_timer_event(self_obj, random(1000, 1000), 1);
+    end
+    if (float_is_called == 0) then begin
+        float_is_called := 1;
+        add_timer_event(self_obj, random(1000, 1000), 2);
+    end
+    if (obj_can_see_obj(self_obj, dude_obj)) then begin
+        if ((local_var(2) == 1) or (global_var(GVAR_TOWN_REP_THE_DEN) <= -31)) then begin
+            set_local_var(2, 0);
+            attack_setup(self_obj, dude_obj);
+        end
+    end
+end
+
+procedure combat_p_proc
+begin
+end
+
+procedure description_p_proc
+begin
+    script_overrides;
+    if (local_var(7) == 0) then begin
+        display_mstr(2);
+    end
+    else begin
+        display_mstr(4);
+    end
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    if (local_var(7) == 0) then begin
+        display_mstr(1);
+    end
+    else begin
+        display_mstr(3);
+    end
+end
+
+procedure pickup_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_local_var(2, 1);
+    end
+end
+
+procedure push_p_proc
+begin
+end
+
+procedure talk_p_proc
+begin
+    if (not(anim_busy(self_obj))) then begin
+        anim(self_obj, 1000, rotation_to_tile(tile_num(self_obj), dude_tile));
+    end
+    start_gdialog(127, self_obj, -1, -1, -1);
+    gsay_start;
+    if (local_var(7) == 0) then begin
+        call Node001();
+    end
+    else begin
+        call Node010();
+    end
+    gsay_end;
+    end_dialogue;
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_global_var(GVAR_PLAYER_REPUTATION, global_var(GVAR_PLAYER_REPUTATION) - 1);
+        if ((49 == 50) or (49 == 59)) then begin
+            set_global_var(GVAR_TOWN_REP_THE_DEN, global_var(GVAR_TOWN_REP_THE_DEN) - 3);
+        end
+        else begin
+            set_global_var(GVAR_TOWN_REP_THE_DEN, global_var(GVAR_TOWN_REP_THE_DEN) - 6);
+        end
+    end
+    set_global_var(GVAR_TORR_HARMED, global_var(GVAR_TORR_HARMED) bwor 2048);
+    if (global_var(GVAR_MODOC_TANNERY_FLAG) == 1) then begin
+        set_global_var(GVAR_MODOC_TANNERY_FLAG, 0);
+    end
+end
+
+procedure use_skill_on_p_proc
+begin
+    if (action_being_used == 10) then begin
+        if ((get_sfall_global_int(1) == 6) and (get_sfall_global_int(13) == 0)) then begin
+            script_overrides;
+            set_sfall_global(13, 1);
+        end
+        else begin
+            if (has_trait(TRAIT_TRAIT, dude_obj, TRAIT_sex_appeal)) then begin
+                if (global_var(GVAR_VAULT_CITIZENSHIP) < get_pc_stat(PCSTAT_level)) then begin
+                    if (is_success(roll_vs_skill(dude_obj, 10, 0))) then begin
+                        set_global_var(GVAR_QUEST_FIND_THOMAS, global_var(GVAR_QUEST_FIND_THOMAS) + 3);
+                    end
+                    else begin
+                        set_global_var(GVAR_QUEST_FIND_THOMAS, global_var(GVAR_QUEST_FIND_THOMAS) + 1);
+                    end
+                    if (global_var(GVAR_QUEST_FIND_THOMAS) >= (2 * get_pc_stat(PCSTAT_level))) then begin
+                        set_global_var(GVAR_QUEST_FIND_THOMAS, 0);
+                        set_global_var(GVAR_VAULT_CITIZENSHIP, global_var(GVAR_VAULT_CITIZENSHIP) + 1);
+                        critter_mod_skill(dude_obj, SKILL_STEAL, 1);
+                        display_msg(message_str(SCRIPT_STTEXT, 410));
+                    end
+                end
+            end
+            steal_perk := 0;
+            steal_gloves := 0;
+            if (has_trait(TRAIT_PERK, dude_obj, PERK_pickpocket) != 0) then begin
+                steal_perk := steal_perk + 15;
+            end
+            if (has_trait(TRAIT_PERK, dude_obj, PERK_master_thief) != 0) then begin
+                steal_perk := steal_perk + 30;
+            end
+            if ((obj_pid(critter_inven_obj(dude_obj, INVEN_TYPE_RIGHT_HAND)) == 245) or (obj_pid(critter_inven_obj(dude_obj, INVEN_TYPE_LEFT_HAND)) == 245)) then begin
+                steal_gloves := 10;
+            end
+            if (random(0, 100) <= ((dude_skill(SKILL_STEAL) / 2) + (((3 * get_critter_stat(dude_obj, STAT_ag)) + (((dude_luck - 4) * 4) - (difficulty_level * 4)) + (2 * steal_perk) + steal_gloves) / (local_var(4) / 25)))) then begin
+                display_msg(message_str(SCRIPT_STTEXT, random(145, 148)));
+            end
+            else begin
+                script_overrides;
+                if (random(0, 100) <= (25 - floor((((dude_luck - 4) * 4) - (difficulty_level * 4)) / 3))) then begin
+                    float_msg(self_obj, message_str(SCRIPT_STTEXT, random(206, 209)), FLOAT_MSG_RED);
+                    set_local_var(2, 1);
+                end
+                else begin
+                    display_msg(message_str(SCRIPT_STTEXT, random(200, 203)));
+                end
+            end
+        end
+    end
+    if (action_being_used == 12) then begin
+        script_overrides;
+        display_msg(message_str(SCRIPT_STTEXT, 204) + ((dude_skill(SKILL_STEAL) / 2) + (((3 * get_critter_stat(dude_obj, STAT_ag)) + (((dude_luck - 4) * 4) - (difficulty_level * 4)) + (2 * steal_perk) + steal_gloves) / (local_var(4) / 25))) + message_str(SCRIPT_STTEXT, 205));
+    end
+end
+
+procedure damage_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_local_var(2, 1);
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    if (dude_gender == 1) then begin
+        apples_qty := 6;
+    end
+    else begin
+        apples_qty := 4;
+    end
+end
+
+procedure timed_event_p_proc
+begin
+    if ((fixed_param == 1) and not(combat_is_initialized)) then begin
+        animation_is_called := 0;
+    end
+    if ((fixed_param == 2) and not(combat_is_initialized)) then begin
+        float_is_called := 0;
+    end
+end
+
+procedure Node001
+begin
+    Reply(10);
+    giq_option(1, NAME, 11, Node002, NEUTRAL_REACTION);
+    giq_option(1, NAME, mstr(12) + dude_name + mstr(13), Node002, NEUTRAL_REACTION);
+    giq_option(1, NAME, 14, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node002
+begin
+    Reply(20);
+    giq_option(1, NAME, 21, Node003, NEUTRAL_REACTION);
+    giq_option(1, NAME, 22, Node003, NEUTRAL_REACTION);
+    giq_option(1, NAME, 23, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node003
+begin
+    Reply(30);
+    giq_option(1, NAME, 31, Node004, NEUTRAL_REACTION);
+    giq_option(1, NAME, 32, Node005, NEUTRAL_REACTION);
+end
+
+procedure Node004
+begin
+    Reply(40);
+    giq_option(1, NAME, 41, Node006, NEUTRAL_REACTION);
+end
+
+procedure Node005
+begin
+    Reply(50);
+    giq_option(1, NAME, 51, Node006, NEUTRAL_REACTION);
+end
+
+procedure Node006
+begin
+    set_local_var(7, 1);
+    already_talk := 1;
+    Reply(60);
+    giq_option(1, NAME, 61, Node010, NEUTRAL_REACTION);
+    giq_option(1, NAME, 62, Node999, NEUTRAL_REACTION);
+    giq_option(1, NAME, 63, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node010
+begin
+    if (already_talk == 0) then begin
+        already_talk := 1;
+        Reply(100);
+    end
+    else begin
+        Reply(random(101, 102));
+    end
+    giq_option(1, NAME, 103, Node011, NEUTRAL_REACTION);
+    giq_option(1, NAME, 104, Node030, NEUTRAL_REACTION);
+    giq_option(1, NAME, 105, Node040, NEUTRAL_REACTION);
+    giq_option(1, NAME, 125, Node020, NEUTRAL_REACTION);
+    if (global_var(GVAR_MODOC_TANNERY_FLAG) == 0) then begin
+        if (map_var(0) == 1) then begin
+            giq_option(1, NAME, 106, Node050, NEUTRAL_REACTION);
+        end
+        else begin
+            giq_option(1, NAME, 107, Node050, NEUTRAL_REACTION);
+        end
+    end
+    if (global_var(GVAR_MODOC_TANNERY_FLAG) == 1) then begin
+        giq_option(1, NAME, 108, Node060, NEUTRAL_REACTION);
+    end
+    giq_option(1, NAME, 109, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node011
+begin
+    if (want_to_know == 0) then begin
+        want_to_know := 1;
+        Reply(111);
+    end
+    else begin
+        Reply(112);
+    end
+    if (local_var(8) == 0) then begin
+        giq_option(1, NAME, 113, NodeRenessance, NEUTRAL_REACTION);
+    end
+    giq_option(1, NAME, 114, Node012, NEUTRAL_REACTION);
+    giq_option(1, NAME, 115, Node013, NEUTRAL_REACTION);
+    giq_option(1, NAME, 116, Node014, NEUTRAL_REACTION);
+    giq_option(1, NAME, 117, Node010, NEUTRAL_REACTION);
+    giq_option(1, NAME, 118, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node012
+begin
+    if (random(0, 100) < (dude_skill(SKILL_SPEECH) + (dude_skill(SKILL_SPEECH) / 20 * dude_charisma) - (30 + ((10 * 1) + 1)) + dude_charisma)) then begin
+        Reply(120);
+        giq_option(1, NAME, 121, Node011, NEUTRAL_REACTION);
+        giq_option(1, NAME, 122, Node999, NEUTRAL_REACTION);
+    end
+    else begin
+        Reply(123);
+        giq_option(1, NAME, 124, Node011, NEUTRAL_REACTION);
+    end
+end
+
+procedure Node013
+begin
+    Reply(130);
+    giq_option(1, NAME, 131, Node011, NEUTRAL_REACTION);
+end
+
+procedure Node014
+begin
+    if (65 < ((dude_charisma * 10) + (dude_skill(SKILL_SPEECH) / 5))) then begin
+        Reply(140);
+        giq_option(1, NAME, 141, Node011, NEUTRAL_REACTION);
+    end
+    else begin
+        Reply(142);
+        giq_option(1, NAME, 143, Node011, NEUTRAL_REACTION);
+        giq_option(1, NAME, 144, Node011, NEUTRAL_REACTION);
+    end
+end
+
+procedure Node020
+begin
+    if (local_var(9) == 0) then begin
+        set_local_var(9, 1);
+        mark_area_known(MARK_TYPE_TOWN, 4, MARK_STATE_KNOWN);
+        Reply(200);
+        giq_option(1, NAME, 201, Node010, NEUTRAL_REACTION);
+        giq_option(1, NAME, 202, Node999, NEUTRAL_REACTION);
+    end
+    else begin
+        Reply(203);
+        giq_option(1, NAME, 204, Node010, NEUTRAL_REACTION);
+        giq_option(1, NAME, 205, Node999, NEUTRAL_REACTION);
+    end
+end
+
+procedure Node030
+begin
+    if (70 < ((dude_charisma * 10) + (dude_skill(SKILL_SPEECH) / 5))) then begin
+        Reply(300);
+        giq_option(1, NAME, 301, Node031, NEUTRAL_REACTION);
+    end
+    else begin
+        Reply(302);
+        giq_option(1, NAME, 303, Node010, NEUTRAL_REACTION);
+        giq_option(1, NAME, 304, Node999, NEUTRAL_REACTION);
+    end
+end
+
+procedure Node031
+begin
+    Reply(310);
+    giq_option(1, NAME, 311, Node010, NEUTRAL_REACTION);
+end
+
+procedure Node040
+begin
+    if (50 < ((dude_charisma * 10) + (dude_skill(SKILL_SPEECH) / 5))) then begin
+        Reply(400);
+        giq_option(1, NAME, 401, Node999, NEUTRAL_REACTION);
+    end
+    else begin
+        Reply(402);
+        giq_option(1, NAME, 403, Node010, NEUTRAL_REACTION);
+    end
+end
+
+procedure Node050
+begin
+    if (map_var(0) == 1) then begin
+        Reply(500);
+        giq_option(1, NAME, 501, Node051, NEUTRAL_REACTION);
+    end
+    else begin
+        Reply(502);
+        giq_option(1, NAME, 503, Node051, NEUTRAL_REACTION);
+        giq_option(1, NAME, 504, Node999, NEUTRAL_REACTION);
+    end
+end
+
+procedure Node051
+begin
+    Reply(mstr(510) + apples_qty + mstr(517));
+    giq_option(1, NAME, 511, NodeQA, NEUTRAL_REACTION);
+    giq_option(1, NAME, 512, Node999, NEUTRAL_REACTION);
+end
+
+procedure NodeQA
+begin
+    set_global_var(GVAR_MODOC_TANNERY_FLAG, 1);
+    Reply(513);
+    giq_option(1, NAME, 514, Node999, NEUTRAL_REACTION);
+    giq_option(1, NAME, 515, Node999, NEUTRAL_REACTION);
+    giq_option(1, NAME, 516, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node060
+begin
+    Reply(600);
+    if (obj_carrying_pid_obj(dude_obj, 336)) then begin
+        giq_option(1, NAME, 604, Node999, NEUTRAL_REACTION);
+    end
+    else begin
+        giq_option(1, NAME, 601, Node061, NEUTRAL_REACTION);
+    end
+    if (obj_carrying_pid_obj(dude_obj, 336) and (obj_is_carrying_obj_pid(dude_obj, 238) >= apples_qty)) then begin
+        giq_option(1, NAME, 602, Node062, NEUTRAL_REACTION);
+    end
+    giq_option(1, NAME, 603, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node061
+begin
+    if (52 < ((dude_charisma * 10) + (dude_skill(SKILL_SPEECH) / 5))) then begin
+        Reply(610);
+        giq_option(1, NAME, 611, Node999, NEUTRAL_REACTION);
+    end
+    else begin
+        Reply(612);
+        giq_option(1, NAME, 613, Node999, NEUTRAL_REACTION);
+        giq_option(1, NAME, 614, Node999, NEUTRAL_REACTION);
+    end
+end
+
+procedure Node062
+begin
+    variable LVar0 := 0;
+    while (LVar0 < apples_qty) do begin
+        LVar0 := LVar0 + 1;
+        rm_obj_from_inven(dude_obj, obj_carrying_pid_obj(dude_obj, 238));
+    end
+    rm_obj_from_inven(dude_obj, obj_carrying_pid_obj(dude_obj, 336));
+    set_global_var(GVAR_MODOC_TANNERY_FLAG, 2);
+    give_exp_points(floor(245 / 5) + (dude_iq * floor(245 / 12)) + (dude_luck * floor(245 / 30)) + (floor(245 / 75) * (((dude_luck - 4) * 4) - (difficulty_level * 4))));
+    display_msg(message_str(SCRIPT_STTEXT, random(140, 143)) + (floor(245 / 5) + (dude_iq * floor(245 / 12)) + (dude_luck * floor(245 / 30)) + (floor(245 / 75) * (((dude_luck - 4) * 4) - (difficulty_level * 4)))) + message_str(SCRIPT_STTEXT, 144));
+    Reply(620);
+    giq_option(1, NAME, 621, Node063, NEUTRAL_REACTION);
+    giq_option(1, NAME, 622, Node064, NEUTRAL_REACTION);
+end
+
+procedure Node063
+begin
+    add_obj_to_inven(dude_obj, create_object(63, 1, 2));
+    Reply(630);
+    giq_option(1, NAME, 631, Node999, NEUTRAL_REACTION);
+    giq_option(1, NAME, 632, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node064
+begin
+    Reply(mstr(640) + dude_name + mstr(641));
+    giq_option(1, NAME, 642, Node999, NEUTRAL_REACTION);
+end
+
+procedure NodeRenessance
+begin
+    if ((local_var(8) == 0) and (global_var(GVAR_CARAVAN_STATUS) < 4)) then begin
+        set_local_var(8, 1);
+        set_global_var(GVAR_CARAVAN_STATUS, global_var(GVAR_CARAVAN_STATUS) + 1);
+        if (global_var(GVAR_CARAVAN_STATUS) == 1) then begin
+            gsay_reply(SCRIPT_STTEXT, 910);
+            giq_option(1, SCRIPT_STTEXT, 911, Node010, NEUTRAL_REACTION);
+        end
+        else begin
+            if (global_var(GVAR_CARAVAN_STATUS) == 2) then begin
+                gsay_reply(SCRIPT_STTEXT, 912);
+                giq_option(1, SCRIPT_STTEXT, 913, Node010, NEUTRAL_REACTION);
+            end
+            else begin
+                if (global_var(GVAR_CARAVAN_STATUS) == 3) then begin
+                    gsay_reply(SCRIPT_STTEXT, 914);
+                    giq_option(1, SCRIPT_STTEXT, 915, Node010, NEUTRAL_REACTION);
+                end
+                else begin
+                    gsay_reply(SCRIPT_STTEXT, 916);
+                    giq_option(1, SCRIPT_STTEXT, 917, Node010, NEUTRAL_REACTION);
+                end
+            end
+        end
+    end
+    else begin
+        gsay_reply(SCRIPT_STTEXT, random(918, 921));
+        giq_option(1, SCRIPT_STTEXT, random(922, 923), Node010, NEUTRAL_REACTION);
+    end
+end
+
+procedure Node999
+begin
+    already_talk := 0;
+end
+
+procedure Node998
+begin
+    already_talk := 0;
+    set_local_var(2, 1);
+end
+
+procedure NodeBarter
+begin
+    gdialog_mod_barter(-(dude_objective_reputation + local_var(6)));
+    call Node010();
+end

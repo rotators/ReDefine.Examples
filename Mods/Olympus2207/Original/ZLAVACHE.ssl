@@ -1,0 +1,223 @@
+variable dude_objective_reputation;
+variable self_subjective_reaction;
+variable z_critter_search;
+variable critter_is_detected;
+variable detected_critter;
+variable persuade_chance;
+variable steal_perk;
+variable steal_gloves;
+variable max_distance;
+variable animation_is_called;
+variable sound_is_called;
+variable distance_to_walk;
+
+procedure start;
+procedure critter_p_proc;
+procedure combat_p_proc;
+procedure description_p_proc;
+procedure look_at_p_proc;
+procedure pickup_p_proc;
+procedure push_p_proc;
+procedure talk_p_proc;
+procedure destroy_p_proc;
+procedure use_skill_on_p_proc;
+procedure damage_p_proc;
+procedure map_enter_p_proc;
+procedure map_exit_p_proc;
+procedure timed_event_p_proc;
+procedure Node001;
+procedure Node002;
+procedure Node003;
+procedure Node998;
+procedure Node999;
+
+
+procedure start
+begin
+    if (local_var(1) == 0) then begin
+        set_local_var(3, tile_num(self_obj));
+        set_local_var(1, 1);
+        critter_add_trait(self_obj, 1, 6, 300);
+        critter_add_trait(self_obj, 1, 5, 15);
+        max_distance := random(2, 6);
+    end
+end
+
+procedure critter_p_proc
+begin
+    if ((animation_is_called == 0) and (anim_busy(self_obj) == 0)) then begin
+        animation_is_called := 1;
+        add_timer_event(self_obj, random(29, 76), 1);
+    end
+    if (sound_is_called == 0) then begin
+        sound_is_called := 1;
+        add_timer_event(self_obj, random(559, 1226), 2);
+    end
+end
+
+procedure combat_p_proc
+begin
+end
+
+procedure description_p_proc
+begin
+    script_overrides;
+    display_msg(message_str(115, random(6, 9)));
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    display_msg(message_str(115, random(1, 5)));
+end
+
+procedure pickup_p_proc
+begin
+    script_overrides;
+end
+
+procedure push_p_proc
+begin
+    script_overrides;
+    reg_anim_func(2, self_obj);
+    reg_anim_func(1, 1);
+    if (random(1, 2) == 1) then begin
+        reg_anim_animate(self_obj, 20, -1);
+        reg_anim_animate(self_obj, 37, -1);
+    end
+    else begin
+        reg_anim_animate(self_obj, 21, -1);
+        reg_anim_animate(self_obj, 36, -1);
+    end
+    play_sfx("MABROMBA");
+    reg_anim_func(3, 0);
+end
+
+procedure talk_p_proc
+begin
+    if (not(anim_busy(self_obj))) then begin
+        anim(self_obj, 1000, rotation_to_tile(tile_num(self_obj), tile_num(dude_obj)));
+    end
+    if (get_critter_stat(dude_obj, 4) <= 3) then begin
+        start_gdialog(115, self_obj, -1, -1, -1);
+        gsay_start;
+        call Node001();
+        gsay_end;
+        end_dialogue;
+    end
+    else begin
+        float_msg(self_obj, message_str(115, random(1030, 1039)), 0);
+    end
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_global_var(0, global_var(0) - 1);
+        if ((cur_map_index >= 12) and (cur_map_index <= 17)) then begin
+            set_global_var(49, global_var(49) - 5);
+        end
+        if ((cur_map_index >= 18) and (cur_map_index <= 26)) then begin
+            set_global_var(52, global_var(52) - 2);
+        end
+        if ((cur_map_index >= 27) and (cur_map_index <= 31)) then begin
+            set_global_var(50, global_var(50) - 4);
+        end
+        if ((cur_map_index >= 38) and (cur_map_index <= 43)) then begin
+            set_global_var(54, global_var(54) - 2);
+        end
+        if ((cur_map_index == 44) or (cur_map_index == 45)) then begin
+            set_global_var(55, global_var(55) - 2);
+        end
+    end
+end
+
+procedure use_skill_on_p_proc
+begin
+end
+
+procedure damage_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        if ((cur_map_index >= 12) and (cur_map_index <= 17)) then begin
+            critter_add_trait(self_obj, 1, 6, 5);
+        end
+        if ((cur_map_index >= 18) and (cur_map_index <= 26)) then begin
+            critter_add_trait(self_obj, 1, 6, 7);
+        end
+        if ((cur_map_index >= 27) and (cur_map_index <= 31)) then begin
+            critter_add_trait(self_obj, 1, 6, 301);
+        end
+        if ((cur_map_index >= 38) and (cur_map_index <= 43)) then begin
+            critter_add_trait(self_obj, 1, 6, 9);
+        end
+        if ((cur_map_index == 44) or (cur_map_index == 45)) then begin
+            critter_add_trait(self_obj, 1, 6, 10);
+        end
+        set_local_var(2, 1);
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    max_distance := random(2, 6);
+end
+
+procedure map_exit_p_proc
+begin
+    critter_add_trait(self_obj, 1, 6, 300);
+end
+
+procedure timed_event_p_proc
+begin
+    if (fixed_param == 1) then begin
+        if (not(combat_is_initialized)) then begin
+            if (tile_distance(tile_num(self_obj), local_var(3)) < max_distance) then begin
+                animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), random(0, 5), random(floor(max_distance / 2), max_distance)), 0);
+            end
+            else begin
+                animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), rotation_to_tile(tile_num(self_obj), local_var(3)), random(floor(max_distance / 2), max_distance)), 0);
+            end
+        end
+        animation_is_called := 0;
+    end
+    if (fixed_param == 2) then begin
+        if (not(combat_is_initialized)) then begin
+            play_sfx("MABROMAQ");
+        end
+        sound_is_called := 0;
+    end
+end
+
+procedure Node001
+begin
+    gsay_reply(115, 10);
+    gsay_option(115, 11, Node002, 50);
+    gsay_option(115, 12, Node998, 50);
+    gsay_option(115, 13, Node999, 50);
+end
+
+procedure Node002
+begin
+    gsay_reply(115, 14);
+    gsay_option(115, 15, Node998, 50);
+    gsay_option(115, 16, Node003, 50);
+    gsay_option(115, 13, Node999, 50);
+end
+
+procedure Node003
+begin
+    gsay_reply(115, 17);
+    gsay_option(115, 19, Node998, 50);
+    gsay_option(115, 18, Node999, 50);
+end
+
+procedure Node998
+begin
+    set_local_var(2, 1);
+end
+
+procedure Node999
+begin
+end
+

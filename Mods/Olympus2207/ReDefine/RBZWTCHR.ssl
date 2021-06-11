@@ -1,0 +1,665 @@
+variable dude_objective_reputation;
+variable self_subjective_reaction;
+variable z_critter_search;
+variable critter_is_detected;
+variable detected_critter;
+variable persuade_chance;
+variable steal_perk;
+variable steal_gloves;
+variable animation_is_called;
+variable floater_is_called;
+variable trading_container;
+
+procedure start;
+procedure critter_p_proc;
+procedure combat_p_proc;
+procedure description_p_proc;
+procedure look_at_p_proc;
+procedure pickup_p_proc;
+procedure push_p_proc;
+procedure talk_p_proc;
+procedure destroy_p_proc;
+procedure use_skill_on_p_proc;
+procedure damage_p_proc;
+procedure map_enter_p_proc;
+procedure timed_event_p_proc;
+
+
+procedure start
+begin
+    if (local_var(1) == 0) then begin
+        set_local_var(3, tile_num(self_obj));
+        set_local_var(1, 1);
+        set_local_var(7, obj_get_rot(self_obj));
+        set_local_var(4, random(50, 70));
+        set_local_var(5, random(40, 70));
+        set_local_var(6, random(-10, 10));
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 22);
+    end
+end
+
+procedure critter_p_proc
+begin
+    if (CUR_MAP_RBARENA) then begin
+        if (floater_is_called == 0) then begin
+            add_timer_event(self_obj, random(100, 500), 1);
+            floater_is_called := 1;
+        end
+        if ((animation_is_called == 0) and not(anim_busy(self_obj))) then begin
+            add_timer_event(self_obj, random(1, 100), 2);
+            animation_is_called := 1;
+        end
+    end
+    if (CUR_MAP_RBARENAF) then begin
+        if (floater_is_called == 0) then begin
+            add_timer_event(self_obj, random(10, 50), 1);
+            floater_is_called := 1;
+        end
+        if (tile_num(self_obj) != local_var(3)) then begin
+            if (not(anim_busy(self_obj)) and not(combat_is_initialized)) then begin
+                animate_move_obj_to_tile(self_obj, local_var(3), 0);
+            end
+        end
+        else begin
+            if (obj_get_rot(self_obj) != local_var(7)) then begin
+                anim(self_obj, 1000, local_var(7));
+            end
+        end
+    end
+    if (obj_can_see_obj(self_obj, dude_obj)) then begin
+        if ((local_var(2) == 1) or (global_var(GVAR_TOWN_REP_BROKEN_HILLS) <= -31)) then begin
+            set_local_var(2, 0);
+            attack_setup(self_obj, dude_obj);
+        end
+    end
+end
+
+procedure combat_p_proc
+begin
+end
+
+procedure description_p_proc
+begin
+    script_overrides;
+    display_mstr(random(6, 9));
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    display_mstr(random(1, 5));
+end
+
+procedure pickup_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_local_var(2, 1);
+    end
+end
+
+procedure push_p_proc
+begin
+    script_overrides;
+    float_msg(self_obj, mstr(random(1040, 1049)), FLOAT_MSG_RED);
+    set_local_var(6, local_var(6) - random(1, 3));
+end
+
+procedure talk_p_proc
+begin
+    if (global_var(GVAR_PLAYER_REPUTATION) > 0) then begin
+        dude_objective_reputation := (global_var(GVAR_TOWN_REP_BROKEN_HILLS) * 30) + global_var(GVAR_PLAYER_REPUTATION) - (20 * global_var(GVAR_CHILDKILLER_REPUTATION));
+    end
+    else begin
+        dude_objective_reputation := (global_var(GVAR_TOWN_REP_BROKEN_HILLS) * 30) + global_var(GVAR_PLAYER_REPUTATION) - (20 * global_var(GVAR_CHILDKILLER_REPUTATION));
+    end
+    if ((dude_objective_reputation + local_var(6)) >= 300) then begin
+        self_subjective_reaction := 1;
+    end
+    else begin
+        if (((dude_objective_reputation + local_var(6)) >= -300) and ((dude_objective_reputation + local_var(6)) < 300)) then begin
+            self_subjective_reaction := 0;
+        end
+        else begin
+            self_subjective_reaction := -1;
+        end
+    end
+    if (not(anim_busy(self_obj))) then begin
+        anim(self_obj, 1000, rotation_to_tile(tile_num(self_obj), dude_tile));
+    end
+    if ((global_var(GVAR_TOWN_REP_BROKEN_HILLS) + local_var(6)) >= 20) then begin
+        float_msg(self_obj, mstr(random(1000, 1009)), FLOAT_MSG_GREEN);
+    end
+    if (((global_var(GVAR_TOWN_REP_BROKEN_HILLS) + local_var(6)) > -20) and ((global_var(GVAR_TOWN_REP_BROKEN_HILLS) + local_var(6)) < 20)) then begin
+        float_msg(self_obj, mstr(random(1010, 1019)), FLOAT_MSG_NORMAL);
+    end
+    if ((global_var(GVAR_TOWN_REP_BROKEN_HILLS) + local_var(6)) <= -20) then begin
+        float_msg(self_obj, mstr(random(1020, 1029)), FLOAT_MSG_RED);
+    end
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_global_var(GVAR_PLAYER_REPUTATION, global_var(GVAR_PLAYER_REPUTATION) - 1);
+        if ((54 == 50) or (54 == 59)) then begin
+            set_global_var(GVAR_TOWN_REP_BROKEN_HILLS, global_var(GVAR_TOWN_REP_BROKEN_HILLS) - 3);
+        end
+        else begin
+            set_global_var(GVAR_TOWN_REP_BROKEN_HILLS, global_var(GVAR_TOWN_REP_BROKEN_HILLS) - 6);
+        end
+    end
+end
+
+procedure use_skill_on_p_proc
+begin
+    if (action_being_used == 10) then begin
+        if ((get_sfall_global_int(1) == 6) and (get_sfall_global_int(13) == 0)) then begin
+            script_overrides;
+            set_sfall_global(13, 1);
+        end
+        else begin
+            if (has_trait(TRAIT_TRAIT, dude_obj, TRAIT_sex_appeal)) then begin
+                if (global_var(GVAR_VAULT_CITIZENSHIP) < get_pc_stat(PCSTAT_level)) then begin
+                    if (is_success(roll_vs_skill(dude_obj, 10, 0))) then begin
+                        set_global_var(GVAR_QUEST_FIND_THOMAS, global_var(GVAR_QUEST_FIND_THOMAS) + 3);
+                    end
+                    else begin
+                        set_global_var(GVAR_QUEST_FIND_THOMAS, global_var(GVAR_QUEST_FIND_THOMAS) + 1);
+                    end
+                    if (global_var(GVAR_QUEST_FIND_THOMAS) >= (2 * get_pc_stat(PCSTAT_level))) then begin
+                        set_global_var(GVAR_QUEST_FIND_THOMAS, 0);
+                        set_global_var(GVAR_VAULT_CITIZENSHIP, global_var(GVAR_VAULT_CITIZENSHIP) + 1);
+                        critter_mod_skill(dude_obj, SKILL_STEAL, 1);
+                        display_msg(message_str(SCRIPT_STTEXT, 410));
+                    end
+                end
+            end
+            steal_perk := 0;
+            steal_gloves := 0;
+            if (has_trait(TRAIT_PERK, dude_obj, PERK_pickpocket) != 0) then begin
+                steal_perk := steal_perk + 15;
+            end
+            if (has_trait(TRAIT_PERK, dude_obj, PERK_master_thief) != 0) then begin
+                steal_perk := steal_perk + 30;
+            end
+            if ((obj_pid(critter_inven_obj(dude_obj, INVEN_TYPE_RIGHT_HAND)) == 245) or (obj_pid(critter_inven_obj(dude_obj, INVEN_TYPE_LEFT_HAND)) == 245)) then begin
+                steal_gloves := 10;
+            end
+            if (random(0, 100) <= ((dude_skill(SKILL_STEAL) / 2) + (((3 * get_critter_stat(dude_obj, STAT_ag)) + (((dude_luck - 4) * 4) - (difficulty_level * 4)) + (2 * steal_perk) + steal_gloves) / (local_var(4) / 25)))) then begin
+                display_msg(message_str(SCRIPT_STTEXT, random(145, 148)));
+            end
+            else begin
+                script_overrides;
+                if (random(0, 100) <= (25 - floor((((dude_luck - 4) * 4) - (difficulty_level * 4)) / 3))) then begin
+                    float_msg(self_obj, message_str(SCRIPT_STTEXT, random(206, 209)), FLOAT_MSG_RED);
+                    set_local_var(2, 1);
+                end
+                else begin
+                    display_msg(message_str(SCRIPT_STTEXT, random(200, 203)));
+                end
+            end
+        end
+    end
+    if (action_being_used == 12) then begin
+        script_overrides;
+        display_msg(message_str(SCRIPT_STTEXT, 204) + ((dude_skill(SKILL_STEAL) / 2) + (((3 * get_critter_stat(dude_obj, STAT_ag)) + (((dude_luck - 4) * 4) - (difficulty_level * 4)) + (2 * steal_perk) + steal_gloves) / (local_var(4) / 25))) + message_str(SCRIPT_STTEXT, 205));
+    end
+end
+
+procedure damage_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_local_var(2, 1);
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    if (map_first_run or (days_since_visited > 5)) then begin
+        if (random(0, 100) <= 50) then begin
+            if (random(0, 100) <= 50) then begin
+                if (random(0, 100) <= 50) then begin
+                    if (random(0, 100) <= 50) then begin
+                        art_change_fid_num(self_obj, 16777244);
+                    end
+                    else begin
+                        art_change_fid_num(self_obj, 16777246);
+                    end
+                end
+                else begin
+                    if (random(0, 100) <= 50) then begin
+                        art_change_fid_num(self_obj, 16777250);
+                    end
+                    else begin
+                        art_change_fid_num(self_obj, 16777251);
+                    end
+                end
+            end
+            else begin
+                if (random(0, 100) <= 50) then begin
+                    if (random(0, 100) <= 50) then begin
+                        art_change_fid_num(self_obj, 16777275);
+                    end
+                    else begin
+                        art_change_fid_num(self_obj, 16777276);
+                    end
+                end
+                else begin
+                    if (random(0, 100) <= 50) then begin
+                        art_change_fid_num(self_obj, 16777277);
+                    end
+                    else begin
+                        art_change_fid_num(self_obj, 16777281);
+                    end
+                end
+            end
+        end
+        else begin
+            if (random(0, 100) <= 50) then begin
+                if (random(0, 100) <= 50) then begin
+                    if (random(0, 100) <= 50) then begin
+                        art_change_fid_num(self_obj, 16777282);
+                    end
+                    else begin
+                        art_change_fid_num(self_obj, 16777283);
+                    end
+                end
+                else begin
+                    if (random(0, 100) <= 50) then begin
+                        art_change_fid_num(self_obj, 16777282);
+                    end
+                    else begin
+                        art_change_fid_num(self_obj, 16777281);
+                    end
+                end
+            end
+            else begin
+                if (random(0, 100) <= 50) then begin
+                    if (random(0, 100) <= 50) then begin
+                        art_change_fid_num(self_obj, 16777277);
+                    end
+                    else begin
+                        art_change_fid_num(self_obj, 16777276);
+                    end
+                end
+                else begin
+                    if (random(0, 100) <= 50) then begin
+                        art_change_fid_num(self_obj, 16777275);
+                    end
+                    else begin
+                        art_change_fid_num(self_obj, 16777251);
+                    end
+                end
+            end
+        end
+    end
+    if (days_since_visited > 5) then begin
+        if (not(tile_contains_obj_pid(1, 2, 250))) then begin
+            trading_container := create_object(250, 1, 2);
+        end
+        else begin
+            trading_container := tile_contains_pid_obj(1, 2, 250);
+        end
+        inven_unwield(self_obj);
+        move_obj_inven_to_obj(self_obj, trading_container);
+        if (random(1, 3) == 1) then begin
+            if (random(0, 100) <= 15) then begin
+                add_obj_to_inven(self_obj, create_object(438, 1, 2));
+            end
+            if (random(0, 100) <= 10) then begin
+                add_mult_objs_to_inven(self_obj, create_object(238, 1, 2), random(1, 2));
+            end
+            if (random(0, 100) <= 10) then begin
+                add_mult_objs_to_inven(self_obj, create_object(213, 1, 2), random(1, 2));
+            end
+            if (random(0, 100) <= 10) then begin
+                add_obj_to_inven(self_obj, create_object(233, 1, 2));
+            end
+            if (random(0, 100) <= 10) then begin
+                add_obj_to_inven(self_obj, create_object(420, 1, 2));
+            end
+            if (random(0, 100) <= 9) then begin
+                add_obj_to_inven(self_obj, create_object(236, 1, 2));
+            end
+            if (random(0, 100) <= 8) then begin
+                add_obj_to_inven(self_obj, create_object(218, 1, 2));
+            end
+            if (random(0, 100) <= 6) then begin
+                add_obj_to_inven(self_obj, create_object(440, 1, 2));
+            end
+            if (random(0, 100) <= 5) then begin
+                add_obj_to_inven(self_obj, create_object(244, 1, 2));
+            end
+            if (random(0, 100) <= 5) then begin
+                add_obj_to_inven(self_obj, create_object(428, 1, 2));
+            end
+            if (random(0, 100) <= 5) then begin
+                add_obj_to_inven(self_obj, create_object(422, 1, 2));
+            end
+            if (random(0, 100) <= 4) then begin
+                add_obj_to_inven(self_obj, create_object(423, 1, 2));
+            end
+            if (random(0, 100) <= 3) then begin
+                add_obj_to_inven(self_obj, create_object(426, 1, 2));
+            end
+            if (random(0, 100) <= 2) then begin
+                add_obj_to_inven(self_obj, create_object(433, 1, 2));
+            end
+            if (random(0, 100) <= 2) then begin
+                add_obj_to_inven(self_obj, create_object(421, 1, 2));
+            end
+        end
+        else begin
+            if (random(1, 2) == 1) then begin
+                if (random(0, 100) <= 33) then begin
+                    add_obj_to_inven(self_obj, create_object(165, 1, 2));
+                    add_mult_objs_to_inven(self_obj, create_object(2, 1, 2), random(11, 28));
+                end
+                else begin
+                    add_obj_to_inven(self_obj, create_object(172, 1, 2));
+                    add_mult_objs_to_inven(self_obj, create_object(7, 1, 2), random(11, 19));
+                end
+                if (random(0, 100) <= 33) then begin
+                    add_obj_to_inven(self_obj, create_object(109, 1, 2));
+                end
+                else begin
+                    add_obj_to_inven(self_obj, create_object(110, 1, 2));
+                end
+                if (random(0, 100) <= 20) then begin
+                    add_mult_objs_to_inven(self_obj, create_object(41, 1, 2), random(5, 20));
+                end
+                if (random(0, 100) <= 15) then begin
+                    add_mult_objs_to_inven(self_obj, create_object(238, 1, 2), random(2, 5));
+                end
+                if (random(0, 100) <= 5) then begin
+                    add_obj_to_inven(self_obj, create_object(236, 1, 2));
+                end
+                if (random(0, 100) <= 4) then begin
+                    add_obj_to_inven(self_obj, create_object(104, 1, 2));
+                end
+                if (random(0, 100) <= 3) then begin
+                    add_obj_to_inven(self_obj, create_object(227, 1, 2));
+                end
+                if (random(0, 100) <= 2) then begin
+                    add_obj_to_inven(self_obj, create_object(239, 1, 2));
+                end
+                if (random(0, 100) <= 2) then begin
+                    add_obj_to_inven(self_obj, create_object(232, 1, 2));
+                end
+                if (random(0, 100) <= 5) then begin
+                    add_obj_to_inven(self_obj, create_object(242, 1, 2));
+                end
+                if (random(0, 100) <= 5) then begin
+                    add_obj_to_inven(self_obj, create_object(422, 1, 2));
+                end
+                if (random(0, 100) <= 4) then begin
+                    add_obj_to_inven(self_obj, create_object(423, 1, 2));
+                end
+                if (random(0, 100) <= 3) then begin
+                    add_obj_to_inven(self_obj, create_object(426, 1, 2));
+                end
+                if (random(0, 100) <= 2) then begin
+                    add_obj_to_inven(self_obj, create_object(433, 1, 2));
+                end
+                if (random(0, 100) <= 2) then begin
+                    add_obj_to_inven(self_obj, create_object(421, 1, 2));
+                end
+            end
+            else begin
+                if (random(0, 100) <= 20) then begin
+                    add_mult_objs_to_inven(self_obj, create_object(41, 1, 2), random(1, 10));
+                end
+                if (random(0, 100) <= 10) then begin
+                    add_mult_objs_to_inven(self_obj, create_object(220, 1, 2), random(1, 2));
+                end
+                if (random(0, 100) <= 10) then begin
+                    add_mult_objs_to_inven(self_obj, create_object(217, 1, 2), random(1, 2));
+                end
+                if (random(0, 100) <= 15) then begin
+                    add_obj_to_inven(self_obj, create_object(36, 1, 2));
+                end
+                if (random(0, 100) <= 14) then begin
+                    add_obj_to_inven(self_obj, create_object(65, 1, 2));
+                end
+                if (random(0, 100) <= 12) then begin
+                    add_obj_to_inven(self_obj, create_object(71, 1, 2));
+                end
+                if (random(0, 100) <= 11) then begin
+                    add_obj_to_inven(self_obj, create_object(138, 1, 2));
+                end
+                if (random(0, 100) <= 10) then begin
+                    add_obj_to_inven(self_obj, create_object(47, 1, 2));
+                end
+                if (random(0, 100) <= 8) then begin
+                    add_obj_to_inven(self_obj, create_object(226, 1, 2));
+                end
+                if (random(0, 100) <= 33) then begin
+                    add_obj_to_inven(self_obj, create_object(225, 1, 2));
+                end
+                if (random(0, 100) <= 10) then begin
+                    add_obj_to_inven(self_obj, create_object(420, 1, 2));
+                end
+                if (random(0, 100) <= 9) then begin
+                    add_obj_to_inven(self_obj, create_object(243, 1, 2));
+                end
+                if (random(0, 100) <= 8) then begin
+                    add_obj_to_inven(self_obj, create_object(423, 1, 2));
+                end
+                if (random(0, 100) <= 7) then begin
+                    add_obj_to_inven(self_obj, create_object(426, 1, 2));
+                end
+                if (random(0, 100) <= 6) then begin
+                    add_obj_to_inven(self_obj, create_object(110, 1, 2));
+                end
+                if (random(0, 100) <= 5) then begin
+                    add_obj_to_inven(self_obj, create_object(421, 1, 2));
+                end
+                if (random(0, 100) <= 4) then begin
+                    add_obj_to_inven(self_obj, create_object(427, 1, 2));
+                end
+                if (random(0, 100) <= 3) then begin
+                    add_obj_to_inven(self_obj, create_object(77, 1, 2));
+                end
+            end
+        end
+    end
+    if (map_first_run) then begin
+        if (random(1, 3) == 1) then begin
+            if (random(0, 100) <= 15) then begin
+                add_obj_to_inven(self_obj, create_object(438, 1, 2));
+            end
+            if (random(0, 100) <= 10) then begin
+                add_mult_objs_to_inven(self_obj, create_object(238, 1, 2), random(1, 2));
+            end
+            if (random(0, 100) <= 10) then begin
+                add_mult_objs_to_inven(self_obj, create_object(213, 1, 2), random(1, 2));
+            end
+            if (random(0, 100) <= 10) then begin
+                add_obj_to_inven(self_obj, create_object(233, 1, 2));
+            end
+            if (random(0, 100) <= 10) then begin
+                add_obj_to_inven(self_obj, create_object(420, 1, 2));
+            end
+            if (random(0, 100) <= 9) then begin
+                add_obj_to_inven(self_obj, create_object(236, 1, 2));
+            end
+            if (random(0, 100) <= 8) then begin
+                add_obj_to_inven(self_obj, create_object(218, 1, 2));
+            end
+            if (random(0, 100) <= 6) then begin
+                add_obj_to_inven(self_obj, create_object(440, 1, 2));
+            end
+            if (random(0, 100) <= 5) then begin
+                add_obj_to_inven(self_obj, create_object(244, 1, 2));
+            end
+            if (random(0, 100) <= 5) then begin
+                add_obj_to_inven(self_obj, create_object(428, 1, 2));
+            end
+            if (random(0, 100) <= 5) then begin
+                add_obj_to_inven(self_obj, create_object(422, 1, 2));
+            end
+            if (random(0, 100) <= 4) then begin
+                add_obj_to_inven(self_obj, create_object(423, 1, 2));
+            end
+            if (random(0, 100) <= 3) then begin
+                add_obj_to_inven(self_obj, create_object(426, 1, 2));
+            end
+            if (random(0, 100) <= 2) then begin
+                add_obj_to_inven(self_obj, create_object(433, 1, 2));
+            end
+            if (random(0, 100) <= 2) then begin
+                add_obj_to_inven(self_obj, create_object(421, 1, 2));
+            end
+        end
+        else begin
+            if (random(1, 2) == 1) then begin
+                if (random(0, 100) <= 33) then begin
+                    add_obj_to_inven(self_obj, create_object(165, 1, 2));
+                    add_mult_objs_to_inven(self_obj, create_object(2, 1, 2), random(11, 28));
+                end
+                else begin
+                    add_obj_to_inven(self_obj, create_object(172, 1, 2));
+                    add_mult_objs_to_inven(self_obj, create_object(7, 1, 2), random(11, 19));
+                end
+                if (random(0, 100) <= 33) then begin
+                    add_obj_to_inven(self_obj, create_object(109, 1, 2));
+                end
+                else begin
+                    add_obj_to_inven(self_obj, create_object(110, 1, 2));
+                end
+                if (random(0, 100) <= 20) then begin
+                    add_mult_objs_to_inven(self_obj, create_object(41, 1, 2), random(5, 20));
+                end
+                if (random(0, 100) <= 15) then begin
+                    add_mult_objs_to_inven(self_obj, create_object(238, 1, 2), random(2, 5));
+                end
+                if (random(0, 100) <= 5) then begin
+                    add_obj_to_inven(self_obj, create_object(236, 1, 2));
+                end
+                if (random(0, 100) <= 4) then begin
+                    add_obj_to_inven(self_obj, create_object(104, 1, 2));
+                end
+                if (random(0, 100) <= 3) then begin
+                    add_obj_to_inven(self_obj, create_object(227, 1, 2));
+                end
+                if (random(0, 100) <= 2) then begin
+                    add_obj_to_inven(self_obj, create_object(239, 1, 2));
+                end
+                if (random(0, 100) <= 2) then begin
+                    add_obj_to_inven(self_obj, create_object(232, 1, 2));
+                end
+                if (random(0, 100) <= 5) then begin
+                    add_obj_to_inven(self_obj, create_object(242, 1, 2));
+                end
+                if (random(0, 100) <= 5) then begin
+                    add_obj_to_inven(self_obj, create_object(422, 1, 2));
+                end
+                if (random(0, 100) <= 4) then begin
+                    add_obj_to_inven(self_obj, create_object(423, 1, 2));
+                end
+                if (random(0, 100) <= 3) then begin
+                    add_obj_to_inven(self_obj, create_object(426, 1, 2));
+                end
+                if (random(0, 100) <= 2) then begin
+                    add_obj_to_inven(self_obj, create_object(433, 1, 2));
+                end
+                if (random(0, 100) <= 2) then begin
+                    add_obj_to_inven(self_obj, create_object(421, 1, 2));
+                end
+            end
+            else begin
+                if (random(0, 100) <= 20) then begin
+                    add_mult_objs_to_inven(self_obj, create_object(41, 1, 2), random(1, 10));
+                end
+                if (random(0, 100) <= 10) then begin
+                    add_mult_objs_to_inven(self_obj, create_object(220, 1, 2), random(1, 2));
+                end
+                if (random(0, 100) <= 10) then begin
+                    add_mult_objs_to_inven(self_obj, create_object(217, 1, 2), random(1, 2));
+                end
+                if (random(0, 100) <= 15) then begin
+                    add_obj_to_inven(self_obj, create_object(36, 1, 2));
+                end
+                if (random(0, 100) <= 14) then begin
+                    add_obj_to_inven(self_obj, create_object(65, 1, 2));
+                end
+                if (random(0, 100) <= 12) then begin
+                    add_obj_to_inven(self_obj, create_object(71, 1, 2));
+                end
+                if (random(0, 100) <= 11) then begin
+                    add_obj_to_inven(self_obj, create_object(138, 1, 2));
+                end
+                if (random(0, 100) <= 10) then begin
+                    add_obj_to_inven(self_obj, create_object(47, 1, 2));
+                end
+                if (random(0, 100) <= 8) then begin
+                    add_obj_to_inven(self_obj, create_object(226, 1, 2));
+                end
+                if (random(0, 100) <= 33) then begin
+                    add_obj_to_inven(self_obj, create_object(225, 1, 2));
+                end
+                if (random(0, 100) <= 10) then begin
+                    add_obj_to_inven(self_obj, create_object(420, 1, 2));
+                end
+                if (random(0, 100) <= 9) then begin
+                    add_obj_to_inven(self_obj, create_object(243, 1, 2));
+                end
+                if (random(0, 100) <= 8) then begin
+                    add_obj_to_inven(self_obj, create_object(423, 1, 2));
+                end
+                if (random(0, 100) <= 7) then begin
+                    add_obj_to_inven(self_obj, create_object(426, 1, 2));
+                end
+                if (random(0, 100) <= 6) then begin
+                    add_obj_to_inven(self_obj, create_object(110, 1, 2));
+                end
+                if (random(0, 100) <= 5) then begin
+                    add_obj_to_inven(self_obj, create_object(421, 1, 2));
+                end
+                if (random(0, 100) <= 4) then begin
+                    add_obj_to_inven(self_obj, create_object(427, 1, 2));
+                end
+                if (random(0, 100) <= 3) then begin
+                    add_obj_to_inven(self_obj, create_object(77, 1, 2));
+                end
+            end
+        end
+    end
+    move_to(self_obj, local_var(3), elevation(self_obj));
+end
+
+procedure timed_event_p_proc
+begin
+    if ((fixed_param == 1) and not(combat_is_initialized)) then begin
+        if (not(anim_busy(self_obj))) then begin
+            if (obj_on_screen(self_obj)) then begin
+                if ((global_var(GVAR_MODOC_TOOL_FLAG) bwand 67108864) != 0) then begin
+                    float_msg(self_obj, mstr(random(1045, 1049)), FLOAT_MSG_NORMAL);
+                end
+                else begin
+                    if (global_var(GVAR_ENEMY_BROKEN_HILLS) == 1) then begin
+                        float_msg(self_obj, mstr(random(1050, 1054)), FLOAT_MSG_NORMAL);
+                    end
+                    else begin
+                        if (global_var(GVAR_ENEMY_BROKEN_HILLS) == 2) then begin
+                            float_msg(self_obj, mstr(random(1055, 1059)), FLOAT_MSG_NORMAL);
+                        end
+                        else begin
+                            float_msg(self_obj, mstr(random(1040, 1044)), FLOAT_MSG_NORMAL);
+                        end
+                    end
+                end
+            end
+        end
+        floater_is_called := 0;
+    end
+    if ((fixed_param == 2) and not(combat_is_initialized)) then begin
+        if (tile_distance(tile_num(self_obj), local_var(3)) > 6) then begin
+            animate_move_obj_to_tile(self_obj, local_var(3), 0);
+        end
+        else begin
+            animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), random(0, 5), random(1, 5)), 0);
+        end
+        animation_is_called := 0;
+    end
+end

@@ -1,0 +1,506 @@
+procedure GetIniConfig(variable arg0, variable arg1, variable arg2, variable arg3);
+procedure GetConfig(variable arg0, variable arg1, variable arg2);
+procedure GetConfigStr(variable arg0, variable arg1, variable arg2);
+procedure unsigned_comp(variable arg0, variable arg1);
+procedure start;
+procedure sfx_enable;
+procedure map_enter_p_proc;
+procedure map_update_p_proc;
+procedure InventoryMoveHandler;
+procedure KeyPressHandler;
+procedure pickup_ground_items;
+procedure pickup_clear;
+procedure distance_sort(variable arg0);
+procedure weapon_drop;
+procedure DeathAmimHandler;
+procedure GameModeHandler;
+procedure UseSkillOnHandler;
+
+variable quickAmmoReload;
+variable pickupKey;
+variable keyMod;
+variable hideIfaceKey;
+variable pickupItem;
+variable temp;
+variable pickupMessage;
+variable hideIface;
+variable deathNpcArray;
+variable countDeath;
+variable autoSaveTime;
+variable autoSaveIsEnabled;
+variable dudeElevation;
+variable bakupMem;
+
+
+procedure GetIniConfig(variable arg0, variable arg1, variable arg2, variable arg3)
+begin
+    variable LVar4 := 0;
+    LVar4 := get_ini_setting(arg3 + "|" + arg0 + "|" + arg1);
+    if (LVar4 == -1) then begin
+        LVar4 := arg2;
+    end
+    return LVar4;
+end
+
+procedure GetConfig(variable arg0, variable arg1, variable arg2)
+begin
+    variable LVar3 := 0;
+    LVar3 := get_ini_setting("sfall-mods.ini" + "|" + arg0 + "|" + arg1);
+    if (LVar3 == -1) then begin
+        LVar3 := arg2;
+    end
+    return LVar3;
+end
+
+procedure GetConfigStr(variable arg0, variable arg1, variable arg2)
+begin
+    variable LVar3 := 0;
+    LVar3 := get_ini_string("sfall-mods.ini" + "|" + arg0 + "|" + arg1);
+    if ((LVar3 == -1) orElse (LVar3 == "")) then begin
+        LVar3 := arg2;
+    end
+    return LVar3;
+end
+
+procedure unsigned_comp(variable arg0, variable arg1)
+begin
+    if ((arg0 bwxor arg1) == 0) then begin
+        return 0;
+    end
+    return 1 if ((arg1 == 0) orElse (arg0 div arg1)) else -1;
+end
+
+procedure start
+begin
+    variable LVar0 := 0;
+    if (game_loaded) then begin
+        LVar0 := (1000 * sfall_ver_major) + (100 * sfall_ver_minor) + sfall_ver_build;
+        register_hook_proc(19, KeyPressHandler);
+        register_hook_proc(24, InventoryMoveHandler);
+        if (LVar0 >= 4140) then begin
+            pickupKey := GetConfig("Inventory", "PickupItemKey", 0);
+            if (pickupKey > 0) then begin
+                pickupMessage := GetConfigStr("Inventory", "PickupItemMsg", "Error");
+            end
+            if ((GetConfig("Inventory", "QuickAmmoReload", 0) > 0) andAlso (GetIniConfig("Misc", "ReloadReserve", -1, "ddraw.ini") > -1)) then begin
+                quickAmmoReload := 1;
+            end
+        end
+        if (GetConfig("Inventory", "DropItemsOnDeath", 0)) then begin
+            register_hook_proc(4, DeathAmimHandler);
+            deathNpcArray := create_array(8, 0);
+        end
+        keyMod := GetConfig("Misc", "CombatKeyMod", 0);
+        if (GetConfig("PartyMember", "UsePartySkills", 0)) then begin
+            register_hook_proc(35, UseSkillOnHandler);
+        end
+        if (GetIniConfig("IFACE", "IFACE_BAR_MODE", 0, "f2_res.ini") == 1) then begin
+            hideIfaceKey := GetConfig("Misc", "HideInterfaceKey", 0);
+            if (hideIfaceKey) then begin
+                register_hook_proc(31, GameModeHandler);
+            end
+        end
+        if (((((LVar0 >= 3823) andAlso GetIniConfig("Misc", "ExtraSaveSlots", 0, "ddraw.ini")) andAlso (GetConfig("Misc", "AutoSave", 0) > 0)) andAlso (GetIniConfig("Misc", "AutoQuickSave", 0, "ddraw.ini") > 0)) andAlso (GetIniConfig("Misc", "AutoQuickSavePage", 0, "ddraw.ini") > 0)) then begin
+            autoSaveIsEnabled := 1;
+            autoSaveTime := GetConfig("Misc", "AutoSaveTime", 5);
+            if (autoSaveTime < 1) then begin
+                autoSaveTime := 300;
+            end
+            else begin
+                autoSaveTime := autoSaveTime * 600;
+            end
+            if (get_sfall_global_int("AutoSave") == 0) then begin
+                set_sfall_global("AutoSave", game_time);
+            end
+            dudeElevation := elevation(dude_obj);
+        end
+        if (has_trait(0, dude_obj, 9)) then begin
+            temp := get_light_level;
+            if (temp > 65535) then begin
+                return 0;
+            end
+            if (temp < 40960) then begin
+                temp := round((temp - 16384) * 100 / 24576.00000);
+            end
+            else begin
+                if (temp > 40960) then begin
+                    temp := round((temp - 40960) * 100 / 24576.00000);
+                end
+                else begin
+                    temp := 50;
+                end
+            end
+            set_light_level(temp);
+        end
+    end
+end
+
+procedure sfx_enable
+begin
+    write_short(4471565, bakupMem);
+end
+
+procedure map_enter_p_proc
+begin
+    if (autoSaveIsEnabled) then begin
+        if (unsigned_comp(autoSaveTime + get_sfall_global_int("AutoSave"), game_time) <= 0) then begin
+            set_sfall_global("AutoSave", game_time);
+            if (bakupMem == 0) then begin
+                bakupMem := read_short(4471565);
+            end
+            write_short(4471565, 2283);
+            tap_key(64);
+            call sfx_enable in (1);
+        end
+        dudeElevation := elevation(dude_obj);
+    end
+end
+
+procedure map_update_p_proc
+begin
+    if (autoSaveIsEnabled andAlso (elevation(dude_obj) != dudeElevation)) then begin
+        if (unsigned_comp(autoSaveTime + get_sfall_global_int("AutoSave"), game_time) <= 0) then begin
+            set_sfall_global("AutoSave", game_time);
+            if (bakupMem == 0) then begin
+                bakupMem := read_short(4471565);
+            end
+            write_short(4471565, 2283);
+            tap_key(64);
+            call sfx_enable in (1);
+        end
+        dudeElevation := elevation(dude_obj);
+    end
+end
+
+procedure InventoryMoveHandler
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    variable LVar3 := 0;
+    variable LVar4 := 0;
+    variable LVar5 := 0;
+    variable LVar6 := 0;
+    LVar0 := get_sfall_arg;
+    LVar1 := get_sfall_arg;
+    LVar2 := get_sfall_arg;
+    if (LVar0 == 4) then begin
+        if (quickAmmoReload) then begin
+            return 0;
+        end
+        LVar3 := get_weapon_ammo_count(LVar2);
+        if (LVar3 == 0) then begin
+            return 0;
+        end
+        LVar4 := get_weapon_ammo_pid(LVar2);
+        if (obj_pid(LVar1) == LVar4) then begin
+            return 0;
+        end
+        LVar6 := read_int(5345368);
+        if (obj_is_carrying_obj(LVar6, LVar2) > 1) then begin
+            return 0;
+        end
+        set_weapon_ammo_count(LVar2, 0);
+        LVar5 := create_object_sid(LVar4, 0, 0, -1);
+        set_weapon_ammo_count(LVar5, LVar3);
+        add_obj_to_inven(LVar6, LVar5);
+    end
+    else begin
+        if (LVar0 == 7) then begin
+            if (pickupItem andAlso (pickupItem == LVar1)) then begin
+                display_msg(sprintf(pickupMessage, obj_name(LVar1)));
+            end
+            pickupItem := 0;
+        end
+        else begin
+            if (LVar0 == 8) then begin
+                if (obj_item_subtype(LVar1) == 2) then begin
+                    set_self(dude_obj);
+                    set_self(dude_obj);
+                    use_obj_on_obj(LVar1, dude_obj);
+                end
+                else begin
+                    display_msg(message_str_game(6, 10));
+                end
+            end
+        end
+    end
+end
+
+procedure KeyPressHandler
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    LVar0 := get_sfall_arg;
+    LVar1 := get_sfall_arg;
+    LVar2 := get_game_mode;
+    if ((LVar1 == hideIfaceKey) andAlso ((LVar2 == 0) orElse (LVar2 == 2112))) then begin
+        if (LVar0) then begin
+            sfall_func0("intface_hide");
+            hideIface := 1;
+        end
+        else begin
+            if (hideIface) then begin
+                sfall_func0("intface_show");
+                hideIface := 0;
+            end
+        end
+        return 0;
+    end
+    if (LVar0) then begin
+        if (LVar2 bwand 1048576) then begin
+            return 0;
+        end
+        if ((LVar1 == 23) andAlso (LVar2 bwand 4096)) then begin
+            tap_key(1);
+        end
+        else begin
+            if ((LVar1 == 31) andAlso (LVar2 bwand 16384)) then begin
+                tap_key(1);
+            end
+            else begin
+                if ((LVar1 == 44) andAlso (LVar2 bwand 1024)) then begin
+                    tap_key(1);
+                end
+                else begin
+                    if ((autoSaveIsEnabled andAlso (LVar2 == 0)) andAlso (LVar1 == 64)) then begin
+                        set_sfall_global("AutoSave", game_time);
+                    end
+                end
+            end
+        end
+        if ((LVar2 bwand 131072) andAlso ((LVar1 == 57) orElse (LVar1 == 28))) then begin
+            play_sfx("IB2P1XX1");
+            tap_key(50);
+        end
+        else begin
+            if ((LVar1 == pickupKey) andAlso (LVar2 == 0)) then begin
+                call pickup_ground_items();
+            end
+            else begin
+                if (keyMod andAlso (LVar2 == 2112)) then begin
+                    if (LVar1 == 30) then begin
+                        if (sfall_func0("get_cursor_mode") != 2) then begin
+                            sfall_func1("set_cursor_mode", 2);
+                        end
+                        else begin
+                            sfall_func1("set_cursor_mode", 0);
+                        end
+                    end
+                    else begin
+                        if (LVar1 == 18) then begin
+                            tap_key(28);
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure pickup_ground_items
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    variable LVar3 := 0;
+    variable LVar4 := 0;
+    variable LVar5 := 0;
+    variable LVar6 := 0;
+    variable LVar7 := 0;
+    LVar5 := distance_sort(list_as_array(1));
+    for (LVar6 := len_array(LVar5); LVar7 < LVar6; LVar7 := LVar7 + 1) begin
+        LVar3 := array_key(LVar5, LVar7);
+        LVar0 := get_array(LVar5, LVar3);
+        if (LVar3 > 1) then begin
+            if (obj_blocking_line(LVar0, tile_num(dude_obj), 3)) then begin
+                continue;
+            end
+            LVar4 := len_array(path_find_to(LVar0, tile_num(dude_obj), 0));
+            if ((LVar4 == 0) orElse (LVar4 > 6)) then begin
+                continue;
+            end
+        end
+        LVar1 := obj_pid(LVar0);
+        if ((LVar1 != 206) andAlso (LVar1 != 209)) then begin
+            LVar2 := sfall_func1("item_weight", LVar0);
+            if ((LVar2 + has_trait(1, dude_obj, 669)) > get_critter_stat(dude_obj, 12)) then begin
+                LVar2 := -1;
+                continue;
+            end
+            LVar2 := 0;
+            set_self(dude_obj);
+            pickupItem := LVar0;
+            pickup_obj(LVar0);
+            call pickup_clear in (3);
+            break;
+        end
+    end
+    if (LVar2 == -1) then begin
+        display_msg(message_str_game(3, 8000));
+    end
+end
+
+procedure pickup_clear
+begin
+    pickupItem := 0;
+end
+
+procedure distance_sort(variable arg0)
+begin
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    variable LVar3 := 0;
+    variable LVar4 := 0;
+    variable LVar5 := 0;
+    variable LVar6 := 0;
+    LVar3 := create_array(-1, 2);
+    for (LVar4 := len_array(arg0); LVar5 < LVar4; LVar5 := LVar5 + 1) begin
+        LVar6 := array_key(arg0, LVar5);
+        LVar2 := get_array(arg0, LVar6);
+        LVar1 := tile_distance_objs(LVar2, dude_obj);
+        if ((LVar1 > 3) orElse (obj_item_subtype(LVar2) == 1)) then begin
+            continue;
+        end
+        set_array(LVar3, LVar1, LVar2);
+    end
+    resize_array(LVar3, -2);
+    return LVar3;
+end
+
+procedure weapon_drop
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    variable LVar3 := 0;
+    variable LVar4 := 0;
+    while (LVar4 < countDeath) do begin
+        LVar0 := get_array(deathNpcArray, LVar4);
+        LVar4 := LVar4 + 1;
+        if (get_proto_data(obj_pid(LVar0), 32) bwand 64) then begin
+            return 0;
+        end
+        LVar3 := elevation(LVar0);
+        LVar2 := critter_inven_obj(LVar0, 1);
+        if (LVar2) then begin
+            sfall_func2("set_flags", LVar2, sfall_func1("get_flags", LVar2) bwand -33554433);
+            rm_obj_from_inven(LVar0, LVar2);
+            LVar1 := tile_num_in_direction(tile_num(LVar0), random(0, 5), 1);
+            if (obj_blocking_tile(LVar1, LVar3, 0) != 0) then begin
+                LVar1 := tile_num(LVar0);
+            end
+            move_to(LVar2, LVar1, LVar3);
+        end
+        LVar2 := critter_inven_obj(LVar0, 2);
+        if (LVar2) then begin
+            sfall_func2("set_flags", LVar2, sfall_func1("get_flags", LVar2) bwand -16777217);
+            rm_obj_from_inven(LVar0, LVar2);
+            LVar1 := tile_num_in_direction(tile_num(LVar0), random(0, 5), 1);
+            if (obj_blocking_tile(LVar1, LVar3, 0) != 0) then begin
+                LVar1 := tile_num(LVar0);
+            end
+            move_to(LVar2, LVar1, LVar3);
+        end
+    end
+    countDeath := 0;
+end
+
+procedure DeathAmimHandler
+begin
+    variable LVar0 := 0;
+    LVar0 := get_sfall_args;
+    if (get_array(LVar0, 2) != sfall_func0("real_dude_obj")) then begin
+        set_array(deathNpcArray, countDeath, get_array(LVar0, 2));
+        countDeath := countDeath + 1;
+        if (countDeath == 1) then begin
+            call weapon_drop in (1);
+        end
+    end
+end
+
+procedure GameModeHandler
+begin
+    if ((hideIface == 0) orElse get_sfall_arg) then begin
+        return 0;
+    end
+    if (sfall_func0("intface_is_hidden")) then begin
+        sfall_func0("intface_show");
+        hideIface := 0;
+    end
+end
+
+procedure UseSkillOnHandler
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    variable LVar3 := 0;
+    variable LVar4 := 0;
+    variable LVar5 := 0;
+    variable LVar6 := 0;
+    variable LVar7 := 0;
+    variable LVar8 := 0;
+    variable LVar9 := 0;
+    variable LVar10 := 0;
+    variable LVar11 := 0;
+    variable LVar12 := 0;
+    if ((metarule(16, 0) == 0) orElse (get_sfall_arg != dude_obj)) then begin
+        return 0;
+    end
+    debug_msg("Party member skill...");
+    LVar0 := get_sfall_arg;
+    LVar2 := get_sfall_arg;
+    LVar6 := LVar0 == dude_obj;
+    LVar7 := (LVar2 == 7) orElse (LVar2 == 6);
+    if (LVar6 andAlso (LVar7 == 0)) then begin
+        return 0;
+    end
+    if (LVar7 andAlso (obj_type(LVar0) != 1)) then begin
+        return 0;
+    end
+    if (((((LVar2 != 9) andAlso (LVar2 != 11)) andAlso (LVar2 != 12)) andAlso (LVar2 != 13)) andAlso (LVar7 == 0)) then begin
+        return 0;
+    end
+    if (((LVar2 == 9) orElse (LVar2 == 11)) andAlso (obj_type(LVar0) == 1)) then begin
+        return 0;
+    end
+    LVar3 := has_skill(dude_obj, LVar2);
+    LVar9 := party_member_list(0);
+    LVar10 := len_array(LVar9);
+    while (LVar11 < LVar10) do begin
+        LVar12 := array_key(LVar9, LVar11);
+        LVar1 := get_array(LVar9, LVar12);
+        if ((LVar1 != dude_obj) andAlso (proto_data(obj_pid(LVar1), 11) == 0)) then begin
+            LVar4 := has_skill(LVar1, LVar2);
+            if ((LVar4 > LVar3) andAlso (tile_distance_objs(dude_obj, LVar1) <= 10)) then begin
+                LVar5 := LVar1;
+                LVar3 := LVar4;
+            end
+        end
+        LVar11 := LVar11 + 1;
+    end
+    if (LVar5 andAlso ((LVar5 != LVar0) orElse LVar7)) then begin
+        if (LVar6) then begin
+            LVar8 := tile_distance_objs(LVar5, LVar0) < 3;
+        end
+        else begin
+            LVar8 := tile_distance_objs(dude_obj, LVar0) > 2;
+        end
+        if (LVar8) then begin
+            float_msg(LVar5, message_str_game(15, random(1000, 1005)), 0);
+            set_sfall_arg(0, LVar5);
+            set_sfall_return(LVar5);
+            debug_msg("> forced use of the party member: " + obj_name(LVar5) + "\n");
+            return 0;
+        end
+        else begin
+            if ((LVar7 orElse (random(0, 10) == 0)) andAlso (anim_busy(LVar5) == 0)) then begin
+                float_msg(LVar5, message_str_game(15, random(1100, 1104)), 0);
+            end
+        end
+    end
+    set_sfall_return(dude_obj);
+end
+

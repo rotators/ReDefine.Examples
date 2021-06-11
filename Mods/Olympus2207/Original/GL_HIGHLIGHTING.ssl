@@ -1,0 +1,325 @@
+variable translationIni;
+
+procedure GetIniConfig(variable arg0, variable arg1, variable arg2, variable arg3);
+procedure GetIniConfigStr(variable arg0, variable arg1, variable arg2, variable arg3);
+procedure GetConfig(variable arg0, variable arg1, variable arg2);
+procedure Translate(variable arg0, variable arg1);
+procedure InitConfigs;
+
+variable isHighlight;
+variable highlightKey;
+variable alsoContainer;
+variable alsoCorpse;
+variable checkLOS := 2;
+variable fogEnabled;
+variable motionScanner;
+variable isUnsafe;
+variable highlightFailMsg1;
+variable highlightFailMsg2;
+variable outlineColor;
+variable defOutlineColor;
+variable lookOutlineColor;
+variable emptyOutlineColor;
+variable checkObject;
+variable lootObject;
+
+procedure start;
+procedure KeyPressHandler;
+procedure CombatTurnHandler;
+procedure CheckMotionSensor;
+procedure ToggleHighlight(variable arg0);
+procedure ToggleHighlightObject(variable arg0, variable arg1, variable arg2);
+procedure GetHighlightColor(variable arg0, variable arg1);
+procedure CheckLineOfSight(variable arg0);
+procedure CheckObjectUsed(variable arg0);
+procedure InventoryMoveHandler;
+
+
+procedure GetIniConfig(variable arg0, variable arg1, variable arg2, variable arg3)
+begin
+    variable LVar4 := 0;
+    LVar4 := get_ini_setting(arg3 + "|" + arg0 + "|" + arg1);
+    if (LVar4 == -1) then begin
+        LVar4 := arg2;
+    end
+    return LVar4;
+end
+
+procedure GetIniConfigStr(variable arg0, variable arg1, variable arg2, variable arg3)
+begin
+    variable LVar4 := 0;
+    LVar4 := get_ini_string(arg3 + "|" + arg0 + "|" + arg1);
+    if ((LVar4 == -1) orElse (LVar4 == "")) then begin
+        LVar4 := arg2;
+    end
+    return LVar4;
+end
+
+procedure GetConfig(variable arg0, variable arg1, variable arg2)
+begin
+    variable LVar3 := 0;
+    LVar3 := get_ini_setting("sfall-mods.ini" + "|" + arg0 + "|" + arg1);
+    if (LVar3 == -1) then begin
+        LVar3 := arg2;
+    end
+    return LVar3;
+end
+
+procedure Translate(variable arg0, variable arg1)
+begin
+    variable LVar2 := 0;
+    LVar2 := get_ini_string(translationIni + "|Sfall|" + arg0);
+    if (not(LVar2) orElse (strlen(LVar2) == 0)) then begin
+        LVar2 := arg1;
+    end
+    return LVar2;
+end
+
+procedure InitConfigs
+begin
+    translationIni := GetIniConfigStr("Main", "TranslationsINI", "Translations.ini", "ddraw.ini");
+end
+
+procedure start
+begin
+    variable LVar0 := 0;
+    if (game_loaded) then begin
+        if (sfall_ver_major < 4) then begin
+            return 0;
+        end
+        call InitConfigs();
+        isUnsafe := GetIniConfig("Debugging", "AllowUnsafeScripting", 0, "ddraw.ini");
+        highlightKey := GetConfig("Highlighting", "Key", 42);
+        alsoContainer := GetConfig("Highlighting", "Containers", 1);
+        alsoCorpse := GetConfig("Highlighting", "Corpses", 1);
+        fogEnabled := GetIniConfig("MAPS", "FOG_OF_WAR", 0, "f2_res.ini");
+        if (fogEnabled == 0) then begin
+            checkLOS := GetConfig("Highlighting", "CheckLOS", 1);
+        end
+        outlineColor := GetConfig("Highlighting", "OutlineColor", 16);
+        defOutlineColor := GetConfig("Highlighting", "DefaultOutlineColor", 32);
+        lookOutlineColor := GetConfig("Highlighting", "LookOutlineColor", 64);
+        emptyOutlineColor := GetConfig("Highlighting", "EmptyOutlineColor", 4);
+        motionScanner := GetConfig("Highlighting", "MotionScanner", 0);
+        highlightFailMsg1 := Translate("HighlightFail1", "You aren't carrying a motion sensor.");
+        highlightFailMsg2 := Translate("HighlightFail2", "Your motion sensor is out of charge.");
+        checkObject := alsoCorpse orElse alsoContainer;
+        register_hook_proc(19, KeyPressHandler);
+        register_hook_proc(27, CombatTurnHandler);
+        register_hook_proc(24, InventoryMoveHandler);
+        set_global_script_type(1);
+        set_global_script_repeat(10);
+    end
+    else begin
+        if (checkObject) then begin
+            if (get_game_mode bwand 65536) then begin
+                LVar0 := sfall_func0("loot_obj");
+                if (lootObject != LVar0) then begin
+                    lootObject := LVar0;
+                    if ((obj_item_subtype(lootObject) == 1) orElse ((obj_type(lootObject) == 1) andAlso (critter_state(lootObject) == 1))) then begin
+                        if (obj_item_subtype(lootObject) == 1) then begin
+                            sfall_func2("set_flags", lootObject, sfall_func1("get_flags", lootObject) bwor 8192);
+                        end
+                        else begin
+                            sfall_func2("set_flags", lootObject, sfall_func1("get_flags", lootObject) bwor 2097152);
+                        end
+                    end
+                end
+            end
+            else begin
+                lootObject := 0;
+            end
+        end
+        if (isHighlight andAlso (key_pressed(highlightKey) == 0)) then begin
+            isHighlight := 0;
+            call ToggleHighlight(0);
+        end
+    end
+end
+
+procedure KeyPressHandler
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    LVar0 := get_sfall_arg;
+    LVar1 := get_sfall_arg == highlightKey;
+    LVar0 := LVar0 andAlso LVar1;
+    if (LVar0) then begin
+        if (get_game_mode bwand -2113) then begin
+            return 0;
+        end
+        if (motionScanner andAlso (CheckMotionSensor() == 0)) then begin
+            LVar0 := 0;
+        end
+    end
+    if (LVar0 orElse isHighlight) then begin
+        isHighlight := LVar0;
+        call ToggleHighlight(LVar0);
+    end
+end
+
+procedure CombatTurnHandler
+begin
+    if (isHighlight) then begin
+        isHighlight := 0;
+        call ToggleHighlight(0);
+    end
+end
+
+procedure CheckMotionSensor
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    variable LVar2 := 1;
+    LVar0 := obj_carrying_pid_obj(dude_obj, 59);
+    if (LVar0) then begin
+        if (motionScanner >= 2) then begin
+            LVar1 := get_weapon_ammo_count(LVar0);
+            if (LVar1 > 0) then begin
+                set_weapon_ammo_count(LVar0, LVar1 - 1);
+                sfall_func0("intface_redraw");
+            end
+            else begin
+                display_msg(highlightFailMsg2);
+                LVar2 := 0;
+            end
+        end
+    end
+    else begin
+        display_msg(highlightFailMsg1);
+        LVar2 := 0;
+    end
+    return LVar2;
+end
+
+procedure ToggleHighlight(variable arg0)
+begin
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    variable LVar3 := 0;
+    variable LVar4 := 0;
+    variable LVar5 := 0;
+    variable LVar6 := 0;
+    variable LVar7 := 0;
+    variable LVar8 := 0;
+    variable LVar9 := 0;
+    variable LVar10 := 0;
+    LVar3 := list_as_array(1);
+    for (LVar4 := len_array(LVar3); LVar5 < LVar4; LVar5 := LVar5 + 1) begin
+        LVar6 := array_key(LVar3, LVar5);
+        LVar1 := get_array(LVar3, LVar6);
+        if (LVar1 != sfall_func0("outlined_object")) then begin
+            if (elevation(LVar1) != elevation(dude_obj)) then begin
+                continue;
+            end
+            LVar2 := alsoContainer andAlso (obj_item_subtype(LVar1) == 1);
+            if (LVar2 andAlso (obj_pid(LVar1) == 455)) then begin
+                continue;
+            end
+            call ToggleHighlightObject(LVar1, arg0, LVar2);
+        end
+    end
+    if (alsoCorpse) then begin
+        LVar7 := list_as_array(0);
+        LVar9 := 0;
+        for (LVar8 := len_array(LVar7); LVar9 < LVar8; LVar9 := LVar9 + 1) begin
+            LVar10 := array_key(LVar7, LVar9);
+            LVar1 := get_array(LVar7, LVar10);
+            if ((critter_state(LVar1) == 1) andAlso not(get_proto_data(obj_pid(LVar1), 32) bwand 32)) then begin
+                if (elevation(LVar1) != elevation(dude_obj)) then begin
+                    continue;
+                end
+                call ToggleHighlightObject(LVar1, arg0, 0);
+            end
+        end
+    end
+    if (isUnsafe) then begin
+        if (arg0) then begin
+            write_short(4781060, 16392);
+        end
+        else begin
+            write_short(4781060, 49152);
+        end
+    end
+    sfall_func0("tile_refresh_display");
+end
+
+procedure ToggleHighlightObject(variable arg0, variable arg1, variable arg2)
+begin
+    if (arg0) then begin
+        if ((((checkLOS >= 2) orElse (arg2 andAlso (checkLOS == 1))) andAlso not(motionScanner)) andAlso not(sfall_func1("get_flags", arg0) bwand 1073741824)) then begin
+            if ((fogEnabled == 0) andAlso CheckLineOfSight(arg0)) then begin
+                sfall_func2("set_flags", arg0, sfall_func1("get_flags", arg0) bwor 1073741824);
+            end
+            else begin
+                return 0;
+            end
+        end
+        if (arg2 orElse (not(sfall_func1("get_flags", arg0) bwand 4096) orElse (motionScanner >= 2))) then begin
+            if (arg1) then begin
+                sfall_func2("set_outline", arg0, GetHighlightColor(arg0, arg2));
+            end
+            else begin
+                sfall_func2("set_outline", arg0, 0);
+            end
+        end
+    end
+end
+
+procedure GetHighlightColor(variable arg0, variable arg1)
+begin
+    variable LVar2 := 0;
+    variable LVar3 := 0;
+    if (arg1 == 0) then begin
+        LVar3 := obj_type(arg0) == 1;
+    end
+    if (arg1 orElse LVar3) then begin
+        if (CheckObjectUsed(arg0)) then begin
+            if (sfall_func2("critter_inven_obj2", arg0, -2) == 0) then begin
+                LVar2 := emptyOutlineColor if ((LVar3 == 0) andAlso (alsoCorpse == 2)) else 0;
+            end
+            else begin
+                LVar2 := lookOutlineColor;
+            end
+        end
+        else begin
+            LVar2 := defOutlineColor;
+        end
+    end
+    else begin
+        LVar2 := outlineColor;
+    end
+    return LVar2;
+end
+
+procedure CheckLineOfSight(variable arg0)
+begin
+    variable LVar1 := 0;
+    variable LVar2 := 1;
+    if (tile_distance_objs(dude_obj, arg0) > 2) then begin
+        LVar1 := tile_num(arg0);
+        if (obj_blocking_tile(LVar1, elevation(dude_obj), 3)) then begin
+            LVar1 := tile_num_in_direction(LVar1, rotation_to_tile(LVar1, tile_num(dude_obj)), 1);
+        end
+        LVar2 := obj_blocking_line(dude_obj, LVar1, 3) == 0;
+    end
+    return LVar2;
+end
+
+procedure CheckObjectUsed(variable arg0)
+begin
+    if (obj_type(arg0) == 1) then begin
+        return sfall_func1("get_flags", arg0) bwand 2097152;
+    end
+    else begin
+        return sfall_func1("get_flags", arg0) bwand 8192;
+    end
+end
+
+procedure InventoryMoveHandler
+begin
+    if (isHighlight andAlso (get_sfall_arg == 7)) then begin
+        sfall_func2("set_outline", get_sfall_arg, 0);
+    end
+end
+

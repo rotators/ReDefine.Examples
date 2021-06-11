@@ -1,0 +1,101 @@
+procedure start;
+procedure map_enter_p_proc;
+procedure set_door_flag(variable arg0);
+procedure set_door_flag_array(variable arg0);
+procedure combatturn_handler;
+
+variable onlyOnce;
+variable pidDoors;
+
+
+procedure start
+begin
+    if (game_loaded) then begin
+        if (sfall_ver_major >= 4) then begin
+            register_hook_proc(27, combatturn_handler);
+        end
+        else begin
+            set_global_script_repeat(40);
+        end
+        call map_enter_p_proc();
+    end
+    else begin
+        if ((onlyOnce == 1) andAlso combat_is_initialized) then begin
+            onlyOnce := 2;
+            call set_door_flag(0);
+        end
+        else begin
+            if ((onlyOnce == 2) andAlso not(combat_is_initialized)) then begin
+                onlyOnce := 1;
+                if (sfall_ver_major >= 4) then begin
+                    set_global_script_repeat(0);
+                end
+                call set_door_flag(4);
+            end
+        end
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    if (pidDoors) then begin
+        free_array(pidDoors);
+        pidDoors := 0;
+    end
+    onlyOnce := 1;
+    call set_door_flag(4);
+end
+
+procedure set_door_flag(variable arg0)
+begin
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    variable LVar3 := 0;
+    variable LVar4 := 0;
+    variable LVar5 := 0;
+    variable LVar6 := 0;
+    variable LVar7 := 0;
+    if (pidDoors) then begin
+        call set_door_flag_array(arg0);
+        return 0;
+    end
+    LVar1 := list_as_array(2);
+    pidDoors := create_array(0, 0);
+    for (LVar5 := len_array(LVar1); LVar6 < LVar5; LVar6 := LVar6 + 1) begin
+        LVar7 := array_key(LVar1, LVar6);
+        LVar2 := get_array(LVar1, LVar7);
+        LVar3 := obj_pid(LVar2);
+        if (((proto_data(LVar3, 9) != 0) orElse get_proto_data(LVar3, 36)) orElse (scan_array(pidDoors, LVar3) != -1)) then begin
+            continue;
+        end
+        resize_array(pidDoors, LVar4 + 1);
+        set_array(pidDoors, LVar4, LVar3);
+        LVar4 := LVar4 + 1;
+        set_proto_data(LVar3, 36, arg0);
+    end
+end
+
+procedure set_door_flag_array(variable arg0)
+begin
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    variable LVar3 := 0;
+    variable LVar4 := 0;
+    LVar2 := len_array(pidDoors);
+    while (LVar3 < LVar2) do begin
+        LVar4 := array_key(pidDoors, LVar3);
+        LVar1 := get_array(pidDoors, LVar4);
+        set_proto_data(LVar1, 36, arg0);
+        LVar3 := LVar3 + 1;
+    end
+end
+
+procedure combatturn_handler
+begin
+    if (onlyOnce == 1) then begin
+        onlyOnce := 2;
+        call set_door_flag_array(0);
+        set_global_script_repeat(60);
+    end
+end
+

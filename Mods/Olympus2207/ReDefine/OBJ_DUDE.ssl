@@ -1,0 +1,561 @@
+variable dude_objective_reputation;
+variable self_subjective_reaction;
+variable z_critter_search;
+variable critter_is_detected;
+variable detected_critter;
+variable persuade_chance;
+variable steal_perk;
+variable steal_gloves;
+variable z_weapon_class;
+
+procedure start;
+procedure timed_event_p_proc;
+procedure critter_p_proc;
+procedure map_enter_p_proc;
+procedure combat_p_proc;
+procedure map_update_p_proc;
+procedure use_skill_on_p_proc;
+procedure first_tip;
+procedure Pass_Tartar;
+procedure Electrical_tip;
+procedure HMS_tip;
+procedure All_Quests_tip;
+procedure Steal_tip;
+procedure Kill_tip;
+procedure Karma_tip;
+procedure Radiation_tip;
+procedure Items_tip;
+procedure tips_yes;
+procedure tips_no;
+procedure close_tip;
+procedure vide;
+procedure passtartar;
+procedure look_at_p_proc;
+procedure description_p_proc;
+procedure use_obj_on_p_proc;
+
+
+procedure start
+begin
+end
+
+procedure timed_event_p_proc
+begin
+end
+
+procedure critter_p_proc
+begin
+    if ((global_var(GVAR_PLAYER_MARRIED) > 0) and ((obj_art_fid(dude_obj) == 16777217) or (obj_art_fid(dude_obj) == 16777218))) then begin
+        animate_move_obj_to_tile(dude_obj, dude_tile, 0);
+    end
+    if (has_trait(TRAIT_TRAIT, dude_obj, TRAIT_sex_appeal) and (global_var(GVAR_SAN_FRAN_BADGER) != get_pc_stat(PCSTAT_level))) then begin
+        set_global_var(GVAR_SAN_FRAN_BADGER, get_pc_stat(PCSTAT_level));
+        set_global_var(GVAR_TORR_MISSING, 0);
+        set_global_var(GVAR_TORR_SEARCH_SUCCESS, 0);
+        set_global_var(GVAR_TRAPPER_RETURNED, 0);
+        set_global_var(GVAR_DUNTONS_ANGRY, 0);
+        set_global_var(GVAR_RUSTLE_FAIL_VIOLENT, 0);
+        set_global_var(GVAR_RUSTLE_FAIL, 0);
+        set_global_var(GVAR_RUSTLE_SUCCESS, 0);
+        set_global_var(GVAR_TORR_GUARD_SUCCESS, 0);
+        set_global_var(GVAR_VAULT_CITIZEN, 0);
+        set_global_var(GVAR_VAULT_PLOW_PROBLEM, 0);
+        set_global_var(GVAR_VAULT_CITIZENSHIP, 0);
+        set_global_var(GVAR_VAULT_GECKO_PLANT, 0);
+        set_global_var(GVAR_VAULT_PLANT_STATUS, 0);
+        set_global_var(GVAR_VAULT_REDDING_PROBLEM, 0);
+        set_global_var(GVAR_JET_QUEST, 0);
+        set_global_var(GVAR_DAY_PASS_SHOWN, 0);
+        set_global_var(GVAR_VAULT_CITIZEN_TEST, 0);
+        set_global_var(GVAR_VAULT_RAIDERS, 0);
+        critter_mod_skill(dude_obj, SKILL_SNEAK, floor(5 - (0.20000 * get_pc_stat(PCSTAT_level))));
+        display_msg(message_str(SCRIPT_STTEXT, 408));
+        critter_mod_skill(dude_obj, SKILL_SCIENCE, floor(5 - (0.20000 * get_pc_stat(PCSTAT_level))));
+        display_msg(message_str(SCRIPT_STTEXT, 412));
+        critter_mod_skill(dude_obj, SKILL_BARTER, floor(5 - (0.20000 * get_pc_stat(PCSTAT_level))));
+        display_msg(message_str(SCRIPT_STTEXT, 415));
+        critter_mod_skill(dude_obj, SKILL_OUTDOORSMAN, floor(5 - (0.20000 * get_pc_stat(PCSTAT_level))));
+        display_msg(message_str(SCRIPT_STTEXT, 417));
+    end
+    if (obj_carrying_pid_obj(dude_obj, 487) or obj_carrying_pid_obj(dude_obj, 488) or obj_carrying_pid_obj(dude_obj, 489) and (get_sfall_global_int(40) == 0)) then begin
+        set_sfall_global(40, 1);
+        display_msg(message_str(SCRIPT_HMSTEXT, 141));
+    end
+    if ((get_pc_stat(PCSTAT_level) >= 7) and (dude_skill(SKILL_REPAIR) >= 70) and (get_sfall_global_int(36) == 0)) then begin
+        set_sfall_global(36, 1);
+        play_sfx("LEVELUP");
+        display_msg(message_str(SCRIPT_HMSTEXT, 137));
+    end
+    if ((global_var(GVAR_START_ARROYO_TRIAL) != 0) and (global_var(GVAR_DEN_MOM_STATUS) == 0)) then begin
+        rm_obj_from_inven(dude_obj, obj_carrying_pid_obj(dude_obj, 43));
+        set_global_var(GVAR_DEN_MOM_STATUS, 1);
+    end
+    if ((global_var(GVAR_START_ARROYO_TRIAL) != 0) and (obj_carrying_pid_obj(dude_obj, 44) != 0)) then begin
+        rm_obj_from_inven(dude_obj, obj_carrying_pid_obj(dude_obj, 44));
+        add_obj_to_inven(dude_obj, create_object(43, 1, 2));
+        set_global_var(GVAR_START_ARROYO_TRIAL, 0);
+        set_global_var(GVAR_REPUTATION_SLAVER, 0);
+        set_global_var(GVAR_REPUTATION_SLAVE_OWNER, 0);
+        set_global_var(GVAR_DEN_MOM_STATUS, 0);
+    end
+    else begin
+        if (obj_carrying_pid_obj(dude_obj, 44) != 0) then begin
+            rm_obj_from_inven(dude_obj, obj_carrying_pid_obj(dude_obj, 44));
+            add_obj_to_inven(dude_obj, create_object(43, 1, 2));
+        end
+    end
+    if (get_sfall_global_int(1) == 1) then begin
+        set_sfall_global(1, 2);
+        call first_tip();
+    end
+    if (get_sfall_global_int(7) == 1) then begin
+        set_sfall_global(7, 2);
+        call Pass_Tartar();
+    end
+    if ((get_sfall_global_int(1) == 6) and (get_sfall_global_int(3) == 1)) then begin
+        set_sfall_global(3, 2);
+        call Electrical_tip();
+    end
+    if ((get_sfall_global_int(1) == 6) and (get_sfall_global_int(2) == 1)) then begin
+        set_sfall_global(2, 2);
+        call HMS_tip();
+    end
+    if ((get_sfall_global_int(1) == 6) and (get_sfall_global_int(12) != 2) and (global_var(GVAR_PLAYER_REPUTATION) != 0)) then begin
+        set_sfall_global(12, 2);
+        call Karma_tip();
+    end
+    if ((get_sfall_global_int(15) != 2) and (get_critter_stat(dude_obj, STAT_current_rad) > 0) and (cur_map_index > MAP_TARTAR02)) then begin
+        set_sfall_global(15, 2);
+        call Radiation_tip();
+    end
+    if (get_sfall_global_int(1) == 6) then begin
+        if ((get_sfall_global_int(8) == 0) and (obj_carrying_pid_obj(dude_obj, 290) or obj_carrying_pid_obj(dude_obj, 294) or obj_carrying_pid_obj(dude_obj, 298) or obj_carrying_pid_obj(dude_obj, 441) or obj_carrying_pid_obj(dude_obj, 300) or obj_carrying_pid_obj(dude_obj, 302))) then begin
+            set_sfall_global(8, 2);
+            call Items_tip();
+        end
+    end
+    if ((get_sfall_global_int(1) == 6) and (get_sfall_global_int(13) == 1)) then begin
+        set_sfall_global(13, 2);
+        call Steal_tip();
+    end
+    if ((get_sfall_global_int(1) == 6) and (get_sfall_global_int(14) == 1)) then begin
+        set_sfall_global(14, 2);
+        call Kill_tip();
+    end
+    if ((get_sfall_global_int(1) == 6) and (get_sfall_global_int(4) == 0) and (global_var(GVAR_SLAVE_RUN) == 2) and (global_var(GVAR_SLAVES_COUNT) == 2) and (global_var(GVAR_MAGGIE_STATUS) == 2) and (global_var(GVAR_PIP_BOY_ANNA_DIARY) == 2)) then begin
+        set_sfall_global(4, 2);
+        call All_Quests_tip();
+    end
+    if (obj_carrying_pid_obj(dude_obj, 325) and (global_var(GVAR_NCR_JACK_STATE) == 0)) then begin
+        set_global_var(GVAR_NCR_JACK_STATE, 1);
+    end
+    if (obj_carrying_pid_obj(dude_obj, 93) and (global_var(GVAR_GOLD_CARAVAN) == 0)) then begin
+        set_global_var(GVAR_GOLD_CARAVAN, 1);
+    end
+    if (obj_carrying_pid_obj(dude_obj, 395) and (global_var(GVAR_NEW_RENO_DELIVERY) == 0)) then begin
+        set_global_var(GVAR_NEW_RENO_DELIVERY, 1);
+        display_msg(message_str(SCRIPT_STTEXT, 1010));
+        set_critter_stat(dude_obj, STAT_st, 1);
+    end
+    if (obj_carrying_pid_obj(dude_obj, 396) and (global_var(GVAR_NEW_RENO_EXTORTION_BROS) == 0)) then begin
+        set_global_var(GVAR_NEW_RENO_EXTORTION_BROS, 1);
+        display_msg(message_str(SCRIPT_STTEXT, 1011));
+        set_critter_stat(dude_obj, STAT_pe, 1);
+    end
+    if (obj_carrying_pid_obj(dude_obj, 397) and (global_var(GVAR_NEW_RENO_ASSASSINATION) == 0)) then begin
+        set_global_var(GVAR_NEW_RENO_ASSASSINATION, 1);
+        display_msg(message_str(SCRIPT_STTEXT, 1012));
+        set_critter_stat(dude_obj, STAT_en, 1);
+    end
+    if (obj_carrying_pid_obj(dude_obj, 398) and (global_var(GVAR_NEW_RENO_LIL_JESUS_REFERS) == 0)) then begin
+        set_global_var(GVAR_NEW_RENO_LIL_JESUS_REFERS, 1);
+        display_msg(message_str(SCRIPT_STTEXT, 1013));
+        set_critter_stat(dude_obj, STAT_ch, 1);
+    end
+    if (obj_carrying_pid_obj(dude_obj, 399) and (global_var(GVAR_SEX_COUNTER) == 0)) then begin
+        set_global_var(GVAR_SEX_COUNTER, 1);
+        display_msg(message_str(SCRIPT_STTEXT, 1014));
+        set_critter_stat(dude_obj, STAT_iq, 1);
+    end
+    if (obj_carrying_pid_obj(dude_obj, 400) and (global_var(GVAR_RND_SALES_NAME) == 0)) then begin
+        set_global_var(GVAR_RND_SALES_NAME, 1);
+        display_msg(message_str(SCRIPT_STTEXT, 1015));
+        set_critter_stat(dude_obj, STAT_ag, 1);
+    end
+    if (obj_carrying_pid_obj(dude_obj, 401) and (global_var(GVAR_RND_SALES_ENCOUNTER) == 0)) then begin
+        set_global_var(GVAR_RND_SALES_ENCOUNTER, 1);
+        display_msg(message_str(SCRIPT_STTEXT, 1016));
+        set_critter_stat(dude_obj, STAT_lu, 1);
+    end
+    if (not(town_known(11) == MARK_STATE_KNOWN) and obj_carrying_pid_obj(dude_obj, 311) and obj_carrying_pid_obj(dude_obj, 312) and obj_carrying_pid_obj(dude_obj, 313) and obj_carrying_pid_obj(dude_obj, 314)) then begin
+        mark_area_known(MARK_TYPE_TOWN, 11, MARK_STATE_KNOWN);
+        if (obj_carrying_pid_obj(dude_obj, 393)) then begin
+            set_sfall_global(18, 1);
+            play_sfx("LEVELUP");
+            display_msg(message_str(SCRIPT_ITNTBOOK, 112));
+        end
+    end
+    if (obj_carrying_pid_obj(dude_obj, 340) and (global_var(GVAR_V13_V15_DALIA_STATE) == 0)) then begin
+        set_global_var(GVAR_V13_V15_DALIA_STATE, 1);
+        if (obj_carrying_pid_obj(dude_obj, 393)) then begin
+            set_sfall_global(22, 1);
+            play_sfx("LEVELUP");
+            display_msg(message_str(SCRIPT_ITNTBOOK, 112));
+        end
+    end
+    if (obj_carrying_pid_obj(dude_obj, 299) and (global_var(GVAR_GRUTHAR_DSTATUS) == 0)) then begin
+        set_global_var(GVAR_GRUTHAR_DSTATUS, 1);
+    end
+    if (obj_carrying_pid_obj(dude_obj, 301) and (global_var(GVAR_NEW_RENO_JULES_ELDRIDGE) == 0)) then begin
+        set_global_var(GVAR_NEW_RENO_JULES_ELDRIDGE, 1);
+    end
+    if (obj_carrying_pid_obj(dude_obj, 302) and (global_var(GVAR_WHIRLY) == 0)) then begin
+        set_global_var(GVAR_WHIRLY, 1);
+    end
+    if ((global_var(GVAR_CARAVAN_MASTERS_TOTAL) >= 15) and (global_var(GVAR_KARMA_HEFNER) == 0)) then begin
+        set_global_var(GVAR_KARMA_HEFNER, 1);
+        give_exp_points(floor(200) + (dude_iq * floor(83)) + (dude_luck * floor(33)) + (floor(13) * (((dude_luck - 4) * 4) - (difficulty_level * 4))));
+        display_msg(message_str(SCRIPT_STTEXT, random(140, 143)) + (floor(200) + (dude_iq * floor(83)) + (dude_luck * floor(33)) + (floor(13) * (((dude_luck - 4) * 4) - (difficulty_level * 4)))) + message_str(SCRIPT_STTEXT, 144));
+        critter_mod_skill(dude_obj, SKILL_GAMBLING, 25);
+    end
+    if ((global_var(GVAR_HOLODISK_MB_LEVEL_1) == 3) and (get_sfall_global_int(20) == 0) and obj_carrying_pid_obj(dude_obj, 393)) then begin
+        set_sfall_global(20, 1);
+        play_sfx("LEVELUP");
+        display_msg(message_str(SCRIPT_ITNTBOOK, 112));
+    end
+    if (combat_is_initialized) then begin
+        call close_tip();
+    end
+    if ((global_var(GVAR_KARMA_SJ_BOSS) == 1) and (global_var(GVAR_KARMA_NWO_BOSS) == 1) and (global_var(GVAR_KARMA_LIVOS_BOSS) == 1) and (global_var(GVAR_KARMA_RR_BOSS) == 1) and (global_var(GVAR_KARMA_RADIUS_BOSS) == 0)) then begin
+        set_global_var(GVAR_KARMA_RADIUS_BOSS, 1);
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    if (global_var(GVAR_ENEMY_ARROYO) == 1) then begin
+        set_global_var(GVAR_ENEMY_ARROYO, 0);
+    end
+end
+
+procedure combat_p_proc
+begin
+    if ((global_var(GVAR_PLAYER_MARRIED) > 0) and ((obj_art_fid(dude_obj) == 16777217) or (obj_art_fid(dude_obj) == 16777218))) then begin
+        animate_move_obj_to_tile(dude_obj, dude_tile, 0);
+    end
+end
+
+procedure map_update_p_proc
+begin
+    if (cur_town > 0) then begin
+        if (global_var(GVAR_TOWN_REP_ARROYO) < global_var(GVAR_KNOW_DOC_HOLIDAY)) then begin
+            set_global_var(GVAR_TOWN_REP_ARROYO, global_var(GVAR_KNOW_DOC_HOLIDAY));
+        end
+    end
+end
+
+procedure use_skill_on_p_proc
+begin
+    if (action_being_used == 6) then begin
+        if (has_trait(TRAIT_TRAIT, dude_obj, TRAIT_sex_appeal)) then begin
+            if (global_var(GVAR_RUSTLE_SUCCESS) < get_pc_stat(PCSTAT_level)) then begin
+                if (is_success(roll_vs_skill(dude_obj, 6, 0))) then begin
+                    set_global_var(GVAR_QUEST_JET_QUEST, global_var(GVAR_QUEST_JET_QUEST) + 3);
+                end
+                else begin
+                    set_global_var(GVAR_QUEST_JET_QUEST, global_var(GVAR_QUEST_JET_QUEST) + 1);
+                end
+                if (global_var(GVAR_QUEST_JET_QUEST) >= (2 * get_pc_stat(PCSTAT_level))) then begin
+                    set_global_var(GVAR_QUEST_JET_QUEST, 0);
+                    set_global_var(GVAR_RUSTLE_SUCCESS, global_var(GVAR_RUSTLE_SUCCESS) + 1);
+                    critter_mod_skill(dude_obj, SKILL_FIRST_AID, 1);
+                    display_msg(message_str(SCRIPT_STTEXT, 406));
+                end
+            end
+        end
+    end
+    if (action_being_used == 7) then begin
+        if (has_trait(TRAIT_TRAIT, dude_obj, TRAIT_sex_appeal)) then begin
+            if (global_var(GVAR_TORR_GUARD_SUCCESS) < get_pc_stat(PCSTAT_level)) then begin
+                if (is_success(roll_vs_skill(dude_obj, 7, 0))) then begin
+                    set_global_var(GVAR_QUEST_RAIDERS, global_var(GVAR_QUEST_RAIDERS) + 3);
+                end
+                else begin
+                    set_global_var(GVAR_QUEST_RAIDERS, global_var(GVAR_QUEST_RAIDERS) + 1);
+                end
+                if (global_var(GVAR_QUEST_RAIDERS) >= (2 * get_pc_stat(PCSTAT_level))) then begin
+                    set_global_var(GVAR_QUEST_RAIDERS, 0);
+                    set_global_var(GVAR_TORR_GUARD_SUCCESS, global_var(GVAR_TORR_GUARD_SUCCESS) + 1);
+                    critter_mod_skill(dude_obj, SKILL_DOCTOR, 1);
+                    display_msg(message_str(SCRIPT_STTEXT, 407));
+                end
+            end
+        end
+    end
+    if (action_being_used == 9) then begin
+        if (has_trait(TRAIT_TRAIT, dude_obj, TRAIT_sex_appeal)) then begin
+        end
+    end
+    if (action_being_used == 10) then begin
+        if (has_trait(TRAIT_TRAIT, dude_obj, TRAIT_sex_appeal)) then begin
+        end
+    end
+    if (action_being_used == 11) then begin
+        if (has_trait(TRAIT_TRAIT, dude_obj, TRAIT_sex_appeal)) then begin
+        end
+    end
+    if (action_being_used == 13) then begin
+        if (has_trait(TRAIT_TRAIT, dude_obj, TRAIT_sex_appeal)) then begin
+            if (global_var(GVAR_VAULT_REDDING_PROBLEM) < get_pc_stat(PCSTAT_level)) then begin
+                if (is_success(roll_vs_skill(dude_obj, 13, 0))) then begin
+                    set_global_var(GVAR_QUEST_VIC_DEVICE, global_var(GVAR_QUEST_VIC_DEVICE) + 2);
+                end
+                else begin
+                    set_global_var(GVAR_QUEST_VIC_DEVICE, global_var(GVAR_QUEST_VIC_DEVICE) + 1);
+                end
+                if (global_var(GVAR_QUEST_VIC_DEVICE) >= get_pc_stat(PCSTAT_level)) then begin
+                    set_global_var(GVAR_QUEST_VIC_DEVICE, 0);
+                    set_global_var(GVAR_VAULT_REDDING_PROBLEM, global_var(GVAR_VAULT_REDDING_PROBLEM) + 1);
+                    critter_mod_skill(dude_obj, SKILL_REPAIR, 1);
+                    display_msg(message_str(SCRIPT_STTEXT, 413));
+                end
+            end
+        end
+    end
+end
+
+procedure first_tip
+begin
+    createWin("Tip_Window", (get_screen_width / 2) - 300, ((get_screen_height - 100) / 2) - 150, 600, 300);
+    selectWin("Tip_Window");
+    display("PCX/tipwndw.pcx");
+    setFont(3);
+    setTextColor(0.00000, 0.80000, 0.00000);
+    format(" " + message_str(SCRIPT_TIPTEXT, 10), 39, 56, 529, 20, 2);
+    format(" " + message_str(SCRIPT_TIPTEXT, 11), 39, 86, 529, 20, 2);
+    format(" " + message_str(SCRIPT_TIPTEXT, 12), 19, 116, 529, 20, 2);
+    addButton("BTN_close", 445, 243, 135, 34);
+    addButtonGfx("BTN_close", "PCX/tipcldwn.pcx", "PCX/tipclup.pcx", "PCX/tipclup.pcx");
+    addButtonProc("BTN_close", vide, vide, vide, tips_no);
+    addButton("BTN_yes", 185, 243, 135, 34);
+    addButtonGfx("BTN_yes", "PCX/tipysdwn.pcx", "PCX/tipysup.pcx", "PCX/tipysup.pcx");
+    addButtonProc("BTN_yes", vide, vide, vide, tips_yes);
+    addButton("BTN_no", 22, 243, 135, 34);
+    addButtonGfx("BTN_no", "PCX/tipnodwn.pcx", "PCX/tipnoup.pcx", "PCX/tipnoup.pcx");
+    addButtonProc("BTN_no", vide, vide, vide, tips_no);
+    game_ui_disable;
+    mouseShape("PCX/mouse2.pcx", 0, 0);
+    showWin;
+end
+
+procedure Pass_Tartar
+begin
+    createWin("Tip_Window", (get_screen_width / 2) - 300, ((get_screen_height - 100) / 2) - 150, 600, 300);
+    selectWin("Tip_Window");
+    display("PCX/tipwndw.pcx");
+    setFont(3);
+    setTextColor(0.00000, 0.80000, 0.00000);
+    format(" " + message_str(SCRIPT_TIPTEXT, 26), 39, 56, 529, 149, 2);
+    addButton("BTN_close", 445, 243, 135, 34);
+    addButtonGfx("BTN_close", "PCX/tipcldwn.pcx", "PCX/tipclup.pcx", "PCX/tipclup.pcx");
+    addButtonProc("BTN_close", vide, vide, vide, close_tip);
+    addButton("BTN_yes", 185, 243, 135, 34);
+    addButtonGfx("BTN_yes", "PCX/tipysdwn.pcx", "PCX/tipysup.pcx", "PCX/tipysup.pcx");
+    addButtonProc("BTN_yes", vide, vide, vide, passtartar);
+    addButton("BTN_no", 22, 243, 135, 34);
+    addButtonGfx("BTN_no", "PCX/tipnodwn.pcx", "PCX/tipnoup.pcx", "PCX/tipnoup.pcx");
+    addButtonProc("BTN_no", vide, vide, vide, close_tip);
+    game_ui_disable;
+    mouseShape("PCX/mouse2.pcx", 0, 0);
+    showWin;
+end
+
+procedure Electrical_tip
+begin
+    createWin("Tip_Window", (get_screen_width / 2) - 300, ((get_screen_height - 100) / 2) - 150, 600, 300);
+    selectWin("Tip_Window");
+    display("PCX/tipwndw.pcx");
+    setFont(3);
+    setTextColor(0.00000, 0.80000, 0.00000);
+    format(" " + message_str(SCRIPT_TIPTEXT, 18), 39, 56, 529, 149, 2);
+    addButton("BTN_close", 445, 243, 135, 34);
+    addButtonGfx("BTN_close", "PCX/tipcldwn.pcx", "PCX/tipclup.pcx", "PCX/tipclup.pcx");
+    addButtonProc("BTN_close", vide, vide, vide, close_tip);
+    game_ui_disable;
+    mouseShape("PCX/mouse2.pcx", 0, 0);
+    showWin;
+end
+
+procedure HMS_tip
+begin
+    createWin("Tip_Window", (get_screen_width / 2) - 300, ((get_screen_height - 100) / 2) - 150, 600, 300);
+    selectWin("Tip_Window");
+    display("PCX/tipwndw.pcx");
+    displayGfx("PCX/tipncstr.pcx", 220, 114, 160, 81);
+    setFont(3);
+    setTextColor(0.00000, 0.80000, 0.00000);
+    format(" " + message_str(SCRIPT_TIPTEXT, 17), 39, 56, 529, 50, 2);
+    addButton("BTN_close", 445, 243, 135, 34);
+    addButtonGfx("BTN_close", "PCX/tipcldwn.pcx", "PCX/tipclup.pcx", "PCX/tipclup.pcx");
+    addButtonProc("BTN_close", vide, vide, vide, close_tip);
+    game_ui_disable;
+    mouseShape("PCX/mouse2.pcx", 0, 0);
+    showWin;
+end
+
+procedure All_Quests_tip
+begin
+    createWin("Tip_Window", (get_screen_width / 2) - 300, ((get_screen_height - 100) / 2) - 150, 600, 300);
+    selectWin("Tip_Window");
+    display("PCX/tipwndw.pcx");
+    setFont(3);
+    setTextColor(0.00000, 0.80000, 0.00000);
+    format(" " + message_str(SCRIPT_TIPTEXT, 16), 39, 56, 529, 149, 2);
+    addButton("BTN_close", 445, 243, 135, 34);
+    addButtonGfx("BTN_close", "PCX/tipcldwn.pcx", "PCX/tipclup.pcx", "PCX/tipclup.pcx");
+    addButtonProc("BTN_close", vide, vide, vide, close_tip);
+    game_ui_disable;
+    mouseShape("PCX/mouse2.pcx", 0, 0);
+    showWin;
+end
+
+procedure Steal_tip
+begin
+    createWin("Tip_Window", (get_screen_width / 2) - 300, ((get_screen_height - 100) / 2) - 150, 600, 300);
+    selectWin("Tip_Window");
+    display("PCX/tipwndw.pcx");
+    setFont(3);
+    setTextColor(0.00000, 0.80000, 0.00000);
+    format(" " + message_str(SCRIPT_TIPTEXT, 19), 39, 56, 529, 50, 2);
+    addButton("BTN_close", 445, 243, 135, 34);
+    addButtonGfx("BTN_close", "PCX/tipcldwn.pcx", "PCX/tipclup.pcx", "PCX/tipclup.pcx");
+    addButtonProc("BTN_close", vide, vide, vide, close_tip);
+    game_ui_disable;
+    mouseShape("PCX/mouse2.pcx", 0, 0);
+    showWin;
+end
+
+procedure Kill_tip
+begin
+    createWin("Tip_Window", (get_screen_width / 2) - 300, ((get_screen_height - 100) / 2) - 150, 600, 300);
+    selectWin("Tip_Window");
+    display("PCX/tipwndw.pcx");
+    setFont(3);
+    setTextColor(0.00000, 0.80000, 0.00000);
+    format(" " + message_str(SCRIPT_TIPTEXT, 20), 39, 56, 529, 50, 2);
+    addButton("BTN_close", 445, 243, 135, 34);
+    addButtonGfx("BTN_close", "PCX/tipcldwn.pcx", "PCX/tipclup.pcx", "PCX/tipclup.pcx");
+    addButtonProc("BTN_close", vide, vide, vide, close_tip);
+    game_ui_disable;
+    mouseShape("PCX/mouse2.pcx", 0, 0);
+    showWin;
+end
+
+procedure Karma_tip
+begin
+    createWin("Tip_Window", (get_screen_width / 2) - 300, ((get_screen_height - 100) / 2) - 150, 600, 300);
+    selectWin("Tip_Window");
+    display("PCX/tipwndw.pcx");
+    setFont(3);
+    setTextColor(0.00000, 0.80000, 0.00000);
+    format(" " + message_str(SCRIPT_TIPTEXT, 21), 39, 56, 529, 50, 2);
+    addButton("BTN_close", 445, 243, 135, 34);
+    addButtonGfx("BTN_close", "PCX/tipcldwn.pcx", "PCX/tipclup.pcx", "PCX/tipclup.pcx");
+    addButtonProc("BTN_close", vide, vide, vide, close_tip);
+    game_ui_disable;
+    mouseShape("PCX/mouse2.pcx", 0, 0);
+    showWin;
+end
+
+procedure Radiation_tip
+begin
+    createWin("Tip_Window", (get_screen_width / 2) - 300, ((get_screen_height - 100) / 2) - 150, 600, 300);
+    selectWin("Tip_Window");
+    display("PCX/tipwndw.pcx");
+    setFont(3);
+    setTextColor(0.00000, 0.80000, 0.00000);
+    format(" " + message_str(SCRIPT_TIPTEXT, 24), 39, 56, 529, 100, 2);
+    addButton("BTN_close", 445, 243, 135, 34);
+    addButtonGfx("BTN_close", "PCX/tipcldwn.pcx", "PCX/tipclup.pcx", "PCX/tipclup.pcx");
+    addButtonProc("BTN_close", vide, vide, vide, close_tip);
+    game_ui_disable;
+    mouseShape("PCX/mouse2.pcx", 0, 0);
+    showWin;
+end
+
+procedure Items_tip
+begin
+    createWin("Tip_Window", (get_screen_width / 2) - 300, ((get_screen_height - 100) / 2) - 150, 600, 300);
+    selectWin("Tip_Window");
+    display("PCX/tipwndw.pcx");
+    setFont(3);
+    setTextColor(0.00000, 0.80000, 0.00000);
+    format(" " + message_str(SCRIPT_TIPTEXT, 27), 39, 56, 529, 50, 2);
+    addButton("BTN_close", 445, 243, 135, 34);
+    addButtonGfx("BTN_close", "PCX/tipcldwn.pcx", "PCX/tipclup.pcx", "PCX/tipclup.pcx");
+    addButtonProc("BTN_close", vide, vide, vide, close_tip);
+    game_ui_disable;
+    mouseShape("PCX/mouse2.pcx", 0, 0);
+    showWin;
+end
+
+procedure tips_yes
+begin
+    set_sfall_global(1, 6);
+    deleteWin("Tip_Window");
+    game_ui_enable;
+    set_sfall_global(7, 1);
+end
+
+procedure tips_no
+begin
+    set_sfall_global(1, 5);
+    deleteWin("Tip_Window");
+    game_ui_enable;
+    set_sfall_global(7, 1);
+end
+
+procedure close_tip
+begin
+    deleteWin("Tip_Window");
+    game_ui_enable;
+end
+
+procedure vide
+begin
+end
+
+procedure passtartar
+begin
+    deleteWin("Tip_Window");
+    game_ui_enable;
+    set_sfall_global(7, 3);
+    set_sfall_global(4, 2);
+    set_global_var(GVAR_LOAD_MAP_INDEX, 2);
+    set_global_var(GVAR_RUNNING_BURNING_GUY, 2);
+    set_global_var(GVAR_VIC_DEVICE, 2);
+    set_global_var(GVAR_SLAVE_RUN, 2);
+    set_global_var(GVAR_SLAVES_COUNT, 2);
+    set_global_var(GVAR_MAGGIE_STATUS, 2);
+    set_global_var(GVAR_SLAVES_LOST, 2);
+    set_global_var(GVAR_SLAVERS_LOST, 2);
+    set_global_var(GVAR_PIP_BOY_ANNA_DIARY, 2);
+    fadeOut(1500);
+    load_map("tartar13", 1);
+end
+
+procedure look_at_p_proc
+begin
+end
+
+procedure description_p_proc
+begin
+    script_overrides;
+    if (local_var(3) == 0) then begin
+        set_local_var(3, 1);
+    end
+end
+
+procedure use_obj_on_p_proc
+begin
+end

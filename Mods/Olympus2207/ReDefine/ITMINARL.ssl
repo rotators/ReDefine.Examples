@@ -1,0 +1,118 @@
+variable dude_objective_reputation;
+variable self_subjective_reaction;
+variable z_critter_search;
+variable critter_is_detected;
+variable detected_critter;
+variable persuade_chance;
+variable steal_perk;
+variable steal_gloves;
+variable i;
+variable found;
+variable object;
+
+procedure start;
+procedure description_p_proc;
+procedure look_at_p_proc;
+procedure damage_p_proc;
+procedure use_p_proc;
+procedure use_skill_on_p_proc;
+procedure drop_p_proc;
+procedure pickup_p_proc;
+procedure explosion_proc;
+procedure timed_event_p_proc;
+procedure kaboom;
+
+
+procedure start
+begin
+end
+
+procedure description_p_proc
+begin
+end
+
+procedure look_at_p_proc
+begin
+end
+
+procedure damage_p_proc
+begin
+end
+
+procedure use_p_proc
+begin
+end
+
+procedure use_skill_on_p_proc
+begin
+    script_overrides;
+    if (action_being_used == 11) then begin
+        if (local_var(0) == 0) then begin
+            display_msg(message_str(SCRIPT_ITTEXT, random(130, 132)));
+            set_local_var(0, 1);
+            call explosion_proc();
+        end
+        else begin
+            rm_timer_event(self_obj);
+            set_local_var(0, 0);
+            display_msg(message_str(SCRIPT_ITTEXT, random(133, 135)));
+        end
+    end
+end
+
+procedure drop_p_proc
+begin
+end
+
+procedure pickup_p_proc
+begin
+    if (local_var(0) != 0) then begin
+        script_overrides;
+        call kaboom();
+    end
+end
+
+procedure explosion_proc
+begin
+    i := 16777217;
+    while ((i <= 16777700) and (found == 0)) do begin
+        if ((tile_contains_obj_pid(tile_num(self_obj), elevation(self_obj), i) == 1) and (critter_state(tile_contains_pid_obj(tile_num(self_obj), elevation(self_obj), i)) == 0)) then begin
+            found := 1;
+            object := tile_contains_pid_obj(tile_num(self_obj), elevation(self_obj), i);
+            i := 16777217;
+        end
+        else begin
+            i := i + 1;
+        end
+    end
+    if (found != 0) then begin
+        call kaboom();
+    end
+    else begin
+        rm_timer_event(self_obj);
+        add_timer_event(self_obj, 2, 1);
+    end
+end
+
+procedure timed_event_p_proc
+begin
+    if (fixed_param == 1) then begin
+        call explosion_proc();
+    end
+end
+
+procedure kaboom
+begin
+    if (combat_is_initialized == 0) then begin
+        explosion(tile_num(self_obj), elevation(self_obj), random(60, 80));
+    end
+    else begin
+        if (object != 0) then begin
+            critter_dmg(object, random(60, 80), DMG_explosion);
+        end
+        else begin
+            critter_dmg(dude_obj, random(30, 50), DMG_explosion);
+        end
+    end
+    move_to(self_obj, 1, 2);
+end

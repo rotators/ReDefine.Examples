@@ -1,0 +1,356 @@
+variable dude_objective_reputation;
+variable self_subjective_reaction;
+variable z_critter_search;
+variable critter_is_detected;
+variable detected_critter;
+variable persuade_chance;
+variable steal_perk;
+variable steal_gloves;
+variable max_distance;
+variable animation_is_called;
+variable distance_to_walk;
+variable time_to_work;
+variable time_to_repose;
+variable work_tile_chois;
+variable repose_tile_chois;
+
+procedure start;
+procedure critter_p_proc;
+procedure combat_p_proc;
+procedure description_p_proc;
+procedure look_at_p_proc;
+procedure pickup_p_proc;
+procedure push_p_proc;
+procedure talk_p_proc;
+procedure destroy_p_proc;
+procedure use_skill_on_p_proc;
+procedure damage_p_proc;
+procedure map_enter_p_proc;
+procedure timed_event_p_proc;
+procedure Node010;
+procedure Node011;
+procedure Node012;
+procedure Node013;
+procedure Node999;
+
+
+procedure start
+begin
+    if (local_var(1) == 0) then begin
+        set_local_var(3, tile_num(self_obj));
+        set_local_var(1, 1);
+        set_local_var(4, random(60, 80));
+        set_local_var(5, random(70, 90));
+        set_local_var(6, random(20, 35));
+        critter_add_trait(self_obj, 1, 6, 0);
+        critter_add_trait(self_obj, 1, 5, 3);
+        max_distance := random(6, 12);
+    end
+end
+
+procedure critter_p_proc
+begin
+    if ((animation_is_called == 0) and (anim_busy(self_obj) == 0)) then begin
+        animation_is_called := 1;
+        add_timer_event(self_obj, random(29, 76), 1);
+    end
+    if (obj_can_see_obj(self_obj, dude_obj)) then begin
+        if ((local_var(2) == 1) or (global_var(47) <= -31)) then begin
+            set_local_var(2, 0);
+            attack_setup(self_obj, dude_obj);
+        end
+    end
+end
+
+procedure combat_p_proc
+begin
+end
+
+procedure description_p_proc
+begin
+    script_overrides;
+    if (local_var(7) == 0) then begin
+        display_msg(message_str(100, 2));
+    end
+    else begin
+        display_msg(message_str(100, 4));
+    end
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    if (local_var(7) == 0) then begin
+        display_msg(message_str(100, 1));
+    end
+    else begin
+        display_msg(message_str(100, 3));
+    end
+end
+
+procedure pickup_p_proc
+begin
+end
+
+procedure push_p_proc
+begin
+end
+
+procedure talk_p_proc
+begin
+    if (not(anim_busy(self_obj))) then begin
+        anim(self_obj, 1000, rotation_to_tile(tile_num(self_obj), tile_num(dude_obj)));
+    end
+    start_gdialog(100, self_obj, -1, -1, -1);
+    gsay_start;
+    call Node010();
+    gsay_end;
+    end_dialogue;
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_global_var(0, global_var(0) - 1);
+        if ((47 == 50) or (47 == 59)) then begin
+            set_global_var(47, global_var(47) - 3);
+        end
+        else begin
+            set_global_var(47, global_var(47) - 6);
+        end
+    end
+end
+
+procedure use_skill_on_p_proc
+begin
+    if (action_being_used == 10) then begin
+        steal_perk := 0;
+        steal_gloves := 0;
+        if (has_trait(0, dude_obj, 37) != 0) then begin
+            steal_perk := steal_perk + 15;
+        end
+        if (has_trait(0, dude_obj, 33) != 0) then begin
+            steal_perk := steal_perk + 30;
+        end
+        if ((obj_pid(critter_inven_obj(dude_obj, 1)) == 245) or (obj_pid(critter_inven_obj(dude_obj, 2)) == 245)) then begin
+            steal_gloves := 10;
+        end
+        if (random(0, 100) <= ((has_skill(dude_obj, 10) / 2) + (((3 * get_critter_stat(dude_obj, 5)) + (((get_critter_stat(dude_obj, 6) - 4) * 4) - (difficulty_level * 4)) + (2 * steal_perk) + steal_gloves) / (local_var(4) / 25)))) then begin
+            display_msg(message_str(10, random(145, 148)));
+        end
+        else begin
+            script_overrides;
+            display_msg(message_str(10, random(200, 203)));
+        end
+    end
+    if (action_being_used == 12) then begin
+        script_overrides;
+        display_msg(message_str(10, 204) + ((has_skill(dude_obj, 10) / 2) + (((3 * get_critter_stat(dude_obj, 5)) + (((get_critter_stat(dude_obj, 6) - 4) * 4) - (difficulty_level * 4)) + (2 * steal_perk) + steal_gloves) / (local_var(4) / 25))) + message_str(10, 205));
+    end
+end
+
+procedure damage_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_local_var(2, 1);
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    max_distance := random(15, 20);
+    if (random(1, 2) == 1) then begin
+        time_to_work := game_time_hour % 100;
+        time_to_repose := time_to_work + random(5, 15);
+        if (time_to_repose >= 60) then begin
+            time_to_repose := random(0, 5);
+        end
+    end
+    else begin
+        time_to_repose := game_time_hour % 100;
+        time_to_work := time_to_repose + random(2, 6);
+        if (time_to_work >= 60) then begin
+            time_to_work := random(0, 5);
+        end
+    end
+end
+
+procedure timed_event_p_proc
+begin
+    if ((fixed_param == 1) and not(combat_is_initialized)) then begin
+        if (((game_time_hour % 100) >= time_to_work) and ((game_time_hour % 100) < time_to_repose) or (((game_time_hour % 100) >= time_to_work) and (time_to_work > time_to_repose)) or (((game_time_hour % 100) < time_to_work) and (time_to_work > time_to_repose))) then begin
+            if ((game_time_hour % 100) >= time_to_repose) then begin
+                time_to_repose := time_to_work + random(5, 15);
+                if (time_to_repose >= 60) then begin
+                    time_to_repose := random(0, 5);
+                end
+                repose_tile_chois := 0;
+            end
+            if ((tile_num(self_obj) != 16535) and (tile_num(self_obj) != 17129) and (tile_num(self_obj) != 16342)) then begin
+                work_tile_chois := random(1, 3);
+                reg_anim_func(2, self_obj);
+                reg_anim_func(1, 1);
+                if (work_tile_chois == 1) then begin
+                    if (tile_num(self_obj) != 16535) then begin
+                        reg_anim_func(2, self_obj);
+                        reg_anim_func(1, 1);
+                        if (tile_distance(tile_num(self_obj), 16535) >= 25) then begin
+                            reg_anim_obj_move_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), rotation_to_tile(tile_num(self_obj), 16535), random(12, 22)), -1);
+                        end
+                        else begin
+                            reg_anim_obj_move_to_tile(self_obj, 16535, -1);
+                        end
+                        reg_anim_func(3, 0);
+                    end
+                end
+                if (work_tile_chois == 2) then begin
+                    if (tile_num(self_obj) != 17129) then begin
+                        reg_anim_func(2, self_obj);
+                        reg_anim_func(1, 1);
+                        if (tile_distance(tile_num(self_obj), 17129) >= 25) then begin
+                            reg_anim_obj_move_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), rotation_to_tile(tile_num(self_obj), 17129), random(12, 22)), -1);
+                        end
+                        else begin
+                            reg_anim_obj_move_to_tile(self_obj, 17129, -1);
+                        end
+                        reg_anim_func(3, 0);
+                    end
+                end
+                if (work_tile_chois == 3) then begin
+                    if (tile_num(self_obj) != 16342) then begin
+                        reg_anim_func(2, self_obj);
+                        reg_anim_func(1, 1);
+                        if (tile_distance(tile_num(self_obj), 16342) >= 25) then begin
+                            reg_anim_obj_move_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), rotation_to_tile(tile_num(self_obj), 16342), random(12, 22)), -1);
+                        end
+                        else begin
+                            reg_anim_obj_move_to_tile(self_obj, 16342, -1);
+                        end
+                        reg_anim_func(3, 0);
+                    end
+                end
+                reg_anim_func(3, 0);
+            end
+            else begin
+                if (tile_num(self_obj) == 16535) then begin
+                    anim(self_obj, 1000, 0);
+                end
+                if (tile_num(self_obj) == 17129) then begin
+                    anim(self_obj, 1000, 5);
+                end
+                if (tile_num(self_obj) == 16342) then begin
+                    anim(self_obj, 1000, 0);
+                end
+                reg_anim_func(2, self_obj);
+                reg_anim_func(1, 1);
+                if (random(1, 2) == 1) then begin
+                    reg_anim_animate(self_obj, 0, -1);
+                end
+                if (random(1, 3) == 1) then begin
+                    reg_anim_animate(self_obj, 10, -1);
+                end
+                reg_anim_animate(self_obj, 11, -1);
+                if (random(1, 4) == 1) then begin
+                    reg_anim_animate(self_obj, 16, -1);
+                    reg_anim_animate(self_obj, 0, -1);
+                end
+                if (random(1, 2) == 1) then begin
+                    reg_anim_animate(self_obj, 0, -1);
+                end
+                reg_anim_func(3, 0);
+            end
+        end
+        else begin
+            if ((game_time_hour % 100) >= time_to_work) then begin
+                time_to_work := time_to_repose + random(2, 6);
+            end
+            if (time_to_work >= 60) then begin
+                time_to_work := random(0, 2);
+            end
+            if (repose_tile_chois == 0) then begin
+                repose_tile_chois := random(1, 2);
+            end
+            if (repose_tile_chois == 1) then begin
+                if (tile_distance(tile_num(self_obj), 18151) >= max_distance) then begin
+                    if (tile_num(self_obj) != tile_num_in_direction(18151, random(0, 5), random(3, 9))) then begin
+                        reg_anim_func(2, self_obj);
+                        reg_anim_func(1, 1);
+                        if (tile_distance(tile_num(self_obj), tile_num_in_direction(18151, random(0, 5), random(3, 9))) >= 25) then begin
+                            reg_anim_obj_move_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), rotation_to_tile(tile_num(self_obj), tile_num_in_direction(18151, random(0, 5), random(3, 9))), random(12, 22)), -1);
+                        end
+                        else begin
+                            reg_anim_obj_move_to_tile(self_obj, tile_num_in_direction(18151, random(0, 5), random(3, 9)), -1);
+                        end
+                        reg_anim_func(3, 0);
+                    end
+                end
+                else begin
+                    reg_anim_func(2, self_obj);
+                    reg_anim_func(1, 1);
+                    reg_anim_obj_move_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), random(0, 5), random(floor(max_distance / 3), max_distance)), -1);
+                    reg_anim_func(3, 0);
+                end
+            end
+            if (repose_tile_chois == 2) then begin
+                if (tile_distance(tile_num(self_obj), 18340) >= max_distance) then begin
+                    if (tile_num(self_obj) != tile_num_in_direction(18340, random(0, 5), random(3, 9))) then begin
+                        reg_anim_func(2, self_obj);
+                        reg_anim_func(1, 1);
+                        if (tile_distance(tile_num(self_obj), tile_num_in_direction(18340, random(0, 5), random(3, 9))) >= 25) then begin
+                            reg_anim_obj_move_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), rotation_to_tile(tile_num(self_obj), tile_num_in_direction(18340, random(0, 5), random(3, 9))), random(12, 22)), -1);
+                        end
+                        else begin
+                            reg_anim_obj_move_to_tile(self_obj, tile_num_in_direction(18340, random(0, 5), random(3, 9)), -1);
+                        end
+                        reg_anim_func(3, 0);
+                    end
+                end
+                else begin
+                    reg_anim_func(2, self_obj);
+                    reg_anim_func(1, 1);
+                    reg_anim_obj_move_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), random(0, 5), random(floor(max_distance / 3), max_distance)), -1);
+                    reg_anim_func(3, 0);
+                end
+            end
+        end
+        animation_is_called := 0;
+    end
+end
+
+procedure Node010
+begin
+    gsay_reply(100, 100);
+    if (local_var(9) == 0) then begin
+        gsay_option(100, 101, Node011, 50);
+    end
+    gsay_option(100, 102, Node999, 50);
+    if ((global_var(34) == 1) and (obj_carrying_pid_obj(dude_obj, 414) == 0)) then begin
+        gsay_option(100, 103, Node013, 50);
+    end
+end
+
+procedure Node011
+begin
+    set_local_var(9, 1);
+    gsay_reply(100, 110);
+    gsay_option(100, 111, Node012, 50);
+    gsay_option(100, 112, Node010, 50);
+end
+
+procedure Node012
+begin
+    gsay_reply(100, 120);
+    gsay_option(100, 121, Node999, 50);
+    gsay_option(100, 112, Node010, 50);
+end
+
+procedure Node013
+begin
+    gsay_reply(100, 130);
+    gsay_option(100, 131, Node999, 50);
+end
+
+procedure Node999
+begin
+end
+

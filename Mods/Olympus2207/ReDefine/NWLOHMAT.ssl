@@ -1,0 +1,466 @@
+variable dude_objective_reputation;
+variable self_subjective_reaction;
+variable z_critter_search;
+variable critter_is_detected;
+variable detected_critter;
+variable persuade_chance;
+variable steal_perk;
+variable steal_gloves;
+variable animation_is_called;
+variable float_is_called;
+variable already_talk;
+variable stuff_container;
+
+procedure start;
+procedure critter_p_proc;
+procedure combat_p_proc;
+procedure description_p_proc;
+procedure look_at_p_proc;
+procedure pickup_p_proc;
+procedure push_p_proc;
+procedure talk_p_proc;
+procedure destroy_p_proc;
+procedure use_skill_on_p_proc;
+procedure use_obj_on_p_proc;
+procedure damage_p_proc;
+procedure map_enter_p_proc;
+procedure timed_event_p_proc;
+procedure Node001;
+procedure Node002;
+procedure Node003;
+procedure Node004;
+procedure Node005;
+procedure Node006;
+procedure Node007;
+procedure Node008;
+procedure Node010;
+procedure Node018;
+procedure Node011;
+procedure Node012;
+procedure Node016;
+procedure Node019;
+procedure Node014;
+procedure Node015;
+procedure Node013;
+procedure Node017;
+procedure Node017a;
+procedure Node017b;
+procedure Node017c;
+procedure NodeIsGoingHome;
+procedure Node999;
+procedure Node998;
+
+
+procedure start
+begin
+    if (local_var(1) == 0) then begin
+        set_local_var(3, tile_num(self_obj));
+        set_local_var(1, 1);
+        set_local_var(5, random(40, 50));
+        set_local_var(6, random(-20, 10));
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 313);
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_GENERIC_JACKAL);
+        set_local_var(9, 6);
+        add_obj_to_inven(self_obj, create_object(516, 1, 2));
+        wield_obj(obj_carrying_pid_obj(self_obj, 516));
+    end
+end
+
+procedure critter_p_proc
+begin
+    if (animation_is_called == 0) then begin
+        animation_is_called := 1;
+        add_timer_event(self_obj, random(20, 40), 1);
+    end
+    if ((global_var(GVAR_NCR_CATTLE_TIME_MIN) == 1) and (anim_busy(self_obj) == 0)) then begin
+        if ((tile_distance(dude_tile, tile_num(self_obj)) > local_var(9)) and (tile_distance(dude_tile, tile_num(self_obj)) <= (local_var(9) + (local_var(9) / 3)))) then begin
+            animate_move_obj_to_tile(self_obj, tile_num_in_direction(dude_tile, rotation_to_tile(dude_tile, tile_num(self_obj)), random(local_var(9) - 2, local_var(9))), 0);
+        end
+        else begin
+            if (tile_distance(dude_tile, tile_num(self_obj)) > (local_var(9) + (local_var(9) / 3))) then begin
+                animate_move_obj_to_tile(self_obj, tile_num_in_direction(dude_tile, rotation_to_tile(dude_tile, tile_num(self_obj)), random(local_var(9) + 1, local_var(9) + 3)), 1);
+            end
+        end
+    end
+    if (obj_can_see_obj(self_obj, dude_obj)) then begin
+        if ((local_var(2) == 1) or (global_var(GVAR_TOWN_REP_VAULT_CITY) <= -31)) then begin
+            set_local_var(2, 0);
+            attack_setup(self_obj, dude_obj);
+        end
+    end
+end
+
+procedure combat_p_proc
+begin
+end
+
+procedure description_p_proc
+begin
+    script_overrides;
+    if ((local_var(7) == 0) and (global_var(GVAR_NCR_CATTLE_TIME_MIN) == 0)) then begin
+        display_mstr(2);
+    end
+    else begin
+        display_mstr(4);
+    end
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    if ((local_var(7) == 0) and (global_var(GVAR_NCR_CATTLE_TIME_MIN) == 0)) then begin
+        display_mstr(1);
+    end
+    else begin
+        display_mstr(3);
+    end
+end
+
+procedure pickup_p_proc
+begin
+    script_overrides;
+end
+
+procedure push_p_proc
+begin
+    if (global_var(GVAR_NCR_CATTLE_TIME_MIN) == 0) then begin
+        script_overrides;
+    end
+end
+
+procedure talk_p_proc
+begin
+    if (not(anim_busy(self_obj))) then begin
+        anim(self_obj, 1000, rotation_to_tile(tile_num(self_obj), dude_tile));
+    end
+    start_gdialog(204, self_obj, -1, -1, -1);
+    gsay_start;
+    if (global_var(GVAR_NCR_CATTLE_TIME_MIN) == 0) then begin
+        call Node001();
+    end
+    else begin
+        call Node010();
+    end
+    gsay_end;
+    end_dialogue;
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_global_var(GVAR_PLAYER_REPUTATION, global_var(GVAR_PLAYER_REPUTATION) - 1);
+        if ((50 == 50) or (50 == 59)) then begin
+            set_global_var(GVAR_TOWN_REP_VAULT_CITY, global_var(GVAR_TOWN_REP_VAULT_CITY) - 3);
+        end
+        else begin
+            set_global_var(GVAR_TOWN_REP_VAULT_CITY, global_var(GVAR_TOWN_REP_VAULT_CITY) - 6);
+        end
+    end
+    set_global_var(GVAR_MODOC_SLAUGHTER_BESS_TIME, global_var(GVAR_MODOC_SLAUGHTER_BESS_TIME) bwor 8388608);
+    if (global_var(GVAR_NCR_CATTLE_TIME_MIN) == 1) then begin
+        set_global_var(GVAR_NCR_CATTLE_TIME_MIN, 0);
+    end
+    if (not(tile_contains_obj_pid(2, 2, 250))) then begin
+        stuff_container := create_object(250, 2, 2);
+    end
+    else begin
+        stuff_container := tile_contains_pid_obj(2, 2, 250);
+    end
+    move_obj_inven_to_obj(self_obj, stuff_container);
+end
+
+procedure use_skill_on_p_proc
+begin
+    if (action_being_used == 10) then begin
+        script_overrides;
+    end
+    if (action_being_used == 12) then begin
+        script_overrides;
+    end
+end
+
+procedure use_obj_on_p_proc
+begin
+end
+
+procedure damage_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_local_var(2, 1);
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    if ((local_var(4) == 1) and (local_var(2) == 0)) then begin
+        set_local_var(2, 1);
+    end
+end
+
+procedure timed_event_p_proc
+begin
+    if ((fixed_param == 1) and not(combat_is_initialized)) then begin
+        if ((global_var(GVAR_NCR_CATTLE_TIME_MIN) == 1) and (anim_busy(self_obj) == 0)) then begin
+            animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), random(0, 5), random(2, 6)), 0);
+        end
+        animation_is_called := 0;
+    end
+    if ((fixed_param == 2) and not(combat_is_initialized)) then begin
+        float_is_called := 0;
+    end
+end
+
+procedure Node001
+begin
+    Reply(10);
+    giq_option(1, NAME, 11, Node002, NEUTRAL_REACTION);
+    if (dude_skill(SKILL_OUTDOORSMAN) >= 70) then begin
+        giq_option(1, NAME, 12, Node003, NEUTRAL_REACTION);
+    end
+    if (dude_skill(SKILL_OUTDOORSMAN) <= 20) then begin
+        giq_option(1, NAME, 13, Node004, NEUTRAL_REACTION);
+    end
+    if (obj_carrying_pid_obj(dude_obj, 315)) then begin
+        giq_option(1, NAME, 14, Node005, NEUTRAL_REACTION);
+    end
+    giq_option(1, NAME, 15, Node006, NEUTRAL_REACTION);
+    giq_option(1, NAME, 16, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node002
+begin
+    Reply(20);
+    if (dude_skill(SKILL_OUTDOORSMAN) >= 70) then begin
+        giq_option(1, NAME, 21, Node003, NEUTRAL_REACTION);
+    end
+    if (dude_skill(SKILL_OUTDOORSMAN) <= 20) then begin
+        giq_option(1, NAME, 22, Node004, NEUTRAL_REACTION);
+    end
+    if (obj_carrying_pid_obj(dude_obj, 315)) then begin
+        giq_option(1, NAME, 23, Node005, NEUTRAL_REACTION);
+    end
+    giq_option(1, NAME, 24, Node006, NEUTRAL_REACTION);
+    giq_option(1, NAME, 25, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node003
+begin
+    Reply(30);
+    giq_option(1, NAME, 31, Node007, NEUTRAL_REACTION);
+end
+
+procedure Node004
+begin
+    Reply(40);
+    giq_option(1, NAME, 41, Node999, NEUTRAL_REACTION);
+    giq_option(1, NAME, 42, Node008, NEUTRAL_REACTION);
+end
+
+procedure Node005
+begin
+    set_global_var(GVAR_NCR_CATTLE_TIME_MIN, 1);
+    set_local_var(8, game_time_in_seconds);
+    rm_obj_from_inven(dude_obj, obj_carrying_pid_obj(dude_obj, 315));
+    party_add(self_obj);
+    Reply(50);
+    giq_option(1, NAME, 51, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node006
+begin
+    Reply(61);
+    giq_option(1, NAME, 62, Node999, NEUTRAL_REACTION);
+    giq_option(1, NAME, 63, Node004, NEUTRAL_REACTION);
+end
+
+procedure Node007
+begin
+    set_global_var(GVAR_NCR_CATTLE_TIME_MIN, 1);
+    set_local_var(8, game_time_in_seconds);
+    party_add(self_obj);
+    Reply(70);
+    giq_option(1, NAME, 71, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node008
+begin
+    Reply(80);
+    giq_option(1, NAME, 81, Node998, NEUTRAL_REACTION);
+end
+
+procedure Node010
+begin
+    if (global_var(GVAR_NCR_CATTLE_TIME_MIN) == 1) then begin
+        if ((game_time_in_seconds - local_var(8)) <= (3600 * 24)) then begin
+            Reply(100);
+        end
+        if (((game_time_in_seconds - local_var(8)) > (3600 * 24)) and ((game_time_in_seconds - local_var(8)) <= (3600 * 24 * 10))) then begin
+            Reply(101);
+        end
+        if (((game_time_in_seconds - local_var(8)) > (3600 * 24 * 10)) and ((game_time_in_seconds - local_var(8)) <= (3600 * 24 * 30))) then begin
+            Reply(102);
+        end
+        if (((game_time_in_seconds - local_var(8)) > (3600 * 24 * 30)) and ((game_time_in_seconds - local_var(8)) <= (3600 * 24 * 120))) then begin
+            Reply(103);
+        end
+        if ((game_time_in_seconds - local_var(8)) > (3600 * 24 * 120)) then begin
+            Reply(104);
+        end
+        giq_option(1, NAME, 107, Node018, NEUTRAL_REACTION);
+    end
+    if (global_var(GVAR_NCR_CATTLE_TIME_MIN) == 2) then begin
+        Reply(105);
+        giq_option(1, NAME, 108, Node014, NEUTRAL_REACTION);
+    end
+    if (global_var(GVAR_NCR_CATTLE_TIME_MIN) == 3) then begin
+        Reply(106);
+        giq_option(1, NAME, 109, Node014, NEUTRAL_REACTION);
+    end
+    giq_option(1, NAME, 119, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node018
+begin
+    Reply(180);
+    giq_option(1, NAME, 181, Node011, NEUTRAL_REACTION);
+    if (cur_map_index != MAP_NWYARD) then begin
+        giq_option(1, NAME, 182, Node012, NEUTRAL_REACTION);
+    end
+    giq_option(1, NAME, 183, Node013, NEUTRAL_REACTION);
+    if (((game_time_in_seconds - local_var(8)) > (3600 * 24 * 30)) and (dude_skill(SKILL_OUTDOORSMAN) >= 35)) then begin
+        giq_option(1, NAME, 184, Node015, NEUTRAL_REACTION);
+    end
+    giq_option(1, NAME, 185, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node011
+begin
+    party_remove(self_obj);
+    set_global_var(GVAR_NCR_CATTLE_TIME_MIN, 2);
+    if ((game_time_in_seconds - local_var(8)) <= (3600 * 24 * 30)) then begin
+        Reply(110);
+    end
+    if (((game_time_in_seconds - local_var(8)) > (3600 * 24 * 30)) and ((game_time_in_seconds - local_var(8)) <= (3600 * 24 * 120))) then begin
+        Reply(111);
+    end
+    if ((game_time_in_seconds - local_var(8)) > (3600 * 24 * 120)) then begin
+        Reply(113);
+    end
+    giq_option(1, NAME, 114, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node012
+begin
+    Reply(120);
+    giq_option(1, NAME, 121, Node016, NEUTRAL_REACTION);
+    giq_option(1, NAME, 122, Node016, NEUTRAL_REACTION);
+    giq_option(1, NAME, 123, Node019, NEUTRAL_REACTION);
+    giq_option(1, NAME, 124, Node010, NEUTRAL_REACTION);
+end
+
+procedure Node016
+begin
+    party_remove(self_obj);
+    set_global_var(GVAR_NCR_CATTLE_TIME_MIN, 3);
+    if ((game_time_in_seconds - local_var(8)) <= (3600 * 24 * 30)) then begin
+        Reply(160);
+    end
+    if (((game_time_in_seconds - local_var(8)) > (3600 * 24 * 30)) and ((game_time_in_seconds - local_var(8)) <= (3600 * 24 * 120))) then begin
+        Reply(161);
+    end
+    if ((game_time_in_seconds - local_var(8)) > (3600 * 24 * 120)) then begin
+        Reply(162);
+    end
+    giq_option(1, NAME, 163, NodeIsGoingHome, NEUTRAL_REACTION);
+end
+
+procedure Node019
+begin
+    party_remove(self_obj);
+    set_global_var(GVAR_NCR_CATTLE_TIME_MIN, 3);
+    Reply(190);
+    giq_option(1, NAME, 191, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node014
+begin
+    set_global_var(GVAR_NCR_CATTLE_TIME_MIN, 1);
+    party_add(self_obj);
+    Reply(140);
+    giq_option(1, NAME, 141, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node015
+begin
+    variable LVar0 := 0;
+    LVar0 := random(1, 6);
+    if (LVar0 == 1) then begin
+        Reply(150);
+    end
+    if (LVar0 == 2) then begin
+        Reply(151);
+    end
+    if (LVar0 == 3) then begin
+        Reply(152);
+    end
+    if (LVar0 == 4) then begin
+        Reply(153);
+    end
+    if (LVar0 == 5) then begin
+        Reply(154);
+    end
+    if (LVar0 == 6) then begin
+        Reply(155);
+    end
+    giq_option(1, NAME, 156, Node018, NEUTRAL_REACTION);
+end
+
+procedure Node013
+begin
+    Reply(130);
+    giq_option(1, NAME, 131, Node017a, NEUTRAL_REACTION);
+    giq_option(1, NAME, 132, Node017b, NEUTRAL_REACTION);
+    giq_option(1, NAME, 133, Node017c, NEUTRAL_REACTION);
+end
+
+procedure Node017
+begin
+    Reply(170);
+    giq_option(1, NAME, 171, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node017a
+begin
+    set_local_var(9, 3);
+    call Node017();
+end
+
+procedure Node017b
+begin
+    set_local_var(9, 6);
+    call Node017();
+end
+
+procedure Node017c
+begin
+    set_local_var(9, 10);
+    call Node017();
+end
+
+procedure NodeIsGoingHome
+begin
+    set_global_var(GVAR_NCR_CATTLE_TIME_MIN, 4);
+    move_to(self_obj, 1, 2);
+end
+
+procedure Node999
+begin
+    already_talk := 0;
+end
+
+procedure Node998
+begin
+    already_talk := 0;
+    set_local_var(2, 1);
+    set_local_var(4, 1);
+end
