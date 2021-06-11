@@ -1,5 +1,5 @@
 diff --git a/Mods/MegaMod/Original/DCORPHN2.ssl b/Mods/MegaMod/ReDefine/DCORPHN2.ssl
-index e2d2a73..fafcb24 100644
+index e2d2a73..d91f683 100644
 --- a/Mods/MegaMod/Original/DCORPHN2.ssl
 +++ b/Mods/MegaMod/ReDefine/DCORPHN2.ssl
 @@ -63,10 +63,10 @@ begin
@@ -24,7 +24,12 @@ index e2d2a73..fafcb24 100644
                      if (Trying_To_Steal == 0) then begin
                          Trying_To_Steal := 1;
                          call poziv();
-@@ -90,7 +90,7 @@ begin
+@@ -86,11 +86,11 @@ begin
+         end
+     end
+     else begin
+-        if (critter_inven_obj(self_obj, -2) > 0) then begin
++        if (inven_count(self_obj) > 0) then begin
              if ((tile_distance_objs(self_obj, dude_obj) > 8) or (tile_num(self_obj) != local_var(4))) then begin
                  temp_owner := 0;
                  temp_box := 0;
@@ -33,6 +38,17 @@ index e2d2a73..fafcb24 100644
                      if (tubby_obj != 0) then begin
                          if (temp_owner != 0) then begin
                              if (tile_distance_objs(self_obj, tubby_obj) < tile_distance_objs(self_obj, temp_owner)) then begin
+@@ -120,8 +120,8 @@ begin
+                     if (tile_distance_objs(self_obj, temp_owner) <= 4) then begin
+                         inven_value := 0;
+                         inven_num := 0;
+-                        while (inven_num < critter_inven_obj(self_obj, -2)) do begin
+-                            inven_value := inven_value + (proto_data(obj_pid(inven_cmds(self_obj, 13, inven_num)), 14) * obj_is_carrying_obj_pid(self_obj, obj_pid(inven_cmds(self_obj, 13, inven_num))));
++                        while (inven_num < inven_count(self_obj)) do begin
++                            inven_value := inven_value + (proto_data(obj_pid(inven_ptr(self_obj, inven_num)), 14) * obj_is_carrying_obj_pid(self_obj, obj_pid(inven_ptr(self_obj, inven_num))));
+                             inven_num := inven_num + 1;
+                         end
+                         inven_value := 25 * inven_value / 100;
 @@ -134,7 +134,7 @@ begin
                              animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(temp_owner), rotation_to_tile(tile_num(temp_owner), tile_num(self_obj)), 1), 1);
                          end
@@ -76,11 +92,25 @@ index e2d2a73..fafcb24 100644
              set_local_var(11, 1);
          end
      end
-@@ -218,7 +218,7 @@ begin
+@@ -208,17 +208,17 @@ begin
+             restock_obj := obj_carrying_pid_obj(self_obj, 567);
+             if (obj_type(self_obj) == 1) then begin
+                 restock_obj := obj_carrying_pid_obj(self_obj, 567);
+-                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                    if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                        restock_obj := critter_inven_obj(self_obj, 0);
++                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                         rm_obj_from_inven(self_obj, restock_obj);
+                         add_obj_to_inven(self_obj, restock_obj);
+                     end
                  end
                  else begin
-                     if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                    if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
 -                        metarule(43, self_obj);
++                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
 +                        inven_unwield(self_obj);
                      end
                  end
@@ -601,6 +631,19 @@ index e2d2a73..fafcb24 100644
          call Attempted_Theft();
      end
  end
+@@ -715,9 +715,9 @@ begin
+     LVar1 := roll_vs_skill(self_obj, 10, 0);
+     if (is_success(LVar1)) then begin
+         if (random(1, 10) <= (3 + (2 * is_critical(LVar1)))) then begin
+-            LVar0 := random(0, critter_inven_obj(dude_obj, -2) - 1);
+-            LVar2 := inven_cmds(dude_obj, 13, LVar0);
+-            if ((critter_inven_obj(dude_obj, 1) != LVar2) and (critter_inven_obj(dude_obj, 2) != LVar2) and (critter_inven_obj(dude_obj, 0) != LVar2)) then begin
++            LVar0 := random(0, inven_count(dude_obj) - 1);
++            LVar2 := inven_ptr(dude_obj, LVar0);
++            if ((critter_inven_obj(dude_obj, INVEN_TYPE_RIGHT_HAND) != LVar2) and (critter_inven_obj(dude_obj, INVEN_TYPE_LEFT_HAND) != LVar2) and (critter_inven_obj(dude_obj, INVEN_TYPE_WORN) != LVar2)) then begin
+                 debug_msg("\nOrphan Stole Inventory Item #" + LVar0 + ".");
+                 LVar3 := rm_mult_objs_from_inven(dude_obj, LVar2, 1);
+                 add_mult_objs_to_inven(self_obj, LVar2, 1);
 @@ -735,7 +735,7 @@ begin
      end
      reg_anim_func(2, self_obj);
@@ -676,8 +719,12 @@ index e2d2a73..fafcb24 100644
              set_local_var(11, 2);
          end
      end
-@@ -815,7 +815,7 @@ begin
-     if (critter_inven_obj(self_obj, -2) > 0) then begin
+@@ -812,10 +812,10 @@ end
+ 
+ procedure map_exit_p_proc
+ begin
+-    if (critter_inven_obj(self_obj, -2) > 0) then begin
++    if (inven_count(self_obj) > 0) then begin
          temp_owner := 0;
          temp_box := 0;
 -        if (cur_map_index == 6) then begin
