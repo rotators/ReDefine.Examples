@@ -137,37 +137,40 @@ function IniToHeader()
     # poor man's dos2unix
     sed -ri 's/\r//g' $header
 
-   # remove all lines except sections and specific key
-   sed -ri "/(^[\\t\\ ]*\\[.+\\]|^[\\t\\ ]*${key})/!d" $header
+    # remove all blanks at end of line
+    sed -ri 's/[\t\ ]+$//g' $header
 
-   # remove everything after section name
-   sed -ri 's/\].*/]/' $header
+    # remove all lines except sections and specific key
+    sed -ri "/(^[\\t\\ ]*\\[.+\\]|^[\\t\\ ]*${key})/!d" $header
 
-   # replace keys with its values only
-   sed -ri "s/^[\\t\\ ]*${key}[\\t\\ ]*=[\\t\\ ]*(.+)/\\1/" $header
-   sed -ri "s/[\\t\\ ]*;.*//" $header
+    # remove everything after section name
+    sed -ri 's/\].*/]/g' $header
 
-   # uppercase all lines
-   sed -ri 's/^(.*)$/\U\1/' $header
+    # replace keys with its values only
+    sed -ri "s/^[\\t\\ ]*${key}[\\t\\ ]*=[\\t\\ ]*(.+)/\\1/" $header
+    sed -ri "s/[\\t\\ ]*;.*//" $header
 
-   # remove invalid characters
-   sed -ri 's/[\,]+//g' $header
+    # uppercase all lines
+    sed -ri 's/^(.*)$/\U\1/' $header
 
-   # replace invalid characters with _
-   sed -ri 's/[-\ ]+/_/g' $header
+    # remove invalid characters
+    sed -ri 's/[\,]+//g' $header
 
-   # merge lines pairs into single line with value and name
-   sed -ri 'N;s/^\[(.+)\]\n(.+)/\2 \1/Mg' $header
+    # replace invalid characters with _
+    sed -ri 's/[-\ ]+/_/g' $header
 
-   # sort by value
-   sort -h -o $header $header
+    # merge lines pairs into single line with value and name
+    sed -ri 'N;s/^\[(.+)\]\n(.+)/\2 \1/Mg' $header
 
-   # create defines
-   if [ -n "$prefix" ]; then
-      sed -ri "s/^(.+) (.+)$/#define ${prefix}_\2 \1/" $header
-   else
-      sed -ri "s/^(.+) (.+)$/#define \2 \1/" $header
-   fi
+    # sort by value
+    sort -h -o $header $header
+
+    # create defines
+    if [ -n "$prefix" ]; then
+       sed -ri "s/^(.+) (.+)$/#define ${prefix}_\2 \1/" $header
+    else
+       sed -ri "s/^(.+) (.+)$/#define \2 \1/" $header
+    fi
 }
 
 # prettify and add include guards, for no good reason

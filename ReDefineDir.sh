@@ -10,5 +10,5 @@ fi
 dir="$1"
 
 find "$(echo "$dir" | sed -re 's![/]+$!/!')" -type f -iname '*.zip' | sort | while read zip; do
-    echo ./ReDefineOne.sh ${zip//\.\//}
+    ./ReDefineOne.sh ${zip//\.\//}
 done
