@@ -49,6 +49,7 @@
 #define AI_PRIMITIVE_FEMALE                (43)
 #define AI_OLD_WOMAN                       (44)
 #define AI_SECURITY_ROBOT                  (45)
+#define AI_ROBOTRON                        (46)
 #define AI_PARTY_ROBOTRONJAPAN_BERSERK     (47)
 #define AI_PARTY_ROBOTRONJAPAN_AGGRESSIVE  (48)
 #define AI_PARTY_ROBOTRONJAPAN_DEFENSIVE   (49)
@@ -79,10 +80,10 @@
 #define AI_PARTY_KIRK_DEFENSIVE            (74)
 #define AI_PARTY_KIRK_COWARD               (75)
 #define AI_PARTY_KIRK_CUSTOM               (76)
-#define AI_PARTY_ROBOTRON_BERSERK          (76)
-#define AI_PARTY_ROBOTRON_AGGRESSIVE       (77)
-#define AI_PARTY_ROBOTRON_DEFENSIVE        (78)
-#define AI_PARTY_ROBOTRON_COWARD           (79)
-#define AI_PARTY_ROBOTRON_CUSTOM           (80)
+#define AI_PARTY_ROBOTRON_BERSERK          (77)
+#define AI_PARTY_ROBOTRON_AGGRESSIVE       (78)
+#define AI_PARTY_ROBOTRON_DEFENSIVE        (79)
+#define AI_PARTY_ROBOTRON_COWARD           (80)
+#define AI_PARTY_ROBOTRON_CUSTOM           (81)
 
 #endif // __AI__ //
