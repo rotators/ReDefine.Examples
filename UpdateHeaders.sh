@@ -69,4 +69,7 @@ PutHeader define_extra.h
 GetHeader command_lite.h
 PutHeader command_lite.h
 
+GetHeader sfall.h
+PutHeader sfall.h
+
 rm -fr $dir_sfall $dir_orig $dir_edit
