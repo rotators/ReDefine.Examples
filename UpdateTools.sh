@@ -6,12 +6,13 @@ function GetToolCMake()
 {
     local name=$1
     local repo=$2
-    local src=$3
+    local branch=$3
+    local src=$4
 
     local dir=_Tools/$name.work
 
     rm -fr $dir
-    git clone $repo $dir/Repo
+    git clone -b $branch $repo $dir/Repo
     cmake -S $dir/Repo/$src -B $dir/Build
     cmake --build $dir/Build --config Release
     cp $dir/Build/$name _Tools/$name
@@ -33,9 +34,9 @@ function GetToolRaw()
 }
 
 if [ ! -f _Tools/int2ssl ]; then
-   GetToolCMake int2ssl https://github.com/sfall-team/int2ssl ""
+   GetToolCMake int2ssl https://github.com/wipe2238/int2ssl detach-g-streams ""
 fi
 
 if [ ! -f _Tools/ReDefine ]; then
-   GetToolCMake ReDefine https://github.com/rotators/ReDefine Source
+   GetToolCMake ReDefine https://github.com/rotators/ReDefine master Source
 fi
