@@ -33,7 +33,7 @@ function GetToolRaw()
 }
 
 if [ ! -f _Tools/int2ssl ]; then
-   GetToolCMake int2ssl https://github.com/FakelsHub/int-sslc int2ssl
+   GetToolCMake int2ssl https://github.com/sfall-team/int2ssl ""
 fi
 
 if [ ! -f _Tools/ReDefine ]; then
