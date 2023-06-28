@@ -34,7 +34,7 @@ function GetToolRaw()
 }
 
 if [ ! -f _Tools/int2ssl ]; then
-   GetToolCMake int2ssl https://github.com/wipe2238/int2ssl detach-g-streams ""
+   GetToolCMake int2ssl https://github.com/sfall-team/int2ssl master ""
 fi
 
 if [ ! -f _Tools/ReDefine ]; then
