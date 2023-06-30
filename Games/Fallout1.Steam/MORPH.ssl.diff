@@ -1,0 +1,792 @@
+diff --git a/Games/Fallout1.Steam/Original/MORPH.ssl b/Games/Fallout1.Steam/ReDefine/MORPH.ssl
+index 3766f34..bde57ca 100644
+--- a/Games/Fallout1.Steam/Original/MORPH.ssl
++++ b/Games/Fallout1.Steam/ReDefine/MORPH.ssl
+@@ -123,23 +123,23 @@ begin
+     if (Only_Once) then begin
+         Only_Once := 0;
+         if (cur_map_index == 18) then begin
+-            critter_add_trait(self_obj, 1, 6, 20);
++            critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 20);
+         end
+         else begin
+-            critter_add_trait(self_obj, 1, 6, 55);
++            critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 55);
+         end
+-        critter_add_trait(self_obj, 1, 5, 82);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_COC_MORPHEUS);
+     end
+-    if (script_action == 11) then begin
++    if (script_action == talk_proc) then begin
+         call do_dialogue();
+     end
+     else begin
+-        if ((script_action == 21) or (script_action == 3)) then begin
++        if ((script_action == look_at_proc) or (script_action == description_proc)) then begin
+             script_overrides;
+-            display_msg(message_str(53, 100));
++            display_mstr(100);
+         end
+         else begin
+-            if (script_action == 22) then begin
++            if (script_action == timed_event_proc) then begin
+                 if (fixed_param == 1) then begin
+                     if (obj_can_see_obj(self_obj, dude_obj)) then begin
+                         dialogue_system_enter;
+@@ -155,43 +155,43 @@ begin
+                 end
+             end
+             else begin
+-                if (script_action == 18) then begin
++                if (script_action == destroy_proc) then begin
+                     if (source_obj == dude_obj) then begin
+-                        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
+-                            set_global_var(156, 1);
+-                            set_global_var(157, 0);
++                        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++                            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++                            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+                         end
+-                        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
+-                            set_global_var(157, 1);
+-                            set_global_var(156, 0);
++                        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
++                            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++                            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+                         end
+-                        set_global_var(160, global_var(160) + 1);
+-                        if ((global_var(160) % 6) == 0) then begin
+-                            set_global_var(155, global_var(155) + 1);
++                        set_global_var(GVAR_BAD_MONSTER, global_var(GVAR_BAD_MONSTER) + 1);
++                        if ((global_var(GVAR_BAD_MONSTER) % 6) == 0) then begin
++                            set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) + 1);
+                         end
+                     end
+-                    display_msg(message_str(53, 500));
++                    display_mstr(500);
+                     give_exp_points(1000);
+                 end
+                 else begin
+-                    if (script_action == 4) then begin
++                    if (script_action == pickup_proc) then begin
+                         set_local_var(5, 2);
+                     end
+                     else begin
+-                        if (script_action == 14) then begin
++                        if (script_action == damage_proc) then begin
+                             set_local_var(5, 1);
+                         end
+                         else begin
+-                            if (script_action == 12) then begin
+-                                if (global_var(241) == 1) then begin
+-                                    set_global_var(241, 2);
++                            if (script_action == critter_proc) then begin
++                                if (global_var(GVAR_MORPHEUS_DELIVERS_PLAYER) == 1) then begin
++                                    set_global_var(GVAR_MORPHEUS_DELIVERS_PLAYER, 2);
+                                     add_timer_event(Master_Ptr, game_ticks(5), 1);
+                                     add_timer_event(self_obj, game_ticks(5), 2);
+                                     dialogue_system_enter;
+                                 end
+                                 if (local_var(5) == 2) then begin
+                                     set_local_var(5, 1);
+-                                    attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++                                    attack(dude_obj);
+                                 end
+                                 if (tile_num(self_obj) == 23457) then begin
+                                     set_obj_visibility(self_obj, 1);
+@@ -208,14 +208,14 @@ end
+ procedure do_dialogue
+ begin
+     call get_reaction();
+-    MALE := get_critter_stat(dude_obj, 34) == 0;
++    MALE := dude_gender == 0;
+     if (local_var(5) != 0) then begin
+-        float_msg(self_obj, message_str(766, 172), 2);
++        float_msg(self_obj, message_str(SCRIPT_GENCHAT, 172), FLOAT_MSG_RED);
+         call morphcbt();
+     end
+     else begin
+-        if (global_var(241) == 2) then begin
+-            set_global_var(241, 3);
++        if (global_var(GVAR_MORPHEUS_DELIVERS_PLAYER) == 2) then begin
++            set_global_var(GVAR_MORPHEUS_DELIVERS_PLAYER, 3);
+             call morph66();
+             animate_move_obj_to_tile(self_obj, 23457, 0);
+         end
+@@ -233,8 +233,8 @@ begin
+                     end_dialogue;
+                 end
+                 else begin
+-                    if (global_var(241) == 3) then begin
+-                        float_msg(self_obj, message_str(766, 171), 2);
++                    if (global_var(GVAR_MORPHEUS_DELIVERS_PLAYER) == 3) then begin
++                        float_msg(self_obj, message_str(SCRIPT_GENCHAT, 171), FLOAT_MSG_RED);
+                     end
+                     else begin
+                         start_gdialog(53, self_obj, 4, 2, 8);
+@@ -260,23 +260,23 @@ end
+ 
+ procedure morph02
+ begin
+-    gsay_reply(53, 101);
+-    giq_option(4, 53, 102, morph02_1, 50);
+-    giq_option(5, 53, 103, morph02_3, 50);
+-    giq_option(4, 53, message_str(53, 104) + proto_data(obj_pid(dude_obj), 1) + message_str(53, 105), morph27, 50);
+-    giq_option(4, 53, 106, morph06, 51);
+-    giq_option(-3, 53, 107, morph02a, 50);
++    Reply(101);
++    giq_option(4, NAME, 102, morph02_1, NEUTRAL_REACTION);
++    giq_option(5, NAME, 103, morph02_3, NEUTRAL_REACTION);
++    giq_option(4, NAME, mstr(104) + proto_data(obj_pid(dude_obj), 1) + mstr(105), morph27, NEUTRAL_REACTION);
++    giq_option(4, NAME, 106, morph06, BAD_REACTION);
++    giq_option(-3, NAME, 107, morph02a, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph02a
+ begin
+-    gsay_message(53, 108, 51);
++    gsay_message(NAME, 108, BAD_REACTION);
+     call morphcbt();
+ end
+ 
+ procedure morph02_1
+ begin
+-    if (obj_pid(critter_inven_obj(dude_obj, 0)) == 113) then begin
++    if (obj_pid(critter_inven_obj(dude_obj, INVEN_TYPE_WORN)) == 113) then begin
+         call morph02_2();
+     end
+     else begin
+@@ -306,12 +306,12 @@ end
+ 
+ procedure morph03
+ begin
+-    gsay_reply(53, 109);
+-    giq_option(4, 53, 110, morph03_1, 50);
+-    giq_option(5, 53, 111, morph03_2, 50);
+-    giq_option(4, 53, 112, morph23, 50);
+-    giq_option(4, 53, 113, morph24, 51);
+-    giq_option(4, 53, 114, morph06, 50);
++    Reply(109);
++    giq_option(4, NAME, 110, morph03_1, NEUTRAL_REACTION);
++    giq_option(5, NAME, 111, morph03_2, NEUTRAL_REACTION);
++    giq_option(4, NAME, 112, morph23, NEUTRAL_REACTION);
++    giq_option(4, NAME, 113, morph24, BAD_REACTION);
++    giq_option(4, NAME, 114, morph06, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph03_1
+@@ -336,36 +336,36 @@ end
+ 
+ procedure morph04
+ begin
+-    gsay_message(53, 115, 50);
++    gsay_message(NAME, 115, NEUTRAL_REACTION);
+     call morphx();
+ end
+ 
+ procedure morph04a
+ begin
+-    float_msg(self_obj, message_str(53, 116), 7);
++    float_msg(self_obj, mstr(116), FLOAT_MSG_LIGHT_RED);
+     call morphcbt();
+ end
+ 
+ procedure morph05
+ begin
+-    gsay_reply(53, 117);
+-    giq_option(4, 53, 118, morph05a, 51);
+-    giq_option(4, 53, 119, morph05b, 50);
+-    giq_option(4, 53, 120, morph06, 51);
++    Reply(117);
++    giq_option(4, NAME, 118, morph05a, BAD_REACTION);
++    giq_option(4, NAME, 119, morph05b, NEUTRAL_REACTION);
++    giq_option(4, NAME, 120, morph06, BAD_REACTION);
+ end
+ 
+ procedure morph06
+ begin
+-    gsay_message(53, 121, 51);
++    gsay_message(NAME, 121, BAD_REACTION);
+     call morphcbt();
+ end
+ 
+ procedure morph07
+ begin
+-    gsay_reply(53, 122);
+-    giq_option(4, 53, 123, morph08, 50);
+-    giq_option(4, 53, 124, morph16, 50);
+-    giq_option(6, 53, 125, morph07_1, 50);
++    Reply(122);
++    giq_option(4, NAME, 123, morph08, NEUTRAL_REACTION);
++    giq_option(4, NAME, 124, morph16, NEUTRAL_REACTION);
++    giq_option(6, NAME, 125, morph07_1, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph07_1
+@@ -380,27 +380,27 @@ end
+ 
+ procedure morph08
+ begin
+-    gsay_reply(53, 126);
+-    giq_option(5, 53, 127, morph08a, 50);
+-    giq_option(4, 53, 128, morph12, 50);
+-    giq_option(5, 53, 129, morph14, 50);
++    Reply(126);
++    giq_option(5, NAME, 127, morph08a, NEUTRAL_REACTION);
++    giq_option(4, NAME, 128, morph12, NEUTRAL_REACTION);
++    giq_option(5, NAME, 129, morph14, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph09
+ begin
+-    gsay_reply(53, 130);
+-    giq_option(5, 53, 131, morph10, 50);
+-    giq_option(5, 53, 132, morph10, 50);
+-    giq_option(4, 53, 133, morph06, 51);
+-    giq_option(4, 53, 134, morph11, 51);
++    Reply(130);
++    giq_option(5, NAME, 131, morph10, NEUTRAL_REACTION);
++    giq_option(5, NAME, 132, morph10, NEUTRAL_REACTION);
++    giq_option(4, NAME, 133, morph06, BAD_REACTION);
++    giq_option(4, NAME, 134, morph11, BAD_REACTION);
+ end
+ 
+ procedure morph10
+ begin
+-    gsay_reply(53, 135);
+-    giq_option(4, 53, 136, morph11, 51);
+-    giq_option(4, 53, 137, morph12, 50);
+-    giq_option(4, 53, 138, morph10_1, 50);
++    Reply(135);
++    giq_option(4, NAME, 136, morph11, BAD_REACTION);
++    giq_option(4, NAME, 137, morph12, NEUTRAL_REACTION);
++    giq_option(4, NAME, 138, morph10_1, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph10_1
+@@ -416,56 +416,56 @@ end
+ 
+ procedure morph11
+ begin
+-    gsay_message(53, 139, 51);
++    gsay_message(NAME, 139, BAD_REACTION);
+     call morphcbt();
+ end
+ 
+ procedure morph12
+ begin
+-    gsay_reply(53, 140);
+-    giq_option(4, 53, 141, morphx2, 50);
+-    giq_option(4, 53, 142, morphcbt, 51);
++    Reply(140);
++    giq_option(4, NAME, 141, morphx2, NEUTRAL_REACTION);
++    giq_option(4, NAME, 142, morphcbt, BAD_REACTION);
+ end
+ 
+ procedure morph13
+ begin
+-    gsay_message(53, 143, 50);
++    gsay_message(NAME, 143, NEUTRAL_REACTION);
+     call morphx2();
+ end
+ 
+ procedure morph14
+ begin
+-    gsay_reply(53, 144);
+-    giq_option(4, 53, 145, morph12, 50);
+-    giq_option(4, 53, 146, morph11, 51);
+-    giq_option(4, 53, 147, morph15, 51);
++    Reply(144);
++    giq_option(4, NAME, 145, morph12, NEUTRAL_REACTION);
++    giq_option(4, NAME, 146, morph11, BAD_REACTION);
++    giq_option(4, NAME, 147, morph15, BAD_REACTION);
+ end
+ 
+ procedure morph15
+ begin
+-    gsay_message(53, 148, 51);
++    gsay_message(NAME, 148, BAD_REACTION);
+     call morphcbt();
+ end
+ 
+ procedure morph16
+ begin
+-    gsay_reply(53, 149);
+-    giq_option(4, 53, 150, morph17, 50);
+-    giq_option(4, 53, 151, morph17, 50);
++    Reply(149);
++    giq_option(4, NAME, 150, morph17, NEUTRAL_REACTION);
++    giq_option(4, NAME, 151, morph17, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph17
+ begin
+-    gsay_reply(53, 152);
+-    giq_option(4, 53, 153, morph18, 50);
+-    giq_option(4, 53, 154, morph18, 50);
++    Reply(152);
++    giq_option(4, NAME, 153, morph18, NEUTRAL_REACTION);
++    giq_option(4, NAME, 154, morph18, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph18
+ begin
+-    gsay_reply(53, 155);
+-    giq_option(4, 53, 156, morph18_1, 50);
+-    giq_option(4, 53, 157, morph18_2, 50);
++    Reply(155);
++    giq_option(4, NAME, 156, morph18_1, NEUTRAL_REACTION);
++    giq_option(4, NAME, 157, morph18_2, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph18_1
+@@ -490,55 +490,55 @@ end
+ 
+ procedure morph19
+ begin
+-    gsay_reply(53, 158);
+-    giq_option(4, 53, 159, morphcbt, 51);
+-    giq_option(4, 53, 160, morphx2, 50);
++    Reply(158);
++    giq_option(4, NAME, 159, morphcbt, BAD_REACTION);
++    giq_option(4, NAME, 160, morphx2, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph20
+ begin
+-    gsay_message(53, 161, 51);
++    gsay_message(NAME, 161, BAD_REACTION);
+     call morphcbt();
+ end
+ 
+ procedure morph21
+ begin
+-    gsay_reply(53, 162);
+-    giq_option(4, 53, 163, morph08, 50);
+-    giq_option(4, 53, 164, morph16, 50);
++    Reply(162);
++    giq_option(4, NAME, 163, morph08, NEUTRAL_REACTION);
++    giq_option(4, NAME, 164, morph16, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph23
+ begin
+-    gsay_reply(53, 165);
+-    giq_option(4, 53, 166, morph12, 50);
+-    giq_option(4, 53, 167, morph16, 50);
+-    giq_option(4, 53, 168, morph11, 51);
+-    giq_option(4, 53, 169, morph15, 51);
++    Reply(165);
++    giq_option(4, NAME, 166, morph12, NEUTRAL_REACTION);
++    giq_option(4, NAME, 167, morph16, NEUTRAL_REACTION);
++    giq_option(4, NAME, 168, morph11, BAD_REACTION);
++    giq_option(4, NAME, 169, morph15, BAD_REACTION);
+ end
+ 
+ procedure morph24
+ begin
+-    gsay_reply(53, 170);
+-    giq_option(4, 53, 171, morphcbt, 51);
+-    giq_option(7, 53, 172, morphcbt, 51);
+-    giq_option(4, 53, 173, morphcbt, 51);
++    Reply(170);
++    giq_option(4, NAME, 171, morphcbt, BAD_REACTION);
++    giq_option(7, NAME, 172, morphcbt, BAD_REACTION);
++    giq_option(4, NAME, 173, morphcbt, BAD_REACTION);
+ end
+ 
+ procedure morph26
+ begin
+-    gsay_reply(53, 174);
+-    giq_option(4, 53, 175, morph12, 50);
+-    giq_option(5, 53, 176, morph16, 50);
+-    giq_option(4, 53, 177, morph11, 51);
+-    giq_option(4, 53, 178, morph15, 51);
++    Reply(174);
++    giq_option(4, NAME, 175, morph12, NEUTRAL_REACTION);
++    giq_option(5, NAME, 176, morph16, NEUTRAL_REACTION);
++    giq_option(4, NAME, 177, morph11, BAD_REACTION);
++    giq_option(4, NAME, 178, morph15, BAD_REACTION);
+ end
+ 
+ procedure morph27
+ begin
+-    gsay_reply(53, 179);
+-    giq_option(4, 53, 180, morph02_1, 50);
+-    giq_option(4, 53, 181, morph27_1, 50);
++    Reply(179);
++    giq_option(4, NAME, 180, morph02_1, NEUTRAL_REACTION);
++    giq_option(4, NAME, 181, morph27_1, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph27_1
+@@ -553,46 +553,46 @@ end
+ 
+ procedure morph28
+ begin
+-    gsay_reply(53, 182);
+-    giq_option(5, 53, 183, morph29, 50);
+-    giq_option(4, 53, 184, morphend, 50);
+-    giq_option(-3, 53, 185, morph42c, 50);
++    Reply(182);
++    giq_option(5, NAME, 183, morph29, NEUTRAL_REACTION);
++    giq_option(4, NAME, 184, morphend, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 185, morph42c, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph29
+ begin
+-    gsay_reply(53, 186);
+-    giq_option(4, 53, 187, morph30, 50);
+-    giq_option(4, 53, 188, morphend, 50);
++    Reply(186);
++    giq_option(4, NAME, 187, morph30, NEUTRAL_REACTION);
++    giq_option(4, NAME, 188, morphend, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph30
+ begin
+     gsay_reply(0, 0);
+-    giq_option(4, 53, 189, morph31, 50);
+-    giq_option(4, 53, 190, morphend, 50);
+-    giq_option(4, 53, 191, morph42a, 50);
++    giq_option(4, NAME, 189, morph31, NEUTRAL_REACTION);
++    giq_option(4, NAME, 190, morphend, NEUTRAL_REACTION);
++    giq_option(4, NAME, 191, morph42a, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph31
+ begin
+-    gsay_reply(53, 192);
+-    giq_option(4, 53, 193, morph32, 50);
+-    giq_option(4, 53, 194, morph39, 50);
++    Reply(192);
++    giq_option(4, NAME, 193, morph32, NEUTRAL_REACTION);
++    giq_option(4, NAME, 194, morph39, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph32
+ begin
+-    gsay_reply(53, 195);
+-    giq_option(4, 53, 196, morph32a, 51);
+-    giq_option(4, 53, 197, morph38, 50);
++    Reply(195);
++    giq_option(4, NAME, 196, morph32a, BAD_REACTION);
++    giq_option(4, NAME, 197, morph38, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph33
+ begin
+-    gsay_reply(53, 198);
+-    giq_option(4, 53, 199, morph34, 50);
+-    giq_option(4, 53, 200, morph33_1, 50);
++    Reply(198);
++    giq_option(4, NAME, 199, morph34, NEUTRAL_REACTION);
++    giq_option(4, NAME, 200, morph33_1, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph33_1
+@@ -607,41 +607,41 @@ end
+ 
+ procedure morph34
+ begin
+-    gsay_message(53, 201, 50);
++    gsay_message(NAME, 201, NEUTRAL_REACTION);
+     call morphx4();
+ end
+ 
+ procedure morph35
+ begin
+-    gsay_reply(53, 202);
+-    giq_option(4, 53, 203, morph36, 50);
+-    giq_option(4, 53, 204, morphend, 50);
++    Reply(202);
++    giq_option(4, NAME, 203, morph36, NEUTRAL_REACTION);
++    giq_option(4, NAME, 204, morphend, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph36
+ begin
+-    gsay_message(53, 205, 50);
++    gsay_message(NAME, 205, NEUTRAL_REACTION);
+     call morph30();
+ end
+ 
+ procedure morph37
+ begin
+-    gsay_message(53, 206, 49);
++    gsay_message(NAME, 206, GOOD_REACTION);
+     call morphx4();
+ end
+ 
+ procedure morph38
+ begin
+-    gsay_reply(53, 207);
+-    giq_option(4, 53, 208, morph36, 50);
+-    giq_option(4, 53, 209, morphend, 50);
++    Reply(207);
++    giq_option(4, NAME, 208, morph36, NEUTRAL_REACTION);
++    giq_option(4, NAME, 209, morphend, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph39
+ begin
+-    gsay_reply(53, 210);
+-    giq_option(4, 53, 211, morph39a, 51);
+-    giq_option(4, 53, 212, morph39_1, 50);
++    Reply(210);
++    giq_option(4, NAME, 211, morph39a, BAD_REACTION);
++    giq_option(4, NAME, 212, morph39_1, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph39_1
+@@ -650,28 +650,28 @@ end
+ 
+ procedure morph40
+ begin
+-    gsay_message(53, 213, 50);
++    gsay_message(NAME, 213, NEUTRAL_REACTION);
+     call morph30();
+ end
+ 
+ procedure morph41
+ begin
+-    gsay_reply(53, 214);
+-    giq_option(4, 53, 215, morph30, 50);
+-    giq_option(4, 53, 216, morphend, 50);
++    Reply(214);
++    giq_option(4, NAME, 215, morph30, NEUTRAL_REACTION);
++    giq_option(4, NAME, 216, morphend, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph42
+ begin
+-    gsay_reply(53, 217);
+-    giq_option(4, 53, 218, morph36, 50);
+-    giq_option(4, 53, 219, morphend, 50);
++    Reply(217);
++    giq_option(4, NAME, 218, morph36, NEUTRAL_REACTION);
++    giq_option(4, NAME, 219, morphend, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph42a
+ begin
+-    gsay_reply(53, 220);
+-    giq_option(4, 53, 221, morph42a_1, 50);
++    Reply(220);
++    giq_option(4, NAME, 221, morph42a_1, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph42a_1
+@@ -686,119 +686,119 @@ end
+ 
+ procedure morph42b
+ begin
+-    gsay_message(53, 222, 50);
++    gsay_message(NAME, 222, NEUTRAL_REACTION);
+     call morphx2();
+ end
+ 
+ procedure morph42c
+ begin
+-    gsay_message(53, 223, 50);
++    gsay_message(NAME, 223, NEUTRAL_REACTION);
+     call morphx4();
+ end
+ 
+ procedure morph45
+ begin
+-    gsay_message(53, 224, 50);
++    gsay_message(NAME, 224, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph46
+ begin
+-    gsay_message(53, 225, 50);
++    gsay_message(NAME, 225, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph47
+ begin
+-    gsay_message(53, 226, 50);
++    gsay_message(NAME, 226, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph48
+ begin
+-    gsay_message(53, 227, 50);
++    gsay_message(NAME, 227, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph49
+ begin
+-    gsay_message(53, 228, 50);
++    gsay_message(NAME, 228, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph50
+ begin
+-    gsay_message(53, 229, 50);
++    gsay_message(NAME, 229, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph51
+ begin
+-    gsay_message(53, 230, 50);
++    gsay_message(NAME, 230, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph52
+ begin
+-    gsay_message(53, 231, 50);
++    gsay_message(NAME, 231, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph53
+ begin
+-    gsay_message(53, 232, 50);
++    gsay_message(NAME, 232, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph54
+ begin
+-    gsay_message(53, 233, 50);
++    gsay_message(NAME, 233, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph55
+ begin
+-    gsay_message(53, 234, 50);
++    gsay_message(NAME, 234, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph56
+ begin
+-    gsay_message(53, 235, 50);
++    gsay_message(NAME, 235, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph57
+ begin
+-    gsay_message(53, 236, 50);
++    gsay_message(NAME, 236, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph58
+ begin
+-    gsay_message(53, 237, 50);
++    gsay_message(NAME, 237, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph59
+ begin
+-    gsay_message(53, 238, 50);
++    gsay_message(NAME, 238, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph60
+ begin
+-    gsay_message(53, 239, 50);
++    gsay_message(NAME, 239, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph61
+ begin
+-    gsay_message(53, 240, 50);
++    gsay_message(NAME, 240, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph62
+ begin
+-    gsay_message(53, 241, 50);
++    gsay_message(NAME, 241, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph63
+ begin
+-    gsay_message(53, 242, 50);
++    gsay_message(NAME, 242, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph64
+ begin
+-    gsay_message(53, 243, 50);
++    gsay_message(NAME, 243, NEUTRAL_REACTION);
+ end
+ 
+ procedure morph65
+ begin
+-    gsay_message(53, 244, 50);
++    gsay_message(NAME, 244, NEUTRAL_REACTION);
+ end
+ 
+ procedure morphx
+@@ -810,7 +810,7 @@ end
+ procedure morphx2
+ begin
+     deliver_player := 1;
+-    set_global_var(241, 1);
++    set_global_var(GVAR_MORPHEUS_DELIVERS_PLAYER, 1);
+     load_map("mstrlr34.map", 12);
+ end
+ 
+@@ -820,7 +820,7 @@ end
+ 
+ procedure morph66
+ begin
+-    float_msg(self_obj, message_str(53, 245), 2);
++    float_msg(self_obj, mstr(245), FLOAT_MSG_RED);
+ end
+ 
+ procedure morph05a
+@@ -863,31 +863,31 @@ begin
+         set_local_var(0, 50);
+         set_local_var(1, 2);
+         set_local_var(2, 1);
+-        set_local_var(0, local_var(0) + (5 * get_critter_stat(dude_obj, 3)) - 25);
+-        set_local_var(0, local_var(0) + (10 * has_trait(0, dude_obj, 10)));
+-        if (has_trait(0, dude_obj, 39)) then begin
+-            if (global_var(155) > 0) then begin
+-                set_local_var(0, local_var(0) + global_var(155));
++        set_local_var(0, local_var(0) + (5 * dude_charisma) - 25);
++        set_local_var(0, local_var(0) + (10 * has_trait(TRAIT_PERK, dude_obj, PERK_presence)));
++        if (has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality)) then begin
++            if (global_var(GVAR_PLAYER_REPUATION) > 0) then begin
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+         else begin
+             if (local_var(3) == 1) then begin
+-                set_local_var(0, local_var(0) - global_var(155));
++                set_local_var(0, local_var(0) - global_var(GVAR_PLAYER_REPUATION));
+             end
+             else begin
+-                set_local_var(0, local_var(0) + global_var(155));
++                set_local_var(0, local_var(0) + global_var(GVAR_PLAYER_REPUATION));
+             end
+         end
+-        if (global_var(158) > 2) then begin
++        if (global_var(GVAR_CHILDKILLER_REPUATION) > 2) then begin
+             set_local_var(0, local_var(0) - 30);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(160) > (3 * global_var(159))) or (global_var(157) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) + 20);
+         end
+-        if (((global_var(160) + global_var(159)) >= 25) and ((global_var(159) > (2 * global_var(160))) or (global_var(156) == 1))) then begin
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+             set_local_var(0, local_var(0) - 20);
+         end
+         call ReactToLevel();
+@@ -980,6 +980,5 @@ end
+ 
+ procedure Goodbyes
+ begin
+-    exit_line := message_str(634, random(100, 105));
++    exit_line := message_str(SCRIPT_MODREACT, random(100, 105));
+ end
+-

@@ -1,0 +1,250 @@
+procedure start;
+procedure critter_p_proc;
+procedure destroy_p_proc;
+procedure map_enter_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure timed_event_p_proc;
+procedure damage_p_proc;
+procedure GizGuard00;
+procedure GizGuard01;
+procedure GizGuard02;
+procedure GizGuard03;
+procedure GizGuard04;
+procedure GizGuard05;
+procedure GizGuard06;
+procedure GizGuard07;
+procedure GizGuard08;
+procedure GizGuardEnd;
+
+variable hostile;
+variable initialized;
+variable sneak_checked;
+
+import variable removal_ptr;
+import variable weapon_checked;
+
+
+procedure start
+begin
+    if (script_action == critter_proc) then begin
+        call critter_p_proc();
+    end
+    else begin
+        if (script_action == destroy_proc) then begin
+            call destroy_p_proc();
+        end
+        else begin
+            if (script_action == map_enter_proc) then begin
+                call map_enter_p_proc();
+            end
+            else begin
+                if (script_action == pickup_proc) then begin
+                    call pickup_p_proc();
+                end
+                else begin
+                    if (script_action == talk_proc) then begin
+                        call talk_p_proc();
+                    end
+                    else begin
+                        if (script_action == timed_event_proc) then begin
+                            call timed_event_p_proc();
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure critter_p_proc
+begin
+    if (hostile) then begin
+        if (obj_can_see_obj(self_obj, dude_obj)) then begin
+            hostile := 0;
+            attack(dude_obj);
+        end
+    end
+    else begin
+        if (obj_can_see_obj(self_obj, dude_obj)) then begin
+            if (tile_distance_objs(self_obj, dude_obj) < 12) then begin
+                if ((obj_item_subtype(critter_inven_obj(dude_obj, INVEN_TYPE_RIGHT_HAND)) == 3) or (obj_item_subtype(critter_inven_obj(dude_obj, INVEN_TYPE_LEFT_HAND)) == 3) and not(weapon_checked)) then begin
+                    dialogue_system_enter;
+                end
+                else begin
+                    if (using_skill(dude_obj, 8) and not(sneak_checked)) then begin
+                        dialogue_system_enter;
+                    end
+                end
+            end
+        end
+    end
+    if (global_var(GVAR_CURE_JARVIS_8) == 1) then begin
+        if (obj_can_see_obj(self_obj, dude_obj)) then begin
+            attack(dude_obj);
+        end
+    end
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_global_var(GVAR_CURE_JARVIS_8, 1);
+        if (source_obj == dude_obj) then begin
+            if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+                set_global_var(GVAR_BERSERKER_REPUTATION, 1);
+                set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+            end
+            if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(160) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1))) then begin
+                set_global_var(GVAR_CHAMPION_REPUTATION, 1);
+                set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+            end
+            set_global_var(GVAR_BAD_MONSTER, global_var(GVAR_BAD_MONSTER) + 1);
+            if ((global_var(GVAR_BAD_MONSTER) % 6) == 0) then begin
+                set_global_var(GVAR_PLAYER_REPUATION, global_var(GVAR_PLAYER_REPUATION) + 1);
+            end
+        end
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    if (not(obj_is_carrying_obj_pid(self_obj, 41))) then begin
+        item_caps_adjust(self_obj, random(0, 10));
+    end
+    if (global_var(GVAR_LOAD_MAP_INDEX) == 4) then begin
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 87);
+    end
+    else begin
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 13);
+    end
+    if ((global_var(GVAR_GIZMO_DEAD) == 1) or (global_var(GVAR_CAPTURE_GIZMO) == 2)) then begin
+        set_obj_visibility(self_obj, 1);
+        move_to(self_obj, 7000, 0);
+        removal_ptr := self_obj;
+    end
+end
+
+procedure pickup_p_proc
+begin
+    hostile := 1;
+end
+
+procedure talk_p_proc
+begin
+    if ((obj_item_subtype(critter_inven_obj(dude_obj, INVEN_TYPE_RIGHT_HAND)) == 3) or (obj_item_subtype(critter_inven_obj(dude_obj, INVEN_TYPE_LEFT_HAND)) == 3)) then begin
+        call GizGuard00();
+    end
+    else begin
+        if (using_skill(dude_obj, 8)) then begin
+            call GizGuard01();
+        end
+        else begin
+            if (not(local_var(0))) then begin
+                start_gdialog(639, self_obj, 4, -1, -1);
+                gsay_start;
+                call GizGuard02();
+                gsay_end;
+                end_dialogue;
+            end
+            else begin
+                call GizGuard07();
+            end
+        end
+    end
+end
+
+procedure timed_event_p_proc
+begin
+    if (fixed_param == 1) then begin
+        if ((obj_item_subtype(critter_inven_obj(dude_obj, INVEN_TYPE_RIGHT_HAND)) == 3) or (obj_item_subtype(critter_inven_obj(dude_obj, INVEN_TYPE_LEFT_HAND)) == 3)) then begin
+            float_msg(self_obj, mstr(random(100, 103)), FLOAT_MSG_RED);
+            hostile := 1;
+        end
+        else begin
+            weapon_checked := 0;
+        end
+    end
+    else begin
+        if (fixed_param == 2) then begin
+            if (using_skill(dude_obj, 8)) then begin
+                hostile := 1;
+            end
+            else begin
+                sneak_checked := 0;
+            end
+        end
+    end
+end
+
+procedure damage_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_global_var(GVAR_CURE_JARVIS_8, 1);
+    end
+end
+
+procedure GizGuard00
+begin
+    float_msg(self_obj, mstr(random(132, 133)), FLOAT_MSG_RED);
+    weapon_checked := 1;
+    add_timer_event(self_obj, game_ticks(5), 1);
+end
+
+procedure GizGuard01
+begin
+    float_msg(self_obj, mstr(random(104, 106)), FLOAT_MSG_RED);
+    sneak_checked := 1;
+    add_timer_event(self_obj, game_ticks(5), 2);
+end
+
+procedure GizGuard02
+begin
+    set_local_var(0, 1);
+    Reply(107);
+    giq_option(4, NAME, 108, GizGuard03, NEUTRAL_REACTION);
+    giq_option(4, NAME, 109, GizGuard04, NEUTRAL_REACTION);
+    giq_option(4, NAME, 110, GizGuardEnd, NEUTRAL_REACTION);
+    giq_option(-3, NAME, 111, GizGuard08, BAD_REACTION);
+end
+
+procedure GizGuard03
+begin
+    if (is_success(roll_vs_skill(dude_obj, 14, 0))) then begin
+        Reply(112);
+        giq_option(4, NAME, 114, GizGuard05, NEUTRAL_REACTION);
+        giq_option(4, NAME, 115, GizGuard06, NEUTRAL_REACTION);
+    end
+    else begin
+        gsay_message(NAME, 113, BAD_REACTION);
+    end
+end
+
+procedure GizGuard04
+begin
+    gsay_message(NAME, random(116, 119), NEUTRAL_REACTION);
+end
+
+procedure GizGuard05
+begin
+    gsay_message(NAME, 120, NEUTRAL_REACTION);
+end
+
+procedure GizGuard06
+begin
+    gsay_message(NAME, random(121, 124), NEUTRAL_REACTION);
+end
+
+procedure GizGuard07
+begin
+    float_msg(self_obj, mstr(random(125, 130)), FLOAT_MSG_NORMAL);
+end
+
+procedure GizGuard08
+begin
+    gsay_message(NAME, 131, NEUTRAL_REACTION);
+end
+
+procedure GizGuardEnd
+begin
+end
