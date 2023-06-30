@@ -49,18 +49,23 @@ function PutHeader()
 }
 
 rm -fr $dir_sfall $dir_orig $dir_edit
-git clone --quiet https://github.com/phobos2077/sfall.git $dir_sfall
+git clone --quiet -b develop https://github.com/sfall-team/sfall.git $dir_sfall
 
 GetHeader define_lite.h
-SedHeader define_lite.h 's/DEFINE_METARULE_/METARULE_/g'
+# wrong prefix
+SedHeader define_lite.h 's/(^[\t\ ]*#.+)DEFINE_METARULE_/\1METARULE_/g'
+# moved to separate header
 SedHeader define_lite.h '/Trait defines/d'
 SedHeader define_lite.h '/define TRAIT_PERK/d'
 SedHeader define_lite.h '/define TRAIT_OBJECT/d'
 SedHeader define_lite.h '/define TRAIT_TRAIT/d'
+# ewww
 SedHeader define_lite.h 's/define SKILL_CONVERSANT/define SKILL_SPEECH    /g'
 SedHeader define_lite.h 's/SKILL_CONVERSANT/SKILL_SPEECH/g'
+# duplicate of STAT_max_hp
 SedHeader define_lite.h '/STAT_max_hit_points/d'
-SedHeader define_lite.h '578d'
+# duplicate
+SedHeader define_lite.h '/METARULE_TEST_FIRSTRUN/ {:a;n;n;/METARULE_TEST_FIRSTRUN/{d;bb};ba;:b}'
 PutHeader define_lite.h
 
 GetHeader define_extra.h
