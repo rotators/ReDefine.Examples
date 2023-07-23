@@ -15,8 +15,12 @@ if [[ ! -f "$zip" ]]; then
    exit
 fi
 
+echo "::group::${zip%.*}"
+
 ok=1
 ./ReDefineOne.sh "${zip//\.\//}" || ok=0
+
+echo "::endgroup::"
 
 if [[ $ok -eq 0 ]]; then
    echo "[WARNING] ReDefine script error"
