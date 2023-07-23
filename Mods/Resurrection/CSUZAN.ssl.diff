@@ -1,0 +1,841 @@
+diff --git a/Mods/Resurrection/Original/CSUZAN.ssl b/Mods/Resurrection/ReDefine/CSUZAN.ssl
+index 808fbed..e72c7c1 100644
+--- a/Mods/Resurrection/Original/CSUZAN.ssl
++++ b/Mods/Resurrection/ReDefine/CSUZAN.ssl
+@@ -78,12 +78,12 @@ begin
+             return 1;
+         end
+     end
+-    if ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0)) then begin
++    if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+         if (tile_distance_objs(self_obj, party_member_obj(16777779)) <= 5) then begin
+             return 1;
+         end
+     end
+-    if ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0)) then begin
++    if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+         if (tile_distance_objs(self_obj, party_member_obj(16777811)) <= 5) then begin
+             return 1;
+         end
+@@ -98,7 +98,7 @@ begin
+             return 1;
+         end
+     end
+-    if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
++    if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+         if (tile_distance_objs(self_obj, party_member_obj(16777814)) <= 5) then begin
+             return 1;
+         end
+@@ -156,15 +156,15 @@ end
+ 
+ procedure critter_p_proc
+ begin
+-    if ((local_var(4) == 1) or (global_var(853) == 1) or (global_var(824) == 1) and obj_can_see_obj(self_obj, dude_obj)) then begin
++    if ((local_var(4) == 1) or (global_var(GVAR_C_ENEMY_OBYVAT) == 1) or (global_var(GVAR_ENEMY_CORATH) == 1) and obj_can_see_obj(self_obj, dude_obj)) then begin
+         if (critter_is_fleeing(self_obj)) then begin
+             if (anim_busy(self_obj) == 0) then begin
+                 if ((tile_distance_objs(self_obj, dude_obj) < 8) or obj_can_see_obj(self_obj, dude_obj)) then begin
+                     if (anim_busy(self_obj) == 0) then begin
+-                        global_temp := rotation_to_tile(tile_num(dude_obj), tile_num(self_obj));
++                        global_temp := rotation_to_tile(dude_tile, tile_num(self_obj));
+                         animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                         global_temp := (global_temp + 1) % 6;
+-                        while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)))) do begin
++                        while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(dude_tile, tile_num(self_obj)))) do begin
+                             debug_msg("flee loop: rot == " + global_temp);
+                             animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                             global_temp := (global_temp + 1) % 6;
+@@ -174,10 +174,10 @@ begin
+             end
+         end
+         else begin
+-            attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++            attack(dude_obj);
+         end
+     end
+-    if (((local_var(6) bwand 512) == 0) and (global_var(825) != 3) and (local_var(7) != 1) and tile_in_tile_rect(23078, 23072, 24278, 24272, tile_num(dude_obj))) then begin
++    if (((local_var(6) bwand 512) == 0) and (global_var(GVAR_C_QUEST_MURDERS) != 3) and (local_var(7) != 1) and tile_in_tile_rect(23078, 23072, 24278, 24272, dude_tile)) then begin
+         call talk_p_proc();
+     end
+ end
+@@ -191,35 +191,35 @@ end
+ 
+ procedure talk_p_proc
+ begin
+-    if (((local_var(6) bwand 128) != 0) and ((global_var(825) == 1) or (global_var(825) == 2))) then begin
+-        float_msg(self_obj, message_str(1535, random(303, 304)), 8);
++    if (((local_var(6) bwand 128) != 0) and ((global_var(GVAR_C_QUEST_MURDERS) == 1) or (global_var(GVAR_C_QUEST_MURDERS) == 2))) then begin
++        float_msg(self_obj, mstr(random(303, 304)), FLOAT_MSG_YELLOW);
+     end
+     else begin
+-        if ((global_var(825) == 3) and not((local_var(6) bwand 256) == 0)) then begin
+-            float_msg(self_obj, message_str(1535, 300), 3);
++        if ((global_var(GVAR_C_QUEST_MURDERS) == 3) and not((local_var(6) bwand 256) == 0)) then begin
++            float_msg(self_obj, mstr(300), FLOAT_MSG_GREEN);
+         end
+         else begin
+-            if (((get_critter_stat(dude_obj, 4) + has_trait(0, dude_obj, 49)) <= 3) and not((local_var(6) bwand 512) == 0)) then begin
+-                float_msg(self_obj, message_str(1535, 310), 2);
++            if (((dude_iq + has_trait(TRAIT_PERK, dude_obj, PERK_smooth_talker)) <= 3) and not((local_var(6) bwand 512) == 0)) then begin
++                float_msg(self_obj, mstr(310), FLOAT_MSG_RED);
+             end
+             else begin
+-                anim(dude_obj, 1000, rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)));
+-                anim(self_obj, 1000, rotation_to_tile(tile_num(self_obj), tile_num(dude_obj)));
++                anim(dude_obj, 1000, rotation_to_tile(dude_tile, tile_num(self_obj)));
++                anim(self_obj, 1000, rotation_to_tile(tile_num(self_obj), dude_tile));
+                 start_gdialog(1535, self_obj, 4, -1, -1);
+                 gsay_start;
+                 if (local_var(5) != 1) then begin
+                     call Node500();
+                 end
+                 if (local_var(5) == 1) then begin
+-                    if ((Projed_Smycku == 0) and (global_var(825) == 3) and ((local_var(6) bwand 256) == 0)) then begin
++                    if ((Projed_Smycku == 0) and (global_var(GVAR_C_QUEST_MURDERS) == 3) and ((local_var(6) bwand 256) == 0)) then begin
+                         call Node1450();
+                         Projed_Smycku := 1;
+                     end
+-                    if ((Projed_Smycku == 0) and ((global_var(825) == 1) or (global_var(825) == 2)) and ((local_var(6) bwand 2) != 0) and ((local_var(6) bwand 32) != 0) and not((local_var(6) bwand 4) == 0)) then begin
++                    if ((Projed_Smycku == 0) and ((global_var(GVAR_C_QUEST_MURDERS) == 1) or (global_var(GVAR_C_QUEST_MURDERS) == 2)) and ((local_var(6) bwand 2) != 0) and ((local_var(6) bwand 32) != 0) and not((local_var(6) bwand 4) == 0)) then begin
+                         call Node1350();
+                         Projed_Smycku := 1;
+                     end
+-                    if ((Projed_Smycku == 0) and ((global_var(825) == 1) or (global_var(825) == 2)) and ((local_var(6) bwand 2) != 0) and not((local_var(6) bwand 32) != 0) and not((local_var(6) bwand 4) == 0)) then begin
++                    if ((Projed_Smycku == 0) and ((global_var(GVAR_C_QUEST_MURDERS) == 1) or (global_var(GVAR_C_QUEST_MURDERS) == 2)) and ((local_var(6) bwand 2) != 0) and not((local_var(6) bwand 32) != 0) and not((local_var(6) bwand 4) == 0)) then begin
+                         call Node950();
+                         Projed_Smycku := 1;
+                     end
+@@ -236,7 +236,7 @@ begin
+             end
+         end
+     end
+-    if (global_var(827) == 2) then begin
++    if (global_var(GVAR_C_QUEST_CHADWIC_WANT_SUZAN) == 2) then begin
+         game_ui_disable;
+         add_timer_event(self_obj, game_ticks(1), 10);
+     end
+@@ -244,61 +244,61 @@ end
+ 
+ procedure destroy_p_proc
+ begin
+-    if (global_var(827) != 2) then begin
++    if (global_var(GVAR_C_QUEST_CHADWIC_WANT_SUZAN) != 2) then begin
+         if (source_obj == dude_obj) then begin
+-            set_global_var(5, global_var(5) + 1);
+-            if (((global_var(4) + global_var(5)) >= 25) and ((global_var(4) > (3 * global_var(5))) or (global_var(2) == 1)) and (global_var(1) == 0)) then begin
+-                set_global_var(2, 1);
+-                set_global_var(3, 0);
++            set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
++            if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(4) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1)) and (global_var(GVAR_CHILDKILLER_REPUTATION) == 0)) then begin
++                set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++                set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+             end
+-            if (metarule(51, self_obj) == 2) then begin
++            if (critter_kill_type(self_obj) == KILL_TYPE_children_kills) then begin
+                 if (source_obj == dude_obj) then begin
+-                    set_global_var(2, 0);
+-                    set_global_var(1, global_var(1) + 1);
+-                    set_global_var(0, global_var(0) + -15);
++                    set_global_var(GVAR_CHAMPION_REPUTATION, 0);
++                    set_global_var(GVAR_CHILDKILLER_REPUTATION, global_var(GVAR_CHILDKILLER_REPUTATION) + 1);
++                    set_global_var(GVAR_PLAYER_REPUTATION, global_var(GVAR_PLAYER_REPUTATION) + -15);
+                     debug_msg("Player gains " + -15 + " Karma Points.");
+-                    set_global_var(37, 0);
+-                    set_global_var(38, 0);
+-                    set_global_var(39, 0);
+-                    set_global_var(40, 0);
+-                    set_global_var(41, 0);
+-                    set_global_var(42, 0);
+-                    set_global_var(43, 0);
+-                    set_global_var(44, 0);
+-                    set_global_var(45, 0);
+-                    if (global_var(0) >= 1000) then begin
+-                        set_global_var(37, 1);
++                    set_global_var(GVAR_KARMA_HOLY_WARRIOR, 0);
++                    set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 0);
++                    set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 0);
++                    set_global_var(GVAR_KARMA_DEFENDER, 0);
++                    set_global_var(GVAR_KARMA_WANDERER, 0);
++                    set_global_var(GVAR_KARMA_BETRAYER, 0);
++                    set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 0);
++                    set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 0);
++                    set_global_var(GVAR_KARMA_DEMON_SPAWN, 0);
++                    if (global_var(GVAR_PLAYER_REPUTATION) >= 1000) then begin
++                        set_global_var(GVAR_KARMA_HOLY_WARRIOR, 1);
+                     end
+                     else begin
+-                        if (global_var(0) >= 750) then begin
+-                            set_global_var(38, 1);
++                        if (global_var(GVAR_PLAYER_REPUTATION) >= 750) then begin
++                            set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 1);
+                         end
+                         else begin
+-                            if (global_var(0) >= 500) then begin
+-                                set_global_var(39, 1);
++                            if (global_var(GVAR_PLAYER_REPUTATION) >= 500) then begin
++                                set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 1);
+                             end
+                             else begin
+-                                if (global_var(0) >= 250) then begin
+-                                    set_global_var(40, 1);
++                                if (global_var(GVAR_PLAYER_REPUTATION) >= 250) then begin
++                                    set_global_var(GVAR_KARMA_DEFENDER, 1);
+                                 end
+                                 else begin
+-                                    if (global_var(0) > -250) then begin
+-                                        set_global_var(41, 1);
++                                    if (global_var(GVAR_PLAYER_REPUTATION) > -250) then begin
++                                        set_global_var(GVAR_KARMA_WANDERER, 1);
+                                     end
+                                     else begin
+-                                        if (global_var(0) > -500) then begin
+-                                            set_global_var(42, 1);
++                                        if (global_var(GVAR_PLAYER_REPUTATION) > -500) then begin
++                                            set_global_var(GVAR_KARMA_BETRAYER, 1);
+                                         end
+                                         else begin
+-                                            if (global_var(0) > -750) then begin
+-                                                set_global_var(43, 1);
++                                            if (global_var(GVAR_PLAYER_REPUTATION) > -750) then begin
++                                                set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 1);
+                                             end
+                                             else begin
+-                                                if (global_var(0) > -1000) then begin
+-                                                    set_global_var(44, 1);
++                                                if (global_var(GVAR_PLAYER_REPUTATION) > -1000) then begin
++                                                    set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 1);
+                                                 end
+                                                 else begin
+-                                                    set_global_var(45, 1);
++                                                    set_global_var(GVAR_KARMA_DEMON_SPAWN, 1);
+                                                 end
+                                             end
+                                         end
+@@ -307,58 +307,58 @@ begin
+                             end
+                         end
+                     end
+-                    set_global_var(50, global_var(50) + -8);
++                    set_global_var(GVAR_TOWN_REP_CORATH, global_var(GVAR_TOWN_REP_CORATH) + -8);
+                     debug_msg("Added " + -8 + " to Town Rep");
+                 end
+             end
+-            if (((global_var(4) + global_var(5)) >= 25) and ((global_var(5) > (2 * global_var(4))) or (global_var(3) == 1))) then begin
+-                set_global_var(3, 1);
+-                set_global_var(2, 0);
++            if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++                set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++                set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+             end
+-            set_global_var(0, global_var(0) + -10);
++            set_global_var(GVAR_PLAYER_REPUTATION, global_var(GVAR_PLAYER_REPUTATION) + -10);
+             debug_msg("Player gains " + -10 + " Karma Points.");
+-            set_global_var(37, 0);
+-            set_global_var(38, 0);
+-            set_global_var(39, 0);
+-            set_global_var(40, 0);
+-            set_global_var(41, 0);
+-            set_global_var(42, 0);
+-            set_global_var(43, 0);
+-            set_global_var(44, 0);
+-            set_global_var(45, 0);
+-            if (global_var(0) >= 1000) then begin
+-                set_global_var(37, 1);
++            set_global_var(GVAR_KARMA_HOLY_WARRIOR, 0);
++            set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 0);
++            set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 0);
++            set_global_var(GVAR_KARMA_DEFENDER, 0);
++            set_global_var(GVAR_KARMA_WANDERER, 0);
++            set_global_var(GVAR_KARMA_BETRAYER, 0);
++            set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 0);
++            set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 0);
++            set_global_var(GVAR_KARMA_DEMON_SPAWN, 0);
++            if (global_var(GVAR_PLAYER_REPUTATION) >= 1000) then begin
++                set_global_var(GVAR_KARMA_HOLY_WARRIOR, 1);
+             end
+             else begin
+-                if (global_var(0) >= 750) then begin
+-                    set_global_var(38, 1);
++                if (global_var(GVAR_PLAYER_REPUTATION) >= 750) then begin
++                    set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 1);
+                 end
+                 else begin
+-                    if (global_var(0) >= 500) then begin
+-                        set_global_var(39, 1);
++                    if (global_var(GVAR_PLAYER_REPUTATION) >= 500) then begin
++                        set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 1);
+                     end
+                     else begin
+-                        if (global_var(0) >= 250) then begin
+-                            set_global_var(40, 1);
++                        if (global_var(GVAR_PLAYER_REPUTATION) >= 250) then begin
++                            set_global_var(GVAR_KARMA_DEFENDER, 1);
+                         end
+                         else begin
+-                            if (global_var(0) > -250) then begin
+-                                set_global_var(41, 1);
++                            if (global_var(GVAR_PLAYER_REPUTATION) > -250) then begin
++                                set_global_var(GVAR_KARMA_WANDERER, 1);
+                             end
+                             else begin
+-                                if (global_var(0) > -500) then begin
+-                                    set_global_var(42, 1);
++                                if (global_var(GVAR_PLAYER_REPUTATION) > -500) then begin
++                                    set_global_var(GVAR_KARMA_BETRAYER, 1);
+                                 end
+                                 else begin
+-                                    if (global_var(0) > -750) then begin
+-                                        set_global_var(43, 1);
++                                    if (global_var(GVAR_PLAYER_REPUTATION) > -750) then begin
++                                        set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 1);
+                                     end
+                                     else begin
+-                                        if (global_var(0) > -1000) then begin
+-                                            set_global_var(44, 1);
++                                        if (global_var(GVAR_PLAYER_REPUTATION) > -1000) then begin
++                                            set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 1);
+                                         end
+                                         else begin
+-                                            set_global_var(45, 1);
++                                            set_global_var(GVAR_KARMA_DEMON_SPAWN, 1);
+                                         end
+                                     end
+                                 end
+@@ -367,7 +367,7 @@ begin
+                     end
+                 end
+             end
+-            set_global_var(50, global_var(50) + -5);
++            set_global_var(GVAR_TOWN_REP_CORATH, global_var(GVAR_TOWN_REP_CORATH) + -5);
+             debug_msg("Added " + -5 + " to Town Rep");
+         end
+     end
+@@ -377,10 +377,10 @@ procedure look_at_p_proc
+ begin
+     script_overrides;
+     if (local_var(5) == 1) then begin
+-        display_msg(message_str(1535, 150));
++        display_mstr(150);
+     end
+     else begin
+-        display_msg(message_str(1535, 100));
++        display_mstr(100);
+     end
+ end
+ 
+@@ -388,18 +388,18 @@ procedure description_p_proc
+ begin
+     script_overrides;
+     if (local_var(5) == 1) then begin
+-        if (global_var(825) == 0) then begin
+-            display_msg(message_str(1535, 250));
++        if (global_var(GVAR_C_QUEST_MURDERS) == 0) then begin
++            display_mstr(250);
+         end
+-        if (global_var(825) == 1) then begin
+-            display_msg(message_str(1535, 251));
++        if (global_var(GVAR_C_QUEST_MURDERS) == 1) then begin
++            display_mstr(251);
+         end
+-        if (global_var(825) == 3) then begin
+-            display_msg(message_str(1535, 252));
++        if (global_var(GVAR_C_QUEST_MURDERS) == 3) then begin
++            display_mstr(252);
+         end
+     end
+     else begin
+-        display_msg(message_str(1535, 200));
++        display_mstr(200);
+     end
+ end
+ 
+@@ -411,15 +411,15 @@ procedure damage_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+         set_local_var(4, 1);
+-        set_global_var(853, 1);
++        set_global_var(GVAR_C_ENEMY_OBYVAT, 1);
+         set_map_var(6, 1);
+         probability := random(0, 10);
+         if ((probability >= 10) and not(critter_is_fleeing(self_obj))) then begin
+-            if (get_critter_stat(dude_obj, 34) == 0) then begin
+-                float_msg(self_obj, message_str(1535, 401), 2);
++            if (dude_gender == 0) then begin
++                float_msg(self_obj, mstr(401), FLOAT_MSG_RED);
+             end
+-            if (get_critter_stat(dude_obj, 34) == 1) then begin
+-                float_msg(self_obj, message_str(1535, 402), 2);
++            if (dude_gender == 1) then begin
++                float_msg(self_obj, mstr(402), FLOAT_MSG_RED);
+             end
+         end
+     end
+@@ -427,9 +427,9 @@ end
+ 
+ procedure map_enter_p_proc
+ begin
+-    critter_add_trait(self_obj, 1, 6, 243);
+-    critter_add_trait(self_obj, 1, 5, 45);
+-    if (global_var(827) >= 2) then begin
++    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 243);
++    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_PROSTITUTE);
++    if (global_var(GVAR_C_QUEST_CHADWIC_WANT_SUZAN) >= 2) then begin
+         destroy_object(self_obj);
+     end
+ end
+@@ -442,11 +442,11 @@ begin
+         set_map_var(0, map_var(0) bwor 4);
+     end
+     if (fixed_param == 2) then begin
+-        if (global_var(825) != 3) then begin
+-            float_msg(self_obj, message_str(1535, 301), 8);
++        if (global_var(GVAR_C_QUEST_MURDERS) != 3) then begin
++            float_msg(self_obj, mstr(301), FLOAT_MSG_YELLOW);
+         end
+         else begin
+-            if ((global_var(825) == 3) and ((local_var(6) bwand 256) == 0)) then begin
++            if ((global_var(GVAR_C_QUEST_MURDERS) == 3) and ((local_var(6) bwand 256) == 0)) then begin
+                 start_gdialog(1535, self_obj, 4, -1, -1);
+                 gsay_start;
+                 call Node1500();
+@@ -454,7 +454,7 @@ begin
+                 end_dialogue;
+             end
+             else begin
+-                float_msg(self_obj, message_str(1535, 302), 3);
++                float_msg(self_obj, mstr(302), FLOAT_MSG_GREEN);
+             end
+         end
+     end
+@@ -462,14 +462,14 @@ begin
+         set_local_var(6, local_var(6) bwor 1);
+     end
+     if (fixed_param == 4) then begin
+-        if (global_var(825) != 3) then begin
+-            float_msg(self_obj, message_str(1535, 301), 8);
++        if (global_var(GVAR_C_QUEST_MURDERS) != 3) then begin
++            float_msg(self_obj, mstr(301), FLOAT_MSG_YELLOW);
+         end
+         else begin
+-            float_msg(self_obj, message_str(1535, 302), 3);
++            float_msg(self_obj, mstr(302), FLOAT_MSG_GREEN);
+         end
+     end
+-    if (global_var(827) == 2) then begin
++    if (global_var(GVAR_C_QUEST_CHADWIC_WANT_SUZAN) == 2) then begin
+         if (fixed_param == 10) then begin
+             sequence := sequence + 1;
+         end
+@@ -479,7 +479,7 @@ begin
+         end
+         if (sequence == 2) then begin
+             set_obj_visibility(self_obj, 1);
+-            set_global_var(50, global_var(50) - 7);
++            set_global_var(GVAR_TOWN_REP_CORATH, global_var(GVAR_TOWN_REP_CORATH) - 7);
+             add_timer_event(self_obj, game_ticks(1), 10);
+         end
+         if (sequence == 3) then begin
+@@ -496,7 +496,7 @@ end
+ procedure Node998
+ begin
+     set_local_var(4, 1);
+-    float_msg(self_obj, message_str(1535, 400), 2);
++    float_msg(self_obj, mstr(400), FLOAT_MSG_RED);
+ end
+ 
+ procedure Node999
+@@ -506,283 +506,282 @@ end
+ 
+ procedure Node500
+ begin
+-    gsay_reply(1535, 500);
++    Reply(500);
+     set_local_var(6, local_var(6) bwor 512);
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        giq_option(4, 1535, 501, Node550, 50);
++    if (dude_gender == 0) then begin
++        giq_option(4, NAME, 501, Node550, NEUTRAL_REACTION);
+     end
+-    if (get_critter_stat(dude_obj, 34) == 1) then begin
+-        giq_option(4, 1535, 502, Node550, 50);
++    if (dude_gender == 1) then begin
++        giq_option(4, NAME, 502, Node550, NEUTRAL_REACTION);
+     end
+     if ((local_var(6) bwand 1) != 0) then begin
+-        giq_option(4, 1535, 503, Node1550, 50);
++        giq_option(4, NAME, 503, Node1550, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 1535, 504, Node999, 50);
+-    giq_option(-3, 1535, 505, Node999, 50);
++    giq_option(4, NAME, 504, Node999, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 505, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node550
+ begin
+-    gsay_reply(1535, 550);
++    Reply(550);
+     set_local_var(5, 1);
+     set_map_var(0, map_var(0) bwor 4);
+-    if (global_var(825) == 1) then begin
+-        giq_option(4, 1535, 551, Node600, 50);
++    if (global_var(GVAR_C_QUEST_MURDERS) == 1) then begin
++        giq_option(4, NAME, 551, Node600, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 1535, 552, Node750, 50);
+-    giq_option(4, 1535, 553, Node999, 50);
++    giq_option(4, NAME, 552, Node750, NEUTRAL_REACTION);
++    giq_option(4, NAME, 553, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node600
+ begin
+-    gsay_reply(1535, 600);
++    Reply(600);
+     set_local_var(6, local_var(6) bwor 2);
+     if ((local_var(6) bwand 4) == 0) then begin
+-        giq_option(4, 1535, 601, Node650, 50);
++        giq_option(4, NAME, 601, Node650, NEUTRAL_REACTION);
+     end
+     if ((local_var(6) bwand 8) == 0) then begin
+-        giq_option(4, 1535, 602, Node700, 50);
++        giq_option(4, NAME, 602, Node700, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 1535, 603, Node999, 50);
++    giq_option(4, NAME, 603, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node650
+ begin
+-    gsay_reply(1535, 650);
++    Reply(650);
+     set_local_var(6, local_var(6) bwor 4);
+-    set_global_var(842, global_var(842) bwor 256);
++    set_global_var(GVAR_C_CORATH_STATUS, global_var(GVAR_C_CORATH_STATUS) bwor 256);
+     if ((local_var(6) bwand 8) == 0) then begin
+-        giq_option(4, 1535, 651, Node700, 50);
++        giq_option(4, NAME, 651, Node700, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 1535, 652, Node999, 50);
++    giq_option(4, NAME, 652, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node700
+ begin
+-    gsay_reply(1535, 700);
++    Reply(700);
+     set_local_var(6, local_var(6) bwor 8);
+     if ((local_var(6) bwand 4) == 0) then begin
+-        giq_option(4, 1535, 701, Node650, 50);
++        giq_option(4, NAME, 701, Node650, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 1535, 702, Node999, 50);
++    giq_option(4, NAME, 702, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node750
+ begin
+-    gsay_reply(1535, 750);
++    Reply(750);
+     set_local_var(6, local_var(6) bwor 16);
+-    if ((global_var(825) == 1) and not((local_var(6) bwand 2) != 0)) then begin
+-        giq_option(4, 1535, 751, Node600, 50);
++    if ((global_var(GVAR_C_QUEST_MURDERS) == 1) and not((local_var(6) bwand 2) != 0)) then begin
++        giq_option(4, NAME, 751, Node600, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 1535, 752, Node999, 50);
++    giq_option(4, NAME, 752, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node800
+ begin
+-    gsay_reply(1535, 800);
+-    if ((global_var(825) == 1) and not((local_var(6) bwand 2) != 0)) then begin
+-        giq_option(4, 1535, 801, Node850, 50);
++    Reply(800);
++    if ((global_var(GVAR_C_QUEST_MURDERS) == 1) and not((local_var(6) bwand 2) != 0)) then begin
++        giq_option(4, NAME, 801, Node850, NEUTRAL_REACTION);
+     end
+     if (((local_var(6) bwand 4) == 0) or ((local_var(6) bwand 8) == 0) and ((local_var(6) bwand 2) != 0)) then begin
+-        giq_option(4, 1535, 802, Node850, 50);
++        giq_option(4, NAME, 802, Node850, NEUTRAL_REACTION);
+     end
+     if ((local_var(6) bwand 16) == 0) then begin
+-        giq_option(4, 1535, 803, Node900, 50);
++        giq_option(4, NAME, 803, Node900, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 1535, 804, Node999, 50);
++    giq_option(4, NAME, 804, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node850
+ begin
+-    gsay_reply(1535, 850);
++    Reply(850);
+     set_local_var(6, local_var(6) bwor 2);
+     if ((local_var(6) bwand 4) == 0) then begin
+-        giq_option(4, 1535, 851, Node650, 50);
++        giq_option(4, NAME, 851, Node650, NEUTRAL_REACTION);
+     end
+     if ((local_var(6) bwand 8) == 0) then begin
+-        giq_option(4, 1535, 852, Node700, 50);
++        giq_option(4, NAME, 852, Node700, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 1535, 853, Node999, 50);
++    giq_option(4, NAME, 853, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node900
+ begin
+-    gsay_reply(1535, 900);
++    Reply(900);
+     set_local_var(6, local_var(6) bwor 16);
+-    if ((global_var(825) == 1) and not((local_var(6) bwand 2) != 0)) then begin
+-        giq_option(4, 1535, 901, Node850, 50);
++    if ((global_var(GVAR_C_QUEST_MURDERS) == 1) and not((local_var(6) bwand 2) != 0)) then begin
++        giq_option(4, NAME, 901, Node850, NEUTRAL_REACTION);
+     end
+     if (((local_var(6) bwand 4) == 0) or ((local_var(6) bwand 8) == 0) and ((local_var(6) bwand 2) != 0)) then begin
+-        giq_option(4, 1535, 902, Node850, 50);
++        giq_option(4, NAME, 902, Node850, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 1535, 903, Node999, 50);
++    giq_option(4, NAME, 903, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node950
+ begin
+-    gsay_reply(1535, 950);
+-    if ((global_var(827) == 1) and not((local_var(6) bwand 8) == 0)) then begin
+-        giq_option(4, 1535, 951, Node1000, 50);
++    Reply(950);
++    if ((global_var(GVAR_C_QUEST_CHADWIC_WANT_SUZAN) == 1) and not((local_var(6) bwand 8) == 0)) then begin
++        giq_option(4, NAME, 951, Node1000, NEUTRAL_REACTION);
+     end
+-    if ((get_critter_stat(dude_obj, 34) == 0) and (global_var(827) == 1)) then begin
+-        giq_option(4, 1535, 952, Node1150, 50);
++    if ((dude_gender == 0) and (global_var(GVAR_C_QUEST_CHADWIC_WANT_SUZAN) == 1)) then begin
++        giq_option(4, NAME, 952, Node1150, NEUTRAL_REACTION);
+     end
+-    if ((get_critter_stat(dude_obj, 34) == 1) and (global_var(827) == 1)) then begin
+-        giq_option(4, 1535, 953, Node1150, 50);
++    if ((dude_gender == 1) and (global_var(GVAR_C_QUEST_CHADWIC_WANT_SUZAN) == 1)) then begin
++        giq_option(4, NAME, 953, Node1150, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 1535, 954, Node999, 50);
++    giq_option(4, NAME, 954, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1000
+ begin
+-    gsay_reply(1535, 1000);
++    Reply(1000);
+     set_local_var(6, local_var(6) bwor 32);
+-    if ((global_var(827) == 1) and not((local_var(6) bwand 8) == 0)) then begin
+-        giq_option(7, 1535, 1001, Node1050, 50);
++    if ((global_var(GVAR_C_QUEST_CHADWIC_WANT_SUZAN) == 1) and not((local_var(6) bwand 8) == 0)) then begin
++        giq_option(7, NAME, 1001, Node1050, NEUTRAL_REACTION);
+     end
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        giq_option(4, 1535, 1002, Node999, 50);
++    if (dude_gender == 0) then begin
++        giq_option(4, NAME, 1002, Node999, NEUTRAL_REACTION);
+     end
+-    if (get_critter_stat(dude_obj, 34) == 1) then begin
+-        giq_option(4, 1535, 1003, Node999, 50);
++    if (dude_gender == 1) then begin
++        giq_option(4, NAME, 1003, Node999, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure Node1050
+ begin
+-    gsay_reply(1535, 1050);
+-    if (has_skill(dude_obj, 14) >= 75) then begin
+-        giq_option(4, 1535, 1051, Node1100, 50);
++    Reply(1050);
++    if (dude_skill(SKILL_SPEECH) >= 75) then begin
++        giq_option(4, NAME, 1051, Node1100, NEUTRAL_REACTION);
+     end
+-    if (has_skill(dude_obj, 14) < 75) then begin
+-        giq_option(4, 1535, 1051, Node1400, 50);
++    if (dude_skill(SKILL_SPEECH) < 75) then begin
++        giq_option(4, NAME, 1051, Node1400, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 1535, 1052, Node999, 50);
++    giq_option(4, NAME, 1052, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1100
+ begin
+-    gsay_reply(1535, 1100);
+-    set_global_var(827, 2);
+-    giq_option(4, 1535, 1101, Node999, 50);
++    Reply(1100);
++    set_global_var(GVAR_C_QUEST_CHADWIC_WANT_SUZAN, 2);
++    giq_option(4, NAME, 1101, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1150
+ begin
+-    gsay_reply(1535, 1150);
++    Reply(1150);
+     set_local_var(6, local_var(6) bwor 64);
+-    giq_option(4, 1535, 1151, Node1200, 50);
+-    giq_option(4, 1535, 1152, Node999, 50);
++    giq_option(4, NAME, 1151, Node1200, NEUTRAL_REACTION);
++    giq_option(4, NAME, 1152, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1200
+ begin
+-    gsay_reply(1535, 1200);
++    Reply(1200);
+     if (item_caps_total(dude_obj) > 299) then begin
+-        giq_option(4, 1535, 1201, Node_Pay_Way_To_Chadwic, 50);
++        giq_option(4, NAME, 1201, Node_Pay_Way_To_Chadwic, NEUTRAL_REACTION);
+     end
+-    if ((item_caps_total(dude_obj) > 149) and (has_skill(dude_obj, 15) > 59)) then begin
+-        giq_option(4, 1535, 1202, Node1250, 50);
++    if ((item_caps_total(dude_obj) > 149) and (dude_skill(SKILL_BARTER) > 59)) then begin
++        giq_option(4, NAME, 1202, Node1250, NEUTRAL_REACTION);
+     end
+-    if ((item_caps_total(dude_obj) > 149) and (has_skill(dude_obj, 15) < 60)) then begin
+-        giq_option(4, 1535, 1202, Node1300, 50);
++    if ((item_caps_total(dude_obj) > 149) and (dude_skill(SKILL_BARTER) < 60)) then begin
++        giq_option(4, NAME, 1202, Node1300, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 1535, 1203, Node999, 50);
++    giq_option(4, NAME, 1203, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1250
+ begin
+-    gsay_reply(1535, 1250);
+-    giq_option(4, 1535, 1251, Node_Pay_Way_To_Chadwic2, 50);
++    Reply(1250);
++    giq_option(4, NAME, 1251, Node_Pay_Way_To_Chadwic2, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1300
+ begin
+-    gsay_reply(1535, 1300);
++    Reply(1300);
+     if (item_caps_total(dude_obj) > 299) then begin
+-        giq_option(4, 1535, 1301, Node_Pay_Way_To_Chadwic, 50);
++        giq_option(4, NAME, 1301, Node_Pay_Way_To_Chadwic, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 1535, 1302, Node999, 50);
++    giq_option(4, NAME, 1302, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1350
+ begin
+-    gsay_reply(1535, 1350);
+-    if (((local_var(6) bwand 64) == 0) and (global_var(827) == 1) and not((local_var(6) bwand 8) == 0)) then begin
+-        giq_option(7, 1535, 1351, Node1050, 50);
++    Reply(1350);
++    if (((local_var(6) bwand 64) == 0) and (global_var(GVAR_C_QUEST_CHADWIC_WANT_SUZAN) == 1) and not((local_var(6) bwand 8) == 0)) then begin
++        giq_option(7, NAME, 1351, Node1050, NEUTRAL_REACTION);
+     end
+-    if (global_var(827) == 1) then begin
+-        giq_option(4, 1535, 1352, Node1600, 50);
++    if (global_var(GVAR_C_QUEST_CHADWIC_WANT_SUZAN) == 1) then begin
++        giq_option(4, NAME, 1352, Node1600, NEUTRAL_REACTION);
+     end
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        giq_option(4, 1535, 1353, Node999, 50);
++    if (dude_gender == 0) then begin
++        giq_option(4, NAME, 1353, Node999, NEUTRAL_REACTION);
+     end
+-    if (get_critter_stat(dude_obj, 34) == 1) then begin
+-        giq_option(4, 1535, 1354, Node999, 50);
++    if (dude_gender == 1) then begin
++        giq_option(4, NAME, 1354, Node999, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure Node1400
+ begin
+-    gsay_reply(1535, 1400);
++    Reply(1400);
+     set_local_var(6, local_var(6) bwor 128);
+-    giq_option(4, 1535, 1401, Node999, 50);
++    giq_option(4, NAME, 1401, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1450
+ begin
+-    gsay_reply(1535, 1450);
++    Reply(1450);
+     set_local_var(6, local_var(6) bwor 256);
+-    restock_obj := create_object_sid(52, 0, 0, -1);
++    restock_obj := create_object(52, 0, 0);
+     add_mult_objs_to_inven(dude_obj, restock_obj, 1);
+-    giq_option(4, 1535, 1451, Node999, 50);
++    giq_option(4, NAME, 1451, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1500
+ begin
+-    gsay_reply(1535, 1500);
++    Reply(1500);
+     set_local_var(6, local_var(6) bwor 256);
+-    restock_obj := create_object_sid(52, 0, 0, -1);
++    restock_obj := create_object(52, 0, 0);
+     add_mult_objs_to_inven(dude_obj, restock_obj, 1);
+-    giq_option(4, 1535, 1501, Node999, 50);
++    giq_option(4, NAME, 1501, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1550
+ begin
+-    gsay_reply(1535, 1550);
++    Reply(1550);
+     set_local_var(5, 1);
+     set_map_var(0, map_var(0) bwor 4);
+-    giq_option(4, 1535, 1551, Node600, 50);
+-    giq_option(4, 1535, 1552, Node999, 50);
++    giq_option(4, NAME, 1551, Node600, NEUTRAL_REACTION);
++    giq_option(4, NAME, 1552, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1600
+ begin
+-    gsay_reply(1535, 1600);
+-    giq_option(4, 1535, 1601, Node998, 50);
+-    giq_option(4, 1535, 1602, Node999, 50);
++    Reply(1600);
++    giq_option(4, NAME, 1601, Node998, NEUTRAL_REACTION);
++    giq_option(4, NAME, 1602, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1650
+ begin
+-    gsay_reply(1535, 1650);
+-    if ((global_var(825) == 1) and not((local_var(6) bwand 2) != 0)) then begin
+-        giq_option(4, 1535, 1651, Node600, 50);
++    Reply(1650);
++    if ((global_var(GVAR_C_QUEST_MURDERS) == 1) and not((local_var(6) bwand 2) != 0)) then begin
++        giq_option(4, NAME, 1651, Node600, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 1535, 1652, Node999, 50);
++    giq_option(4, NAME, 1652, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node_Pay_Way_To_Chadwic
+ begin
+-    set_global_var(827, 2);
++    set_global_var(GVAR_C_QUEST_CHADWIC_WANT_SUZAN, 2);
+     item_caps_adjust(dude_obj, -300);
+     call Node999();
+ end
+ 
+ procedure Node_Pay_Way_To_Chadwic2
+ begin
+-    set_global_var(827, 2);
++    set_global_var(GVAR_C_QUEST_CHADWIC_WANT_SUZAN, 2);
+     item_caps_adjust(dude_obj, -150);
+     call Node999();
+ end
+-

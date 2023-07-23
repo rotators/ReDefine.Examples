@@ -1,0 +1,1985 @@
+variable ProtoOfItemGiven;
+variable ValueOfRollCheck := 1;
+variable Scenery_Creation;
+variable Scenery_Creation_Hex;
+variable Scenery_Creation_Count;
+variable Temp_Scenery_Creation_Hex;
+variable Scenery_Creation_Ptr;
+variable lPartyWornArmor;
+variable How_Many_Party_Members_Are_Injured;
+variable How_Many_Party_Members_Armed;
+variable PartyHealingItem;
+
+procedure checkPartyMembersNearDoor;
+
+variable global_temp;
+variable dest_tile;
+variable step_tile;
+variable in_dialog;
+variable forced_node;
+variable restock_amt;
+variable restock_obj;
+variable restock_trash;
+variable removed_qty;
+variable toRemove_qty;
+
+procedure div(variable arg0, variable arg1);
+procedure start;
+procedure map_enter_p_proc;
+procedure pickup_p_proc;
+procedure use_p_proc;
+procedure damage_p_proc;
+procedure map_exit_p_proc;
+procedure map_update_p_proc;
+procedure use_obj_on_p_proc;
+procedure look_at_p_proc;
+procedure description_p_proc;
+procedure use_skill_on_p_proc;
+
+import variable pater_box;
+import variable pater;
+
+variable caught_tamper;
+variable user_obj;
+variable temp_roll;
+
+procedure timed_event_p_proc;
+
+
+procedure checkPartyMembersNearDoor
+begin
+    if (party_member_obj(16777729) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777729)) <= 5) then begin
+            return 1;
+        end
+    end
+    if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777779)) <= 5) then begin
+            return 1;
+        end
+    end
+    if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777811)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777812) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777812)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777813) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777813)) <= 5) then begin
+            return 1;
+        end
+    end
+    if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777814)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777748) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777748)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777294) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777294)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778017) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778017)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778016) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778016)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778049) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778049)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778050) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778050)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778051) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778051)) <= 5) then begin
+            return 1;
+        end
+    end
+    return 0;
+end
+
+procedure div(variable arg0, variable arg1)
+begin
+    if (0 > arg0) then begin
+        return -(-arg0 / arg1);
+    end
+    return arg0 / arg1;
+end
+
+procedure start
+begin
+    pater_box := self_obj;
+end
+
+procedure map_enter_p_proc
+begin
+    if (is_loading_game == 0) then begin
+        if (1) then begin
+            obj_close(self_obj);
+        end
+        if (1 and 1) then begin
+            obj_lock(self_obj);
+        end
+    end
+    if (pater and (pater != -1)) then begin
+        if ((game_time < 0) and (local_var(4) > 0)) then begin
+            set_local_var(4, game_time - 1);
+        end
+        if (local_var(4) < game_time) then begin
+            item_caps_adjust(self_obj, random(150, 200) - item_caps_total(self_obj));
+            restock_amt := random(1, 5);
+            if (obj_is_carrying_obj_pid(self_obj, 49) < restock_amt) then begin
+                if (100 >= random(1, 100)) then begin
+                    if (obj_is_carrying_obj_pid(self_obj, 49) < restock_amt) then begin
+                        restock_obj := create_object(49, 0, 0);
+                        add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 49));
+                    end
+                    else begin
+                        if (obj_is_carrying_obj_pid(self_obj, 49) > restock_amt) then begin
+                            removed_qty := obj_is_carrying_obj_pid(self_obj, 49);
+                            if ((obj_is_carrying_obj_pid(self_obj, 49) - restock_amt) < removed_qty) then begin
+                                removed_qty := obj_is_carrying_obj_pid(self_obj, 49) - restock_amt;
+                            end
+                            if (removed_qty > 0) then begin
+                                restock_obj := obj_carrying_pid_obj(self_obj, 49);
+                                if (obj_type(self_obj) == 1) then begin
+                                    restock_obj := obj_carrying_pid_obj(self_obj, 49);
+                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
+                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
+                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                            debug_msg("armour pid == " + obj_pid(restock_obj));
+                                            rm_obj_from_inven(self_obj, restock_obj);
+                                            add_obj_to_inven(self_obj, restock_obj);
+                                        end
+                                    end
+                                    else begin
+                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
+                                            inven_unwield(self_obj);
+                                        end
+                                    end
+                                end
+                                restock_amt := rm_mult_objs_from_inven(self_obj, restock_obj, removed_qty);
+                                if (restock_amt == 0) then begin
+                                    toRemove_qty := obj_is_carrying_obj_pid(self_obj, 49) - restock_amt;
+                                    while ((toRemove_qty > 0) and obj_carrying_pid_obj(self_obj, 49)) do begin
+                                        restock_obj := obj_carrying_pid_obj(self_obj, 49);
+                                        rm_obj_from_inven(self_obj, restock_obj);
+                                        destroy_object(restock_obj);
+                                        toRemove_qty := toRemove_qty - 1;
+                                    end
+                                end
+                                else begin
+                                    destroy_object(restock_obj);
+                                end
+                            end
+                            restock_obj := 0;
+                            restock_amt := 0;
+                        end
+                        else begin
+                            restock_obj := 0;
+                        end
+                    end
+                end
+            end
+            else begin
+                if (obj_is_carrying_obj_pid(self_obj, 49) < restock_amt) then begin
+                    restock_obj := create_object(49, 0, 0);
+                    add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 49));
+                end
+                else begin
+                    if (obj_is_carrying_obj_pid(self_obj, 49) > restock_amt) then begin
+                        removed_qty := obj_is_carrying_obj_pid(self_obj, 49);
+                        if ((obj_is_carrying_obj_pid(self_obj, 49) - restock_amt) < removed_qty) then begin
+                            removed_qty := obj_is_carrying_obj_pid(self_obj, 49) - restock_amt;
+                        end
+                        if (removed_qty > 0) then begin
+                            restock_obj := obj_carrying_pid_obj(self_obj, 49);
+                            if (obj_type(self_obj) == 1) then begin
+                                restock_obj := obj_carrying_pid_obj(self_obj, 49);
+                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
+                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
+                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                        debug_msg("armour pid == " + obj_pid(restock_obj));
+                                        rm_obj_from_inven(self_obj, restock_obj);
+                                        add_obj_to_inven(self_obj, restock_obj);
+                                    end
+                                end
+                                else begin
+                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
+                                        inven_unwield(self_obj);
+                                    end
+                                end
+                            end
+                            restock_amt := rm_mult_objs_from_inven(self_obj, restock_obj, removed_qty);
+                            if (restock_amt == 0) then begin
+                                toRemove_qty := obj_is_carrying_obj_pid(self_obj, 49) - restock_amt;
+                                while ((toRemove_qty > 0) and obj_carrying_pid_obj(self_obj, 49)) do begin
+                                    restock_obj := obj_carrying_pid_obj(self_obj, 49);
+                                    rm_obj_from_inven(self_obj, restock_obj);
+                                    destroy_object(restock_obj);
+                                    toRemove_qty := toRemove_qty - 1;
+                                end
+                            end
+                            else begin
+                                destroy_object(restock_obj);
+                            end
+                        end
+                        restock_obj := 0;
+                        restock_amt := 0;
+                    end
+                    else begin
+                        restock_obj := 0;
+                    end
+                end
+            end
+            restock_amt := random(2, 6);
+            if (obj_is_carrying_obj_pid(self_obj, 40) < restock_amt) then begin
+                if (100 >= random(1, 100)) then begin
+                    if (obj_is_carrying_obj_pid(self_obj, 40) < restock_amt) then begin
+                        restock_obj := create_object(40, 0, 0);
+                        add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 40));
+                    end
+                    else begin
+                        if (obj_is_carrying_obj_pid(self_obj, 40) > restock_amt) then begin
+                            removed_qty := obj_is_carrying_obj_pid(self_obj, 40);
+                            if ((obj_is_carrying_obj_pid(self_obj, 40) - restock_amt) < removed_qty) then begin
+                                removed_qty := obj_is_carrying_obj_pid(self_obj, 40) - restock_amt;
+                            end
+                            if (removed_qty > 0) then begin
+                                restock_obj := obj_carrying_pid_obj(self_obj, 40);
+                                if (obj_type(self_obj) == 1) then begin
+                                    restock_obj := obj_carrying_pid_obj(self_obj, 40);
+                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
+                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
+                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                            debug_msg("armour pid == " + obj_pid(restock_obj));
+                                            rm_obj_from_inven(self_obj, restock_obj);
+                                            add_obj_to_inven(self_obj, restock_obj);
+                                        end
+                                    end
+                                    else begin
+                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
+                                            inven_unwield(self_obj);
+                                        end
+                                    end
+                                end
+                                restock_amt := rm_mult_objs_from_inven(self_obj, restock_obj, removed_qty);
+                                if (restock_amt == 0) then begin
+                                    toRemove_qty := obj_is_carrying_obj_pid(self_obj, 40) - restock_amt;
+                                    while ((toRemove_qty > 0) and obj_carrying_pid_obj(self_obj, 40)) do begin
+                                        restock_obj := obj_carrying_pid_obj(self_obj, 40);
+                                        rm_obj_from_inven(self_obj, restock_obj);
+                                        destroy_object(restock_obj);
+                                        toRemove_qty := toRemove_qty - 1;
+                                    end
+                                end
+                                else begin
+                                    destroy_object(restock_obj);
+                                end
+                            end
+                            restock_obj := 0;
+                            restock_amt := 0;
+                        end
+                        else begin
+                            restock_obj := 0;
+                        end
+                    end
+                end
+            end
+            else begin
+                if (obj_is_carrying_obj_pid(self_obj, 40) < restock_amt) then begin
+                    restock_obj := create_object(40, 0, 0);
+                    add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 40));
+                end
+                else begin
+                    if (obj_is_carrying_obj_pid(self_obj, 40) > restock_amt) then begin
+                        removed_qty := obj_is_carrying_obj_pid(self_obj, 40);
+                        if ((obj_is_carrying_obj_pid(self_obj, 40) - restock_amt) < removed_qty) then begin
+                            removed_qty := obj_is_carrying_obj_pid(self_obj, 40) - restock_amt;
+                        end
+                        if (removed_qty > 0) then begin
+                            restock_obj := obj_carrying_pid_obj(self_obj, 40);
+                            if (obj_type(self_obj) == 1) then begin
+                                restock_obj := obj_carrying_pid_obj(self_obj, 40);
+                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
+                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
+                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                        debug_msg("armour pid == " + obj_pid(restock_obj));
+                                        rm_obj_from_inven(self_obj, restock_obj);
+                                        add_obj_to_inven(self_obj, restock_obj);
+                                    end
+                                end
+                                else begin
+                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
+                                        inven_unwield(self_obj);
+                                    end
+                                end
+                            end
+                            restock_amt := rm_mult_objs_from_inven(self_obj, restock_obj, removed_qty);
+                            if (restock_amt == 0) then begin
+                                toRemove_qty := obj_is_carrying_obj_pid(self_obj, 40) - restock_amt;
+                                while ((toRemove_qty > 0) and obj_carrying_pid_obj(self_obj, 40)) do begin
+                                    restock_obj := obj_carrying_pid_obj(self_obj, 40);
+                                    rm_obj_from_inven(self_obj, restock_obj);
+                                    destroy_object(restock_obj);
+                                    toRemove_qty := toRemove_qty - 1;
+                                end
+                            end
+                            else begin
+                                destroy_object(restock_obj);
+                            end
+                        end
+                        restock_obj := 0;
+                        restock_amt := 0;
+                    end
+                    else begin
+                        restock_obj := 0;
+                    end
+                end
+            end
+            restock_amt := random(4, 8);
+            if (obj_is_carrying_obj_pid(self_obj, 87) < restock_amt) then begin
+                if (100 >= random(1, 100)) then begin
+                    if (obj_is_carrying_obj_pid(self_obj, 87) < restock_amt) then begin
+                        restock_obj := create_object(87, 0, 0);
+                        add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 87));
+                    end
+                    else begin
+                        if (obj_is_carrying_obj_pid(self_obj, 87) > restock_amt) then begin
+                            removed_qty := obj_is_carrying_obj_pid(self_obj, 87);
+                            if ((obj_is_carrying_obj_pid(self_obj, 87) - restock_amt) < removed_qty) then begin
+                                removed_qty := obj_is_carrying_obj_pid(self_obj, 87) - restock_amt;
+                            end
+                            if (removed_qty > 0) then begin
+                                restock_obj := obj_carrying_pid_obj(self_obj, 87);
+                                if (obj_type(self_obj) == 1) then begin
+                                    restock_obj := obj_carrying_pid_obj(self_obj, 87);
+                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
+                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
+                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                            debug_msg("armour pid == " + obj_pid(restock_obj));
+                                            rm_obj_from_inven(self_obj, restock_obj);
+                                            add_obj_to_inven(self_obj, restock_obj);
+                                        end
+                                    end
+                                    else begin
+                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
+                                            inven_unwield(self_obj);
+                                        end
+                                    end
+                                end
+                                restock_amt := rm_mult_objs_from_inven(self_obj, restock_obj, removed_qty);
+                                if (restock_amt == 0) then begin
+                                    toRemove_qty := obj_is_carrying_obj_pid(self_obj, 87) - restock_amt;
+                                    while ((toRemove_qty > 0) and obj_carrying_pid_obj(self_obj, 87)) do begin
+                                        restock_obj := obj_carrying_pid_obj(self_obj, 87);
+                                        rm_obj_from_inven(self_obj, restock_obj);
+                                        destroy_object(restock_obj);
+                                        toRemove_qty := toRemove_qty - 1;
+                                    end
+                                end
+                                else begin
+                                    destroy_object(restock_obj);
+                                end
+                            end
+                            restock_obj := 0;
+                            restock_amt := 0;
+                        end
+                        else begin
+                            restock_obj := 0;
+                        end
+                    end
+                end
+            end
+            else begin
+                if (obj_is_carrying_obj_pid(self_obj, 87) < restock_amt) then begin
+                    restock_obj := create_object(87, 0, 0);
+                    add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 87));
+                end
+                else begin
+                    if (obj_is_carrying_obj_pid(self_obj, 87) > restock_amt) then begin
+                        removed_qty := obj_is_carrying_obj_pid(self_obj, 87);
+                        if ((obj_is_carrying_obj_pid(self_obj, 87) - restock_amt) < removed_qty) then begin
+                            removed_qty := obj_is_carrying_obj_pid(self_obj, 87) - restock_amt;
+                        end
+                        if (removed_qty > 0) then begin
+                            restock_obj := obj_carrying_pid_obj(self_obj, 87);
+                            if (obj_type(self_obj) == 1) then begin
+                                restock_obj := obj_carrying_pid_obj(self_obj, 87);
+                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
+                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
+                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                        debug_msg("armour pid == " + obj_pid(restock_obj));
+                                        rm_obj_from_inven(self_obj, restock_obj);
+                                        add_obj_to_inven(self_obj, restock_obj);
+                                    end
+                                end
+                                else begin
+                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
+                                        inven_unwield(self_obj);
+                                    end
+                                end
+                            end
+                            restock_amt := rm_mult_objs_from_inven(self_obj, restock_obj, removed_qty);
+                            if (restock_amt == 0) then begin
+                                toRemove_qty := obj_is_carrying_obj_pid(self_obj, 87) - restock_amt;
+                                while ((toRemove_qty > 0) and obj_carrying_pid_obj(self_obj, 87)) do begin
+                                    restock_obj := obj_carrying_pid_obj(self_obj, 87);
+                                    rm_obj_from_inven(self_obj, restock_obj);
+                                    destroy_object(restock_obj);
+                                    toRemove_qty := toRemove_qty - 1;
+                                end
+                            end
+                            else begin
+                                destroy_object(restock_obj);
+                            end
+                        end
+                        restock_obj := 0;
+                        restock_amt := 0;
+                    end
+                    else begin
+                        restock_obj := 0;
+                    end
+                end
+            end
+            restock_amt := random(4, 8);
+            if (obj_is_carrying_obj_pid(self_obj, 53) < restock_amt) then begin
+                if (100 >= random(1, 100)) then begin
+                    if (obj_is_carrying_obj_pid(self_obj, 53) < restock_amt) then begin
+                        restock_obj := create_object(53, 0, 0);
+                        add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 53));
+                    end
+                    else begin
+                        if (obj_is_carrying_obj_pid(self_obj, 53) > restock_amt) then begin
+                            removed_qty := obj_is_carrying_obj_pid(self_obj, 53);
+                            if ((obj_is_carrying_obj_pid(self_obj, 53) - restock_amt) < removed_qty) then begin
+                                removed_qty := obj_is_carrying_obj_pid(self_obj, 53) - restock_amt;
+                            end
+                            if (removed_qty > 0) then begin
+                                restock_obj := obj_carrying_pid_obj(self_obj, 53);
+                                if (obj_type(self_obj) == 1) then begin
+                                    restock_obj := obj_carrying_pid_obj(self_obj, 53);
+                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
+                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
+                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                            debug_msg("armour pid == " + obj_pid(restock_obj));
+                                            rm_obj_from_inven(self_obj, restock_obj);
+                                            add_obj_to_inven(self_obj, restock_obj);
+                                        end
+                                    end
+                                    else begin
+                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
+                                            inven_unwield(self_obj);
+                                        end
+                                    end
+                                end
+                                restock_amt := rm_mult_objs_from_inven(self_obj, restock_obj, removed_qty);
+                                if (restock_amt == 0) then begin
+                                    toRemove_qty := obj_is_carrying_obj_pid(self_obj, 53) - restock_amt;
+                                    while ((toRemove_qty > 0) and obj_carrying_pid_obj(self_obj, 53)) do begin
+                                        restock_obj := obj_carrying_pid_obj(self_obj, 53);
+                                        rm_obj_from_inven(self_obj, restock_obj);
+                                        destroy_object(restock_obj);
+                                        toRemove_qty := toRemove_qty - 1;
+                                    end
+                                end
+                                else begin
+                                    destroy_object(restock_obj);
+                                end
+                            end
+                            restock_obj := 0;
+                            restock_amt := 0;
+                        end
+                        else begin
+                            restock_obj := 0;
+                        end
+                    end
+                end
+            end
+            else begin
+                if (obj_is_carrying_obj_pid(self_obj, 53) < restock_amt) then begin
+                    restock_obj := create_object(53, 0, 0);
+                    add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 53));
+                end
+                else begin
+                    if (obj_is_carrying_obj_pid(self_obj, 53) > restock_amt) then begin
+                        removed_qty := obj_is_carrying_obj_pid(self_obj, 53);
+                        if ((obj_is_carrying_obj_pid(self_obj, 53) - restock_amt) < removed_qty) then begin
+                            removed_qty := obj_is_carrying_obj_pid(self_obj, 53) - restock_amt;
+                        end
+                        if (removed_qty > 0) then begin
+                            restock_obj := obj_carrying_pid_obj(self_obj, 53);
+                            if (obj_type(self_obj) == 1) then begin
+                                restock_obj := obj_carrying_pid_obj(self_obj, 53);
+                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
+                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
+                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                        debug_msg("armour pid == " + obj_pid(restock_obj));
+                                        rm_obj_from_inven(self_obj, restock_obj);
+                                        add_obj_to_inven(self_obj, restock_obj);
+                                    end
+                                end
+                                else begin
+                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
+                                        inven_unwield(self_obj);
+                                    end
+                                end
+                            end
+                            restock_amt := rm_mult_objs_from_inven(self_obj, restock_obj, removed_qty);
+                            if (restock_amt == 0) then begin
+                                toRemove_qty := obj_is_carrying_obj_pid(self_obj, 53) - restock_amt;
+                                while ((toRemove_qty > 0) and obj_carrying_pid_obj(self_obj, 53)) do begin
+                                    restock_obj := obj_carrying_pid_obj(self_obj, 53);
+                                    rm_obj_from_inven(self_obj, restock_obj);
+                                    destroy_object(restock_obj);
+                                    toRemove_qty := toRemove_qty - 1;
+                                end
+                            end
+                            else begin
+                                destroy_object(restock_obj);
+                            end
+                        end
+                        restock_obj := 0;
+                        restock_amt := 0;
+                    end
+                    else begin
+                        restock_obj := 0;
+                    end
+                end
+            end
+            restock_amt := random(4, 8);
+            if (obj_is_carrying_obj_pid(self_obj, 110) < restock_amt) then begin
+                if (100 >= random(1, 100)) then begin
+                    if (obj_is_carrying_obj_pid(self_obj, 110) < restock_amt) then begin
+                        restock_obj := create_object(110, 0, 0);
+                        add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 110));
+                    end
+                    else begin
+                        if (obj_is_carrying_obj_pid(self_obj, 110) > restock_amt) then begin
+                            removed_qty := obj_is_carrying_obj_pid(self_obj, 110);
+                            if ((obj_is_carrying_obj_pid(self_obj, 110) - restock_amt) < removed_qty) then begin
+                                removed_qty := obj_is_carrying_obj_pid(self_obj, 110) - restock_amt;
+                            end
+                            if (removed_qty > 0) then begin
+                                restock_obj := obj_carrying_pid_obj(self_obj, 110);
+                                if (obj_type(self_obj) == 1) then begin
+                                    restock_obj := obj_carrying_pid_obj(self_obj, 110);
+                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
+                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
+                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                            debug_msg("armour pid == " + obj_pid(restock_obj));
+                                            rm_obj_from_inven(self_obj, restock_obj);
+                                            add_obj_to_inven(self_obj, restock_obj);
+                                        end
+                                    end
+                                    else begin
+                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
+                                            inven_unwield(self_obj);
+                                        end
+                                    end
+                                end
+                                restock_amt := rm_mult_objs_from_inven(self_obj, restock_obj, removed_qty);
+                                if (restock_amt == 0) then begin
+                                    toRemove_qty := obj_is_carrying_obj_pid(self_obj, 110) - restock_amt;
+                                    while ((toRemove_qty > 0) and obj_carrying_pid_obj(self_obj, 110)) do begin
+                                        restock_obj := obj_carrying_pid_obj(self_obj, 110);
+                                        rm_obj_from_inven(self_obj, restock_obj);
+                                        destroy_object(restock_obj);
+                                        toRemove_qty := toRemove_qty - 1;
+                                    end
+                                end
+                                else begin
+                                    destroy_object(restock_obj);
+                                end
+                            end
+                            restock_obj := 0;
+                            restock_amt := 0;
+                        end
+                        else begin
+                            restock_obj := 0;
+                        end
+                    end
+                end
+            end
+            else begin
+                if (obj_is_carrying_obj_pid(self_obj, 110) < restock_amt) then begin
+                    restock_obj := create_object(110, 0, 0);
+                    add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 110));
+                end
+                else begin
+                    if (obj_is_carrying_obj_pid(self_obj, 110) > restock_amt) then begin
+                        removed_qty := obj_is_carrying_obj_pid(self_obj, 110);
+                        if ((obj_is_carrying_obj_pid(self_obj, 110) - restock_amt) < removed_qty) then begin
+                            removed_qty := obj_is_carrying_obj_pid(self_obj, 110) - restock_amt;
+                        end
+                        if (removed_qty > 0) then begin
+                            restock_obj := obj_carrying_pid_obj(self_obj, 110);
+                            if (obj_type(self_obj) == 1) then begin
+                                restock_obj := obj_carrying_pid_obj(self_obj, 110);
+                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
+                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
+                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                        debug_msg("armour pid == " + obj_pid(restock_obj));
+                                        rm_obj_from_inven(self_obj, restock_obj);
+                                        add_obj_to_inven(self_obj, restock_obj);
+                                    end
+                                end
+                                else begin
+                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
+                                        inven_unwield(self_obj);
+                                    end
+                                end
+                            end
+                            restock_amt := rm_mult_objs_from_inven(self_obj, restock_obj, removed_qty);
+                            if (restock_amt == 0) then begin
+                                toRemove_qty := obj_is_carrying_obj_pid(self_obj, 110) - restock_amt;
+                                while ((toRemove_qty > 0) and obj_carrying_pid_obj(self_obj, 110)) do begin
+                                    restock_obj := obj_carrying_pid_obj(self_obj, 110);
+                                    rm_obj_from_inven(self_obj, restock_obj);
+                                    destroy_object(restock_obj);
+                                    toRemove_qty := toRemove_qty - 1;
+                                end
+                            end
+                            else begin
+                                destroy_object(restock_obj);
+                            end
+                        end
+                        restock_obj := 0;
+                        restock_amt := 0;
+                    end
+                    else begin
+                        restock_obj := 0;
+                    end
+                end
+            end
+            restock_amt := random(4, 8);
+            if (obj_is_carrying_obj_pid(self_obj, 109) < restock_amt) then begin
+                if (100 >= random(1, 100)) then begin
+                    if (obj_is_carrying_obj_pid(self_obj, 109) < restock_amt) then begin
+                        restock_obj := create_object(109, 0, 0);
+                        add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 109));
+                    end
+                    else begin
+                        if (obj_is_carrying_obj_pid(self_obj, 109) > restock_amt) then begin
+                            removed_qty := obj_is_carrying_obj_pid(self_obj, 109);
+                            if ((obj_is_carrying_obj_pid(self_obj, 109) - restock_amt) < removed_qty) then begin
+                                removed_qty := obj_is_carrying_obj_pid(self_obj, 109) - restock_amt;
+                            end
+                            if (removed_qty > 0) then begin
+                                restock_obj := obj_carrying_pid_obj(self_obj, 109);
+                                if (obj_type(self_obj) == 1) then begin
+                                    restock_obj := obj_carrying_pid_obj(self_obj, 109);
+                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
+                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
+                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                            debug_msg("armour pid == " + obj_pid(restock_obj));
+                                            rm_obj_from_inven(self_obj, restock_obj);
+                                            add_obj_to_inven(self_obj, restock_obj);
+                                        end
+                                    end
+                                    else begin
+                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
+                                            inven_unwield(self_obj);
+                                        end
+                                    end
+                                end
+                                restock_amt := rm_mult_objs_from_inven(self_obj, restock_obj, removed_qty);
+                                if (restock_amt == 0) then begin
+                                    toRemove_qty := obj_is_carrying_obj_pid(self_obj, 109) - restock_amt;
+                                    while ((toRemove_qty > 0) and obj_carrying_pid_obj(self_obj, 109)) do begin
+                                        restock_obj := obj_carrying_pid_obj(self_obj, 109);
+                                        rm_obj_from_inven(self_obj, restock_obj);
+                                        destroy_object(restock_obj);
+                                        toRemove_qty := toRemove_qty - 1;
+                                    end
+                                end
+                                else begin
+                                    destroy_object(restock_obj);
+                                end
+                            end
+                            restock_obj := 0;
+                            restock_amt := 0;
+                        end
+                        else begin
+                            restock_obj := 0;
+                        end
+                    end
+                end
+            end
+            else begin
+                if (obj_is_carrying_obj_pid(self_obj, 109) < restock_amt) then begin
+                    restock_obj := create_object(109, 0, 0);
+                    add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 109));
+                end
+                else begin
+                    if (obj_is_carrying_obj_pid(self_obj, 109) > restock_amt) then begin
+                        removed_qty := obj_is_carrying_obj_pid(self_obj, 109);
+                        if ((obj_is_carrying_obj_pid(self_obj, 109) - restock_amt) < removed_qty) then begin
+                            removed_qty := obj_is_carrying_obj_pid(self_obj, 109) - restock_amt;
+                        end
+                        if (removed_qty > 0) then begin
+                            restock_obj := obj_carrying_pid_obj(self_obj, 109);
+                            if (obj_type(self_obj) == 1) then begin
+                                restock_obj := obj_carrying_pid_obj(self_obj, 109);
+                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
+                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
+                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                        debug_msg("armour pid == " + obj_pid(restock_obj));
+                                        rm_obj_from_inven(self_obj, restock_obj);
+                                        add_obj_to_inven(self_obj, restock_obj);
+                                    end
+                                end
+                                else begin
+                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
+                                        inven_unwield(self_obj);
+                                    end
+                                end
+                            end
+                            restock_amt := rm_mult_objs_from_inven(self_obj, restock_obj, removed_qty);
+                            if (restock_amt == 0) then begin
+                                toRemove_qty := obj_is_carrying_obj_pid(self_obj, 109) - restock_amt;
+                                while ((toRemove_qty > 0) and obj_carrying_pid_obj(self_obj, 109)) do begin
+                                    restock_obj := obj_carrying_pid_obj(self_obj, 109);
+                                    rm_obj_from_inven(self_obj, restock_obj);
+                                    destroy_object(restock_obj);
+                                    toRemove_qty := toRemove_qty - 1;
+                                end
+                            end
+                            else begin
+                                destroy_object(restock_obj);
+                            end
+                        end
+                        restock_obj := 0;
+                        restock_amt := 0;
+                    end
+                    else begin
+                        restock_obj := 0;
+                    end
+                end
+            end
+            restock_amt := random(4, 8);
+            if (obj_is_carrying_obj_pid(self_obj, 48) < restock_amt) then begin
+                if (100 >= random(1, 100)) then begin
+                    if (obj_is_carrying_obj_pid(self_obj, 48) < restock_amt) then begin
+                        restock_obj := create_object(48, 0, 0);
+                        add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 48));
+                    end
+                    else begin
+                        if (obj_is_carrying_obj_pid(self_obj, 48) > restock_amt) then begin
+                            removed_qty := obj_is_carrying_obj_pid(self_obj, 48);
+                            if ((obj_is_carrying_obj_pid(self_obj, 48) - restock_amt) < removed_qty) then begin
+                                removed_qty := obj_is_carrying_obj_pid(self_obj, 48) - restock_amt;
+                            end
+                            if (removed_qty > 0) then begin
+                                restock_obj := obj_carrying_pid_obj(self_obj, 48);
+                                if (obj_type(self_obj) == 1) then begin
+                                    restock_obj := obj_carrying_pid_obj(self_obj, 48);
+                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
+                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
+                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                            debug_msg("armour pid == " + obj_pid(restock_obj));
+                                            rm_obj_from_inven(self_obj, restock_obj);
+                                            add_obj_to_inven(self_obj, restock_obj);
+                                        end
+                                    end
+                                    else begin
+                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
+                                            inven_unwield(self_obj);
+                                        end
+                                    end
+                                end
+                                restock_amt := rm_mult_objs_from_inven(self_obj, restock_obj, removed_qty);
+                                if (restock_amt == 0) then begin
+                                    toRemove_qty := obj_is_carrying_obj_pid(self_obj, 48) - restock_amt;
+                                    while ((toRemove_qty > 0) and obj_carrying_pid_obj(self_obj, 48)) do begin
+                                        restock_obj := obj_carrying_pid_obj(self_obj, 48);
+                                        rm_obj_from_inven(self_obj, restock_obj);
+                                        destroy_object(restock_obj);
+                                        toRemove_qty := toRemove_qty - 1;
+                                    end
+                                end
+                                else begin
+                                    destroy_object(restock_obj);
+                                end
+                            end
+                            restock_obj := 0;
+                            restock_amt := 0;
+                        end
+                        else begin
+                            restock_obj := 0;
+                        end
+                    end
+                end
+            end
+            else begin
+                if (obj_is_carrying_obj_pid(self_obj, 48) < restock_amt) then begin
+                    restock_obj := create_object(48, 0, 0);
+                    add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 48));
+                end
+                else begin
+                    if (obj_is_carrying_obj_pid(self_obj, 48) > restock_amt) then begin
+                        removed_qty := obj_is_carrying_obj_pid(self_obj, 48);
+                        if ((obj_is_carrying_obj_pid(self_obj, 48) - restock_amt) < removed_qty) then begin
+                            removed_qty := obj_is_carrying_obj_pid(self_obj, 48) - restock_amt;
+                        end
+                        if (removed_qty > 0) then begin
+                            restock_obj := obj_carrying_pid_obj(self_obj, 48);
+                            if (obj_type(self_obj) == 1) then begin
+                                restock_obj := obj_carrying_pid_obj(self_obj, 48);
+                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
+                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
+                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                        debug_msg("armour pid == " + obj_pid(restock_obj));
+                                        rm_obj_from_inven(self_obj, restock_obj);
+                                        add_obj_to_inven(self_obj, restock_obj);
+                                    end
+                                end
+                                else begin
+                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
+                                        inven_unwield(self_obj);
+                                    end
+                                end
+                            end
+                            restock_amt := rm_mult_objs_from_inven(self_obj, restock_obj, removed_qty);
+                            if (restock_amt == 0) then begin
+                                toRemove_qty := obj_is_carrying_obj_pid(self_obj, 48) - restock_amt;
+                                while ((toRemove_qty > 0) and obj_carrying_pid_obj(self_obj, 48)) do begin
+                                    restock_obj := obj_carrying_pid_obj(self_obj, 48);
+                                    rm_obj_from_inven(self_obj, restock_obj);
+                                    destroy_object(restock_obj);
+                                    toRemove_qty := toRemove_qty - 1;
+                                end
+                            end
+                            else begin
+                                destroy_object(restock_obj);
+                            end
+                        end
+                        restock_obj := 0;
+                        restock_amt := 0;
+                    end
+                    else begin
+                        restock_obj := 0;
+                    end
+                end
+            end
+            restock_amt := 1;
+            if (obj_is_carrying_obj_pid(self_obj, 80) < restock_amt) then begin
+                if (5 >= random(1, 100)) then begin
+                    if (obj_is_carrying_obj_pid(self_obj, 80) < restock_amt) then begin
+                        restock_obj := create_object(80, 0, 0);
+                        add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 80));
+                    end
+                    else begin
+                        if (obj_is_carrying_obj_pid(self_obj, 80) > restock_amt) then begin
+                            removed_qty := obj_is_carrying_obj_pid(self_obj, 80);
+                            if ((obj_is_carrying_obj_pid(self_obj, 80) - restock_amt) < removed_qty) then begin
+                                removed_qty := obj_is_carrying_obj_pid(self_obj, 80) - restock_amt;
+                            end
+                            if (removed_qty > 0) then begin
+                                restock_obj := obj_carrying_pid_obj(self_obj, 80);
+                                if (obj_type(self_obj) == 1) then begin
+                                    restock_obj := obj_carrying_pid_obj(self_obj, 80);
+                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
+                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
+                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                            debug_msg("armour pid == " + obj_pid(restock_obj));
+                                            rm_obj_from_inven(self_obj, restock_obj);
+                                            add_obj_to_inven(self_obj, restock_obj);
+                                        end
+                                    end
+                                    else begin
+                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
+                                            inven_unwield(self_obj);
+                                        end
+                                    end
+                                end
+                                restock_amt := rm_mult_objs_from_inven(self_obj, restock_obj, removed_qty);
+                                if (restock_amt == 0) then begin
+                                    toRemove_qty := obj_is_carrying_obj_pid(self_obj, 80) - restock_amt;
+                                    while ((toRemove_qty > 0) and obj_carrying_pid_obj(self_obj, 80)) do begin
+                                        restock_obj := obj_carrying_pid_obj(self_obj, 80);
+                                        rm_obj_from_inven(self_obj, restock_obj);
+                                        destroy_object(restock_obj);
+                                        toRemove_qty := toRemove_qty - 1;
+                                    end
+                                end
+                                else begin
+                                    destroy_object(restock_obj);
+                                end
+                            end
+                            restock_obj := 0;
+                            restock_amt := 0;
+                        end
+                        else begin
+                            restock_obj := 0;
+                        end
+                    end
+                end
+            end
+            else begin
+                if (obj_is_carrying_obj_pid(self_obj, 80) < restock_amt) then begin
+                    restock_obj := create_object(80, 0, 0);
+                    add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 80));
+                end
+                else begin
+                    if (obj_is_carrying_obj_pid(self_obj, 80) > restock_amt) then begin
+                        removed_qty := obj_is_carrying_obj_pid(self_obj, 80);
+                        if ((obj_is_carrying_obj_pid(self_obj, 80) - restock_amt) < removed_qty) then begin
+                            removed_qty := obj_is_carrying_obj_pid(self_obj, 80) - restock_amt;
+                        end
+                        if (removed_qty > 0) then begin
+                            restock_obj := obj_carrying_pid_obj(self_obj, 80);
+                            if (obj_type(self_obj) == 1) then begin
+                                restock_obj := obj_carrying_pid_obj(self_obj, 80);
+                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
+                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
+                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                        debug_msg("armour pid == " + obj_pid(restock_obj));
+                                        rm_obj_from_inven(self_obj, restock_obj);
+                                        add_obj_to_inven(self_obj, restock_obj);
+                                    end
+                                end
+                                else begin
+                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
+                                        inven_unwield(self_obj);
+                                    end
+                                end
+                            end
+                            restock_amt := rm_mult_objs_from_inven(self_obj, restock_obj, removed_qty);
+                            if (restock_amt == 0) then begin
+                                toRemove_qty := obj_is_carrying_obj_pid(self_obj, 80) - restock_amt;
+                                while ((toRemove_qty > 0) and obj_carrying_pid_obj(self_obj, 80)) do begin
+                                    restock_obj := obj_carrying_pid_obj(self_obj, 80);
+                                    rm_obj_from_inven(self_obj, restock_obj);
+                                    destroy_object(restock_obj);
+                                    toRemove_qty := toRemove_qty - 1;
+                                end
+                            end
+                            else begin
+                                destroy_object(restock_obj);
+                            end
+                        end
+                        restock_obj := 0;
+                        restock_amt := 0;
+                    end
+                    else begin
+                        restock_obj := 0;
+                    end
+                end
+            end
+            restock_amt := 1;
+            if (obj_is_carrying_obj_pid(self_obj, 47) < restock_amt) then begin
+                if (40 >= random(1, 100)) then begin
+                    if (obj_is_carrying_obj_pid(self_obj, 47) < restock_amt) then begin
+                        restock_obj := create_object(47, 0, 0);
+                        add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 47));
+                    end
+                    else begin
+                        if (obj_is_carrying_obj_pid(self_obj, 47) > restock_amt) then begin
+                            removed_qty := obj_is_carrying_obj_pid(self_obj, 47);
+                            if ((obj_is_carrying_obj_pid(self_obj, 47) - restock_amt) < removed_qty) then begin
+                                removed_qty := obj_is_carrying_obj_pid(self_obj, 47) - restock_amt;
+                            end
+                            if (removed_qty > 0) then begin
+                                restock_obj := obj_carrying_pid_obj(self_obj, 47);
+                                if (obj_type(self_obj) == 1) then begin
+                                    restock_obj := obj_carrying_pid_obj(self_obj, 47);
+                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
+                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
+                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                            debug_msg("armour pid == " + obj_pid(restock_obj));
+                                            rm_obj_from_inven(self_obj, restock_obj);
+                                            add_obj_to_inven(self_obj, restock_obj);
+                                        end
+                                    end
+                                    else begin
+                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
+                                            inven_unwield(self_obj);
+                                        end
+                                    end
+                                end
+                                restock_amt := rm_mult_objs_from_inven(self_obj, restock_obj, removed_qty);
+                                if (restock_amt == 0) then begin
+                                    toRemove_qty := obj_is_carrying_obj_pid(self_obj, 47) - restock_amt;
+                                    while ((toRemove_qty > 0) and obj_carrying_pid_obj(self_obj, 47)) do begin
+                                        restock_obj := obj_carrying_pid_obj(self_obj, 47);
+                                        rm_obj_from_inven(self_obj, restock_obj);
+                                        destroy_object(restock_obj);
+                                        toRemove_qty := toRemove_qty - 1;
+                                    end
+                                end
+                                else begin
+                                    destroy_object(restock_obj);
+                                end
+                            end
+                            restock_obj := 0;
+                            restock_amt := 0;
+                        end
+                        else begin
+                            restock_obj := 0;
+                        end
+                    end
+                end
+            end
+            else begin
+                if (obj_is_carrying_obj_pid(self_obj, 47) < restock_amt) then begin
+                    restock_obj := create_object(47, 0, 0);
+                    add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 47));
+                end
+                else begin
+                    if (obj_is_carrying_obj_pid(self_obj, 47) > restock_amt) then begin
+                        removed_qty := obj_is_carrying_obj_pid(self_obj, 47);
+                        if ((obj_is_carrying_obj_pid(self_obj, 47) - restock_amt) < removed_qty) then begin
+                            removed_qty := obj_is_carrying_obj_pid(self_obj, 47) - restock_amt;
+                        end
+                        if (removed_qty > 0) then begin
+                            restock_obj := obj_carrying_pid_obj(self_obj, 47);
+                            if (obj_type(self_obj) == 1) then begin
+                                restock_obj := obj_carrying_pid_obj(self_obj, 47);
+                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
+                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
+                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                        debug_msg("armour pid == " + obj_pid(restock_obj));
+                                        rm_obj_from_inven(self_obj, restock_obj);
+                                        add_obj_to_inven(self_obj, restock_obj);
+                                    end
+                                end
+                                else begin
+                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
+                                        inven_unwield(self_obj);
+                                    end
+                                end
+                            end
+                            restock_amt := rm_mult_objs_from_inven(self_obj, restock_obj, removed_qty);
+                            if (restock_amt == 0) then begin
+                                toRemove_qty := obj_is_carrying_obj_pid(self_obj, 47) - restock_amt;
+                                while ((toRemove_qty > 0) and obj_carrying_pid_obj(self_obj, 47)) do begin
+                                    restock_obj := obj_carrying_pid_obj(self_obj, 47);
+                                    rm_obj_from_inven(self_obj, restock_obj);
+                                    destroy_object(restock_obj);
+                                    toRemove_qty := toRemove_qty - 1;
+                                end
+                            end
+                            else begin
+                                destroy_object(restock_obj);
+                            end
+                        end
+                        restock_obj := 0;
+                        restock_amt := 0;
+                    end
+                    else begin
+                        restock_obj := 0;
+                    end
+                end
+            end
+            restock_amt := 1;
+            if (obj_is_carrying_obj_pid(self_obj, 117) < restock_amt) then begin
+                if (10 >= random(1, 100)) then begin
+                    if (obj_is_carrying_obj_pid(self_obj, 117) < restock_amt) then begin
+                        restock_obj := create_object(117, 0, 0);
+                        add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 117));
+                    end
+                    else begin
+                        if (obj_is_carrying_obj_pid(self_obj, 117) > restock_amt) then begin
+                            removed_qty := obj_is_carrying_obj_pid(self_obj, 117);
+                            if ((obj_is_carrying_obj_pid(self_obj, 117) - restock_amt) < removed_qty) then begin
+                                removed_qty := obj_is_carrying_obj_pid(self_obj, 117) - restock_amt;
+                            end
+                            if (removed_qty > 0) then begin
+                                restock_obj := obj_carrying_pid_obj(self_obj, 117);
+                                if (obj_type(self_obj) == 1) then begin
+                                    restock_obj := obj_carrying_pid_obj(self_obj, 117);
+                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
+                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
+                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                            debug_msg("armour pid == " + obj_pid(restock_obj));
+                                            rm_obj_from_inven(self_obj, restock_obj);
+                                            add_obj_to_inven(self_obj, restock_obj);
+                                        end
+                                    end
+                                    else begin
+                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
+                                            inven_unwield(self_obj);
+                                        end
+                                    end
+                                end
+                                restock_amt := rm_mult_objs_from_inven(self_obj, restock_obj, removed_qty);
+                                if (restock_amt == 0) then begin
+                                    toRemove_qty := obj_is_carrying_obj_pid(self_obj, 117) - restock_amt;
+                                    while ((toRemove_qty > 0) and obj_carrying_pid_obj(self_obj, 117)) do begin
+                                        restock_obj := obj_carrying_pid_obj(self_obj, 117);
+                                        rm_obj_from_inven(self_obj, restock_obj);
+                                        destroy_object(restock_obj);
+                                        toRemove_qty := toRemove_qty - 1;
+                                    end
+                                end
+                                else begin
+                                    destroy_object(restock_obj);
+                                end
+                            end
+                            restock_obj := 0;
+                            restock_amt := 0;
+                        end
+                        else begin
+                            restock_obj := 0;
+                        end
+                    end
+                end
+            end
+            else begin
+                if (obj_is_carrying_obj_pid(self_obj, 117) < restock_amt) then begin
+                    restock_obj := create_object(117, 0, 0);
+                    add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 117));
+                end
+                else begin
+                    if (obj_is_carrying_obj_pid(self_obj, 117) > restock_amt) then begin
+                        removed_qty := obj_is_carrying_obj_pid(self_obj, 117);
+                        if ((obj_is_carrying_obj_pid(self_obj, 117) - restock_amt) < removed_qty) then begin
+                            removed_qty := obj_is_carrying_obj_pid(self_obj, 117) - restock_amt;
+                        end
+                        if (removed_qty > 0) then begin
+                            restock_obj := obj_carrying_pid_obj(self_obj, 117);
+                            if (obj_type(self_obj) == 1) then begin
+                                restock_obj := obj_carrying_pid_obj(self_obj, 117);
+                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
+                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
+                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                        debug_msg("armour pid == " + obj_pid(restock_obj));
+                                        rm_obj_from_inven(self_obj, restock_obj);
+                                        add_obj_to_inven(self_obj, restock_obj);
+                                    end
+                                end
+                                else begin
+                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
+                                        inven_unwield(self_obj);
+                                    end
+                                end
+                            end
+                            restock_amt := rm_mult_objs_from_inven(self_obj, restock_obj, removed_qty);
+                            if (restock_amt == 0) then begin
+                                toRemove_qty := obj_is_carrying_obj_pid(self_obj, 117) - restock_amt;
+                                while ((toRemove_qty > 0) and obj_carrying_pid_obj(self_obj, 117)) do begin
+                                    restock_obj := obj_carrying_pid_obj(self_obj, 117);
+                                    rm_obj_from_inven(self_obj, restock_obj);
+                                    destroy_object(restock_obj);
+                                    toRemove_qty := toRemove_qty - 1;
+                                end
+                            end
+                            else begin
+                                destroy_object(restock_obj);
+                            end
+                        end
+                        restock_obj := 0;
+                        restock_amt := 0;
+                    end
+                    else begin
+                        restock_obj := 0;
+                    end
+                end
+            end
+            restock_amt := 1;
+            if (obj_is_carrying_obj_pid(self_obj, 272) < restock_amt) then begin
+                if (10 >= random(1, 100)) then begin
+                    if (obj_is_carrying_obj_pid(self_obj, 272) < restock_amt) then begin
+                        restock_obj := create_object(272, 0, 0);
+                        add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 272));
+                    end
+                    else begin
+                        if (obj_is_carrying_obj_pid(self_obj, 272) > restock_amt) then begin
+                            removed_qty := obj_is_carrying_obj_pid(self_obj, 272);
+                            if ((obj_is_carrying_obj_pid(self_obj, 272) - restock_amt) < removed_qty) then begin
+                                removed_qty := obj_is_carrying_obj_pid(self_obj, 272) - restock_amt;
+                            end
+                            if (removed_qty > 0) then begin
+                                restock_obj := obj_carrying_pid_obj(self_obj, 272);
+                                if (obj_type(self_obj) == 1) then begin
+                                    restock_obj := obj_carrying_pid_obj(self_obj, 272);
+                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
+                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
+                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                            debug_msg("armour pid == " + obj_pid(restock_obj));
+                                            rm_obj_from_inven(self_obj, restock_obj);
+                                            add_obj_to_inven(self_obj, restock_obj);
+                                        end
+                                    end
+                                    else begin
+                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
+                                            inven_unwield(self_obj);
+                                        end
+                                    end
+                                end
+                                restock_amt := rm_mult_objs_from_inven(self_obj, restock_obj, removed_qty);
+                                if (restock_amt == 0) then begin
+                                    toRemove_qty := obj_is_carrying_obj_pid(self_obj, 272) - restock_amt;
+                                    while ((toRemove_qty > 0) and obj_carrying_pid_obj(self_obj, 272)) do begin
+                                        restock_obj := obj_carrying_pid_obj(self_obj, 272);
+                                        rm_obj_from_inven(self_obj, restock_obj);
+                                        destroy_object(restock_obj);
+                                        toRemove_qty := toRemove_qty - 1;
+                                    end
+                                end
+                                else begin
+                                    destroy_object(restock_obj);
+                                end
+                            end
+                            restock_obj := 0;
+                            restock_amt := 0;
+                        end
+                        else begin
+                            restock_obj := 0;
+                        end
+                    end
+                end
+            end
+            else begin
+                if (obj_is_carrying_obj_pid(self_obj, 272) < restock_amt) then begin
+                    restock_obj := create_object(272, 0, 0);
+                    add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 272));
+                end
+                else begin
+                    if (obj_is_carrying_obj_pid(self_obj, 272) > restock_amt) then begin
+                        removed_qty := obj_is_carrying_obj_pid(self_obj, 272);
+                        if ((obj_is_carrying_obj_pid(self_obj, 272) - restock_amt) < removed_qty) then begin
+                            removed_qty := obj_is_carrying_obj_pid(self_obj, 272) - restock_amt;
+                        end
+                        if (removed_qty > 0) then begin
+                            restock_obj := obj_carrying_pid_obj(self_obj, 272);
+                            if (obj_type(self_obj) == 1) then begin
+                                restock_obj := obj_carrying_pid_obj(self_obj, 272);
+                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
+                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
+                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                        debug_msg("armour pid == " + obj_pid(restock_obj));
+                                        rm_obj_from_inven(self_obj, restock_obj);
+                                        add_obj_to_inven(self_obj, restock_obj);
+                                    end
+                                end
+                                else begin
+                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
+                                        inven_unwield(self_obj);
+                                    end
+                                end
+                            end
+                            restock_amt := rm_mult_objs_from_inven(self_obj, restock_obj, removed_qty);
+                            if (restock_amt == 0) then begin
+                                toRemove_qty := obj_is_carrying_obj_pid(self_obj, 272) - restock_amt;
+                                while ((toRemove_qty > 0) and obj_carrying_pid_obj(self_obj, 272)) do begin
+                                    restock_obj := obj_carrying_pid_obj(self_obj, 272);
+                                    rm_obj_from_inven(self_obj, restock_obj);
+                                    destroy_object(restock_obj);
+                                    toRemove_qty := toRemove_qty - 1;
+                                end
+                            end
+                            else begin
+                                destroy_object(restock_obj);
+                            end
+                        end
+                        restock_obj := 0;
+                        restock_amt := 0;
+                    end
+                    else begin
+                        restock_obj := 0;
+                    end
+                end
+            end
+            restock_amt := 1;
+            if (obj_is_carrying_obj_pid(self_obj, 271) < restock_amt) then begin
+                if (10 >= random(1, 100)) then begin
+                    if (obj_is_carrying_obj_pid(self_obj, 271) < restock_amt) then begin
+                        restock_obj := create_object(271, 0, 0);
+                        add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 271));
+                    end
+                    else begin
+                        if (obj_is_carrying_obj_pid(self_obj, 271) > restock_amt) then begin
+                            removed_qty := obj_is_carrying_obj_pid(self_obj, 271);
+                            if ((obj_is_carrying_obj_pid(self_obj, 271) - restock_amt) < removed_qty) then begin
+                                removed_qty := obj_is_carrying_obj_pid(self_obj, 271) - restock_amt;
+                            end
+                            if (removed_qty > 0) then begin
+                                restock_obj := obj_carrying_pid_obj(self_obj, 271);
+                                if (obj_type(self_obj) == 1) then begin
+                                    restock_obj := obj_carrying_pid_obj(self_obj, 271);
+                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
+                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
+                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                            debug_msg("armour pid == " + obj_pid(restock_obj));
+                                            rm_obj_from_inven(self_obj, restock_obj);
+                                            add_obj_to_inven(self_obj, restock_obj);
+                                        end
+                                    end
+                                    else begin
+                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
+                                            inven_unwield(self_obj);
+                                        end
+                                    end
+                                end
+                                restock_amt := rm_mult_objs_from_inven(self_obj, restock_obj, removed_qty);
+                                if (restock_amt == 0) then begin
+                                    toRemove_qty := obj_is_carrying_obj_pid(self_obj, 271) - restock_amt;
+                                    while ((toRemove_qty > 0) and obj_carrying_pid_obj(self_obj, 271)) do begin
+                                        restock_obj := obj_carrying_pid_obj(self_obj, 271);
+                                        rm_obj_from_inven(self_obj, restock_obj);
+                                        destroy_object(restock_obj);
+                                        toRemove_qty := toRemove_qty - 1;
+                                    end
+                                end
+                                else begin
+                                    destroy_object(restock_obj);
+                                end
+                            end
+                            restock_obj := 0;
+                            restock_amt := 0;
+                        end
+                        else begin
+                            restock_obj := 0;
+                        end
+                    end
+                end
+            end
+            else begin
+                if (obj_is_carrying_obj_pid(self_obj, 271) < restock_amt) then begin
+                    restock_obj := create_object(271, 0, 0);
+                    add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 271));
+                end
+                else begin
+                    if (obj_is_carrying_obj_pid(self_obj, 271) > restock_amt) then begin
+                        removed_qty := obj_is_carrying_obj_pid(self_obj, 271);
+                        if ((obj_is_carrying_obj_pid(self_obj, 271) - restock_amt) < removed_qty) then begin
+                            removed_qty := obj_is_carrying_obj_pid(self_obj, 271) - restock_amt;
+                        end
+                        if (removed_qty > 0) then begin
+                            restock_obj := obj_carrying_pid_obj(self_obj, 271);
+                            if (obj_type(self_obj) == 1) then begin
+                                restock_obj := obj_carrying_pid_obj(self_obj, 271);
+                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
+                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
+                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                        debug_msg("armour pid == " + obj_pid(restock_obj));
+                                        rm_obj_from_inven(self_obj, restock_obj);
+                                        add_obj_to_inven(self_obj, restock_obj);
+                                    end
+                                end
+                                else begin
+                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
+                                        inven_unwield(self_obj);
+                                    end
+                                end
+                            end
+                            restock_amt := rm_mult_objs_from_inven(self_obj, restock_obj, removed_qty);
+                            if (restock_amt == 0) then begin
+                                toRemove_qty := obj_is_carrying_obj_pid(self_obj, 271) - restock_amt;
+                                while ((toRemove_qty > 0) and obj_carrying_pid_obj(self_obj, 271)) do begin
+                                    restock_obj := obj_carrying_pid_obj(self_obj, 271);
+                                    rm_obj_from_inven(self_obj, restock_obj);
+                                    destroy_object(restock_obj);
+                                    toRemove_qty := toRemove_qty - 1;
+                                end
+                            end
+                            else begin
+                                destroy_object(restock_obj);
+                            end
+                        end
+                        restock_obj := 0;
+                        restock_amt := 0;
+                    end
+                    else begin
+                        restock_obj := 0;
+                    end
+                end
+            end
+            restock_amt := random(2, 4);
+            if (obj_is_carrying_obj_pid(self_obj, 318) < restock_amt) then begin
+                if (60 >= random(1, 100)) then begin
+                    if (obj_is_carrying_obj_pid(self_obj, 318) < restock_amt) then begin
+                        restock_obj := create_object(318, 0, 0);
+                        add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 318));
+                    end
+                    else begin
+                        if (obj_is_carrying_obj_pid(self_obj, 318) > restock_amt) then begin
+                            removed_qty := obj_is_carrying_obj_pid(self_obj, 318);
+                            if ((obj_is_carrying_obj_pid(self_obj, 318) - restock_amt) < removed_qty) then begin
+                                removed_qty := obj_is_carrying_obj_pid(self_obj, 318) - restock_amt;
+                            end
+                            if (removed_qty > 0) then begin
+                                restock_obj := obj_carrying_pid_obj(self_obj, 318);
+                                if (obj_type(self_obj) == 1) then begin
+                                    restock_obj := obj_carrying_pid_obj(self_obj, 318);
+                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
+                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
+                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                            debug_msg("armour pid == " + obj_pid(restock_obj));
+                                            rm_obj_from_inven(self_obj, restock_obj);
+                                            add_obj_to_inven(self_obj, restock_obj);
+                                        end
+                                    end
+                                    else begin
+                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
+                                            inven_unwield(self_obj);
+                                        end
+                                    end
+                                end
+                                restock_amt := rm_mult_objs_from_inven(self_obj, restock_obj, removed_qty);
+                                if (restock_amt == 0) then begin
+                                    toRemove_qty := obj_is_carrying_obj_pid(self_obj, 318) - restock_amt;
+                                    while ((toRemove_qty > 0) and obj_carrying_pid_obj(self_obj, 318)) do begin
+                                        restock_obj := obj_carrying_pid_obj(self_obj, 318);
+                                        rm_obj_from_inven(self_obj, restock_obj);
+                                        destroy_object(restock_obj);
+                                        toRemove_qty := toRemove_qty - 1;
+                                    end
+                                end
+                                else begin
+                                    destroy_object(restock_obj);
+                                end
+                            end
+                            restock_obj := 0;
+                            restock_amt := 0;
+                        end
+                        else begin
+                            restock_obj := 0;
+                        end
+                    end
+                end
+            end
+            else begin
+                if (obj_is_carrying_obj_pid(self_obj, 318) < restock_amt) then begin
+                    restock_obj := create_object(318, 0, 0);
+                    add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 318));
+                end
+                else begin
+                    if (obj_is_carrying_obj_pid(self_obj, 318) > restock_amt) then begin
+                        removed_qty := obj_is_carrying_obj_pid(self_obj, 318);
+                        if ((obj_is_carrying_obj_pid(self_obj, 318) - restock_amt) < removed_qty) then begin
+                            removed_qty := obj_is_carrying_obj_pid(self_obj, 318) - restock_amt;
+                        end
+                        if (removed_qty > 0) then begin
+                            restock_obj := obj_carrying_pid_obj(self_obj, 318);
+                            if (obj_type(self_obj) == 1) then begin
+                                restock_obj := obj_carrying_pid_obj(self_obj, 318);
+                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
+                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
+                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                        debug_msg("armour pid == " + obj_pid(restock_obj));
+                                        rm_obj_from_inven(self_obj, restock_obj);
+                                        add_obj_to_inven(self_obj, restock_obj);
+                                    end
+                                end
+                                else begin
+                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
+                                        inven_unwield(self_obj);
+                                    end
+                                end
+                            end
+                            restock_amt := rm_mult_objs_from_inven(self_obj, restock_obj, removed_qty);
+                            if (restock_amt == 0) then begin
+                                toRemove_qty := obj_is_carrying_obj_pid(self_obj, 318) - restock_amt;
+                                while ((toRemove_qty > 0) and obj_carrying_pid_obj(self_obj, 318)) do begin
+                                    restock_obj := obj_carrying_pid_obj(self_obj, 318);
+                                    rm_obj_from_inven(self_obj, restock_obj);
+                                    destroy_object(restock_obj);
+                                    toRemove_qty := toRemove_qty - 1;
+                                end
+                            end
+                            else begin
+                                destroy_object(restock_obj);
+                            end
+                        end
+                        restock_obj := 0;
+                        restock_amt := 0;
+                    end
+                    else begin
+                        restock_obj := 0;
+                    end
+                end
+            end
+            set_local_var(4, (random(7, 14) * (24 * (60 * (60 * 10)))) + game_time);
+            if ((game_time < 0) and (local_var(4) > 0)) then begin
+                set_local_var(4, 0);
+            end
+        end
+    end
+end
+
+procedure pickup_p_proc
+begin
+end
+
+procedure use_p_proc
+begin
+    if (pater and (pater != -1)) then begin
+        script_overrides;
+        add_timer_event(pater, 0, 10);
+    end
+    else begin
+        caught_tamper := 0;
+        user_obj := source_obj;
+        if (user_obj != 0) then begin
+            if (caught_tamper == 0) then begin
+                if (1) then begin
+                    if (0 != 0) then begin
+                        if (obj_is_visible_flag(0) and ((critter_state(0) bwand 1) == 0)) then begin
+                            if (obj_can_see_obj(0, user_obj)) then begin
+                                caught_tamper := 1;
+                            end
+                        end
+                    end
+                end
+            end
+            if (caught_tamper) then begin
+                if (caught_tamper) then begin
+                    script_overrides;
+                    if (((local_var(0) bwand 1024) != 0) or 0) then begin
+                        attack_setup(0, user_obj);
+                    end
+                    else begin
+                        float_msg(0, g_mstr(5400), FLOAT_MSG_YELLOW);
+                    end
+                    set_local_var(0, local_var(0) bwor 1024);
+                end
+            end
+        end
+    end
+end
+
+procedure damage_p_proc
+begin
+    if (obj_is_locked(self_obj)) then begin
+        if (target_obj != 0) then begin
+            if (weapon_dmg_type(target_obj) == 6) then begin
+                if (1) then begin
+                    display_msg(message_str(SCRIPT_ZILOCKER, 300));
+                    obj_unlock(self_obj);
+                end
+                else begin
+                    display_msg(message_str(SCRIPT_ZILOCKER, 301));
+                end
+            end
+        end
+    end
+    user_obj := source_obj;
+    if (user_obj != 0) then begin
+        if (caught_tamper) then begin
+            script_overrides;
+            if (((local_var(0) bwand 1024) != 0) or 0) then begin
+                attack_setup(0, user_obj);
+            end
+            else begin
+                float_msg(0, g_mstr(5400), FLOAT_MSG_YELLOW);
+            end
+            set_local_var(0, local_var(0) bwor 1024);
+        end
+    end
+    if ((pater != -1) and pater and (user_obj == dude_obj)) then begin
+        script_overrides;
+        add_timer_event(pater, 0, 10);
+    end
+end
+
+procedure map_exit_p_proc
+begin
+end
+
+procedure map_update_p_proc
+begin
+    if (0) then begin
+        obj_close(self_obj);
+    end
+    if (0 and 1) then begin
+        obj_lock(self_obj);
+    end
+end
+
+procedure use_obj_on_p_proc
+begin
+    if (pater and (pater != -1)) then begin
+        script_overrides;
+        add_timer_event(pater, 0, 10);
+    end
+    else begin
+        caught_tamper := 0;
+        user_obj := source_obj;
+        if (user_obj != 0) then begin
+            if (caught_tamper == 0) then begin
+                if (1) then begin
+                    if (0 != 0) then begin
+                        if (obj_is_visible_flag(0) and ((critter_state(0) bwand 1) == 0)) then begin
+                            if (obj_can_see_obj(0, user_obj)) then begin
+                                caught_tamper := 1;
+                            end
+                        end
+                    end
+                end
+            end
+            if (caught_tamper) then begin
+                if (caught_tamper) then begin
+                    script_overrides;
+                    if (((local_var(0) bwand 1024) != 0) or 0) then begin
+                        attack_setup(0, user_obj);
+                    end
+                    else begin
+                        float_msg(0, g_mstr(5400), FLOAT_MSG_YELLOW);
+                    end
+                    set_local_var(0, local_var(0) bwor 1024);
+                end
+            end
+            else begin
+                if (obj_is_locked(self_obj)) then begin
+                    if (obj_pid(obj_being_used_with) == 84) then begin
+                        script_overrides;
+                        if (1) then begin
+                            if (is_success(roll_vs_skill(user_obj, 9, -75 + 20))) then begin
+                                script_overrides;
+                                if (user_obj == dude_obj) then begin
+                                    display_msg(message_str(SCRIPT_ZILOCKER, 100));
+                                    if (((local_var(0) bwand 512) != 0) == 0) then begin
+                                        give_exp_points(25);
+                                        display_msg(g_mstr(100) + 25 + g_mstr(101));
+                                    end
+                                    set_local_var(0, local_var(0) bwor 512);
+                                end
+                                else begin
+                                    if (user_obj != 0) then begin
+                                        display_msg(obj_name(user_obj) + message_str(SCRIPT_ZILOCKER, 200));
+                                        if (((local_var(0) bwand 512) != 0) == 0) then begin
+                                            give_exp_points(25);
+                                            display_msg(g_mstr(100) + 25 + g_mstr(101));
+                                        end
+                                        set_local_var(0, local_var(0) bwor 512);
+                                    end
+                                end
+                                debug_msg("unlock_success_msg");
+                                obj_unlock(self_obj);
+                            end
+                            else begin
+                                script_overrides;
+                                if (user_obj == dude_obj) then begin
+                                    display_msg(message_str(SCRIPT_ZILOCKER, 101));
+                                end
+                                else begin
+                                    if (user_obj != 0) then begin
+                                        display_msg(obj_name(user_obj) + message_str(SCRIPT_ZILOCKER, 201));
+                                    end
+                                end
+                                debug_msg("unlock_fail_msg");
+                            end
+                        end
+                    end
+                    else begin
+                        if (obj_pid(obj_being_used_with) == 410) then begin
+                            script_overrides;
+                            if (1) then begin
+                                if (is_success(roll_vs_skill(user_obj, 9, -75 + 20))) then begin
+                                    script_overrides;
+                                    if (user_obj == dude_obj) then begin
+                                        display_msg(message_str(SCRIPT_ZILOCKER, 100));
+                                        if (((local_var(0) bwand 512) != 0) == 0) then begin
+                                            give_exp_points(25);
+                                            display_msg(g_mstr(100) + 25 + g_mstr(101));
+                                        end
+                                        set_local_var(0, local_var(0) bwor 512);
+                                    end
+                                    else begin
+                                        if (user_obj != 0) then begin
+                                            display_msg(obj_name(user_obj) + message_str(SCRIPT_ZILOCKER, 200));
+                                            if (((local_var(0) bwand 512) != 0) == 0) then begin
+                                                give_exp_points(25);
+                                                display_msg(g_mstr(100) + 25 + g_mstr(101));
+                                            end
+                                            set_local_var(0, local_var(0) bwor 512);
+                                        end
+                                    end
+                                    debug_msg("unlock_success_msg");
+                                    obj_unlock(self_obj);
+                                end
+                                else begin
+                                    script_overrides;
+                                    if (user_obj == dude_obj) then begin
+                                        display_msg(message_str(SCRIPT_ZILOCKER, 101));
+                                    end
+                                    else begin
+                                        if (user_obj != 0) then begin
+                                            display_msg(obj_name(user_obj) + message_str(SCRIPT_ZILOCKER, 201));
+                                        end
+                                    end
+                                    debug_msg("unlock_fail_msg");
+                                end
+                            end
+                        end
+                        else begin
+                            if (obj_pid(obj_being_used_with) == 20) then begin
+                                script_overrides;
+                                if (is_success(do_check(user_obj, 0, 0))) then begin
+                                    if (user_obj == dude_obj) then begin
+                                        display_msg(message_str(SCRIPT_ZILOCKER, 400));
+                                        if (((local_var(0) bwand 512) != 0) == 0) then begin
+                                            give_exp_points(25);
+                                            display_msg(g_mstr(100) + 25 + g_mstr(101));
+                                        end
+                                        set_local_var(0, local_var(0) bwor 512);
+                                    end
+                                    else begin
+                                        if (user_obj != 0) then begin
+                                            display_msg(obj_name(user_obj) + message_str(SCRIPT_ZILOCKER, 500));
+                                            if (((local_var(0) bwand 512) != 0) == 0) then begin
+                                                give_exp_points(25);
+                                                display_msg(g_mstr(100) + 25 + g_mstr(101));
+                                            end
+                                            set_local_var(0, local_var(0) bwor 512);
+                                        end
+                                    end
+                                    debug_msg("pry_success_msg");
+                                    obj_unlock(self_obj);
+                                end
+                                else begin
+                                    if (user_obj == dude_obj) then begin
+                                        display_msg(message_str(SCRIPT_ZILOCKER, 401));
+                                    end
+                                    else begin
+                                        if (user_obj != 0) then begin
+                                            display_msg(obj_name(user_obj) + message_str(SCRIPT_ZILOCKER, 501));
+                                        end
+                                    end
+                                    debug_msg("pry_fail_msg");
+                                end
+                            end
+                        end
+                    end
+                end
+                else begin
+                    if (obj_pid(obj_being_used_with) == 84) then begin
+                        script_overrides;
+                        if (1) then begin
+                            if (is_success(roll_vs_skill(user_obj, 9, -75 + 40))) then begin
+                                script_overrides;
+                                if (user_obj == dude_obj) then begin
+                                    display_msg(message_str(SCRIPT_ZILOCKER, 102));
+                                    if (((local_var(0) bwand 512) != 0) == 0) then begin
+                                        give_exp_points(25);
+                                        display_msg(g_mstr(100) + 25 + g_mstr(101));
+                                    end
+                                    set_local_var(0, local_var(0) bwor 512);
+                                end
+                                else begin
+                                    if (user_obj != 0) then begin
+                                        display_msg(obj_name(user_obj) + message_str(SCRIPT_ZILOCKER, 202));
+                                        if (((local_var(0) bwand 512) != 0) == 0) then begin
+                                            give_exp_points(25);
+                                            display_msg(g_mstr(100) + 25 + g_mstr(101));
+                                        end
+                                        set_local_var(0, local_var(0) bwor 512);
+                                    end
+                                end
+                                debug_msg("lock_success_msg");
+                                obj_lock(self_obj);
+                            end
+                            else begin
+                                script_overrides;
+                                if (user_obj == dude_obj) then begin
+                                    display_msg(message_str(SCRIPT_ZILOCKER, 103));
+                                end
+                                else begin
+                                    if (user_obj != 0) then begin
+                                        display_msg(obj_name(user_obj) + message_str(SCRIPT_ZILOCKER, 203));
+                                    end
+                                end
+                                debug_msg("lock_fail_msg");
+                            end
+                        end
+                    end
+                    else begin
+                        if (obj_pid(obj_being_used_with) == 410) then begin
+                            script_overrides;
+                            if (1) then begin
+                                if (is_success(roll_vs_skill(user_obj, 9, -75 + 40))) then begin
+                                    script_overrides;
+                                    if (user_obj == dude_obj) then begin
+                                        display_msg(message_str(SCRIPT_ZILOCKER, 102));
+                                        if (((local_var(0) bwand 512) != 0) == 0) then begin
+                                            give_exp_points(25);
+                                            display_msg(g_mstr(100) + 25 + g_mstr(101));
+                                        end
+                                        set_local_var(0, local_var(0) bwor 512);
+                                    end
+                                    else begin
+                                        if (user_obj != 0) then begin
+                                            display_msg(obj_name(user_obj) + message_str(SCRIPT_ZILOCKER, 202));
+                                            if (((local_var(0) bwand 512) != 0) == 0) then begin
+                                                give_exp_points(25);
+                                                display_msg(g_mstr(100) + 25 + g_mstr(101));
+                                            end
+                                            set_local_var(0, local_var(0) bwor 512);
+                                        end
+                                    end
+                                    debug_msg("lock_success_msg");
+                                    obj_lock(self_obj);
+                                end
+                                else begin
+                                    script_overrides;
+                                    if (user_obj == dude_obj) then begin
+                                        display_msg(message_str(SCRIPT_ZILOCKER, 103));
+                                    end
+                                    else begin
+                                        if (user_obj != 0) then begin
+                                            display_msg(obj_name(user_obj) + message_str(SCRIPT_ZILOCKER, 203));
+                                        end
+                                    end
+                                    debug_msg("lock_fail_msg");
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure look_at_p_proc
+begin
+end
+
+procedure description_p_proc
+begin
+end
+
+procedure use_skill_on_p_proc
+begin
+    if (pater and (pater != -1)) then begin
+        script_overrides;
+        add_timer_event(pater, 0, 10);
+    end
+    else begin
+        caught_tamper := 0;
+        user_obj := source_obj;
+        if (user_obj != 0) then begin
+            if (caught_tamper == 0) then begin
+                if (1) then begin
+                    if (0 != 0) then begin
+                        if (obj_is_visible_flag(0) and ((critter_state(0) bwand 1) == 0)) then begin
+                            if (obj_can_see_obj(0, user_obj)) then begin
+                                caught_tamper := 1;
+                            end
+                        end
+                    end
+                end
+            end
+            if (caught_tamper) then begin
+                if (caught_tamper) then begin
+                    script_overrides;
+                    if (((local_var(0) bwand 1024) != 0) or 0) then begin
+                        attack_setup(0, user_obj);
+                    end
+                    else begin
+                        float_msg(0, g_mstr(5400), FLOAT_MSG_YELLOW);
+                    end
+                    set_local_var(0, local_var(0) bwor 1024);
+                end
+            end
+            else begin
+                if (action_being_used == 9) then begin
+                    script_overrides;
+                    if (obj_is_locked(self_obj)) then begin
+                        if (1) then begin
+                            if (is_success(roll_vs_skill(user_obj, 9, -75))) then begin
+                                script_overrides;
+                                if (user_obj == dude_obj) then begin
+                                    display_msg(message_str(SCRIPT_ZILOCKER, 100));
+                                    if (((local_var(0) bwand 512) != 0) == 0) then begin
+                                        give_exp_points(25);
+                                        display_msg(g_mstr(100) + 25 + g_mstr(101));
+                                    end
+                                    set_local_var(0, local_var(0) bwor 512);
+                                end
+                                else begin
+                                    if (user_obj != 0) then begin
+                                        display_msg(obj_name(user_obj) + message_str(SCRIPT_ZILOCKER, 200));
+                                        if (((local_var(0) bwand 512) != 0) == 0) then begin
+                                            give_exp_points(25);
+                                            display_msg(g_mstr(100) + 25 + g_mstr(101));
+                                        end
+                                        set_local_var(0, local_var(0) bwor 512);
+                                    end
+                                end
+                                debug_msg("unlock_success_msg");
+                                obj_unlock(self_obj);
+                            end
+                            else begin
+                                script_overrides;
+                                if (user_obj == dude_obj) then begin
+                                    display_msg(message_str(SCRIPT_ZILOCKER, 101));
+                                end
+                                else begin
+                                    if (user_obj != 0) then begin
+                                        display_msg(obj_name(user_obj) + message_str(SCRIPT_ZILOCKER, 201));
+                                    end
+                                end
+                                debug_msg("unlock_fail_msg");
+                            end
+                        end
+                    end
+                    else begin
+                        if (1) then begin
+                            if (is_success(roll_vs_skill(user_obj, 9, -75))) then begin
+                                script_overrides;
+                                if (user_obj == dude_obj) then begin
+                                    display_msg(message_str(SCRIPT_ZILOCKER, 102));
+                                    if (((local_var(0) bwand 512) != 0) == 0) then begin
+                                        give_exp_points(25);
+                                        display_msg(g_mstr(100) + 25 + g_mstr(101));
+                                    end
+                                    set_local_var(0, local_var(0) bwor 512);
+                                end
+                                else begin
+                                    if (user_obj != 0) then begin
+                                        display_msg(obj_name(user_obj) + message_str(SCRIPT_ZILOCKER, 202));
+                                        if (((local_var(0) bwand 512) != 0) == 0) then begin
+                                            give_exp_points(25);
+                                            display_msg(g_mstr(100) + 25 + g_mstr(101));
+                                        end
+                                        set_local_var(0, local_var(0) bwor 512);
+                                    end
+                                end
+                                debug_msg("lock_success_msg");
+                                obj_lock(self_obj);
+                            end
+                            else begin
+                                script_overrides;
+                                if (user_obj == dude_obj) then begin
+                                    display_msg(message_str(SCRIPT_ZILOCKER, 103));
+                                end
+                                else begin
+                                    if (user_obj != 0) then begin
+                                        display_msg(obj_name(user_obj) + message_str(SCRIPT_ZILOCKER, 203));
+                                    end
+                                end
+                                debug_msg("lock_fail_msg");
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure timed_event_p_proc
+begin
+end

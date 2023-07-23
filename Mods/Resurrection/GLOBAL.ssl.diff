@@ -1,0 +1,276 @@
+diff --git a/Mods/Resurrection/Original/GLOBAL.ssl b/Mods/Resurrection/ReDefine/GLOBAL.ssl
+index 1de1d0c..5ed1d91 100644
+--- a/Mods/Resurrection/Original/GLOBAL.ssl
++++ b/Mods/Resurrection/ReDefine/GLOBAL.ssl
+@@ -24,7 +24,7 @@ variable karma;
+ 
+ procedure start
+ begin
+-    if (metarule(22, 0)) then begin
++    if (is_loading_game) then begin
+         return 0;
+     end
+     if (game_loaded) then begin
+@@ -33,8 +33,8 @@ begin
+         end
+         set_global_script_type(3);
+         set_global_script_repeat(25);
+-        level := get_pc_stat(1);
+-        karma := global_var(0);
++        level := get_pc_stat(PCSTAT_level);
++        karma := global_var(GVAR_PLAYER_REPUTATION);
+     end
+     else begin
+         call on_global_repeat();
+@@ -54,8 +54,8 @@ begin
+     variable LVar0 := 0;
+     variable LVar1 := 0;
+     variable LVar2 := 0;
+-    LVar0 := get_pc_stat(1);
+-    LVar1 := global_var(0);
++    LVar0 := get_pc_stat(PCSTAT_level);
++    LVar1 := global_var(GVAR_PLAYER_REPUTATION);
+     if (LVar0 > level) then begin
+         call on_level_up(LVar0 - level);
+         level := LVar0;
+@@ -65,7 +65,7 @@ begin
+         karma := LVar1;
+         call on_karma_change(LVar2);
+     end
+-    if (in_world_map and not(global_var(918)) and ((metarule(44, 0) > 400) or (metarule(45, 0) > 450))) then begin
++    if (in_world_map and not(global_var(GVAR_OBRODA_FIRST_ECC_MEET_DONE)) and ((worldmap_xpos > 400) or (worldmap_ypos > 450))) then begin
+         force_encounter(108);
+     end
+     call check_perk_technomage();
+@@ -80,38 +80,38 @@ end
+ 
+ procedure on_level_up(variable arg0)
+ begin
+-    if (has_trait(0, dude_obj, 36)) then begin
++    if (has_trait(TRAIT_PERK, dude_obj, PERK_friendly_foe)) then begin
+         call apply_perk_brutish_hulk(arg0);
+     end
+-    if (has_trait(0, dude_obj, 76)) then begin
++    if (has_trait(TRAIT_PERK, dude_obj, PERK_phoenix_armor_perk)) then begin
+         call apply_perk_divine_favor(arg0);
+     end
+ end
+ 
+ procedure on_karma_change(variable arg0)
+ begin
+-    if (has_trait(0, dude_obj, 95)) then begin
++    if (has_trait(TRAIT_PERK, dude_obj, PERK_karma_beacon_perk)) then begin
+         call apply_perk_karma_beacon(arg0);
+     end
+ end
+ 
+ procedure check_perk_technomage
+ begin
+-    if (not(has_trait(0, dude_obj, 10)) or get_sfall_global_int(1000 + 10)) then begin
++    if (not(has_trait(TRAIT_PERK, dude_obj, PERK_presence)) or get_sfall_global_int(1000 + 10)) then begin
+         return 0;
+     end
+     if (get_ini_setting("ddraw.ini|Resurrection|Debug") > 0) then begin
+         display_msg("global.ssl" + "@" + 135 + ": " + "Enabling 'technomage' perk.");
+     end
+     set_sfall_global(1000 + 10, 1);
+-    write_int(5358764 + (4 * 12), read_int(5358764 + (4 * 12)) + div(20, metarule(40, 12) + 1));
+-    write_int(5358764 + (4 * 13), read_int(5358764 + (4 * 13)) + div(20, metarule(40, 13) + 1));
+-    write_int(5358764 + (4 * 9), read_int(5358764 + (4 * 9)) + div(20, metarule(40, 9) + 1));
++    write_int(5358764 + (4 * 12), read_int(5358764 + (4 * 12)) + div(20, is_skill_tagged(SKILL_SCIENCE) + 1));
++    write_int(5358764 + (4 * 13), read_int(5358764 + (4 * 13)) + div(20, is_skill_tagged(SKILL_REPAIR) + 1));
++    write_int(5358764 + (4 * 9), read_int(5358764 + (4 * 9)) + div(20, is_skill_tagged(SKILL_LOCKPICK) + 1));
+ end
+ 
+ procedure check_perk_gift_from_the_sky
+ begin
+-    if (not(has_trait(0, dude_obj, 22)) or get_sfall_global_int(1000 + 22)) then begin
++    if (not(has_trait(TRAIT_PERK, dude_obj, PERK_empathy)) or get_sfall_global_int(1000 + 22)) then begin
+         return 0;
+     end
+     if (get_ini_setting("ddraw.ini|Resurrection|Debug") > 0) then begin
+@@ -123,10 +123,10 @@ end
+ 
+ procedure check_perk_die_hard
+ begin
+-    if (not(has_trait(0, dude_obj, 27))) then begin
++    if (not(has_trait(TRAIT_PERK, dude_obj, PERK_mental_block))) then begin
+         return 0;
+     end
+-    if (get_critter_stat(dude_obj, 35) < (0.20000 * get_critter_stat(dude_obj, 7))) then begin
++    if (get_critter_stat(dude_obj, STAT_current_hp) < (0.20000 * get_critter_stat(dude_obj, STAT_max_hp))) then begin
+         if (not(get_sfall_global_int(1000 + 27))) then begin
+             if (get_ini_setting("ddraw.ini|Resurrection|Debug") > 0) then begin
+                 display_msg("global.ssl" + "@" + 159 + ": " + "Enabling 'die hard' perk.");
+@@ -166,10 +166,10 @@ end
+ 
+ procedure check_perk_loner
+ begin
+-    if (not(has_trait(0, dude_obj, 39))) then begin
++    if (not(has_trait(TRAIT_PERK, dude_obj, PERK_cult_of_personality))) then begin
+         return 0;
+     end
+-    if ((metarule(16, 0) - (((global_var(910) bwand 32) != 0) and not((global_var(632) bwand 2) != 0)) - (((global_var(910) bwand 64) != 0) and not((global_var(632) bwand 4) != 0)) - (((global_var(910) bwand 128) != 0) and not((global_var(632) bwand 32) != 0)) - 1) > 0) then begin
++    if ((party_member_count(DONT_LIST_HIDDEN_MEMBERS) - (((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) != 0) and not((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 2) != 0)) - (((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) != 0) and not((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 4) != 0)) - (((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) != 0) and not((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 32) != 0)) - 1) > 0) then begin
+         if (get_sfall_global_int(1000 + 39)) then begin
+             if (get_ini_setting("ddraw.ini|Resurrection|Debug") > 0) then begin
+                 display_msg("global.ssl" + "@" + 185 + ": " + "Disabling 'loner' perk.");
+@@ -177,7 +177,7 @@ begin
+             set_sfall_global(1000 + 39, 0);
+             global_temp := 0;
+             while (global_temp <= 17) do begin
+-                write_int(5358764 + (4 * global_temp), read_int(5358764 + (4 * global_temp)) + div(-10, metarule(40, global_temp) + 1));
++                write_int(5358764 + (4 * global_temp), read_int(5358764 + (4 * global_temp)) + div(-10, is_skill_tagged(global_temp) + 1));
+                 global_temp := global_temp + 1;
+             end
+             global_temp := global_temp;
+@@ -191,7 +191,7 @@ begin
+             set_sfall_global(1000 + 39, 1);
+             global_temp := 0;
+             while (global_temp <= 17) do begin
+-                write_int(5358764 + (4 * global_temp), read_int(5358764 + (4 * global_temp)) + div(10, metarule(40, global_temp) + 1));
++                write_int(5358764 + (4 * global_temp), read_int(5358764 + (4 * global_temp)) + div(10, is_skill_tagged(global_temp) + 1));
+                 global_temp := global_temp + 1;
+             end
+             global_temp := global_temp;
+@@ -201,7 +201,7 @@ end
+ 
+ procedure check_perk_wonderful_regeneration
+ begin
+-    if (not(has_trait(0, dude_obj, 40)) or not(critter_state(dude_obj) bwand (4 bwor 8 bwor 16 bwor 32 bwor 64))) then begin
++    if (not(has_trait(TRAIT_PERK, dude_obj, PERK_scrounger)) or not(critter_state(dude_obj) bwand (4 bwor 8 bwor 16 bwor 32 bwor 64))) then begin
+         return 0;
+     end
+     if (get_ini_setting("ddraw.ini|Resurrection|Debug") > 0) then begin
+@@ -212,7 +212,7 @@ end
+ 
+ procedure check_perk_hide_of_scars
+ begin
+-    if (not(has_trait(0, dude_obj, 75)) or get_sfall_global_int(1000 + 75)) then begin
++    if (not(has_trait(TRAIT_PERK, dude_obj, PERK_dermal_enhancement_perk)) or get_sfall_global_int(1000 + 75)) then begin
+         if (get_critter_base_stat(dude_obj, 4) > 2) then begin
+             set_perk_ranks(75, -1);
+         end
+@@ -234,11 +234,11 @@ begin
+     variable LVar0 := 0;
+     variable LVar1 := 0;
+     variable LVar2 := 0;
+-    if (has_trait(0, dude_obj, 76) and not(global_var(844))) then begin
+-        LVar0 := get_pc_stat(1);
+-        LVar1 := 3 + has_trait(2, dude_obj, 14);
++    if (has_trait(TRAIT_PERK, dude_obj, PERK_phoenix_armor_perk) and not(global_var(GVAR_PERK_GIVINE_FAVOR_TAKEN_LEVEL))) then begin
++        LVar0 := get_pc_stat(PCSTAT_level);
++        LVar1 := 3 + has_trait(TRAIT_TRAIT, dude_obj, TRAIT_skilled);
+         LVar2 := LVar0 / LVar1 * LVar1;
+-        set_global_var(844, LVar2);
++        set_global_var(GVAR_PERK_GIVINE_FAVOR_TAKEN_LEVEL, LVar2);
+         call apply_perk_divine_favor(LVar0 - LVar2);
+     end
+ end
+@@ -249,7 +249,7 @@ begin
+     if (get_ini_setting("ddraw.ini|Resurrection|Debug") > 0) then begin
+         display_msg("global.ssl" + "@" + 241 + ": " + "Applying 'brutish hulk' perk.");
+     end
+-    LVar1 := arg0 * ((get_critter_base_stat(dude_obj, 2) / 2) + 2 + (4 * has_trait(0, dude_obj, 28)));
++    LVar1 := arg0 * ((get_critter_base_stat(dude_obj, 2) / 2) + 2 + (4 * has_trait(TRAIT_PERK, dude_obj, PERK_lifegiver)));
+     set_critter_extra_stat(dude_obj, 7, get_critter_extra_stat(dude_obj, 7) + LVar1);
+     critter_heal(dude_obj, LVar1);
+ end
+@@ -262,9 +262,9 @@ begin
+     if (get_ini_setting("ddraw.ini|Resurrection|Debug") > 0) then begin
+         display_msg("global.ssl" + "@" + 254 + ": " + "Applying 'divine favor' perk.");
+     end
+-    LVar1 := get_pc_stat(1) - global_var(844);
++    LVar1 := get_pc_stat(PCSTAT_level) - global_var(GVAR_PERK_GIVINE_FAVOR_TAKEN_LEVEL);
+     LVar2 := LVar1 - arg0;
+-    LVar3 := 3 + has_trait(2, dude_obj, 14);
++    LVar3 := 3 + has_trait(TRAIT_TRAIT, dude_obj, TRAIT_skilled);
+     set_perk_owed(get_perk_owed + ((LVar1 / (LVar3 - 1)) - (LVar2 / (LVar3 - 1))) - ((LVar1 / LVar3) - (LVar2 / LVar3)));
+ end
+ 
+@@ -273,50 +273,50 @@ begin
+     if (get_ini_setting("ddraw.ini|Resurrection|Debug") > 0) then begin
+         display_msg("global.ssl" + "@" + 262 + ": " + "Applying 'karma beacon' perk.");
+     end
+-    set_global_var(0, global_var(0) + arg0);
++    set_global_var(GVAR_PLAYER_REPUTATION, global_var(GVAR_PLAYER_REPUTATION) + arg0);
+     debug_msg("Player gains " + arg0 + " Karma Points.");
+-    set_global_var(37, 0);
+-    set_global_var(38, 0);
+-    set_global_var(39, 0);
+-    set_global_var(40, 0);
+-    set_global_var(41, 0);
+-    set_global_var(42, 0);
+-    set_global_var(43, 0);
+-    set_global_var(44, 0);
+-    set_global_var(45, 0);
+-    if (global_var(0) >= 1000) then begin
+-        set_global_var(37, 1);
++    set_global_var(GVAR_KARMA_HOLY_WARRIOR, 0);
++    set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 0);
++    set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 0);
++    set_global_var(GVAR_KARMA_DEFENDER, 0);
++    set_global_var(GVAR_KARMA_WANDERER, 0);
++    set_global_var(GVAR_KARMA_BETRAYER, 0);
++    set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 0);
++    set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 0);
++    set_global_var(GVAR_KARMA_DEMON_SPAWN, 0);
++    if (global_var(GVAR_PLAYER_REPUTATION) >= 1000) then begin
++        set_global_var(GVAR_KARMA_HOLY_WARRIOR, 1);
+     end
+     else begin
+-        if (global_var(0) >= 750) then begin
+-            set_global_var(38, 1);
++        if (global_var(GVAR_PLAYER_REPUTATION) >= 750) then begin
++            set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 1);
+         end
+         else begin
+-            if (global_var(0) >= 500) then begin
+-                set_global_var(39, 1);
++            if (global_var(GVAR_PLAYER_REPUTATION) >= 500) then begin
++                set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 1);
+             end
+             else begin
+-                if (global_var(0) >= 250) then begin
+-                    set_global_var(40, 1);
++                if (global_var(GVAR_PLAYER_REPUTATION) >= 250) then begin
++                    set_global_var(GVAR_KARMA_DEFENDER, 1);
+                 end
+                 else begin
+-                    if (global_var(0) > -250) then begin
+-                        set_global_var(41, 1);
++                    if (global_var(GVAR_PLAYER_REPUTATION) > -250) then begin
++                        set_global_var(GVAR_KARMA_WANDERER, 1);
+                     end
+                     else begin
+-                        if (global_var(0) > -500) then begin
+-                            set_global_var(42, 1);
++                        if (global_var(GVAR_PLAYER_REPUTATION) > -500) then begin
++                            set_global_var(GVAR_KARMA_BETRAYER, 1);
+                         end
+                         else begin
+-                            if (global_var(0) > -750) then begin
+-                                set_global_var(43, 1);
++                            if (global_var(GVAR_PLAYER_REPUTATION) > -750) then begin
++                                set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 1);
+                             end
+                             else begin
+-                                if (global_var(0) > -1000) then begin
+-                                    set_global_var(44, 1);
++                                if (global_var(GVAR_PLAYER_REPUTATION) > -1000) then begin
++                                    set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 1);
+                                 end
+                                 else begin
+-                                    set_global_var(45, 1);
++                                    set_global_var(GVAR_KARMA_DEMON_SPAWN, 1);
+                                 end
+                             end
+                         end
+@@ -325,6 +325,5 @@ begin
+             end
+         end
+     end
+-    karma := global_var(0);
++    karma := global_var(GVAR_PLAYER_REPUTATION);
+ end
+-

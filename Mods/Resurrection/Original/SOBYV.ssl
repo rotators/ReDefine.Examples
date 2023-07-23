@@ -1,0 +1,661 @@
+variable ProtoOfItemGiven;
+variable ValueOfRollCheck := 1;
+variable Scenery_Creation;
+variable Scenery_Creation_Hex;
+variable Scenery_Creation_Count;
+variable Temp_Scenery_Creation_Hex;
+variable Scenery_Creation_Ptr;
+variable lPartyWornArmor;
+variable How_Many_Party_Members_Are_Injured;
+variable How_Many_Party_Members_Armed;
+variable PartyHealingItem;
+
+procedure checkPartyMembersNearDoor;
+
+variable global_temp;
+variable dest_tile;
+variable step_tile;
+variable in_dialog;
+variable forced_node;
+variable restock_amt;
+variable restock_obj;
+variable restock_trash;
+variable removed_qty;
+variable toRemove_qty;
+
+procedure div(variable arg0, variable arg1);
+procedure start;
+procedure critter_p_proc;
+procedure combat_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure look_at_p_proc;
+procedure description_p_proc;
+procedure timed_event_p_proc;
+procedure map_enter_p_proc;
+procedure map_exit_p_proc;
+procedure damage_p_proc;
+procedure destroy_p_proc;
+
+variable talking_float;
+variable dialog_loop;
+variable loop_numbers;
+variable leaving;
+variable onlooker_float;
+variable ShootingTile;
+variable ShootingDist;
+
+
+procedure checkPartyMembersNearDoor
+begin
+    if (party_member_obj(16777729) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777729)) <= 5) then begin
+            return 1;
+        end
+    end
+    if ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0)) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777779)) <= 5) then begin
+            return 1;
+        end
+    end
+    if ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0)) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777811)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777812) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777812)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777813) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777813)) <= 5) then begin
+            return 1;
+        end
+    end
+    if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777814)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777748) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777748)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777293) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777293)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778017) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778017)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778016) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778016)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778049) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778049)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778050) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778050)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778051) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778051)) <= 5) then begin
+            return 1;
+        end
+    end
+    return 0;
+end
+
+procedure div(variable arg0, variable arg1)
+begin
+    if (0 > arg0) then begin
+        return -(-arg0 / arg1);
+    end
+    return arg0 / arg1;
+end
+
+procedure start
+begin
+end
+
+procedure critter_p_proc
+begin
+    if ((local_var(5) == 2) and obj_can_see_obj(self_obj, dude_obj)) then begin
+        set_local_var(5, 1);
+        attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
+    end
+    if ((global_var(769) == 1) and (cur_map_index != 13)) then begin
+        if (obj_can_see_obj(self_obj, dude_obj) or obj_can_hear_obj(self_obj, dude_obj)) then begin
+            attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
+        end
+    end
+    if ((global_var(774) > 2) and (cur_map_index == 13) and (local_var(7) == 0)) then begin
+        if ((tile_distance_objs(self_obj, dude_obj) < 8) or obj_can_see_obj(self_obj, dude_obj)) then begin
+            if (anim_busy(self_obj) == 0) then begin
+                global_temp := rotation_to_tile(tile_num(dude_obj), tile_num(self_obj));
+                animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                global_temp := (global_temp + 1) % 6;
+                while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)))) do begin
+                    debug_msg("flee loop: rot == " + global_temp);
+                    animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                    global_temp := (global_temp + 1) % 6;
+                end
+            end
+        end
+    end
+    if ((cur_map_index == 13) and (local_var(7) == 1)) then begin
+        if ((map_var(6) > 0) and (has_trait(1, self_obj, 666) == 0)) then begin
+            set_obj_visibility(self_obj, 0);
+            if (map_var(6) == 5) then begin
+                metarule3(100, self_obj, 1, 0);
+            end
+            add_timer_event(self_obj, game_ticks(random(2, 8)), 1);
+        end
+        if ((map_var(6) == 0) and (has_trait(1, self_obj, 666) == 1)) then begin
+            set_obj_visibility(self_obj, 1);
+        end
+    end
+    if ((cur_map_index == 13) and (map_var(9) > 0)) then begin
+        if (ShootingTile == 0) then begin
+            ShootingDist := tile_distance(tile_num(self_obj), 14102);
+            ShootingTile := 14102;
+            if (tile_distance(tile_num(self_obj), 23133) < ShootingDist) then begin
+                ShootingDist := tile_distance(tile_num(self_obj), 23133);
+                ShootingTile := 23133;
+            end
+            if (tile_distance(tile_num(self_obj), 23123) < ShootingDist) then begin
+                ShootingDist := tile_distance(tile_num(self_obj), 23123);
+                ShootingTile := 23123;
+            end
+        end
+        if ((map_var(9) == 1) and (art_anim(obj_art_fid(self_obj)) != 1) and (ShootingTile != 0)) then begin
+            animate_move_obj_to_tile(self_obj, ShootingTile, 1);
+        end
+        if (map_var(9) == 2) then begin
+            leaving := 1;
+            destroy_object(self_obj);
+        end
+    end
+end
+
+procedure combat_p_proc
+begin
+    if ((fixed_param == 4) and (cur_map_index == 13) and (local_var(7) == 0) and ((global_var(770) == 1) or (global_var(774) > 0))) then begin
+        critter_set_flee_state(self_obj, 1);
+    end
+    if ((local_var(7) == 1) and (map_var(6) > 0) and (map_var(6) <= 2)) then begin
+        if (random(1, 4) == 1) then begin
+            float_msg(self_obj, 0, 0);
+        end
+        else begin
+            if (get_critter_stat(dude_obj, 34) == 0) then begin
+                float_msg(self_obj, message_str(1406, random(360, 369)), 2);
+            end
+            if (get_critter_stat(dude_obj, 34) == 1) then begin
+                float_msg(self_obj, message_str(1406, random(363, 372)), 2);
+            end
+        end
+    end
+    if ((local_var(7) == 1) and (map_var(6) == 3)) then begin
+        if (onlooker_float == 0) then begin
+            onlooker_float := random(1, 4);
+        end
+        if (random(1, 4) == 1) then begin
+            float_msg(self_obj, 0, 0);
+        end
+        else begin
+            if (onlooker_float == 1) then begin
+                if (get_critter_stat(dude_obj, 34) == 0) then begin
+                    float_msg(self_obj, message_str(1406, random(380, 390)), 2);
+                end
+                if (get_critter_stat(dude_obj, 34) == 1) then begin
+                    float_msg(self_obj, message_str(1406, random(384, 394)), 2);
+                end
+            end
+            else begin
+                if (get_critter_stat(dude_obj, 34) == 0) then begin
+                    float_msg(self_obj, message_str(1406, random(360, 369)), 2);
+                end
+                if (get_critter_stat(dude_obj, 34) == 1) then begin
+                    float_msg(self_obj, message_str(1406, random(363, 372)), 2);
+                end
+            end
+        end
+    end
+    if ((local_var(7) == 1) and (map_var(6) == 4)) then begin
+        if (onlooker_float == 0) then begin
+            onlooker_float := random(1, 4);
+        end
+        if (random(1, 4) == 1) then begin
+            float_msg(self_obj, 0, 0);
+        end
+        else begin
+            if (onlooker_float == 1) then begin
+                if (get_critter_stat(dude_obj, 34) == 0) then begin
+                    float_msg(self_obj, message_str(1406, random(360, 369)), 2);
+                end
+                if (get_critter_stat(dude_obj, 34) == 1) then begin
+                    float_msg(self_obj, message_str(1406, random(363, 372)), 2);
+                end
+            end
+            else begin
+                if (get_critter_stat(dude_obj, 34) == 0) then begin
+                    float_msg(self_obj, message_str(1406, random(380, 390)), 2);
+                end
+                if (get_critter_stat(dude_obj, 34) == 1) then begin
+                    float_msg(self_obj, message_str(1406, random(384, 394)), 2);
+                end
+            end
+        end
+    end
+end
+
+procedure pickup_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_local_var(5, 2);
+    end
+end
+
+procedure talk_p_proc
+begin
+    if ((cur_map_index == 13) and ((global_var(770) == 1) or (global_var(774) > 0))) then begin
+        if ((tile_distance_objs(self_obj, dude_obj) < 8) or obj_can_see_obj(self_obj, dude_obj)) then begin
+            if (anim_busy(self_obj) == 0) then begin
+                global_temp := rotation_to_tile(tile_num(dude_obj), tile_num(self_obj));
+                animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                global_temp := (global_temp + 1) % 6;
+                while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)))) do begin
+                    debug_msg("flee loop: rot == " + global_temp);
+                    animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                    global_temp := (global_temp + 1) % 6;
+                end
+            end
+        end
+    end
+    else begin
+        if (party_member_obj(16777812) != 0) then begin
+            if (get_critter_stat(dude_obj, 34) == 0) then begin
+                float_msg(self_obj, message_str(1406, random(350, 356)), 8);
+            end
+            if (get_critter_stat(dude_obj, 34) == 1) then begin
+                float_msg(self_obj, message_str(1406, random(352, 358)), 8);
+            end
+        end
+        else begin
+            if ((obj_pid(critter_inven_obj(dude_obj, 0)) == 3) or (obj_pid(critter_inven_obj(dude_obj, 0)) == 348) or (obj_pid(critter_inven_obj(dude_obj, 0)) == 349) or (obj_pid(critter_inven_obj(dude_obj, 0)) == 232)) then begin
+                if (get_critter_stat(self_obj, 34) == 0) then begin
+                    float_msg(self_obj, message_str(1406, random(340, 345)), 8);
+                end
+                if (get_critter_stat(self_obj, 34) == 1) then begin
+                    float_msg(self_obj, message_str(1406, random(341, 346)), 8);
+                end
+            end
+            else begin
+                while (dialog_loop == 0) do begin
+                    talking_float := random(0, 24);
+                    loop_numbers := loop_numbers + 1;
+                    if ((talking_float >= 0) and (talking_float <= 5) or (loop_numbers == 7)) then begin
+                        float_msg(self_obj, message_str(1406, random(300, 305)), 8);
+                        dialog_loop := 1;
+                    end
+                    if ((talking_float == 6) and (cur_map_index == 11)) then begin
+                        if (get_critter_stat(self_obj, 34) == 0) then begin
+                            float_msg(self_obj, message_str(1406, 306), 8);
+                        end
+                        if (get_critter_stat(self_obj, 34) == 1) then begin
+                            float_msg(self_obj, message_str(1406, 326), 8);
+                        end
+                        dialog_loop := 1;
+                    end
+                    if ((talking_float == 7) and (cur_map_index != 11) and (global_var(791) != 3) and (global_var(712) < 2)) then begin
+                        float_msg(self_obj, message_str(1406, 307), 8);
+                        dialog_loop := 1;
+                    end
+                    if ((talking_float >= 8) and (talking_float <= 9) and (global_var(720) != 3)) then begin
+                        float_msg(self_obj, message_str(1406, random(308, 309)), 8);
+                        dialog_loop := 1;
+                    end
+                    if ((talking_float == 10) and ((global_var(723) >= 1) or (global_var(724) >= 4))) then begin
+                        float_msg(self_obj, message_str(1406, 310), 8);
+                        dialog_loop := 1;
+                    end
+                    if ((talking_float >= 11) and (talking_float <= 12) and (global_var(722) == 1)) then begin
+                        float_msg(self_obj, message_str(1406, random(311, 312)), 8);
+                        dialog_loop := 1;
+                    end
+                    if ((talking_float >= 13) and (talking_float <= 14) and (global_var(790) == 3)) then begin
+                        float_msg(self_obj, message_str(1406, random(313, 314)), 8);
+                        dialog_loop := 1;
+                    end
+                    if ((talking_float == 15) and (cur_map_index != 11) and (global_var(791) == 3)) then begin
+                        float_msg(self_obj, message_str(1406, 315), 8);
+                        dialog_loop := 1;
+                    end
+                    if ((talking_float == 16) and (cur_map_index != 11) and (global_var(712) == 3)) then begin
+                        float_msg(self_obj, message_str(1406, 316), 8);
+                        dialog_loop := 1;
+                    end
+                    if ((talking_float >= 17) and (talking_float <= 18) and (global_var(732) == 3)) then begin
+                        float_msg(self_obj, message_str(1406, random(317, 318)), 8);
+                        dialog_loop := 1;
+                    end
+                    if ((talking_float >= 19) and (talking_float <= 20) and (global_var(738) == 4)) then begin
+                        float_msg(self_obj, message_str(1406, random(319, 320)), 8);
+                        dialog_loop := 1;
+                    end
+                    if ((talking_float >= 21) and (talking_float <= 24) and (global_var(231) == 1)) then begin
+                        if (get_critter_stat(self_obj, 34) == 0) then begin
+                            if (get_critter_stat(dude_obj, 34) == 0) then begin
+                                float_msg(self_obj, message_str(1406, random(321, 324)), 8);
+                            end
+                            if (get_critter_stat(dude_obj, 34) == 1) then begin
+                                float_msg(self_obj, message_str(1406, random(322, 325)), 8);
+                            end
+                        end
+                        if (get_critter_stat(self_obj, 34) == 1) then begin
+                            if (get_critter_stat(dude_obj, 34) == 0) then begin
+                                float_msg(self_obj, message_str(1406, random(327, 331)), 8);
+                            end
+                            if (get_critter_stat(dude_obj, 34) == 1) then begin
+                                float_msg(self_obj, message_str(1406, random(329, 331)), 8);
+                            end
+                        end
+                        dialog_loop := 1;
+                    end
+                end
+                dialog_loop := 0;
+                loop_numbers := 0;
+            end
+        end
+    end
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    if (get_critter_stat(self_obj, 34) == 0) then begin
+        display_msg(message_str(1406, 100));
+    end
+    if (get_critter_stat(self_obj, 34) == 1) then begin
+        display_msg(message_str(1406, 101));
+    end
+end
+
+procedure description_p_proc
+begin
+    script_overrides;
+    if (get_critter_stat(self_obj, 34) == 0) then begin
+        display_msg(message_str(1406, 200));
+    end
+    if (get_critter_stat(self_obj, 34) == 1) then begin
+        display_msg(message_str(1406, 201));
+    end
+end
+
+procedure timed_event_p_proc
+begin
+    if (fixed_param == 1) then begin
+        if (map_var(6) == 5) then begin
+            float_msg(self_obj, message_str(1406, random(360, 369)), 2);
+            metarule3(100, self_obj, 1, 0);
+            add_timer_event(self_obj, game_ticks(random(2, 8)), 1);
+        end
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    critter_add_trait(self_obj, 1, 6, 212);
+    if (cur_map_index == 13) then begin
+        critter_add_trait(self_obj, 1, 5, 25);
+    end
+    else begin
+        critter_add_trait(self_obj, 1, 5, 14);
+    end
+    if (local_var(6) == 0) then begin
+        set_local_var(6, tile_num(self_obj));
+    end
+    if (cur_map_index == 13) then begin
+        if ((tile_num(self_obj) == 24137) or (tile_num(self_obj) == 24131) or (tile_num(self_obj) == 25342) or (tile_num(self_obj) == 27327) or (tile_num(self_obj) == 27333) or (tile_num(self_obj) == 27140)) then begin
+            set_obj_visibility(self_obj, 1);
+            set_local_var(7, 1);
+        end
+    end
+    if (not(metarule(22, 0)) and (cur_map_index == 11) and (tile_num(self_obj) == 18525) and (has_trait(1, self_obj, 666) == 1)) then begin
+        if ((global_var(793) == 3) or (global_var(791) == 3)) then begin
+            set_obj_visibility(self_obj, 1);
+        end
+    end
+end
+
+procedure map_exit_p_proc
+begin
+    if ((global_var(792) == 2) and (cur_map_index == 13)) then begin
+        leaving := 1;
+        destroy_object(self_obj);
+    end
+    if (tile_num(self_obj) != local_var(6)) then begin
+        if ((global_var(769) != 1) and (cur_map_index != 13)) then begin
+            move_to(self_obj, local_var(6), elevation(self_obj));
+        end
+        if ((global_var(774) < 3) and (cur_map_index == 13)) then begin
+            move_to(self_obj, local_var(6), elevation(self_obj));
+        end
+    end
+    float_msg(self_obj, 0, 0);
+end
+
+procedure damage_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        if (cur_map_index == 13) then begin
+            set_global_var(770, 1);
+            if (global_var(774) < 3) then begin
+                set_global_var(774, global_var(774) + 1);
+            end
+            set_global_var(1015, global_var(1015) bwand (-1 - 256));
+        end
+        else begin
+            set_global_var(769, 1);
+        end
+    end
+end
+
+procedure destroy_p_proc
+begin
+    if (cur_map_index == 13) then begin
+        if (leaving != 1) then begin
+            set_global_var(0, global_var(0) + -10);
+            debug_msg("Player gains " + -10 + " Karma Points.");
+            set_global_var(37, 0);
+            set_global_var(38, 0);
+            set_global_var(39, 0);
+            set_global_var(40, 0);
+            set_global_var(41, 0);
+            set_global_var(42, 0);
+            set_global_var(43, 0);
+            set_global_var(44, 0);
+            set_global_var(45, 0);
+            if (global_var(0) >= 1000) then begin
+                set_global_var(37, 1);
+            end
+            else begin
+                if (global_var(0) >= 750) then begin
+                    set_global_var(38, 1);
+                end
+                else begin
+                    if (global_var(0) >= 500) then begin
+                        set_global_var(39, 1);
+                    end
+                    else begin
+                        if (global_var(0) >= 250) then begin
+                            set_global_var(40, 1);
+                        end
+                        else begin
+                            if (global_var(0) > -250) then begin
+                                set_global_var(41, 1);
+                            end
+                            else begin
+                                if (global_var(0) > -500) then begin
+                                    set_global_var(42, 1);
+                                end
+                                else begin
+                                    if (global_var(0) > -750) then begin
+                                        set_global_var(43, 1);
+                                    end
+                                    else begin
+                                        if (global_var(0) > -1000) then begin
+                                            set_global_var(44, 1);
+                                        end
+                                        else begin
+                                            set_global_var(45, 1);
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    else begin
+        if (source_obj == dude_obj) then begin
+            set_global_var(5, global_var(5) + 1);
+            if (((global_var(4) + global_var(5)) >= 25) and ((global_var(4) > (3 * global_var(5))) or (global_var(2) == 1)) and (global_var(1) == 0)) then begin
+                set_global_var(2, 1);
+                set_global_var(3, 0);
+            end
+            if (metarule(51, self_obj) == 2) then begin
+                if (source_obj == dude_obj) then begin
+                    set_global_var(2, 0);
+                    set_global_var(1, global_var(1) + 1);
+                    set_global_var(0, global_var(0) + -15);
+                    debug_msg("Player gains " + -15 + " Karma Points.");
+                    set_global_var(37, 0);
+                    set_global_var(38, 0);
+                    set_global_var(39, 0);
+                    set_global_var(40, 0);
+                    set_global_var(41, 0);
+                    set_global_var(42, 0);
+                    set_global_var(43, 0);
+                    set_global_var(44, 0);
+                    set_global_var(45, 0);
+                    if (global_var(0) >= 1000) then begin
+                        set_global_var(37, 1);
+                    end
+                    else begin
+                        if (global_var(0) >= 750) then begin
+                            set_global_var(38, 1);
+                        end
+                        else begin
+                            if (global_var(0) >= 500) then begin
+                                set_global_var(39, 1);
+                            end
+                            else begin
+                                if (global_var(0) >= 250) then begin
+                                    set_global_var(40, 1);
+                                end
+                                else begin
+                                    if (global_var(0) > -250) then begin
+                                        set_global_var(41, 1);
+                                    end
+                                    else begin
+                                        if (global_var(0) > -500) then begin
+                                            set_global_var(42, 1);
+                                        end
+                                        else begin
+                                            if (global_var(0) > -750) then begin
+                                                set_global_var(43, 1);
+                                            end
+                                            else begin
+                                                if (global_var(0) > -1000) then begin
+                                                    set_global_var(44, 1);
+                                                end
+                                                else begin
+                                                    set_global_var(45, 1);
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    set_global_var(48, global_var(48) + -8);
+                    debug_msg("Added " + -8 + " to Town Rep");
+                end
+            end
+            if (((global_var(4) + global_var(5)) >= 25) and ((global_var(5) > (2 * global_var(4))) or (global_var(3) == 1))) then begin
+                set_global_var(3, 1);
+                set_global_var(2, 0);
+            end
+            set_global_var(0, global_var(0) + -10);
+            debug_msg("Player gains " + -10 + " Karma Points.");
+            set_global_var(37, 0);
+            set_global_var(38, 0);
+            set_global_var(39, 0);
+            set_global_var(40, 0);
+            set_global_var(41, 0);
+            set_global_var(42, 0);
+            set_global_var(43, 0);
+            set_global_var(44, 0);
+            set_global_var(45, 0);
+            if (global_var(0) >= 1000) then begin
+                set_global_var(37, 1);
+            end
+            else begin
+                if (global_var(0) >= 750) then begin
+                    set_global_var(38, 1);
+                end
+                else begin
+                    if (global_var(0) >= 500) then begin
+                        set_global_var(39, 1);
+                    end
+                    else begin
+                        if (global_var(0) >= 250) then begin
+                            set_global_var(40, 1);
+                        end
+                        else begin
+                            if (global_var(0) > -250) then begin
+                                set_global_var(41, 1);
+                            end
+                            else begin
+                                if (global_var(0) > -500) then begin
+                                    set_global_var(42, 1);
+                                end
+                                else begin
+                                    if (global_var(0) > -750) then begin
+                                        set_global_var(43, 1);
+                                    end
+                                    else begin
+                                        if (global_var(0) > -1000) then begin
+                                            set_global_var(44, 1);
+                                        end
+                                        else begin
+                                            set_global_var(45, 1);
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+            set_global_var(48, global_var(48) + -5);
+            debug_msg("Added " + -5 + " to Town Rep");
+        end
+    end
+end
+

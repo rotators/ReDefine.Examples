@@ -1,0 +1,1360 @@
+diff --git a/Mods/Resurrection/Original/RHVORECH.ssl b/Mods/Resurrection/ReDefine/RHVORECH.ssl
+index c7fb737..8039d1e 100644
+--- a/Mods/Resurrection/Original/RHVORECH.ssl
++++ b/Mods/Resurrection/ReDefine/RHVORECH.ssl
+@@ -81,12 +81,12 @@ begin
+             return 1;
+         end
+     end
+-    if ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0)) then begin
++    if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+         if (tile_distance_objs(self_obj, party_member_obj(16777779)) <= 5) then begin
+             return 1;
+         end
+     end
+-    if ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0)) then begin
++    if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+         if (tile_distance_objs(self_obj, party_member_obj(16777811)) <= 5) then begin
+             return 1;
+         end
+@@ -101,7 +101,7 @@ begin
+             return 1;
+         end
+     end
+-    if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
++    if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+         if (tile_distance_objs(self_obj, party_member_obj(16777814)) <= 5) then begin
+             return 1;
+         end
+@@ -163,10 +163,10 @@ begin
+             if (anim_busy(self_obj) == 0) then begin
+                 if ((tile_distance_objs(self_obj, dude_obj) < 8) or obj_can_see_obj(self_obj, dude_obj)) then begin
+                     if (anim_busy(self_obj) == 0) then begin
+-                        global_temp := rotation_to_tile(tile_num(dude_obj), tile_num(self_obj));
++                        global_temp := rotation_to_tile(dude_tile, tile_num(self_obj));
+                         animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                         global_temp := (global_temp + 1) % 6;
+-                        while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)))) do begin
++                        while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(dude_tile, tile_num(self_obj)))) do begin
+                             debug_msg("flee loop: rot == " + global_temp);
+                             animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                             global_temp := (global_temp + 1) % 6;
+@@ -176,7 +176,7 @@ begin
+             end
+         end
+         else begin
+-            attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++            attack(dude_obj);
+         end
+     end
+     if ((after_combat_dialog == 1) and not(combat_is_initialized)) then begin
+@@ -192,12 +192,12 @@ end
+ procedure talk_p_proc
+ begin
+     if (not(combat_is_initialized)) then begin
+-        anim(dude_obj, 1000, rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)));
+-        anim(self_obj, 1000, rotation_to_tile(tile_num(self_obj), tile_num(dude_obj)));
++        anim(dude_obj, 1000, rotation_to_tile(dude_tile, tile_num(self_obj)));
++        anim(self_obj, 1000, rotation_to_tile(tile_num(self_obj), dude_tile));
+         start_gdialog(28, self_obj, 4, -1, -1);
+         gsay_start;
+         if (feeding == 1) then begin
+-            if (((get_critter_stat(dude_obj, 4) + has_trait(0, dude_obj, 49)) < 4) and (local_var(6) == 0) and (local_var(7) == 0)) then begin
++            if (((dude_iq + has_trait(TRAIT_PERK, dude_obj, PERK_smooth_talker)) < 4) and (local_var(6) == 0) and (local_var(7) == 0)) then begin
+                 call Node1510();
+             end
+             else begin
+@@ -233,58 +233,58 @@ end
+ procedure destroy_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        if (((global_var(4) + global_var(5)) >= 25) and ((global_var(4) > (3 * global_var(5))) or (global_var(2) == 1)) and (global_var(1) == 0)) then begin
+-            set_global_var(2, 1);
+-            set_global_var(3, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(4) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1)) and (global_var(GVAR_CHILDKILLER_REPUTATION) == 0)) then begin
++            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+         end
+-        if (metarule(51, self_obj) == 2) then begin
++        if (critter_kill_type(self_obj) == KILL_TYPE_children_kills) then begin
+             if (source_obj == dude_obj) then begin
+-                set_global_var(2, 0);
+-                set_global_var(1, global_var(1) + 1);
+-                set_global_var(0, global_var(0) + -15);
++                set_global_var(GVAR_CHAMPION_REPUTATION, 0);
++                set_global_var(GVAR_CHILDKILLER_REPUTATION, global_var(GVAR_CHILDKILLER_REPUTATION) + 1);
++                set_global_var(GVAR_PLAYER_REPUTATION, global_var(GVAR_PLAYER_REPUTATION) + -15);
+                 debug_msg("Player gains " + -15 + " Karma Points.");
+-                set_global_var(37, 0);
+-                set_global_var(38, 0);
+-                set_global_var(39, 0);
+-                set_global_var(40, 0);
+-                set_global_var(41, 0);
+-                set_global_var(42, 0);
+-                set_global_var(43, 0);
+-                set_global_var(44, 0);
+-                set_global_var(45, 0);
+-                if (global_var(0) >= 1000) then begin
+-                    set_global_var(37, 1);
++                set_global_var(GVAR_KARMA_HOLY_WARRIOR, 0);
++                set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 0);
++                set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 0);
++                set_global_var(GVAR_KARMA_DEFENDER, 0);
++                set_global_var(GVAR_KARMA_WANDERER, 0);
++                set_global_var(GVAR_KARMA_BETRAYER, 0);
++                set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 0);
++                set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 0);
++                set_global_var(GVAR_KARMA_DEMON_SPAWN, 0);
++                if (global_var(GVAR_PLAYER_REPUTATION) >= 1000) then begin
++                    set_global_var(GVAR_KARMA_HOLY_WARRIOR, 1);
+                 end
+                 else begin
+-                    if (global_var(0) >= 750) then begin
+-                        set_global_var(38, 1);
++                    if (global_var(GVAR_PLAYER_REPUTATION) >= 750) then begin
++                        set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 1);
+                     end
+                     else begin
+-                        if (global_var(0) >= 500) then begin
+-                            set_global_var(39, 1);
++                        if (global_var(GVAR_PLAYER_REPUTATION) >= 500) then begin
++                            set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 1);
+                         end
+                         else begin
+-                            if (global_var(0) >= 250) then begin
+-                                set_global_var(40, 1);
++                            if (global_var(GVAR_PLAYER_REPUTATION) >= 250) then begin
++                                set_global_var(GVAR_KARMA_DEFENDER, 1);
+                             end
+                             else begin
+-                                if (global_var(0) > -250) then begin
+-                                    set_global_var(41, 1);
++                                if (global_var(GVAR_PLAYER_REPUTATION) > -250) then begin
++                                    set_global_var(GVAR_KARMA_WANDERER, 1);
+                                 end
+                                 else begin
+-                                    if (global_var(0) > -500) then begin
+-                                        set_global_var(42, 1);
++                                    if (global_var(GVAR_PLAYER_REPUTATION) > -500) then begin
++                                        set_global_var(GVAR_KARMA_BETRAYER, 1);
+                                     end
+                                     else begin
+-                                        if (global_var(0) > -750) then begin
+-                                            set_global_var(43, 1);
++                                        if (global_var(GVAR_PLAYER_REPUTATION) > -750) then begin
++                                            set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 1);
+                                         end
+                                         else begin
+-                                            if (global_var(0) > -1000) then begin
+-                                                set_global_var(44, 1);
++                                            if (global_var(GVAR_PLAYER_REPUTATION) > -1000) then begin
++                                                set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 1);
+                                             end
+                                             else begin
+-                                                set_global_var(45, 1);
++                                                set_global_var(GVAR_KARMA_DEMON_SPAWN, 1);
+                                             end
+                                         end
+                                     end
+@@ -295,54 +295,54 @@ begin
+                 end
+             end
+         end
+-        if (((global_var(4) + global_var(5)) >= 25) and ((global_var(5) > (2 * global_var(4))) or (global_var(3) == 1))) then begin
+-            set_global_var(3, 1);
+-            set_global_var(2, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+         end
+-        set_global_var(0, global_var(0) + 0);
++        set_global_var(GVAR_PLAYER_REPUTATION, global_var(GVAR_PLAYER_REPUTATION) + 0);
+         debug_msg("Player gains " + 0 + " Karma Points.");
+-        set_global_var(37, 0);
+-        set_global_var(38, 0);
+-        set_global_var(39, 0);
+-        set_global_var(40, 0);
+-        set_global_var(41, 0);
+-        set_global_var(42, 0);
+-        set_global_var(43, 0);
+-        set_global_var(44, 0);
+-        set_global_var(45, 0);
+-        if (global_var(0) >= 1000) then begin
+-            set_global_var(37, 1);
++        set_global_var(GVAR_KARMA_HOLY_WARRIOR, 0);
++        set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 0);
++        set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 0);
++        set_global_var(GVAR_KARMA_DEFENDER, 0);
++        set_global_var(GVAR_KARMA_WANDERER, 0);
++        set_global_var(GVAR_KARMA_BETRAYER, 0);
++        set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 0);
++        set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 0);
++        set_global_var(GVAR_KARMA_DEMON_SPAWN, 0);
++        if (global_var(GVAR_PLAYER_REPUTATION) >= 1000) then begin
++            set_global_var(GVAR_KARMA_HOLY_WARRIOR, 1);
+         end
+         else begin
+-            if (global_var(0) >= 750) then begin
+-                set_global_var(38, 1);
++            if (global_var(GVAR_PLAYER_REPUTATION) >= 750) then begin
++                set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 1);
+             end
+             else begin
+-                if (global_var(0) >= 500) then begin
+-                    set_global_var(39, 1);
++                if (global_var(GVAR_PLAYER_REPUTATION) >= 500) then begin
++                    set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 1);
+                 end
+                 else begin
+-                    if (global_var(0) >= 250) then begin
+-                        set_global_var(40, 1);
++                    if (global_var(GVAR_PLAYER_REPUTATION) >= 250) then begin
++                        set_global_var(GVAR_KARMA_DEFENDER, 1);
+                     end
+                     else begin
+-                        if (global_var(0) > -250) then begin
+-                            set_global_var(41, 1);
++                        if (global_var(GVAR_PLAYER_REPUTATION) > -250) then begin
++                            set_global_var(GVAR_KARMA_WANDERER, 1);
+                         end
+                         else begin
+-                            if (global_var(0) > -500) then begin
+-                                set_global_var(42, 1);
++                            if (global_var(GVAR_PLAYER_REPUTATION) > -500) then begin
++                                set_global_var(GVAR_KARMA_BETRAYER, 1);
+                             end
+                             else begin
+-                                if (global_var(0) > -750) then begin
+-                                    set_global_var(43, 1);
++                                if (global_var(GVAR_PLAYER_REPUTATION) > -750) then begin
++                                    set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 1);
+                                 end
+                                 else begin
+-                                    if (global_var(0) > -1000) then begin
+-                                        set_global_var(44, 1);
++                                    if (global_var(GVAR_PLAYER_REPUTATION) > -1000) then begin
++                                        set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 1);
+                                     end
+                                     else begin
+-                                        set_global_var(45, 1);
++                                        set_global_var(GVAR_KARMA_DEMON_SPAWN, 1);
+                                     end
+                                 end
+                             end
+@@ -357,13 +357,13 @@ end
+ procedure look_at_p_proc
+ begin
+     script_overrides;
+-    display_msg(message_str(28, 100));
++    display_msg(message_str(SCRIPT_VORECH, 100));
+ end
+ 
+ procedure description_p_proc
+ begin
+     script_overrides;
+-    display_msg(message_str(28, 200));
++    display_msg(message_str(SCRIPT_VORECH, 200));
+ end
+ 
+ procedure use_skill_on_p_proc
+@@ -376,7 +376,7 @@ begin
+         if (not(combat_is_initialized)) then begin
+             script_overrides;
+             meatPid := obj_pid(obj_being_used_with);
+-            display_msg(message_str(28, 260 + (get_critter_stat(dude_obj, 34) == 1)));
++            display_msg(message_str(SCRIPT_VORECH, 260 + (dude_gender == 1)));
+             add_timer_event(self_obj, 5, 3);
+         end
+     end
+@@ -391,27 +391,27 @@ end
+ 
+ procedure map_enter_p_proc
+ begin
+-    critter_add_trait(self_obj, 1, 6, 289);
+-    if (not((global_var(910) bwand 1) != 0)) then begin
+-        metarule3(100, self_obj, 1, 0);
++    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 289);
++    if (not((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 1) != 0)) then begin
++        rm_fixed_timer_event(self_obj, 1);
+     end
+     add_timer_event(self_obj, game_ticks(random(10, 20)), 1);
+-    if (((global_var(910) bwand 1) != 0) and not(metarule(22, 0))) then begin
++    if (((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 1) != 0) and not(is_loading_game)) then begin
+         destroy_object(self_obj);
+     end
+ end
+ 
+ procedure timed_event_p_proc
+ begin
+-    if (not((global_var(910) bwand 1) != 0) and (fixed_param == 1)) then begin
++    if (not((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 1) != 0) and (fixed_param == 1)) then begin
+         if (not(combat_is_initialized)) then begin
+-            float_msg(self_obj, message_str(28, random(300, 303)), 8);
++            float_msg(self_obj, message_str(SCRIPT_VORECH, random(300, 303)), FLOAT_MSG_YELLOW);
+         end
+         if ((obj_on_screen(self_obj) == 1) and not(combat_is_initialized)) then begin
+             play_sfx("DOGBARK");
+-            set_global_var(910, global_var(910) bwor 131072);
++            set_global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS, global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwor 131072);
+         end
+-        metarule3(100, self_obj, 1, 0);
++        rm_fixed_timer_event(self_obj, 1);
+         add_timer_event(self_obj, game_ticks(random(10, 20)), 1);
+     end
+     if (fixed_param == 2) then begin
+@@ -434,15 +434,15 @@ begin
+     end
+     if (fixed_param == 5) then begin
+         game_ui_enable;
+-        critter_heal(self_obj, -get_critter_stat(self_obj, 35));
++        critter_heal(self_obj, -get_critter_stat(self_obj, STAT_current_hp));
+     end
+ end
+ 
+ procedure combat_p_proc
+ begin
+-    if (((get_critter_stat(self_obj, 35) * 100 / get_critter_stat(self_obj, 7)) < 20) and (local_var(5) == 1)) then begin
++    if (((get_critter_stat(self_obj, STAT_current_hp) * 100 / get_critter_stat(self_obj, STAT_max_hp)) < 20) and (local_var(5) == 1)) then begin
+         set_local_var(4, 0);
+-        if (obj_can_see_obj(self_obj, dude_obj) or (tile_distance(tile_num(self_obj), tile_num(dude_obj)) < 10)) then begin
++        if (obj_can_see_obj(self_obj, dude_obj) or (tile_distance(tile_num(self_obj), dude_tile) < 10)) then begin
+             after_combat_dialog := 1;
+         end
+         terminate_combat;
+@@ -452,212 +452,212 @@ end
+ procedure Node998
+ begin
+     set_local_var(4, 1);
+-    if (not((global_var(910) bwand 1) != 0)) then begin
++    if (not((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 1) != 0)) then begin
+         set_local_var(5, 1);
+     end
+ end
+ 
+ procedure Node999
+ begin
+-    if (not((global_var(910) bwand 1) != 0)) then begin
++    if (not((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 1) != 0)) then begin
+         anim(self_obj, 1000, 2);
+     end
+ end
+ 
+ procedure Node500
+ begin
+-    gsay_reply(28, 500);
+-    if ((get_critter_stat(dude_obj, 6) > 5) and (get_critter_stat(dude_obj, 3) > 4)) then begin
+-        giq_option(4, 28, 501, Node550, 50);
++    gsay_reply(SCRIPT_VORECH, 500);
++    if ((dude_luck > 5) and (dude_charisma > 4)) then begin
++        giq_option(4, SCRIPT_VORECH, 501, Node550, NEUTRAL_REACTION);
+     end
+     else begin
+-        giq_option(4, 28, 501, Node800, 50);
++        giq_option(4, SCRIPT_VORECH, 501, Node800, NEUTRAL_REACTION);
+     end
+     if ((local_var(6) == 0) and obj_carrying_pid_obj(dude_obj, 284)) then begin
+-        giq_option(4, 28, 502, Node950, 50);
++        giq_option(4, SCRIPT_VORECH, 502, Node950, NEUTRAL_REACTION);
+     end
+     if ((local_var(6) == 0) and (obj_is_carrying_obj_pid(dude_obj, 284) == 0) and (obj_carrying_pid_obj(dude_obj, 81) or obj_carrying_pid_obj(dude_obj, 103))) then begin
+-        giq_option(4, 28, 503, Node950, 50);
++        giq_option(4, SCRIPT_VORECH, 503, Node950, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 28, 504, Node1450, 50);
++    giq_option(4, SCRIPT_VORECH, 504, Node1450, NEUTRAL_REACTION);
+     if ((local_var(6) > 0) and (obj_carrying_pid_obj(dude_obj, 284) or obj_carrying_pid_obj(dude_obj, 81) or obj_carrying_pid_obj(dude_obj, 103))) then begin
+         if (local_var(6) == 1) then begin
+-            giq_option(4, 28, 505, Node1100, 50);
++            giq_option(4, SCRIPT_VORECH, 505, Node1100, NEUTRAL_REACTION);
+         end
+         if (local_var(6) == 2) then begin
+-            giq_option(4, 28, 505, Node1300, 50);
++            giq_option(4, SCRIPT_VORECH, 505, Node1300, NEUTRAL_REACTION);
+         end
+     end
+-    giq_option(4, 28, 506, Node999, 50);
+-    giq_option(-3, 28, 507, Node1500, 50);
++    giq_option(4, SCRIPT_VORECH, 506, Node999, NEUTRAL_REACTION);
++    giq_option(-3, SCRIPT_VORECH, 507, Node1500, NEUTRAL_REACTION);
+     if ((local_var(6) > 0) or (local_var(7) == 1) and (obj_carrying_pid_obj(dude_obj, 284) or obj_carrying_pid_obj(dude_obj, 81) or obj_carrying_pid_obj(dude_obj, 103))) then begin
+         if (local_var(6) == 0) then begin
+-            giq_option(-3, 28, 509, Node1000, 50);
++            giq_option(-3, SCRIPT_VORECH, 509, Node1000, NEUTRAL_REACTION);
+         end
+         if (local_var(6) == 1) then begin
+-            giq_option(-3, 28, 509, Node1100, 50);
++            giq_option(-3, SCRIPT_VORECH, 509, Node1100, NEUTRAL_REACTION);
+         end
+         if (local_var(6) == 2) then begin
+-            giq_option(-3, 28, 509, Node1300, 50);
++            giq_option(-3, SCRIPT_VORECH, 509, Node1300, NEUTRAL_REACTION);
+         end
+     end
+-    giq_option(-3, 28, 508, Node999, 50);
++    giq_option(-3, SCRIPT_VORECH, 508, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node550
+ begin
+-    gsay_reply(28, 550);
+-    if ((get_critter_stat(dude_obj, 6) > 6) and (get_critter_stat(dude_obj, 3) > 5)) then begin
+-        giq_option(4, 28, 551, Node600, 50);
++    gsay_reply(SCRIPT_VORECH, 550);
++    if ((dude_luck > 6) and (dude_charisma > 5)) then begin
++        giq_option(4, SCRIPT_VORECH, 551, Node600, NEUTRAL_REACTION);
+     end
+     else begin
+-        giq_option(4, 28, 551, Node800, 50);
++        giq_option(4, SCRIPT_VORECH, 551, Node800, NEUTRAL_REACTION);
+     end
+     if (obj_carrying_pid_obj(dude_obj, 284) or obj_carrying_pid_obj(dude_obj, 81) or obj_carrying_pid_obj(dude_obj, 103)) then begin
+         if (local_var(6) == 0) then begin
+-            giq_option(4, 28, 552, Node950, 50);
++            giq_option(4, SCRIPT_VORECH, 552, Node950, NEUTRAL_REACTION);
+         end
+         if (local_var(6) == 1) then begin
+-            giq_option(4, 28, 552, Node1100, 50);
++            giq_option(4, SCRIPT_VORECH, 552, Node1100, NEUTRAL_REACTION);
+         end
+         if (local_var(6) == 2) then begin
+-            giq_option(4, 28, 552, Node1300, 50);
++            giq_option(4, SCRIPT_VORECH, 552, Node1300, NEUTRAL_REACTION);
+         end
+     end
+-    giq_option(4, 28, 553, Node999, 50);
++    giq_option(4, SCRIPT_VORECH, 553, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node600
+ begin
+-    gsay_reply(28, 600);
+-    if (get_critter_stat(dude_obj, 3) > 6) then begin
+-        giq_option(4, 28, 601, Node650, 50);
++    gsay_reply(SCRIPT_VORECH, 600);
++    if (dude_charisma > 6) then begin
++        giq_option(4, SCRIPT_VORECH, 601, Node650, NEUTRAL_REACTION);
+     end
+     else begin
+-        giq_option(4, 28, 601, Node800, 50);
++        giq_option(4, SCRIPT_VORECH, 601, Node800, NEUTRAL_REACTION);
+     end
+     if (obj_carrying_pid_obj(dude_obj, 284) or obj_carrying_pid_obj(dude_obj, 81) or obj_carrying_pid_obj(dude_obj, 103)) then begin
+         if (local_var(6) == 0) then begin
+-            giq_option(4, 28, 602, Node950, 50);
++            giq_option(4, SCRIPT_VORECH, 602, Node950, NEUTRAL_REACTION);
+         end
+         if (local_var(6) == 1) then begin
+-            giq_option(4, 28, 602, Node1100, 50);
++            giq_option(4, SCRIPT_VORECH, 602, Node1100, NEUTRAL_REACTION);
+         end
+         if (local_var(6) == 2) then begin
+-            giq_option(4, 28, 602, Node1300, 50);
++            giq_option(4, SCRIPT_VORECH, 602, Node1300, NEUTRAL_REACTION);
+         end
+     end
+-    giq_option(4, 28, 603, Node999, 50);
++    giq_option(4, SCRIPT_VORECH, 603, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node650
+ begin
+-    gsay_reply(28, 650);
+-    if (get_critter_stat(dude_obj, 3) > 7) then begin
+-        giq_option(4, 28, 651, Node700, 50);
++    gsay_reply(SCRIPT_VORECH, 650);
++    if (dude_charisma > 7) then begin
++        giq_option(4, SCRIPT_VORECH, 651, Node700, NEUTRAL_REACTION);
+     end
+     else begin
+-        giq_option(4, 28, 651, Node800, 50);
++        giq_option(4, SCRIPT_VORECH, 651, Node800, NEUTRAL_REACTION);
+     end
+     if (obj_carrying_pid_obj(dude_obj, 284) or obj_carrying_pid_obj(dude_obj, 81) or obj_carrying_pid_obj(dude_obj, 103)) then begin
+         if (local_var(6) == 0) then begin
+-            giq_option(4, 28, 652, Node950, 50);
++            giq_option(4, SCRIPT_VORECH, 652, Node950, NEUTRAL_REACTION);
+         end
+         if (local_var(6) == 1) then begin
+-            giq_option(4, 28, 652, Node1100, 50);
++            giq_option(4, SCRIPT_VORECH, 652, Node1100, NEUTRAL_REACTION);
+         end
+         if (local_var(6) == 2) then begin
+-            giq_option(4, 28, 652, Node1300, 50);
++            giq_option(4, SCRIPT_VORECH, 652, Node1300, NEUTRAL_REACTION);
+         end
+     end
+-    giq_option(4, 28, 653, Node999, 50);
++    giq_option(4, SCRIPT_VORECH, 653, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node700
+ begin
+-    gsay_reply(28, 700);
+-    if (get_critter_stat(dude_obj, 6) > 7) then begin
+-        giq_option(4, 28, 701, Node750, 50);
++    gsay_reply(SCRIPT_VORECH, 700);
++    if (dude_luck > 7) then begin
++        giq_option(4, SCRIPT_VORECH, 701, Node750, NEUTRAL_REACTION);
+     end
+     else begin
+-        giq_option(4, 28, 701, Node800, 50);
++        giq_option(4, SCRIPT_VORECH, 701, Node800, NEUTRAL_REACTION);
+     end
+     if (obj_carrying_pid_obj(dude_obj, 284) or obj_carrying_pid_obj(dude_obj, 81) or obj_carrying_pid_obj(dude_obj, 103)) then begin
+         if (local_var(6) == 0) then begin
+-            giq_option(4, 28, 702, Node950, 50);
++            giq_option(4, SCRIPT_VORECH, 702, Node950, NEUTRAL_REACTION);
+         end
+         if (local_var(6) == 1) then begin
+-            giq_option(4, 28, 702, Node1100, 50);
++            giq_option(4, SCRIPT_VORECH, 702, Node1100, NEUTRAL_REACTION);
+         end
+         if (local_var(6) == 2) then begin
+-            giq_option(4, 28, 702, Node1300, 50);
++            giq_option(4, SCRIPT_VORECH, 702, Node1300, NEUTRAL_REACTION);
+         end
+     end
+-    giq_option(4, 28, 703, Node999, 50);
++    giq_option(4, SCRIPT_VORECH, 703, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node750
+ begin
+-    gsay_reply(28, 750);
+-    if (((metarule(16, 0) - (((global_var(910) bwand 32) != 0) and not((global_var(632) bwand 2) != 0)) - (((global_var(910) bwand 64) != 0) and not((global_var(632) bwand 4) != 0)) - (((global_var(910) bwand 128) != 0) and not((global_var(632) bwand 32) != 0)) - 1) >= (floor(get_critter_stat(dude_obj, 3) / 2) + has_trait(0, dude_obj, 98))) or ((metarule(16, 0) - (((global_var(910) bwand 32) != 0) and not((global_var(632) bwand 2) != 0)) - (((global_var(910) bwand 64) != 0) and not((global_var(632) bwand 4) != 0)) - (((global_var(910) bwand 128) != 0) and not((global_var(632) bwand 32) != 0)) - 1) >= 5)) then begin
+-        giq_option(4, 28, 751, Node1550, 50);
++    gsay_reply(SCRIPT_VORECH, 750);
++    if (((party_member_count(DONT_LIST_HIDDEN_MEMBERS) - (((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) != 0) and not((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 2) != 0)) - (((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) != 0) and not((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 4) != 0)) - (((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) != 0) and not((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 32) != 0)) - 1) >= (floor(dude_charisma / 2) + has_trait(TRAIT_PERK, dude_obj, PERK_magnetic_personality_perk))) or ((party_member_count(DONT_LIST_HIDDEN_MEMBERS) - (((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) != 0) and not((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 2) != 0)) - (((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) != 0) and not((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 4) != 0)) - (((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) != 0) and not((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 32) != 0)) - 1) >= 5)) then begin
++        giq_option(4, SCRIPT_VORECH, 751, Node1550, NEUTRAL_REACTION);
+     end
+     else begin
+-        giq_option(4, 28, 751, JOIN_TO_PARTY, 50);
++        giq_option(4, SCRIPT_VORECH, 751, JOIN_TO_PARTY, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure Node800
+ begin
+-    gsay_reply(28, 800);
+-    if (get_critter_stat(dude_obj, 5) > 7) then begin
+-        giq_option(4, 28, 801, Node850, 50);
++    gsay_reply(SCRIPT_VORECH, 800);
++    if (get_critter_stat(dude_obj, STAT_ag) > 7) then begin
++        giq_option(4, SCRIPT_VORECH, 801, Node850, NEUTRAL_REACTION);
+     end
+     else begin
+-        giq_option(4, 28, 801, Node900, 50);
++        giq_option(4, SCRIPT_VORECH, 801, Node900, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 28, 802, Node999, 50);
++    giq_option(4, SCRIPT_VORECH, 802, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node850
+ begin
+-    gsay_reply(28, 850);
+-    giq_option(4, 28, 851, Node999, 50);
++    gsay_reply(SCRIPT_VORECH, 850);
++    giq_option(4, SCRIPT_VORECH, 851, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node900
+ begin
+-    gsay_reply(28, 900);
+-    if (get_critter_stat(dude_obj, 35) > 5) then begin
+-        critter_dmg(dude_obj, 5, 0);
++    gsay_reply(SCRIPT_VORECH, 900);
++    if (get_critter_stat(dude_obj, STAT_current_hp) > 5) then begin
++        critter_damage(dude_obj, 5);
+     end
+     else begin
+-        if (get_critter_stat(dude_obj, 35) == 5) then begin
+-            critter_dmg(dude_obj, 4, 0);
++        if (get_critter_stat(dude_obj, STAT_current_hp) == 5) then begin
++            critter_damage(dude_obj, 4);
+         end
+-        if (get_critter_stat(dude_obj, 35) == 4) then begin
+-            critter_dmg(dude_obj, 3, 0);
++        if (get_critter_stat(dude_obj, STAT_current_hp) == 4) then begin
++            critter_damage(dude_obj, 3);
+         end
+-        if (get_critter_stat(dude_obj, 35) == 3) then begin
+-            critter_dmg(dude_obj, 2, 0);
++        if (get_critter_stat(dude_obj, STAT_current_hp) == 3) then begin
++            critter_damage(dude_obj, 2);
+         end
+-        if (get_critter_stat(dude_obj, 35) == 2) then begin
+-            critter_dmg(dude_obj, 1, 0);
++        if (get_critter_stat(dude_obj, STAT_current_hp) == 2) then begin
++            critter_damage(dude_obj, 1);
+         end
+     end
+-    giq_option(4, 28, 901, Node999, 50);
++    giq_option(4, SCRIPT_VORECH, 901, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node950
+ begin
+-    gsay_reply(28, 950);
+-    giq_option(4, 28, 951, Node1000, 50);
+-    giq_option(4, 28, 952, Node1050, 50);
++    gsay_reply(SCRIPT_VORECH, 950);
++    giq_option(4, SCRIPT_VORECH, 951, Node1000, NEUTRAL_REACTION);
++    giq_option(4, SCRIPT_VORECH, 952, Node1050, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1000
+ begin
+-    gsay_reply(28, 1000);
++    gsay_reply(SCRIPT_VORECH, 1000);
+     if (meatPid != 0) then begin
+         removed_qty := obj_is_carrying_obj_pid(dude_obj, meatPid);
+         if (1 < removed_qty) then begin
+@@ -667,17 +667,17 @@ begin
+             restock_obj := obj_carrying_pid_obj(dude_obj, meatPid);
+             if (obj_type(self_obj) == 1) then begin
+                 restock_obj := obj_carrying_pid_obj(dude_obj, meatPid);
+-                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                    if (obj_item_subtype(critter_inven_obj(dude_obj, 0)) == 0) then begin
+-                        restock_obj := critter_inven_obj(dude_obj, 0);
++                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                    if (obj_item_subtype(critter_inven_obj(dude_obj, INVEN_TYPE_WORN)) == 0) then begin
++                        restock_obj := critter_inven_obj(dude_obj, INVEN_TYPE_WORN);
+                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                         rm_obj_from_inven(dude_obj, restock_obj);
+                         add_obj_to_inven(dude_obj, restock_obj);
+                     end
+                 end
+                 else begin
+-                    if ((critter_inven_obj(dude_obj, 2) == restock_obj) or (critter_inven_obj(dude_obj, 1) == restock_obj)) then begin
+-                        metarule(43, dude_obj);
++                    if ((critter_inven_obj(dude_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(dude_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                        inven_unwield(dude_obj);
+                     end
+                 end
+             end
+@@ -708,17 +708,17 @@ begin
+                 restock_obj := obj_carrying_pid_obj(dude_obj, 284);
+                 if (obj_type(self_obj) == 1) then begin
+                     restock_obj := obj_carrying_pid_obj(dude_obj, 284);
+-                    if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                        if (obj_item_subtype(critter_inven_obj(dude_obj, 0)) == 0) then begin
+-                            restock_obj := critter_inven_obj(dude_obj, 0);
++                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                        if (obj_item_subtype(critter_inven_obj(dude_obj, INVEN_TYPE_WORN)) == 0) then begin
++                            restock_obj := critter_inven_obj(dude_obj, INVEN_TYPE_WORN);
+                             debug_msg("armour pid == " + obj_pid(restock_obj));
+                             rm_obj_from_inven(dude_obj, restock_obj);
+                             add_obj_to_inven(dude_obj, restock_obj);
+                         end
+                     end
+                     else begin
+-                        if ((critter_inven_obj(dude_obj, 2) == restock_obj) or (critter_inven_obj(dude_obj, 1) == restock_obj)) then begin
+-                            metarule(43, dude_obj);
++                        if ((critter_inven_obj(dude_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(dude_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                            inven_unwield(dude_obj);
+                         end
+                     end
+                 end
+@@ -749,17 +749,17 @@ begin
+                     restock_obj := obj_carrying_pid_obj(dude_obj, 81);
+                     if (obj_type(self_obj) == 1) then begin
+                         restock_obj := obj_carrying_pid_obj(dude_obj, 81);
+-                        if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                            if (obj_item_subtype(critter_inven_obj(dude_obj, 0)) == 0) then begin
+-                                restock_obj := critter_inven_obj(dude_obj, 0);
++                        if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                            if (obj_item_subtype(critter_inven_obj(dude_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                restock_obj := critter_inven_obj(dude_obj, INVEN_TYPE_WORN);
+                                 debug_msg("armour pid == " + obj_pid(restock_obj));
+                                 rm_obj_from_inven(dude_obj, restock_obj);
+                                 add_obj_to_inven(dude_obj, restock_obj);
+                             end
+                         end
+                         else begin
+-                            if ((critter_inven_obj(dude_obj, 2) == restock_obj) or (critter_inven_obj(dude_obj, 1) == restock_obj)) then begin
+-                                metarule(43, dude_obj);
++                            if ((critter_inven_obj(dude_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(dude_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                inven_unwield(dude_obj);
+                             end
+                         end
+                     end
+@@ -790,17 +790,17 @@ begin
+                         restock_obj := obj_carrying_pid_obj(dude_obj, 103);
+                         if (obj_type(self_obj) == 1) then begin
+                             restock_obj := obj_carrying_pid_obj(dude_obj, 103);
+-                            if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                if (obj_item_subtype(critter_inven_obj(dude_obj, 0)) == 0) then begin
+-                                    restock_obj := critter_inven_obj(dude_obj, 0);
++                            if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                if (obj_item_subtype(critter_inven_obj(dude_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                    restock_obj := critter_inven_obj(dude_obj, INVEN_TYPE_WORN);
+                                     debug_msg("armour pid == " + obj_pid(restock_obj));
+                                     rm_obj_from_inven(dude_obj, restock_obj);
+                                     add_obj_to_inven(dude_obj, restock_obj);
+                                 end
+                             end
+                             else begin
+-                                if ((critter_inven_obj(dude_obj, 2) == restock_obj) or (critter_inven_obj(dude_obj, 1) == restock_obj)) then begin
+-                                    metarule(43, dude_obj);
++                                if ((critter_inven_obj(dude_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(dude_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                    inven_unwield(dude_obj);
+                                 end
+                             end
+                         end
+@@ -827,54 +827,54 @@ begin
+     set_local_var(6, local_var(6) + 1);
+     meatPid := 0;
+     if ((obj_is_carrying_obj_pid(dude_obj, 103) >= 1) or (obj_is_carrying_obj_pid(dude_obj, 284) >= 1) or (obj_is_carrying_obj_pid(dude_obj, 81) >= 1)) then begin
+-        giq_option(4, 28, 1001, Node1100, 50);
+-        giq_option(-3, 28, 1003, Node1100, 50);
++        giq_option(4, SCRIPT_VORECH, 1001, Node1100, NEUTRAL_REACTION);
++        giq_option(-3, SCRIPT_VORECH, 1003, Node1100, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 28, 1002, Node1150, 50);
+-    giq_option(-3, 28, 1004, Node999, 50);
++    giq_option(4, SCRIPT_VORECH, 1002, Node1150, NEUTRAL_REACTION);
++    giq_option(-3, SCRIPT_VORECH, 1004, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1050
+ begin
+-    gsay_reply(28, 1050);
+-    if (get_critter_stat(dude_obj, 35) > 10) then begin
+-        critter_dmg(dude_obj, 10, 0);
++    gsay_reply(SCRIPT_VORECH, 1050);
++    if (get_critter_stat(dude_obj, STAT_current_hp) > 10) then begin
++        critter_damage(dude_obj, 10);
+     end
+     else begin
+-        if (get_critter_stat(dude_obj, 35) == 10) then begin
+-            critter_dmg(dude_obj, 9, 0);
++        if (get_critter_stat(dude_obj, STAT_current_hp) == 10) then begin
++            critter_damage(dude_obj, 9);
+         end
+-        if (get_critter_stat(dude_obj, 35) == 9) then begin
+-            critter_dmg(dude_obj, 8, 0);
++        if (get_critter_stat(dude_obj, STAT_current_hp) == 9) then begin
++            critter_damage(dude_obj, 8);
+         end
+-        if (get_critter_stat(dude_obj, 35) == 8) then begin
+-            critter_dmg(dude_obj, 7, 0);
++        if (get_critter_stat(dude_obj, STAT_current_hp) == 8) then begin
++            critter_damage(dude_obj, 7);
+         end
+-        if (get_critter_stat(dude_obj, 35) == 7) then begin
+-            critter_dmg(dude_obj, 6, 0);
++        if (get_critter_stat(dude_obj, STAT_current_hp) == 7) then begin
++            critter_damage(dude_obj, 6);
+         end
+-        if (get_critter_stat(dude_obj, 35) == 6) then begin
+-            critter_dmg(dude_obj, 5, 0);
++        if (get_critter_stat(dude_obj, STAT_current_hp) == 6) then begin
++            critter_damage(dude_obj, 5);
+         end
+-        if (get_critter_stat(dude_obj, 35) == 5) then begin
+-            critter_dmg(dude_obj, 4, 0);
++        if (get_critter_stat(dude_obj, STAT_current_hp) == 5) then begin
++            critter_damage(dude_obj, 4);
+         end
+-        if (get_critter_stat(dude_obj, 35) == 4) then begin
+-            critter_dmg(dude_obj, 3, 0);
++        if (get_critter_stat(dude_obj, STAT_current_hp) == 4) then begin
++            critter_damage(dude_obj, 3);
+         end
+-        if (get_critter_stat(dude_obj, 35) == 3) then begin
+-            critter_dmg(dude_obj, 2, 0);
++        if (get_critter_stat(dude_obj, STAT_current_hp) == 3) then begin
++            critter_damage(dude_obj, 2);
+         end
+-        if (get_critter_stat(dude_obj, 35) == 2) then begin
+-            critter_dmg(dude_obj, 1, 0);
++        if (get_critter_stat(dude_obj, STAT_current_hp) == 2) then begin
++            critter_damage(dude_obj, 1);
+         end
+     end
+-    giq_option(4, 28, 1051, Node999, 50);
++    giq_option(4, SCRIPT_VORECH, 1051, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1100
+ begin
+-    gsay_reply(28, 1100);
++    gsay_reply(SCRIPT_VORECH, 1100);
+     if (meatPid != 0) then begin
+         removed_qty := obj_is_carrying_obj_pid(dude_obj, meatPid);
+         if (1 < removed_qty) then begin
+@@ -884,17 +884,17 @@ begin
+             restock_obj := obj_carrying_pid_obj(dude_obj, meatPid);
+             if (obj_type(self_obj) == 1) then begin
+                 restock_obj := obj_carrying_pid_obj(dude_obj, meatPid);
+-                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                    if (obj_item_subtype(critter_inven_obj(dude_obj, 0)) == 0) then begin
+-                        restock_obj := critter_inven_obj(dude_obj, 0);
++                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                    if (obj_item_subtype(critter_inven_obj(dude_obj, INVEN_TYPE_WORN)) == 0) then begin
++                        restock_obj := critter_inven_obj(dude_obj, INVEN_TYPE_WORN);
+                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                         rm_obj_from_inven(dude_obj, restock_obj);
+                         add_obj_to_inven(dude_obj, restock_obj);
+                     end
+                 end
+                 else begin
+-                    if ((critter_inven_obj(dude_obj, 2) == restock_obj) or (critter_inven_obj(dude_obj, 1) == restock_obj)) then begin
+-                        metarule(43, dude_obj);
++                    if ((critter_inven_obj(dude_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(dude_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                        inven_unwield(dude_obj);
+                     end
+                 end
+             end
+@@ -925,17 +925,17 @@ begin
+                 restock_obj := obj_carrying_pid_obj(dude_obj, 284);
+                 if (obj_type(self_obj) == 1) then begin
+                     restock_obj := obj_carrying_pid_obj(dude_obj, 284);
+-                    if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                        if (obj_item_subtype(critter_inven_obj(dude_obj, 0)) == 0) then begin
+-                            restock_obj := critter_inven_obj(dude_obj, 0);
++                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                        if (obj_item_subtype(critter_inven_obj(dude_obj, INVEN_TYPE_WORN)) == 0) then begin
++                            restock_obj := critter_inven_obj(dude_obj, INVEN_TYPE_WORN);
+                             debug_msg("armour pid == " + obj_pid(restock_obj));
+                             rm_obj_from_inven(dude_obj, restock_obj);
+                             add_obj_to_inven(dude_obj, restock_obj);
+                         end
+                     end
+                     else begin
+-                        if ((critter_inven_obj(dude_obj, 2) == restock_obj) or (critter_inven_obj(dude_obj, 1) == restock_obj)) then begin
+-                            metarule(43, dude_obj);
++                        if ((critter_inven_obj(dude_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(dude_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                            inven_unwield(dude_obj);
+                         end
+                     end
+                 end
+@@ -966,17 +966,17 @@ begin
+                     restock_obj := obj_carrying_pid_obj(dude_obj, 81);
+                     if (obj_type(self_obj) == 1) then begin
+                         restock_obj := obj_carrying_pid_obj(dude_obj, 81);
+-                        if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                            if (obj_item_subtype(critter_inven_obj(dude_obj, 0)) == 0) then begin
+-                                restock_obj := critter_inven_obj(dude_obj, 0);
++                        if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                            if (obj_item_subtype(critter_inven_obj(dude_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                restock_obj := critter_inven_obj(dude_obj, INVEN_TYPE_WORN);
+                                 debug_msg("armour pid == " + obj_pid(restock_obj));
+                                 rm_obj_from_inven(dude_obj, restock_obj);
+                                 add_obj_to_inven(dude_obj, restock_obj);
+                             end
+                         end
+                         else begin
+-                            if ((critter_inven_obj(dude_obj, 2) == restock_obj) or (critter_inven_obj(dude_obj, 1) == restock_obj)) then begin
+-                                metarule(43, dude_obj);
++                            if ((critter_inven_obj(dude_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(dude_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                inven_unwield(dude_obj);
+                             end
+                         end
+                     end
+@@ -1007,17 +1007,17 @@ begin
+                         restock_obj := obj_carrying_pid_obj(dude_obj, 103);
+                         if (obj_type(self_obj) == 1) then begin
+                             restock_obj := obj_carrying_pid_obj(dude_obj, 103);
+-                            if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                if (obj_item_subtype(critter_inven_obj(dude_obj, 0)) == 0) then begin
+-                                    restock_obj := critter_inven_obj(dude_obj, 0);
++                            if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                if (obj_item_subtype(critter_inven_obj(dude_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                    restock_obj := critter_inven_obj(dude_obj, INVEN_TYPE_WORN);
+                                     debug_msg("armour pid == " + obj_pid(restock_obj));
+                                     rm_obj_from_inven(dude_obj, restock_obj);
+                                     add_obj_to_inven(dude_obj, restock_obj);
+                                 end
+                             end
+                             else begin
+-                                if ((critter_inven_obj(dude_obj, 2) == restock_obj) or (critter_inven_obj(dude_obj, 1) == restock_obj)) then begin
+-                                    metarule(43, dude_obj);
++                                if ((critter_inven_obj(dude_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(dude_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                    inven_unwield(dude_obj);
+                                 end
+                             end
+                         end
+@@ -1043,40 +1043,40 @@ begin
+     end
+     set_local_var(6, local_var(6) + 1);
+     meatPid := 0;
+-    giq_option(4, 28, 1101, Node1200, 50);
++    giq_option(4, SCRIPT_VORECH, 1101, Node1200, NEUTRAL_REACTION);
+     if ((obj_is_carrying_obj_pid(dude_obj, 103) >= 1) or (obj_is_carrying_obj_pid(dude_obj, 284) >= 1) or (obj_is_carrying_obj_pid(dude_obj, 81) >= 1)) then begin
+-        giq_option(4, 28, 1102, Node1300, 50);
+-        giq_option(-3, 28, 1104, Node1300, 50);
++        giq_option(4, SCRIPT_VORECH, 1102, Node1300, NEUTRAL_REACTION);
++        giq_option(-3, SCRIPT_VORECH, 1104, Node1300, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 28, 1103, Node1400, 50);
+-    giq_option(-3, 28, 1105, Node999, 50);
++    giq_option(4, SCRIPT_VORECH, 1103, Node1400, NEUTRAL_REACTION);
++    giq_option(-3, SCRIPT_VORECH, 1105, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1150
+ begin
+-    gsay_reply(28, 1150);
+-    giq_option(4, 28, 1151, Node999, 50);
++    gsay_reply(SCRIPT_VORECH, 1150);
++    giq_option(4, SCRIPT_VORECH, 1151, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1200
+ begin
+-    gsay_reply(28, 1200);
+-    giq_option(4, 28, 1201, Node1250, 50);
++    gsay_reply(SCRIPT_VORECH, 1200);
++    giq_option(4, SCRIPT_VORECH, 1201, Node1250, NEUTRAL_REACTION);
+     if ((obj_is_carrying_obj_pid(dude_obj, 103) >= 1) or (obj_is_carrying_obj_pid(dude_obj, 284) >= 1) or (obj_is_carrying_obj_pid(dude_obj, 81) >= 1)) then begin
+-        giq_option(4, 28, 1202, Node1300, 50);
++        giq_option(4, SCRIPT_VORECH, 1202, Node1300, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 28, 1203, Node999, 50);
++    giq_option(4, SCRIPT_VORECH, 1203, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1250
+ begin
+-    gsay_reply(28, 1250);
+-    giq_option(4, 28, 1251, Node998, 50);
++    gsay_reply(SCRIPT_VORECH, 1250);
++    giq_option(4, SCRIPT_VORECH, 1251, Node998, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1300
+ begin
+-    gsay_reply(28, 1300);
++    gsay_reply(SCRIPT_VORECH, 1300);
+     if (meatPid != 0) then begin
+         removed_qty := obj_is_carrying_obj_pid(dude_obj, meatPid);
+         if (1 < removed_qty) then begin
+@@ -1086,17 +1086,17 @@ begin
+             restock_obj := obj_carrying_pid_obj(dude_obj, meatPid);
+             if (obj_type(self_obj) == 1) then begin
+                 restock_obj := obj_carrying_pid_obj(dude_obj, meatPid);
+-                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                    if (obj_item_subtype(critter_inven_obj(dude_obj, 0)) == 0) then begin
+-                        restock_obj := critter_inven_obj(dude_obj, 0);
++                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                    if (obj_item_subtype(critter_inven_obj(dude_obj, INVEN_TYPE_WORN)) == 0) then begin
++                        restock_obj := critter_inven_obj(dude_obj, INVEN_TYPE_WORN);
+                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                         rm_obj_from_inven(dude_obj, restock_obj);
+                         add_obj_to_inven(dude_obj, restock_obj);
+                     end
+                 end
+                 else begin
+-                    if ((critter_inven_obj(dude_obj, 2) == restock_obj) or (critter_inven_obj(dude_obj, 1) == restock_obj)) then begin
+-                        metarule(43, dude_obj);
++                    if ((critter_inven_obj(dude_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(dude_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                        inven_unwield(dude_obj);
+                     end
+                 end
+             end
+@@ -1127,17 +1127,17 @@ begin
+                 restock_obj := obj_carrying_pid_obj(dude_obj, 284);
+                 if (obj_type(self_obj) == 1) then begin
+                     restock_obj := obj_carrying_pid_obj(dude_obj, 284);
+-                    if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                        if (obj_item_subtype(critter_inven_obj(dude_obj, 0)) == 0) then begin
+-                            restock_obj := critter_inven_obj(dude_obj, 0);
++                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                        if (obj_item_subtype(critter_inven_obj(dude_obj, INVEN_TYPE_WORN)) == 0) then begin
++                            restock_obj := critter_inven_obj(dude_obj, INVEN_TYPE_WORN);
+                             debug_msg("armour pid == " + obj_pid(restock_obj));
+                             rm_obj_from_inven(dude_obj, restock_obj);
+                             add_obj_to_inven(dude_obj, restock_obj);
+                         end
+                     end
+                     else begin
+-                        if ((critter_inven_obj(dude_obj, 2) == restock_obj) or (critter_inven_obj(dude_obj, 1) == restock_obj)) then begin
+-                            metarule(43, dude_obj);
++                        if ((critter_inven_obj(dude_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(dude_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                            inven_unwield(dude_obj);
+                         end
+                     end
+                 end
+@@ -1168,17 +1168,17 @@ begin
+                     restock_obj := obj_carrying_pid_obj(dude_obj, 81);
+                     if (obj_type(self_obj) == 1) then begin
+                         restock_obj := obj_carrying_pid_obj(dude_obj, 81);
+-                        if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                            if (obj_item_subtype(critter_inven_obj(dude_obj, 0)) == 0) then begin
+-                                restock_obj := critter_inven_obj(dude_obj, 0);
++                        if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                            if (obj_item_subtype(critter_inven_obj(dude_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                restock_obj := critter_inven_obj(dude_obj, INVEN_TYPE_WORN);
+                                 debug_msg("armour pid == " + obj_pid(restock_obj));
+                                 rm_obj_from_inven(dude_obj, restock_obj);
+                                 add_obj_to_inven(dude_obj, restock_obj);
+                             end
+                         end
+                         else begin
+-                            if ((critter_inven_obj(dude_obj, 2) == restock_obj) or (critter_inven_obj(dude_obj, 1) == restock_obj)) then begin
+-                                metarule(43, dude_obj);
++                            if ((critter_inven_obj(dude_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(dude_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                inven_unwield(dude_obj);
+                             end
+                         end
+                     end
+@@ -1209,17 +1209,17 @@ begin
+                         restock_obj := obj_carrying_pid_obj(dude_obj, 103);
+                         if (obj_type(self_obj) == 1) then begin
+                             restock_obj := obj_carrying_pid_obj(dude_obj, 103);
+-                            if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                if (obj_item_subtype(critter_inven_obj(dude_obj, 0)) == 0) then begin
+-                                    restock_obj := critter_inven_obj(dude_obj, 0);
++                            if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                if (obj_item_subtype(critter_inven_obj(dude_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                    restock_obj := critter_inven_obj(dude_obj, INVEN_TYPE_WORN);
+                                     debug_msg("armour pid == " + obj_pid(restock_obj));
+                                     rm_obj_from_inven(dude_obj, restock_obj);
+                                     add_obj_to_inven(dude_obj, restock_obj);
+                                 end
+                             end
+                             else begin
+-                                if ((critter_inven_obj(dude_obj, 2) == restock_obj) or (critter_inven_obj(dude_obj, 1) == restock_obj)) then begin
+-                                    metarule(43, dude_obj);
++                                if ((critter_inven_obj(dude_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(dude_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                    inven_unwield(dude_obj);
+                                 end
+                             end
+                         end
+@@ -1245,96 +1245,96 @@ begin
+     end
+     set_local_var(6, local_var(6) + 1);
+     meatPid := 0;
+-    giq_option(4, 28, 1301, Node1350, 50);
+-    giq_option(-3, 28, 1302, Node1350, 50);
++    giq_option(4, SCRIPT_VORECH, 1301, Node1350, NEUTRAL_REACTION);
++    giq_option(-3, SCRIPT_VORECH, 1302, Node1350, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1350
+ begin
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        gsay_reply(28, 1350);
++    if (dude_gender == 0) then begin
++        gsay_reply(SCRIPT_VORECH, 1350);
+     end
+     else begin
+-        gsay_reply(28, 1351);
++        gsay_reply(SCRIPT_VORECH, 1351);
+     end
+-    if (((metarule(16, 0) - (((global_var(910) bwand 32) != 0) and not((global_var(632) bwand 2) != 0)) - (((global_var(910) bwand 64) != 0) and not((global_var(632) bwand 4) != 0)) - (((global_var(910) bwand 128) != 0) and not((global_var(632) bwand 32) != 0)) - 1) >= (floor(get_critter_stat(dude_obj, 3) / 2) + has_trait(0, dude_obj, 98))) or ((metarule(16, 0) - (((global_var(910) bwand 32) != 0) and not((global_var(632) bwand 2) != 0)) - (((global_var(910) bwand 64) != 0) and not((global_var(632) bwand 4) != 0)) - (((global_var(910) bwand 128) != 0) and not((global_var(632) bwand 32) != 0)) - 1) >= 5)) then begin
+-        giq_option(4, 28, 1352, Node1550, 50);
++    if (((party_member_count(DONT_LIST_HIDDEN_MEMBERS) - (((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) != 0) and not((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 2) != 0)) - (((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) != 0) and not((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 4) != 0)) - (((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) != 0) and not((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 32) != 0)) - 1) >= (floor(dude_charisma / 2) + has_trait(TRAIT_PERK, dude_obj, PERK_magnetic_personality_perk))) or ((party_member_count(DONT_LIST_HIDDEN_MEMBERS) - (((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) != 0) and not((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 2) != 0)) - (((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) != 0) and not((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 4) != 0)) - (((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) != 0) and not((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 32) != 0)) - 1) >= 5)) then begin
++        giq_option(4, SCRIPT_VORECH, 1352, Node1550, NEUTRAL_REACTION);
+     end
+     else begin
+-        giq_option(4, 28, 1352, JOIN_TO_PARTY, 50);
++        giq_option(4, SCRIPT_VORECH, 1352, JOIN_TO_PARTY, NEUTRAL_REACTION);
+     end
+-    if (((metarule(16, 0) - (((global_var(910) bwand 32) != 0) and not((global_var(632) bwand 2) != 0)) - (((global_var(910) bwand 64) != 0) and not((global_var(632) bwand 4) != 0)) - (((global_var(910) bwand 128) != 0) and not((global_var(632) bwand 32) != 0)) - 1) >= (floor(get_critter_stat(dude_obj, 3) / 2) + has_trait(0, dude_obj, 98))) or ((metarule(16, 0) - (((global_var(910) bwand 32) != 0) and not((global_var(632) bwand 2) != 0)) - (((global_var(910) bwand 64) != 0) and not((global_var(632) bwand 4) != 0)) - (((global_var(910) bwand 128) != 0) and not((global_var(632) bwand 32) != 0)) - 1) >= 5)) then begin
+-        giq_option(-3, 28, 1353, Node1550, 50);
++    if (((party_member_count(DONT_LIST_HIDDEN_MEMBERS) - (((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) != 0) and not((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 2) != 0)) - (((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) != 0) and not((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 4) != 0)) - (((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) != 0) and not((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 32) != 0)) - 1) >= (floor(dude_charisma / 2) + has_trait(TRAIT_PERK, dude_obj, PERK_magnetic_personality_perk))) or ((party_member_count(DONT_LIST_HIDDEN_MEMBERS) - (((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) != 0) and not((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 2) != 0)) - (((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) != 0) and not((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 4) != 0)) - (((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) != 0) and not((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 32) != 0)) - 1) >= 5)) then begin
++        giq_option(-3, SCRIPT_VORECH, 1353, Node1550, NEUTRAL_REACTION);
+     end
+     else begin
+-        giq_option(-3, 28, 1353, JOIN_TO_PARTY, 50);
++        giq_option(-3, SCRIPT_VORECH, 1353, JOIN_TO_PARTY, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure Node1400
+ begin
+-    gsay_reply(28, 1400);
+-    giq_option(4, 28, 1401, Node999, 50);
++    gsay_reply(SCRIPT_VORECH, 1400);
++    giq_option(4, SCRIPT_VORECH, 1401, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1450
+ begin
+-    gsay_reply(28, 1450);
+-    giq_option(1, 28, 1451, Node998, 50);
++    gsay_reply(SCRIPT_VORECH, 1450);
++    giq_option(1, SCRIPT_VORECH, 1451, Node998, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1500
+ begin
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        gsay_reply(28, 1500);
++    if (dude_gender == 0) then begin
++        gsay_reply(SCRIPT_VORECH, 1500);
+     end
+     else begin
+-        gsay_reply(28, 1501);
++        gsay_reply(SCRIPT_VORECH, 1501);
+     end
+-    if (get_critter_stat(dude_obj, 35) > 10) then begin
+-        critter_dmg(dude_obj, 10, 0);
++    if (get_critter_stat(dude_obj, STAT_current_hp) > 10) then begin
++        critter_damage(dude_obj, 10);
+     end
+     else begin
+-        if (get_critter_stat(dude_obj, 35) == 10) then begin
+-            critter_dmg(dude_obj, 9, 0);
++        if (get_critter_stat(dude_obj, STAT_current_hp) == 10) then begin
++            critter_damage(dude_obj, 9);
+         end
+-        if (get_critter_stat(dude_obj, 35) == 9) then begin
+-            critter_dmg(dude_obj, 8, 0);
++        if (get_critter_stat(dude_obj, STAT_current_hp) == 9) then begin
++            critter_damage(dude_obj, 8);
+         end
+-        if (get_critter_stat(dude_obj, 35) == 8) then begin
+-            critter_dmg(dude_obj, 7, 0);
++        if (get_critter_stat(dude_obj, STAT_current_hp) == 8) then begin
++            critter_damage(dude_obj, 7);
+         end
+-        if (get_critter_stat(dude_obj, 35) == 7) then begin
+-            critter_dmg(dude_obj, 6, 0);
++        if (get_critter_stat(dude_obj, STAT_current_hp) == 7) then begin
++            critter_damage(dude_obj, 6);
+         end
+-        if (get_critter_stat(dude_obj, 35) == 6) then begin
+-            critter_dmg(dude_obj, 5, 0);
++        if (get_critter_stat(dude_obj, STAT_current_hp) == 6) then begin
++            critter_damage(dude_obj, 5);
+         end
+-        if (get_critter_stat(dude_obj, 35) == 5) then begin
+-            critter_dmg(dude_obj, 4, 0);
++        if (get_critter_stat(dude_obj, STAT_current_hp) == 5) then begin
++            critter_damage(dude_obj, 4);
+         end
+-        if (get_critter_stat(dude_obj, 35) == 4) then begin
+-            critter_dmg(dude_obj, 3, 0);
++        if (get_critter_stat(dude_obj, STAT_current_hp) == 4) then begin
++            critter_damage(dude_obj, 3);
+         end
+-        if (get_critter_stat(dude_obj, 35) == 3) then begin
+-            critter_dmg(dude_obj, 2, 0);
++        if (get_critter_stat(dude_obj, STAT_current_hp) == 3) then begin
++            critter_damage(dude_obj, 2);
+         end
+-        if (get_critter_stat(dude_obj, 35) == 2) then begin
+-            critter_dmg(dude_obj, 1, 0);
++        if (get_critter_stat(dude_obj, STAT_current_hp) == 2) then begin
++            critter_damage(dude_obj, 1);
+         end
+     end
+-    giq_option(-3, 28, 1502, Node998, 50);
++    giq_option(-3, SCRIPT_VORECH, 1502, Node998, NEUTRAL_REACTION);
+     if ((local_var(6) == 0) and (local_var(7) == 0) and obj_carrying_pid_obj(dude_obj, 284)) then begin
+-        giq_option(-3, 28, 1503, Node1510, 50);
++        giq_option(-3, SCRIPT_VORECH, 1503, Node1510, NEUTRAL_REACTION);
+     end
+     if ((local_var(6) == 0) and (local_var(7) == 0) and (obj_is_carrying_obj_pid(dude_obj, 284) == 0) and (obj_carrying_pid_obj(dude_obj, 81) or obj_carrying_pid_obj(dude_obj, 103))) then begin
+-        giq_option(-3, 28, 1504, Node1510, 50);
++        giq_option(-3, SCRIPT_VORECH, 1504, Node1510, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure Node1510
+ begin
+-    gsay_reply(28, 1510);
++    gsay_reply(SCRIPT_VORECH, 1510);
+     if (meatPid != 0) then begin
+         removed_qty := obj_is_carrying_obj_pid(dude_obj, meatPid);
+         if (1 < removed_qty) then begin
+@@ -1344,17 +1344,17 @@ begin
+             restock_obj := obj_carrying_pid_obj(dude_obj, meatPid);
+             if (obj_type(self_obj) == 1) then begin
+                 restock_obj := obj_carrying_pid_obj(dude_obj, meatPid);
+-                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                    if (obj_item_subtype(critter_inven_obj(dude_obj, 0)) == 0) then begin
+-                        restock_obj := critter_inven_obj(dude_obj, 0);
++                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                    if (obj_item_subtype(critter_inven_obj(dude_obj, INVEN_TYPE_WORN)) == 0) then begin
++                        restock_obj := critter_inven_obj(dude_obj, INVEN_TYPE_WORN);
+                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                         rm_obj_from_inven(dude_obj, restock_obj);
+                         add_obj_to_inven(dude_obj, restock_obj);
+                     end
+                 end
+                 else begin
+-                    if ((critter_inven_obj(dude_obj, 2) == restock_obj) or (critter_inven_obj(dude_obj, 1) == restock_obj)) then begin
+-                        metarule(43, dude_obj);
++                    if ((critter_inven_obj(dude_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(dude_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                        inven_unwield(dude_obj);
+                     end
+                 end
+             end
+@@ -1385,17 +1385,17 @@ begin
+                 restock_obj := obj_carrying_pid_obj(dude_obj, 284);
+                 if (obj_type(self_obj) == 1) then begin
+                     restock_obj := obj_carrying_pid_obj(dude_obj, 284);
+-                    if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                        if (obj_item_subtype(critter_inven_obj(dude_obj, 0)) == 0) then begin
+-                            restock_obj := critter_inven_obj(dude_obj, 0);
++                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                        if (obj_item_subtype(critter_inven_obj(dude_obj, INVEN_TYPE_WORN)) == 0) then begin
++                            restock_obj := critter_inven_obj(dude_obj, INVEN_TYPE_WORN);
+                             debug_msg("armour pid == " + obj_pid(restock_obj));
+                             rm_obj_from_inven(dude_obj, restock_obj);
+                             add_obj_to_inven(dude_obj, restock_obj);
+                         end
+                     end
+                     else begin
+-                        if ((critter_inven_obj(dude_obj, 2) == restock_obj) or (critter_inven_obj(dude_obj, 1) == restock_obj)) then begin
+-                            metarule(43, dude_obj);
++                        if ((critter_inven_obj(dude_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(dude_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                            inven_unwield(dude_obj);
+                         end
+                     end
+                 end
+@@ -1426,17 +1426,17 @@ begin
+                     restock_obj := obj_carrying_pid_obj(dude_obj, 81);
+                     if (obj_type(self_obj) == 1) then begin
+                         restock_obj := obj_carrying_pid_obj(dude_obj, 81);
+-                        if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                            if (obj_item_subtype(critter_inven_obj(dude_obj, 0)) == 0) then begin
+-                                restock_obj := critter_inven_obj(dude_obj, 0);
++                        if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                            if (obj_item_subtype(critter_inven_obj(dude_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                restock_obj := critter_inven_obj(dude_obj, INVEN_TYPE_WORN);
+                                 debug_msg("armour pid == " + obj_pid(restock_obj));
+                                 rm_obj_from_inven(dude_obj, restock_obj);
+                                 add_obj_to_inven(dude_obj, restock_obj);
+                             end
+                         end
+                         else begin
+-                            if ((critter_inven_obj(dude_obj, 2) == restock_obj) or (critter_inven_obj(dude_obj, 1) == restock_obj)) then begin
+-                                metarule(43, dude_obj);
++                            if ((critter_inven_obj(dude_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(dude_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                inven_unwield(dude_obj);
+                             end
+                         end
+                     end
+@@ -1467,17 +1467,17 @@ begin
+                         restock_obj := obj_carrying_pid_obj(dude_obj, 103);
+                         if (obj_type(self_obj) == 1) then begin
+                             restock_obj := obj_carrying_pid_obj(dude_obj, 103);
+-                            if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                if (obj_item_subtype(critter_inven_obj(dude_obj, 0)) == 0) then begin
+-                                    restock_obj := critter_inven_obj(dude_obj, 0);
++                            if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                if (obj_item_subtype(critter_inven_obj(dude_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                    restock_obj := critter_inven_obj(dude_obj, INVEN_TYPE_WORN);
+                                     debug_msg("armour pid == " + obj_pid(restock_obj));
+                                     rm_obj_from_inven(dude_obj, restock_obj);
+                                     add_obj_to_inven(dude_obj, restock_obj);
+                                 end
+                             end
+                             else begin
+-                                if ((critter_inven_obj(dude_obj, 2) == restock_obj) or (critter_inven_obj(dude_obj, 1) == restock_obj)) then begin
+-                                    metarule(43, dude_obj);
++                                if ((critter_inven_obj(dude_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(dude_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                    inven_unwield(dude_obj);
+                                 end
+                             end
+                         end
+@@ -1504,54 +1504,54 @@ begin
+     set_local_var(7, 1);
+     meatPid := 0;
+     if (obj_carrying_pid_obj(dude_obj, 284) or obj_carrying_pid_obj(dude_obj, 81) or obj_carrying_pid_obj(dude_obj, 103)) then begin
+-        giq_option(-3, 28, 1511, Node1000, 50);
++        giq_option(-3, SCRIPT_VORECH, 1511, Node1000, NEUTRAL_REACTION);
+     end
+-    giq_option(-3, 28, 1512, Node999, 50);
++    giq_option(-3, SCRIPT_VORECH, 1512, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1550
+ begin
+-    gsay_reply(28, 1550);
++    gsay_reply(SCRIPT_VORECH, 1550);
+     set_local_var(4, 0);
+-    giq_option(4, 28, 1551, JOIN_TO_PARTY_TOO_MANY_FOLLOWERS, 50);
+-    giq_option(-3, 28, 1552, JOIN_TO_PARTY_TOO_MANY_FOLLOWERS, 50);
++    giq_option(4, SCRIPT_VORECH, 1551, JOIN_TO_PARTY_TOO_MANY_FOLLOWERS, NEUTRAL_REACTION);
++    giq_option(-3, SCRIPT_VORECH, 1552, JOIN_TO_PARTY_TOO_MANY_FOLLOWERS, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1600
+ begin
+-    gsay_reply(28, 1600);
++    gsay_reply(SCRIPT_VORECH, 1600);
+     set_local_var(5, 2);
+-    giq_option(4, 28, 1601, KILL_DOG, 50);
+-    giq_option(-3, 28, 1603, KILL_DOG, 50);
+-    if ((get_critter_stat(dude_obj, 4) + has_trait(0, dude_obj, 49)) > 3) then begin
+-        if (((metarule(16, 0) - (((global_var(910) bwand 32) != 0) and not((global_var(632) bwand 2) != 0)) - (((global_var(910) bwand 64) != 0) and not((global_var(632) bwand 4) != 0)) - (((global_var(910) bwand 128) != 0) and not((global_var(632) bwand 32) != 0)) - 1) >= (floor(get_critter_stat(dude_obj, 3) / 2) + has_trait(0, dude_obj, 98))) or ((metarule(16, 0) - (((global_var(910) bwand 32) != 0) and not((global_var(632) bwand 2) != 0)) - (((global_var(910) bwand 64) != 0) and not((global_var(632) bwand 4) != 0)) - (((global_var(910) bwand 128) != 0) and not((global_var(632) bwand 32) != 0)) - 1) >= 5)) then begin
+-            giq_option(4, 28, 1602, Node1550, 50);
++    giq_option(4, SCRIPT_VORECH, 1601, KILL_DOG, NEUTRAL_REACTION);
++    giq_option(-3, SCRIPT_VORECH, 1603, KILL_DOG, NEUTRAL_REACTION);
++    if ((dude_iq + has_trait(TRAIT_PERK, dude_obj, PERK_smooth_talker)) > 3) then begin
++        if (((party_member_count(DONT_LIST_HIDDEN_MEMBERS) - (((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) != 0) and not((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 2) != 0)) - (((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) != 0) and not((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 4) != 0)) - (((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) != 0) and not((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 32) != 0)) - 1) >= (floor(dude_charisma / 2) + has_trait(TRAIT_PERK, dude_obj, PERK_magnetic_personality_perk))) or ((party_member_count(DONT_LIST_HIDDEN_MEMBERS) - (((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) != 0) and not((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 2) != 0)) - (((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) != 0) and not((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 4) != 0)) - (((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) != 0) and not((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 32) != 0)) - 1) >= 5)) then begin
++            giq_option(4, SCRIPT_VORECH, 1602, Node1550, NEUTRAL_REACTION);
+         end
+         else begin
+-            giq_option(4, 28, 1602, JOIN_TO_PARTY, 50);
++            giq_option(4, SCRIPT_VORECH, 1602, JOIN_TO_PARTY, NEUTRAL_REACTION);
+         end
+     end
+     else begin
+-        if (((metarule(16, 0) - (((global_var(910) bwand 32) != 0) and not((global_var(632) bwand 2) != 0)) - (((global_var(910) bwand 64) != 0) and not((global_var(632) bwand 4) != 0)) - (((global_var(910) bwand 128) != 0) and not((global_var(632) bwand 32) != 0)) - 1) >= (floor(get_critter_stat(dude_obj, 3) / 2) + has_trait(0, dude_obj, 98))) or ((metarule(16, 0) - (((global_var(910) bwand 32) != 0) and not((global_var(632) bwand 2) != 0)) - (((global_var(910) bwand 64) != 0) and not((global_var(632) bwand 4) != 0)) - (((global_var(910) bwand 128) != 0) and not((global_var(632) bwand 32) != 0)) - 1) >= 5)) then begin
+-            giq_option(-3, 28, 1604, Node1550, 50);
++        if (((party_member_count(DONT_LIST_HIDDEN_MEMBERS) - (((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) != 0) and not((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 2) != 0)) - (((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) != 0) and not((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 4) != 0)) - (((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) != 0) and not((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 32) != 0)) - 1) >= (floor(dude_charisma / 2) + has_trait(TRAIT_PERK, dude_obj, PERK_magnetic_personality_perk))) or ((party_member_count(DONT_LIST_HIDDEN_MEMBERS) - (((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) != 0) and not((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 2) != 0)) - (((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) != 0) and not((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 4) != 0)) - (((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) != 0) and not((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 32) != 0)) - 1) >= 5)) then begin
++            giq_option(-3, SCRIPT_VORECH, 1604, Node1550, NEUTRAL_REACTION);
+         end
+         else begin
+-            giq_option(-3, 28, 1604, JOIN_TO_PARTY, 50);
++            giq_option(-3, SCRIPT_VORECH, 1604, JOIN_TO_PARTY, NEUTRAL_REACTION);
+         end
+     end
+ end
+ 
+ procedure JOIN_TO_PARTY
+ begin
+-    vorech_partym := create_object_sid(16777729, tile_num(self_obj), elevation(self_obj), 28);
+-    anim(vorech_partym, 1000, has_trait(1, self_obj, 10));
+-    critter_heal(vorech_partym, -(get_critter_stat(self_obj, 7) - get_critter_stat(self_obj, 35)));
++    vorech_partym := create_object_sid(16777729, tile_num(self_obj), elevation(self_obj), SCRIPT_VORECH);
++    anim(vorech_partym, 1000, obj_get_rot(self_obj));
++    critter_heal(vorech_partym, -(get_critter_stat(self_obj, STAT_max_hp) - get_critter_stat(self_obj, STAT_current_hp)));
+     party_add(vorech_partym);
+-    critter_add_trait(vorech_partym, 1, 6, 0);
+-    if (not((global_var(910) bwand 1) != 0)) then begin
+-        set_global_var(910, global_var(910) bwor 1);
++    critter_add_trait(vorech_partym, TRAIT_OBJECT, OBJECT_TEAM_NUM, 0);
++    if (not((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 1) != 0)) then begin
++        set_global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS, global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwor 1);
+         give_exp_points(100);
+-        display_msg(message_str(14, 100) + 100 + message_str(14, 101));
++        display_msg(g_mstr(100) + 100 + g_mstr(101));
+     end
+     destroy_after_join := 1;
+     add_timer_event(self_obj, 2, 2);
+@@ -1560,14 +1560,14 @@ end
+ 
+ procedure JOIN_TO_PARTY_TOO_MANY_FOLLOWERS
+ begin
+-    vorech_partym := create_object_sid(16777729, tile_num(self_obj), elevation(self_obj), 28);
+-    anim(vorech_partym, 1000, has_trait(1, self_obj, 10));
+-    critter_heal(vorech_partym, -(get_critter_stat(self_obj, 7) - get_critter_stat(self_obj, 35)));
+-    critter_add_trait(vorech_partym, 1, 6, 289);
+-    if (not((global_var(910) bwand 1) != 0)) then begin
+-        set_global_var(910, global_var(910) bwor 1);
++    vorech_partym := create_object_sid(16777729, tile_num(self_obj), elevation(self_obj), SCRIPT_VORECH);
++    anim(vorech_partym, 1000, obj_get_rot(self_obj));
++    critter_heal(vorech_partym, -(get_critter_stat(self_obj, STAT_max_hp) - get_critter_stat(self_obj, STAT_current_hp)));
++    critter_add_trait(vorech_partym, TRAIT_OBJECT, OBJECT_TEAM_NUM, 289);
++    if (not((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 1) != 0)) then begin
++        set_global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS, global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwor 1);
+         give_exp_points(100);
+-        display_msg(message_str(14, 100) + 100 + message_str(14, 101));
++        display_msg(g_mstr(100) + 100 + g_mstr(101));
+     end
+     destroy_after_join := 1;
+     add_timer_event(self_obj, 2, 2);
+@@ -1579,4 +1579,3 @@ begin
+     game_ui_disable;
+     add_timer_event(self_obj, 5, 4);
+ end
+-

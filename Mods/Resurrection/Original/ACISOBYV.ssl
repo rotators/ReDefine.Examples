@@ -1,0 +1,509 @@
+variable ProtoOfItemGiven;
+variable ValueOfRollCheck := 1;
+variable Scenery_Creation;
+variable Scenery_Creation_Hex;
+variable Scenery_Creation_Count;
+variable Temp_Scenery_Creation_Hex;
+variable Scenery_Creation_Ptr;
+variable lPartyWornArmor;
+variable How_Many_Party_Members_Are_Injured;
+variable How_Many_Party_Members_Armed;
+variable PartyHealingItem;
+
+procedure checkPartyMembersNearDoor;
+
+variable global_temp;
+variable dest_tile;
+variable step_tile;
+variable in_dialog;
+variable forced_node;
+variable restock_amt;
+variable restock_obj;
+variable restock_trash;
+variable removed_qty;
+variable toRemove_qty;
+
+procedure div(variable arg0, variable arg1);
+procedure start;
+procedure critter_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure destroy_p_proc;
+procedure look_at_p_proc;
+procedure description_p_proc;
+procedure use_skill_on_p_proc;
+procedure damage_p_proc;
+procedure map_enter_p_proc;
+procedure combat_p_proc;
+procedure timed_event_p_proc;
+
+import variable obyv_palace_food;
+import variable obyv_barman;
+
+variable Projed_smycku;
+variable probability;
+variable probability_special;
+
+
+procedure checkPartyMembersNearDoor
+begin
+    if (party_member_obj(16777729) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777729)) <= 5) then begin
+            return 1;
+        end
+    end
+    if ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0)) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777779)) <= 5) then begin
+            return 1;
+        end
+    end
+    if ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0)) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777811)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777812) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777812)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777813) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777813)) <= 5) then begin
+            return 1;
+        end
+    end
+    if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777814)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777748) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777748)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777294) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777294)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778017) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778017)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778016) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778016)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778049) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778049)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778050) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778050)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778051) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778051)) <= 5) then begin
+            return 1;
+        end
+    end
+    return 0;
+end
+
+procedure div(variable arg0, variable arg1)
+begin
+    if (0 > arg0) then begin
+        return -(-arg0 / arg1);
+    end
+    return arg0 / arg1;
+end
+
+procedure start
+begin
+    if ((cur_map_index == 25) and (tile_num(self_obj) == 28082)) then begin
+        obyv_palace_food := self_obj;
+    end
+    if ((cur_map_index == 26) and (tile_num(self_obj) == 14090)) then begin
+        obyv_barman := self_obj;
+    end
+end
+
+procedure critter_p_proc
+begin
+    if ((local_var(4) == 1) or (global_var(998) == 1) and (has_trait(1, self_obj, 666) == 1) and obj_can_see_obj(self_obj, dude_obj) and ((global_var(910) bwand 16777216) == 0)) then begin
+        if (critter_is_fleeing(self_obj)) then begin
+            if (anim_busy(self_obj) == 0) then begin
+                if ((tile_distance_objs(self_obj, dude_obj) < 8) or obj_can_see_obj(self_obj, dude_obj)) then begin
+                    if (anim_busy(self_obj) == 0) then begin
+                        global_temp := rotation_to_tile(tile_num(dude_obj), tile_num(self_obj));
+                        animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                        global_temp := (global_temp + 1) % 6;
+                        while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)))) do begin
+                            debug_msg("flee loop: rot == " + global_temp);
+                            animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                            global_temp := (global_temp + 1) % 6;
+                        end
+                    end
+                end
+            end
+        end
+        else begin
+            attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
+        end
+    end
+    if ((global_var(1008) >= 2) and (global_var(1008) <= 9) and not((global_var(904) bwand 1) != 0) or ((global_var(1000) bwand 64) != 0)) then begin
+        if (has_trait(1, self_obj, 666) == 1) then begin
+            set_obj_visibility(self_obj, 1);
+        end
+    end
+    else begin
+        if ((game_time_hour > 2000) or (game_time_hour < 700)) then begin
+        end
+        else begin
+            if (has_trait(1, self_obj, 666) == 0) then begin
+                set_obj_visibility(self_obj, 0);
+            end
+        end
+    end
+end
+
+procedure pickup_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_local_var(4, 1);
+    end
+end
+
+procedure talk_p_proc
+begin
+    if ((local_var(5) == 14090) and (cur_map_index == 26)) then begin
+        float_msg(self_obj, message_str(125, random(350, 362)), 8);
+    end
+    else begin
+        probability := random(0, 10);
+        if (probability >= 6) then begin
+            if (get_critter_stat(dude_obj, 34) == 0) then begin
+                float_msg(self_obj, message_str(125, random(300, 316)), 8);
+            end
+            else begin
+                float_msg(self_obj, message_str(125, random(301, 317)), 8);
+            end
+        end
+        else begin
+            probability_special := random(0, 10);
+            if ((probability_special >= 5) and (Projed_smycku == 0) and ((party_member_obj(16777729) != 0) or (party_member_obj(16777812) != 0))) then begin
+                float_msg(self_obj, message_str(125, 339), 8);
+                Projed_smycku := 1;
+            end
+            probability_special := random(0, 10);
+            if ((probability_special >= 7) and (Projed_smycku == 0) and not((global_var(904) bwand 33554432) != 0) and not((global_var(904) bwand 67108864) != 0)) then begin
+                float_msg(self_obj, message_str(125, 318), 8);
+                Projed_smycku := 1;
+            end
+            if ((probability_special >= 7) and (Projed_smycku == 0) and ((global_var(904) bwand 33554432) != 0) and not((global_var(904) bwand 67108864) != 0) and ((game_time - global_var(1003)) > (24 * (60 * (60 * 10)) * 5))) then begin
+                float_msg(self_obj, message_str(125, 319), 8);
+                Projed_smycku := 1;
+            end
+            if ((probability_special >= 7) and (Projed_smycku == 0) and not((global_var(904) bwand 33554432) != 0) and ((global_var(904) bwand 67108864) != 0) and ((game_time - global_var(1003)) > (24 * (60 * (60 * 10)) * 2))) then begin
+                float_msg(self_obj, message_str(125, random(320, 321)), 8);
+                Projed_smycku := 1;
+            end
+            probability_special := random(0, 10);
+            if ((probability_special >= 6) and (Projed_smycku == 0) and (global_var(874) != 2)) then begin
+                float_msg(self_obj, message_str(125, 322), 8);
+                Projed_smycku := 1;
+            end
+            probability_special := random(0, 10);
+            if ((probability_special >= 7) and (Projed_smycku == 0) and not((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0))) then begin
+                float_msg(self_obj, message_str(125, 323), 8);
+                Projed_smycku := 1;
+            end
+            if ((probability_special >= 5) and (Projed_smycku == 0) and ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0))) then begin
+                float_msg(self_obj, message_str(125, 324), 8);
+                Projed_smycku := 1;
+            end
+            if ((probability_special >= 7) and (Projed_smycku == 0) and (global_var(903) == 5)) then begin
+                if (get_critter_stat(dude_obj, 34) == 0) then begin
+                    float_msg(self_obj, message_str(125, random(325, 326)), 8);
+                end
+                else begin
+                    float_msg(self_obj, message_str(125, random(326, 327)), 8);
+                end
+                Projed_smycku := 1;
+            end
+            if (Projed_smycku == 0) then begin
+                if (not((global_var(904) bwand 32) != 0)) then begin
+                    float_msg(self_obj, message_str(125, random(328, 332)), 8);
+                end
+                else begin
+                    if ((global_var(904) bwand 1) != 0) then begin
+                        float_msg(self_obj, message_str(125, random(333, 335)), 8);
+                    end
+                    else begin
+                        float_msg(self_obj, message_str(125, random(336, 338)), 8);
+                    end
+                end
+            end
+            Projed_smycku := 0;
+        end
+    end
+end
+
+procedure destroy_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_global_var(5, global_var(5) + 1);
+        if (((global_var(4) + global_var(5)) >= 25) and ((global_var(4) > (3 * global_var(5))) or (global_var(2) == 1)) and (global_var(1) == 0)) then begin
+            set_global_var(2, 1);
+            set_global_var(3, 0);
+        end
+        if (metarule(51, self_obj) == 2) then begin
+            if (source_obj == dude_obj) then begin
+                set_global_var(2, 0);
+                set_global_var(1, global_var(1) + 1);
+                set_global_var(0, global_var(0) + -15);
+                debug_msg("Player gains " + -15 + " Karma Points.");
+                set_global_var(37, 0);
+                set_global_var(38, 0);
+                set_global_var(39, 0);
+                set_global_var(40, 0);
+                set_global_var(41, 0);
+                set_global_var(42, 0);
+                set_global_var(43, 0);
+                set_global_var(44, 0);
+                set_global_var(45, 0);
+                if (global_var(0) >= 1000) then begin
+                    set_global_var(37, 1);
+                end
+                else begin
+                    if (global_var(0) >= 750) then begin
+                        set_global_var(38, 1);
+                    end
+                    else begin
+                        if (global_var(0) >= 500) then begin
+                            set_global_var(39, 1);
+                        end
+                        else begin
+                            if (global_var(0) >= 250) then begin
+                                set_global_var(40, 1);
+                            end
+                            else begin
+                                if (global_var(0) > -250) then begin
+                                    set_global_var(41, 1);
+                                end
+                                else begin
+                                    if (global_var(0) > -500) then begin
+                                        set_global_var(42, 1);
+                                    end
+                                    else begin
+                                        if (global_var(0) > -750) then begin
+                                            set_global_var(43, 1);
+                                        end
+                                        else begin
+                                            if (global_var(0) > -1000) then begin
+                                                set_global_var(44, 1);
+                                            end
+                                            else begin
+                                                set_global_var(45, 1);
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+                set_global_var(53, global_var(53) + -8);
+                debug_msg("Added " + -8 + " to Town Rep");
+            end
+        end
+        if (((global_var(4) + global_var(5)) >= 25) and ((global_var(5) > (2 * global_var(4))) or (global_var(3) == 1))) then begin
+            set_global_var(3, 1);
+            set_global_var(2, 0);
+        end
+        set_global_var(0, global_var(0) + -10);
+        debug_msg("Player gains " + -10 + " Karma Points.");
+        set_global_var(37, 0);
+        set_global_var(38, 0);
+        set_global_var(39, 0);
+        set_global_var(40, 0);
+        set_global_var(41, 0);
+        set_global_var(42, 0);
+        set_global_var(43, 0);
+        set_global_var(44, 0);
+        set_global_var(45, 0);
+        if (global_var(0) >= 1000) then begin
+            set_global_var(37, 1);
+        end
+        else begin
+            if (global_var(0) >= 750) then begin
+                set_global_var(38, 1);
+            end
+            else begin
+                if (global_var(0) >= 500) then begin
+                    set_global_var(39, 1);
+                end
+                else begin
+                    if (global_var(0) >= 250) then begin
+                        set_global_var(40, 1);
+                    end
+                    else begin
+                        if (global_var(0) > -250) then begin
+                            set_global_var(41, 1);
+                        end
+                        else begin
+                            if (global_var(0) > -500) then begin
+                                set_global_var(42, 1);
+                            end
+                            else begin
+                                if (global_var(0) > -750) then begin
+                                    set_global_var(43, 1);
+                                end
+                                else begin
+                                    if (global_var(0) > -1000) then begin
+                                        set_global_var(44, 1);
+                                    end
+                                    else begin
+                                        set_global_var(45, 1);
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        set_global_var(53, global_var(53) + -5);
+        debug_msg("Added " + -5 + " to Town Rep");
+    end
+    if (obyv_palace_food == self_obj) then begin
+        obyv_palace_food := -1;
+    end
+    if (obyv_barman == self_obj) then begin
+        obyv_barman := -1;
+    end
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    if ((local_var(5) == 14090) and (cur_map_index == 26)) then begin
+        display_msg(message_str(125, 102));
+    end
+    else begin
+        if (get_critter_stat(self_obj, 34) == 0) then begin
+            display_msg(message_str(125, 100));
+        end
+        else begin
+            display_msg(message_str(125, 101));
+        end
+    end
+end
+
+procedure description_p_proc
+begin
+    script_overrides;
+    if ((local_var(5) == 14090) and (cur_map_index == 26)) then begin
+        display_msg(message_str(125, 202));
+    end
+    else begin
+        if (get_critter_stat(self_obj, 34) == 0) then begin
+            display_msg(message_str(125, 200));
+        end
+        else begin
+            display_msg(message_str(125, 201));
+        end
+    end
+end
+
+procedure use_skill_on_p_proc
+begin
+end
+
+procedure damage_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_local_var(4, 1);
+        set_global_var(998, 1);
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    critter_add_trait(self_obj, 1, 6, 282);
+    critter_add_trait(self_obj, 1, 5, 52);
+    if (local_var(5) == 0) then begin
+        set_local_var(5, tile_num(self_obj));
+    end
+    if ((global_var(1008) >= 2) and (global_var(1008) <= 9) and not((global_var(904) bwand 1) != 0) or ((global_var(1000) bwand 64) != 0)) then begin
+        if (has_trait(1, self_obj, 666) == 1) then begin
+            set_obj_visibility(self_obj, 1);
+        end
+    end
+    else begin
+        if ((game_time_hour > 2000) or (game_time_hour < 700)) then begin
+            if (cur_map_index == 25) then begin
+                if ((local_var(5) == 20109) or (local_var(5) == 18321) or (local_var(5) == 19725) or (local_var(5) == 15733) or (local_var(5) == 15337) or (local_var(5) == 13526) or (local_var(5) == 15905) or (local_var(5) == 15709) or (local_var(5) == 22288) or (local_var(5) == 22291) or (local_var(5) == 23094) or (local_var(5) == 26921) or (local_var(5) == 26730) or (local_var(5) == 28555) or (local_var(5) == 27758) or (local_var(5) == 22537) or (local_var(5) == 22743) or (local_var(5) == 26654) or (local_var(5) == 27252) and (has_trait(1, self_obj, 666) == 1)) then begin
+                    if (has_trait(1, self_obj, 666) == 1) then begin
+                        set_obj_visibility(self_obj, 1);
+                    end
+                end
+            end
+            else begin
+                if ((local_var(5) == 19505) or (local_var(5) == 16303) or (local_var(5) == 16105) or (local_var(5) == 22477) or (local_var(5) == 22307) or (local_var(5) == 29927) or (local_var(5) == 28678) or (local_var(5) == 29471) and (has_trait(1, self_obj, 666) == 1)) then begin
+                    if (has_trait(1, self_obj, 666) == 1) then begin
+                        set_obj_visibility(self_obj, 1);
+                    end
+                end
+            end
+        end
+        else begin
+            if (has_trait(1, self_obj, 666) == 0) then begin
+                set_obj_visibility(self_obj, 0);
+            end
+        end
+    end
+end
+
+procedure combat_p_proc
+begin
+    if ((fixed_param == 4) and (global_var(998) == 1)) then begin
+        probability := random(0, 10);
+        if ((probability >= 10) and not(critter_is_fleeing(self_obj))) then begin
+            if ((get_critter_stat(dude_obj, 34) == 0) and obj_can_see_obj(self_obj, dude_obj)) then begin
+                float_msg(self_obj, message_str(125, random(400, 413)), 2);
+            end
+            if ((get_critter_stat(dude_obj, 34) == 1) and obj_can_see_obj(self_obj, dude_obj)) then begin
+                float_msg(self_obj, message_str(125, random(402, 415)), 2);
+            end
+        end
+    end
+end
+
+procedure timed_event_p_proc
+begin
+    if ((fixed_param == 10) and (obyv_palace_food == self_obj)) then begin
+        float_msg(self_obj, message_str(125, 340), 8);
+    end
+    if ((fixed_param == 11) and (obyv_barman == self_obj)) then begin
+        float_msg(self_obj, message_str(125, 363), 8);
+    end
+    if ((fixed_param == 12) and (obyv_barman == self_obj)) then begin
+        float_msg(self_obj, message_str(125, 364), 8);
+    end
+    if ((fixed_param == 13) and (obyv_barman == self_obj)) then begin
+        if (get_critter_stat(dude_obj, 34) == 0) then begin
+            float_msg(self_obj, message_str(125, 400), 2);
+        end
+        if (get_critter_stat(dude_obj, 34) == 1) then begin
+            float_msg(self_obj, message_str(125, 414), 2);
+        end
+        set_global_var(998, 1);
+    end
+end
+

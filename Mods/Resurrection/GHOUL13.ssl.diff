@@ -1,0 +1,366 @@
+diff --git a/Mods/Resurrection/Original/GHOUL13.ssl b/Mods/Resurrection/ReDefine/GHOUL13.ssl
+index 0f1755b..aabdda8 100644
+--- a/Mods/Resurrection/Original/GHOUL13.ssl
++++ b/Mods/Resurrection/ReDefine/GHOUL13.ssl
+@@ -66,12 +66,12 @@ begin
+             return 1;
+         end
+     end
+-    if ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0)) then begin
++    if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+         if (tile_distance_objs(self_obj, party_member_obj(16777779)) <= 5) then begin
+             return 1;
+         end
+     end
+-    if ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0)) then begin
++    if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+         if (tile_distance_objs(self_obj, party_member_obj(16777811)) <= 5) then begin
+             return 1;
+         end
+@@ -86,7 +86,7 @@ begin
+             return 1;
+         end
+     end
+-    if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
++    if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+         if (tile_distance_objs(self_obj, party_member_obj(16777814)) <= 5) then begin
+             return 1;
+         end
+@@ -149,28 +149,28 @@ end
+ procedure map_enter_p_proc
+ begin
+     set_light_level(75);
+-    if (metarule(14, 0)) then begin
+-        set_global_var(962, global_var(962) bwor 1);
+-        set_global_var(963, global_var(963) bwor 1);
+-        set_global_var(963, global_var(963) bwor 2);
+-        set_global_var(962, global_var(962) bwor 2);
+-        set_global_var(963, global_var(963) bwor 4);
+-    end
+-    if (global_var(929) == 1) then begin
++    if (map_first_run) then begin
++        set_global_var(GVAR_G_ENERGY_FIELDS, global_var(GVAR_G_ENERGY_FIELDS) bwor 1);
++        set_global_var(GVAR_G_SEC_ROBOTS_ACTIVATION, global_var(GVAR_G_SEC_ROBOTS_ACTIVATION) bwor 1);
++        set_global_var(GVAR_G_SEC_ROBOTS_ACTIVATION, global_var(GVAR_G_SEC_ROBOTS_ACTIVATION) bwor 2);
++        set_global_var(GVAR_G_ENERGY_FIELDS, global_var(GVAR_G_ENERGY_FIELDS) bwor 2);
++        set_global_var(GVAR_G_SEC_ROBOTS_ACTIVATION, global_var(GVAR_G_SEC_ROBOTS_ACTIVATION) bwor 4);
++    end
++    if (global_var(GVAR_G_ELEVATOR) == 1) then begin
+         add_timer_event(self_obj, 1, 1);
+     end
+-    if (not(metarule(22, 0)) and (global_var(929) == 0) and ((map_var(13) bwand 4) != 0)) then begin
++    if (not(is_loading_game) and (global_var(GVAR_G_ELEVATOR) == 0) and ((map_var(13) bwand 4) != 0)) then begin
+         add_timer_event(self_obj, 1, 3);
+     end
+     if (((map_var(13) bwand 1) == 0) or ((map_var(13) bwand 2) == 0) or ((map_var(13) bwand 4) == 0)) then begin
+         lGuardsAliveL1 := 1;
+         lGuardsAliveL2 := 1;
+         lGuardsAliveL3 := 1;
+-        metarule3(100, self_obj, 2, 0);
++        rm_fixed_timer_event(self_obj, 2);
+         add_timer_event(self_obj, 20, 2);
+     end
+-    if (global_var(954) != 0) then begin
+-        metarule3(100, self_obj, 9, 0);
++    if (global_var(GVAR_G_BASE_TIME_OF_DESTRUCTION) != 0) then begin
++        rm_fixed_timer_event(self_obj, 9);
+         add_timer_event(self_obj, game_ticks(1), 9);
+     end
+ end
+@@ -190,20 +190,20 @@ begin
+     if ((Guard_4 != 0) and (critter_state(Guard_4) == 1)) then begin
+         Guard_4 := 0;
+     end
+-    if (((map_var(13) bwand 1) != 0) and (elevation(dude_obj) > 0)) then begin
++    if (((map_var(13) bwand 1) != 0) and (dude_elevation > 0)) then begin
+         call CreateGhoulGuard(0);
+         call CreateGhoulGuard(0);
+         lGuardsAliveL1 := 1;
+         set_map_var(13, map_var(13) bwand (-1 - 1));
+-        metarule3(100, self_obj, 2, 0);
++        rm_fixed_timer_event(self_obj, 2);
+         add_timer_event(self_obj, 40, 2);
+     end
+-    if (((map_var(13) bwand 2) != 0) and (elevation(dude_obj) > 1)) then begin
++    if (((map_var(13) bwand 2) != 0) and (dude_elevation > 1)) then begin
+         call CreateGhoulGuard(1);
+         call CreateGhoulGuard(1);
+         lGuardsAliveL2 := 1;
+         set_map_var(13, map_var(13) bwand (-1 - 2));
+-        metarule3(100, self_obj, 2, 0);
++        rm_fixed_timer_event(self_obj, 2);
+         add_timer_event(self_obj, 40, 2);
+     end
+ end
+@@ -214,122 +214,122 @@ begin
+         move_to(dude_obj, 19688, 0);
+         anim(dude_obj, 1000, 2);
+         if (party_member_obj(16777729) != 0) then begin
+-            anim(party_member_obj(16777729), 1000, has_trait(1, dude_obj, 10));
++            anim(party_member_obj(16777729), 1000, obj_get_rot(dude_obj));
+         end
+-        if ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0)) then begin
+-            anim(party_member_obj(16777779), 1000, has_trait(1, dude_obj, 10));
++        if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
++            anim(party_member_obj(16777779), 1000, obj_get_rot(dude_obj));
+         end
+-        if ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0)) then begin
+-            anim(party_member_obj(16777811), 1000, has_trait(1, dude_obj, 10));
++        if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
++            anim(party_member_obj(16777811), 1000, obj_get_rot(dude_obj));
+         end
+-        if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
+-            anim(party_member_obj(16777814), 1000, has_trait(1, dude_obj, 10));
++        if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
++            anim(party_member_obj(16777814), 1000, obj_get_rot(dude_obj));
+         end
+         if (party_member_obj(16778017) != 0) then begin
+-            anim(party_member_obj(16778017), 1000, has_trait(1, dude_obj, 10));
++            anim(party_member_obj(16778017), 1000, obj_get_rot(dude_obj));
+         end
+         if (party_member_obj(16778016) != 0) then begin
+-            anim(party_member_obj(16778016), 1000, has_trait(1, dude_obj, 10));
++            anim(party_member_obj(16778016), 1000, obj_get_rot(dude_obj));
+         end
+         if (party_member_obj(16778049) != 0) then begin
+-            anim(party_member_obj(16778049), 1000, has_trait(1, dude_obj, 10));
++            anim(party_member_obj(16778049), 1000, obj_get_rot(dude_obj));
+         end
+         if (party_member_obj(16778050) != 0) then begin
+-            anim(party_member_obj(16778050), 1000, has_trait(1, dude_obj, 10));
++            anim(party_member_obj(16778050), 1000, obj_get_rot(dude_obj));
+         end
+         if (party_member_obj(16778051) != 0) then begin
+-            anim(party_member_obj(16778051), 1000, has_trait(1, dude_obj, 10));
++            anim(party_member_obj(16778051), 1000, obj_get_rot(dude_obj));
+         end
+         if (party_member_obj(16777812) != 0) then begin
+-            anim(party_member_obj(16777812), 1000, has_trait(1, dude_obj, 10));
++            anim(party_member_obj(16777812), 1000, obj_get_rot(dude_obj));
+         end
+         if (party_member_obj(16777729) != 0) then begin
+             if (party_member_obj(16777729) != 0) then begin
+-                if (has_trait(1, party_member_obj(16777729), 666)) then begin
+-                    critter_attempt_placement(party_member_obj(16777729), tile_num_in_direction(tile_num(dude_obj), has_trait(1, dude_obj, 10), 2), elevation(dude_obj));
++                if (obj_is_visible_flag(party_member_obj(16777729))) then begin
++                    critter_attempt_placement(party_member_obj(16777729), tile_num_in_direction(dude_tile, obj_get_rot(dude_obj), 2), dude_elevation);
+                 end
+             end
+         end
+-        if ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0)) then begin
++        if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+             if (party_member_obj(16777779) != 0) then begin
+-                if (has_trait(1, party_member_obj(16777779), 666)) then begin
+-                    critter_attempt_placement(party_member_obj(16777779), tile_num_in_direction(tile_num(dude_obj), has_trait(1, dude_obj, 10), 2), elevation(dude_obj));
++                if (obj_is_visible_flag(party_member_obj(16777779))) then begin
++                    critter_attempt_placement(party_member_obj(16777779), tile_num_in_direction(dude_tile, obj_get_rot(dude_obj), 2), dude_elevation);
+                 end
+             end
+         end
+-        if ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0)) then begin
++        if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+             if (party_member_obj(16777811) != 0) then begin
+-                if (has_trait(1, party_member_obj(16777811), 666)) then begin
+-                    critter_attempt_placement(party_member_obj(16777811), tile_num_in_direction(tile_num(dude_obj), has_trait(1, dude_obj, 10), 2), elevation(dude_obj));
++                if (obj_is_visible_flag(party_member_obj(16777811))) then begin
++                    critter_attempt_placement(party_member_obj(16777811), tile_num_in_direction(dude_tile, obj_get_rot(dude_obj), 2), dude_elevation);
+                 end
+             end
+         end
+         if (party_member_obj(16777812) != 0) then begin
+             if (party_member_obj(16777812) != 0) then begin
+-                if (has_trait(1, party_member_obj(16777812), 666)) then begin
+-                    critter_attempt_placement(party_member_obj(16777812), tile_num_in_direction(tile_num(dude_obj), has_trait(1, dude_obj, 10), 2), elevation(dude_obj));
++                if (obj_is_visible_flag(party_member_obj(16777812))) then begin
++                    critter_attempt_placement(party_member_obj(16777812), tile_num_in_direction(dude_tile, obj_get_rot(dude_obj), 2), dude_elevation);
+                 end
+             end
+         end
+-        if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
++        if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+             if (party_member_obj(16777814) != 0) then begin
+-                if (has_trait(1, party_member_obj(16777814), 666)) then begin
+-                    critter_attempt_placement(party_member_obj(16777814), tile_num_in_direction(tile_num(dude_obj), has_trait(1, dude_obj, 10), 2), elevation(dude_obj));
++                if (obj_is_visible_flag(party_member_obj(16777814))) then begin
++                    critter_attempt_placement(party_member_obj(16777814), tile_num_in_direction(dude_tile, obj_get_rot(dude_obj), 2), dude_elevation);
+                 end
+             end
+         end
+         if (party_member_obj(16777748) != 0) then begin
+             if (party_member_obj(16777748) != 0) then begin
+-                if (has_trait(1, party_member_obj(16777748), 666)) then begin
+-                    critter_attempt_placement(party_member_obj(16777748), tile_num_in_direction(tile_num(dude_obj), has_trait(1, dude_obj, 10), 2), elevation(dude_obj));
++                if (obj_is_visible_flag(party_member_obj(16777748))) then begin
++                    critter_attempt_placement(party_member_obj(16777748), tile_num_in_direction(dude_tile, obj_get_rot(dude_obj), 2), dude_elevation);
+                 end
+             end
+         end
+         if (party_member_obj(16778017) != 0) then begin
+             if (party_member_obj(16778017) != 0) then begin
+-                if (has_trait(1, party_member_obj(16778017), 666)) then begin
+-                    critter_attempt_placement(party_member_obj(16778017), tile_num_in_direction(tile_num(dude_obj), has_trait(1, dude_obj, 10), 2), elevation(dude_obj));
++                if (obj_is_visible_flag(party_member_obj(16778017))) then begin
++                    critter_attempt_placement(party_member_obj(16778017), tile_num_in_direction(dude_tile, obj_get_rot(dude_obj), 2), dude_elevation);
+                 end
+             end
+         end
+         if (party_member_obj(16778016) != 0) then begin
+             if (party_member_obj(16778016) != 0) then begin
+-                if (has_trait(1, party_member_obj(16778016), 666)) then begin
+-                    critter_attempt_placement(party_member_obj(16778016), tile_num_in_direction(tile_num(dude_obj), has_trait(1, dude_obj, 10), 2), elevation(dude_obj));
++                if (obj_is_visible_flag(party_member_obj(16778016))) then begin
++                    critter_attempt_placement(party_member_obj(16778016), tile_num_in_direction(dude_tile, obj_get_rot(dude_obj), 2), dude_elevation);
+                 end
+             end
+         end
+         if (party_member_obj(16778049) != 0) then begin
+             if (party_member_obj(16778049) != 0) then begin
+-                if (has_trait(1, party_member_obj(16778049), 666)) then begin
+-                    critter_attempt_placement(party_member_obj(16778049), tile_num_in_direction(tile_num(dude_obj), has_trait(1, dude_obj, 10), 2), elevation(dude_obj));
++                if (obj_is_visible_flag(party_member_obj(16778049))) then begin
++                    critter_attempt_placement(party_member_obj(16778049), tile_num_in_direction(dude_tile, obj_get_rot(dude_obj), 2), dude_elevation);
+                 end
+             end
+         end
+         if (party_member_obj(16778050) != 0) then begin
+             if (party_member_obj(16778050) != 0) then begin
+-                if (has_trait(1, party_member_obj(16778050), 666)) then begin
+-                    critter_attempt_placement(party_member_obj(16778050), tile_num_in_direction(tile_num(dude_obj), has_trait(1, dude_obj, 10), 2), elevation(dude_obj));
++                if (obj_is_visible_flag(party_member_obj(16778050))) then begin
++                    critter_attempt_placement(party_member_obj(16778050), tile_num_in_direction(dude_tile, obj_get_rot(dude_obj), 2), dude_elevation);
+                 end
+             end
+         end
+         if (party_member_obj(16778051) != 0) then begin
+             if (party_member_obj(16778051) != 0) then begin
+-                if (has_trait(1, party_member_obj(16778051), 666)) then begin
+-                    critter_attempt_placement(party_member_obj(16778051), tile_num_in_direction(tile_num(dude_obj), has_trait(1, dude_obj, 10), 2), elevation(dude_obj));
++                if (obj_is_visible_flag(party_member_obj(16778051))) then begin
++                    critter_attempt_placement(party_member_obj(16778051), tile_num_in_direction(dude_tile, obj_get_rot(dude_obj), 2), dude_elevation);
+                 end
+             end
+         end
+         if (party_member_obj(16777294) != 0) then begin
+             if (party_member_obj(16777294) != 0) then begin
+-                if (has_trait(1, party_member_obj(16777294), 666)) then begin
+-                    critter_attempt_placement(party_member_obj(16777294), tile_num_in_direction(tile_num(dude_obj), has_trait(1, dude_obj, 10), 2), elevation(dude_obj));
++                if (obj_is_visible_flag(party_member_obj(16777294))) then begin
++                    critter_attempt_placement(party_member_obj(16777294), tile_num_in_direction(dude_tile, obj_get_rot(dude_obj), 2), dude_elevation);
+                 end
+             end
+         end
+         game_ui_enable;
+-        gfade_in(1);
+-        set_global_var(929, 0);
++        fade_in;
++        set_global_var(GVAR_G_ELEVATOR, 0);
+     end
+     if (fixed_param == 2) then begin
+         if ((lGuardsAliveL1 == 0) and ((map_var(13) bwand 1) == 0)) then begin
+@@ -345,35 +345,35 @@ begin
+             lGuardsAliveL1 := 0;
+             lGuardsAliveL2 := 0;
+             lGuardsAliveL3 := 0;
+-            metarule3(100, self_obj, 2, 0);
++            rm_fixed_timer_event(self_obj, 2);
+             add_timer_event(self_obj, 20, 2);
+         end
+     end
+     if (fixed_param == 3) then begin
+-        if (elevation(dude_obj) == 2) then begin
++        if (dude_elevation == 2) then begin
+             call CreateGhoulGuard(2);
+             call CreateGhoulGuard(2);
+             lGuardsAliveL3 := 1;
+             set_map_var(13, map_var(13) bwand (-1 - 4));
+-            metarule3(100, self_obj, 2, 0);
++            rm_fixed_timer_event(self_obj, 2);
+             add_timer_event(self_obj, 40, 2);
+         end
+     end
+     if (fixed_param == 9) then begin
+-        destruction_countdown := (global_var(954) - game_time) / 10;
++        destruction_countdown := (global_var(GVAR_G_BASE_TIME_OF_DESTRUCTION) - game_time) / 10;
+         if ((destruction_countdown > 0) and (destruction_countdown <= (5 * 60 * 10 / 10))) then begin
+-            display_msg(message_str(387, 401) + destruction_countdown + message_str(387, 402));
++            display_msg(mstr(401) + destruction_countdown + mstr(402));
+             if (destruction_countdown <= 10) then begin
+-                metarule3(100, self_obj, 9, 0);
++                rm_fixed_timer_event(self_obj, 9);
+                 add_timer_event(self_obj, game_ticks(1), 9);
+             end
+             else begin
+-                metarule3(100, self_obj, 9, 0);
++                rm_fixed_timer_event(self_obj, 9);
+                 add_timer_event(self_obj, game_ticks(10), 9);
+             end
+         end
+         else begin
+-            display_msg(message_str(387, 401) + 0 + message_str(387, 402));
++            display_msg(mstr(401) + 0 + mstr(402));
+             play_sfx("pluto");
+             kill_critter(dude_obj, 0);
+         end
+@@ -392,15 +392,15 @@ end
+ procedure CreateGhoulGuard(variable arg0)
+ begin
+     if (arg0 == 0) then begin
+-        lGhoulObj := create_object_sid(16777830, 21104, arg0, 432);
++        lGhoulObj := create_object_sid(16777830, 21104, arg0, SCRIPT_GGUARD7);
+     end
+     else begin
+         if (arg0 == 1) then begin
+-            lGhoulObj := create_object_sid(16777830, 21539, arg0, 432);
++            lGhoulObj := create_object_sid(16777830, 21539, arg0, SCRIPT_GGUARD7);
+         end
+         else begin
+             if (arg0 == 2) then begin
+-                lGhoulObj := create_object_sid(16777830, 21336, arg0, 432);
++                lGhoulObj := create_object_sid(16777830, 21336, arg0, SCRIPT_GGUARD7);
+             end
+         end
+     end
+@@ -411,25 +411,25 @@ begin
+         lWeaponIndx := random(1, 3);
+     end
+     if (lWeaponIndx == 1) then begin
+-        restock_obj := create_object_sid(118, 0, 0, -1);
++        restock_obj := create_object(118, 0, 0);
+         add_mult_objs_to_inven(lGhoulObj, restock_obj, 1);
+         wield_obj_critter(lGhoulObj, obj_carrying_pid_obj(lGhoulObj, 118));
+     end
+     else begin
+         if (lWeaponIndx == 2) then begin
+-            restock_obj := create_object_sid(15, 0, 0, -1);
++            restock_obj := create_object(15, 0, 0);
+             add_mult_objs_to_inven(lGhoulObj, restock_obj, 1);
+             wield_obj_critter(lGhoulObj, obj_carrying_pid_obj(lGhoulObj, 15));
+         end
+         else begin
+             if (lWeaponIndx == 3) then begin
+-                restock_obj := create_object_sid(115, 0, 0, -1);
++                restock_obj := create_object(115, 0, 0);
+                 add_mult_objs_to_inven(lGhoulObj, restock_obj, 1);
+                 wield_obj_critter(lGhoulObj, obj_carrying_pid_obj(lGhoulObj, 115));
+             end
+             else begin
+                 if (lWeaponIndx == 4) then begin
+-                    restock_obj := create_object_sid(28, 0, 0, -1);
++                    restock_obj := create_object(28, 0, 0);
+                     add_mult_objs_to_inven(lGhoulObj, restock_obj, 1);
+                     wield_obj_critter(lGhoulObj, obj_carrying_pid_obj(lGhoulObj, 28));
+                 end
+@@ -437,7 +437,7 @@ begin
+         end
+     end
+     if (random(1, 20 - (difficulty_level * 5)) == 5) then begin
+-        restock_obj := create_object_sid(26, 0, 0, -1);
++        restock_obj := create_object(26, 0, 0);
+         add_mult_objs_to_inven(lGhoulObj, restock_obj, 1);
+     end
+     if (arg0 == 0) then begin
+@@ -458,4 +458,3 @@ begin
+     end
+     add_timer_event(lGhoulObj, 0, 2);
+ end
+-

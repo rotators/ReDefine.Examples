@@ -1,0 +1,544 @@
+variable ProtoOfItemGiven;
+variable ValueOfRollCheck := 1;
+variable Scenery_Creation;
+variable Scenery_Creation_Hex;
+variable Scenery_Creation_Count;
+variable Temp_Scenery_Creation_Hex;
+variable Scenery_Creation_Ptr;
+variable lPartyWornArmor;
+variable How_Many_Party_Members_Are_Injured;
+variable How_Many_Party_Members_Armed;
+variable PartyHealingItem;
+
+procedure checkPartyMembersNearDoor;
+
+variable global_temp;
+variable dest_tile;
+variable step_tile;
+variable in_dialog;
+variable forced_node;
+variable restock_amt;
+variable restock_obj;
+variable restock_trash;
+variable removed_qty;
+variable toRemove_qty;
+
+procedure div(variable arg0, variable arg1);
+procedure start;
+procedure map_enter_p_proc;
+procedure critter_p_proc;
+procedure damage_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure destroy_p_proc;
+procedure look_at_p_proc;
+procedure description_p_proc;
+procedure use_skill_on_p_proc;
+procedure timed_event_p_proc;
+procedure combat_p_proc;
+procedure way_destination_load_not_functional;
+
+variable probability;
+variable counter_attack_timer;
+
+
+procedure checkPartyMembersNearDoor
+begin
+    if (party_member_obj(16777729) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777729)) <= 5) then begin
+            return 1;
+        end
+    end
+    if ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0)) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777779)) <= 5) then begin
+            return 1;
+        end
+    end
+    if ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0)) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777811)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777812) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777812)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777813) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777813)) <= 5) then begin
+            return 1;
+        end
+    end
+    if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777814)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777748) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777748)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777293) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777293)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778017) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778017)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778016) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778016)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778049) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778049)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778050) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778050)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778051) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778051)) <= 5) then begin
+            return 1;
+        end
+    end
+    return 0;
+end
+
+procedure div(variable arg0, variable arg1)
+begin
+    if (0 > arg0) then begin
+        return -(-arg0 / arg1);
+    end
+    return arg0 / arg1;
+end
+
+procedure start
+begin
+end
+
+procedure map_enter_p_proc
+begin
+    if (((global_var(911) bwand 1) != 0) and not((global_var(911) bwand 131072) != 0)) then begin
+        critter_add_trait(self_obj, 1, 6, 0);
+    end
+    else begin
+        critter_add_trait(self_obj, 1, 6, 92);
+    end
+    if (local_var(5) == 6) then begin
+        critter_add_trait(self_obj, 1, 5, 3);
+    end
+    else begin
+        critter_add_trait(self_obj, 1, 5, 181);
+    end
+    if (((global_var(911) bwand 8192) != 0) and not(metarule(22, 0))) then begin
+        set_local_var(6, 2);
+    end
+end
+
+procedure critter_p_proc
+begin
+    if (((global_var(911) bwand 131072) != 0) and obj_can_see_obj(self_obj, dude_obj)) then begin
+        if (critter_is_fleeing(self_obj)) then begin
+            if (anim_busy(self_obj) == 0) then begin
+                if ((tile_distance_objs(self_obj, dude_obj) < 8) or obj_can_see_obj(self_obj, dude_obj)) then begin
+                    if (anim_busy(self_obj) == 0) then begin
+                        global_temp := rotation_to_tile(tile_num(dude_obj), tile_num(self_obj));
+                        animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                        global_temp := (global_temp + 1) % 6;
+                        while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)))) do begin
+                            debug_msg("flee loop: rot == " + global_temp);
+                            animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                            global_temp := (global_temp + 1) % 6;
+                        end
+                    end
+                end
+            end
+        end
+        else begin
+            attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
+        end
+    end
+    if (((global_var(911) bwand 1) != 0) and not((global_var(911) bwand 8388608) != 0)) then begin
+        if (counter_attack_timer == 0) then begin
+            counter_attack_timer := game_time;
+        end
+        if (game_time > (counter_attack_timer + (1 * 10))) then begin
+            if ((global_var(1024) == 1) and (cur_map_index == 102)) then begin
+            end
+            else begin
+                set_global_var(911, global_var(911) bwor 8388608);
+            end
+        end
+    end
+    if ((global_var(916) <= 0) and (local_var(6) == 0)) then begin
+        if (local_var(5) == 1) then begin
+            float_msg(self_obj, message_str(23, 300), 8);
+            set_local_var(6, 1);
+        end
+        else begin
+            if ((global_var(911) bwand 8192) != 0) then begin
+                if ((global_var(911) bwand 4) != 0) then begin
+                    if (global_var(748) == 2) then begin
+                        if (local_var(5) == 4) then begin
+                            float_msg(self_obj, message_str(23, 312), 8);
+                        end
+                        if (((global_var(911) bwand 65536) != 0) and (local_var(5) == 3)) then begin
+                            float_msg(self_obj, message_str(23, 312), 8);
+                        end
+                        if (((global_var(911) bwand 65536) != 0) and ((global_var(911) bwand 32768) != 0) and (local_var(5) == 2)) then begin
+                            float_msg(self_obj, message_str(23, 312), 8);
+                        end
+                    end
+                    else begin
+                        if (local_var(5) == 4) then begin
+                            float_msg(self_obj, message_str(23, 311), 8);
+                        end
+                        if (((global_var(911) bwand 65536) != 0) and (local_var(5) == 3)) then begin
+                            float_msg(self_obj, message_str(23, 311), 8);
+                        end
+                        if (((global_var(911) bwand 65536) != 0) and ((global_var(911) bwand 32768) != 0) and (local_var(5) == 2)) then begin
+                            float_msg(self_obj, message_str(23, 311), 8);
+                        end
+                    end
+                end
+                else begin
+                    if (local_var(5) == 2) then begin
+                        float_msg(self_obj, message_str(23, 310), 8);
+                    end
+                    if (((global_var(911) bwand 16384) != 0) and (local_var(5) == 3)) then begin
+                        float_msg(self_obj, message_str(23, 310), 8);
+                    end
+                    if (((global_var(911) bwand 16384) != 0) and ((global_var(911) bwand 32768) != 0) and (local_var(5) == 4)) then begin
+                        float_msg(self_obj, message_str(23, 310), 8);
+                    end
+                end
+                set_local_var(6, 1);
+            end
+        end
+    end
+    if ((global_var(916) <= 0) and (local_var(6) == 2)) then begin
+        if ((global_var(911) bwand 8192) != 0) then begin
+            if ((global_var(911) bwand 4) != 0) then begin
+                if (local_var(5) == 4) then begin
+                    float_msg(self_obj, message_str(23, 300), 8);
+                end
+                if (((global_var(911) bwand 65536) != 0) and (local_var(5) == 3)) then begin
+                    float_msg(self_obj, message_str(23, 300), 8);
+                end
+                if (((global_var(911) bwand 65536) != 0) and ((global_var(911) bwand 32768) != 0) and (local_var(5) == 2)) then begin
+                    float_msg(self_obj, message_str(23, 300), 8);
+                end
+            end
+            else begin
+                if (local_var(5) == 2) then begin
+                    float_msg(self_obj, message_str(23, 300), 8);
+                end
+                if (((global_var(911) bwand 16384) != 0) and (local_var(5) == 3)) then begin
+                    float_msg(self_obj, message_str(23, 300), 8);
+                end
+                if (((global_var(911) bwand 16384) != 0) and ((global_var(911) bwand 32768) != 0) and (local_var(5) == 4)) then begin
+                    float_msg(self_obj, message_str(23, 300), 8);
+                end
+            end
+            set_local_var(6, 1);
+        end
+    end
+end
+
+procedure damage_p_proc
+begin
+    if ((source_obj == dude_obj) and not((global_var(911) bwand 131072) != 0)) then begin
+        set_local_var(4, local_var(4) + 1);
+        if (local_var(4) > 3) then begin
+            set_global_var(911, global_var(911) bwor 131072);
+        end
+    end
+end
+
+procedure pickup_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_global_var(911, global_var(911) bwor 131072);
+    end
+end
+
+procedure talk_p_proc
+begin
+    if (local_var(5) == 6) then begin
+        if (get_critter_stat(dude_obj, 34) == 0) then begin
+            float_msg(self_obj, message_str(23, random(361, 363)), 8);
+        end
+        else begin
+            float_msg(self_obj, message_str(23, random(362, 364)), 8);
+        end
+    end
+    else begin
+        if (local_var(5) == 1) then begin
+            float_msg(self_obj, message_str(23, random(301, 304)), 8);
+        end
+        else begin
+            float_msg(self_obj, message_str(23, random(313, 316)), 8);
+        end
+    end
+end
+
+procedure destroy_p_proc
+begin
+    if (local_var(5) == 1) then begin
+        set_global_var(911, global_var(911) bwor 8192);
+    end
+    if (local_var(5) == 6) then begin
+        set_global_var(911, global_var(911) bwor 8192);
+    end
+    if (local_var(5) == 6) then begin
+        set_global_var(751, 1);
+    end
+    if (local_var(5) == 2) then begin
+        set_global_var(911, global_var(911) bwor 16384);
+    end
+    if (local_var(5) == 3) then begin
+        set_global_var(911, global_var(911) bwor 32768);
+    end
+    if (local_var(5) == 4) then begin
+        set_global_var(911, global_var(911) bwor 65536);
+    end
+    if (local_var(5) == 5) then begin
+        set_global_var(911, global_var(911) bwor 524288);
+    end
+    if ((local_var(5) == 2) or (local_var(5) == 3) or (local_var(5) == 4) or (local_var(5) == 5)) then begin
+        set_global_var(915, global_var(915) + 1);
+    end
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    if (local_var(5) == 6) then begin
+        display_msg(message_str(23, 150));
+    end
+    else begin
+        if (local_var(5) == 1) then begin
+            display_msg(message_str(23, 100));
+        end
+        else begin
+            display_msg(message_str(23, 101));
+        end
+    end
+end
+
+procedure description_p_proc
+begin
+    script_overrides;
+    if (local_var(5) == 6) then begin
+        if (not(combat_is_initialized)) then begin
+            display_msg(message_str(23, 250));
+        end
+        else begin
+            display_msg(message_str(23, 251));
+        end
+    end
+    else begin
+        if (local_var(5) == 1) then begin
+            if ((global_var(911) bwand 8) != 0) then begin
+                display_msg(message_str(23, 200));
+            end
+            if ((global_var(911) bwand 16) != 0) then begin
+                display_msg(message_str(23, 201));
+            end
+            if ((global_var(911) bwand 4) != 0) then begin
+                display_msg(message_str(23, 202));
+            end
+        end
+        else begin
+            if ((global_var(911) bwand 8) != 0) then begin
+                display_msg(message_str(23, 203));
+            end
+            if ((global_var(911) bwand 16) != 0) then begin
+                display_msg(message_str(23, 204));
+            end
+            if ((global_var(911) bwand 4) != 0) then begin
+                display_msg(message_str(23, 205));
+            end
+        end
+    end
+end
+
+procedure use_skill_on_p_proc
+begin
+end
+
+procedure timed_event_p_proc
+begin
+    if (fixed_param == 1) then begin
+        set_local_var(5, 1);
+        call map_enter_p_proc();
+    end
+    if (fixed_param == 2) then begin
+        set_local_var(5, 2);
+        call map_enter_p_proc();
+    end
+    if (fixed_param == 3) then begin
+        set_local_var(5, 3);
+        call map_enter_p_proc();
+    end
+    if (fixed_param == 4) then begin
+        set_local_var(5, 4);
+        call map_enter_p_proc();
+    end
+    if (fixed_param == 5) then begin
+        set_local_var(5, 5);
+        call map_enter_p_proc();
+    end
+    if (fixed_param == 6) then begin
+        set_local_var(5, 6);
+        critter_add_trait(self_obj, 1, 5, 3);
+        call map_enter_p_proc();
+    end
+    if (fixed_param == 10) then begin
+        if (local_var(5) == 6) then begin
+            if (global_var(1024) != 1) then begin
+                probability := random(0, 1);
+                if (probability == 0) then begin
+                    float_msg(self_obj, message_str(23, 470), 2);
+                end
+                if (probability == 1) then begin
+                    float_msg(self_obj, message_str(23, 471), 2);
+                end
+            end
+        end
+        else begin
+            if (local_var(5) == 1) then begin
+                float_msg(self_obj, message_str(23, 450), 2);
+                set_global_var(911, global_var(911) bwor 8388608);
+            end
+            else begin
+                if ((global_var(1024) == 1) and (cur_map_index == 102)) then begin
+                end
+                else begin
+                    probability := random(0, 7);
+                    if (probability == 1) then begin
+                        float_msg(self_obj, message_str(23, 460), 2);
+                    end
+                    if (probability == 2) then begin
+                        float_msg(self_obj, message_str(23, 461), 2);
+                    end
+                    if (probability == 3) then begin
+                        float_msg(self_obj, message_str(23, 462), 2);
+                    end
+                end
+            end
+        end
+    end
+    if (fixed_param == 20) then begin
+        if ((obj_is_carrying_obj_pid(self_obj, 18) >= 1) and ((obj_pid(critter_inven_obj(self_obj, 1)) != 18) and (obj_pid(critter_inven_obj(self_obj, 2)) != 18))) then begin
+            wield_obj_critter(self_obj, obj_carrying_pid_obj(self_obj, 18));
+        end
+        if ((obj_is_carrying_obj_pid(self_obj, 9) >= 1) and ((obj_pid(critter_inven_obj(self_obj, 1)) != 9) and (obj_pid(critter_inven_obj(self_obj, 2)) != 9))) then begin
+            wield_obj_critter(self_obj, obj_carrying_pid_obj(self_obj, 9));
+        end
+        if ((obj_is_carrying_obj_pid(self_obj, 10) >= 1) and ((obj_pid(critter_inven_obj(self_obj, 1)) != 10) and (obj_pid(critter_inven_obj(self_obj, 2)) != 10))) then begin
+            wield_obj_critter(self_obj, obj_carrying_pid_obj(self_obj, 10));
+        end
+        if ((obj_is_carrying_obj_pid(self_obj, 8) >= 1) and ((obj_pid(critter_inven_obj(self_obj, 1)) != 8) and (obj_pid(critter_inven_obj(self_obj, 2)) != 8))) then begin
+            wield_obj_critter(self_obj, obj_carrying_pid_obj(self_obj, 8));
+        end
+        if ((obj_is_carrying_obj_pid(self_obj, 234) >= 1) and ((obj_pid(critter_inven_obj(self_obj, 1)) != 234) and (obj_pid(critter_inven_obj(self_obj, 2)) != 234))) then begin
+            wield_obj_critter(self_obj, obj_carrying_pid_obj(self_obj, 234));
+        end
+        if ((obj_is_carrying_obj_pid(self_obj, 94) >= 1) and ((obj_pid(critter_inven_obj(self_obj, 1)) != 94) and (obj_pid(critter_inven_obj(self_obj, 2)) != 94))) then begin
+            wield_obj_critter(self_obj, obj_carrying_pid_obj(self_obj, 94));
+        end
+        if ((obj_is_carrying_obj_pid(self_obj, 4) >= 1) and ((obj_pid(critter_inven_obj(self_obj, 1)) != 4) and (obj_pid(critter_inven_obj(self_obj, 2)) != 4))) then begin
+            wield_obj_critter(self_obj, obj_carrying_pid_obj(self_obj, 4));
+        end
+        if ((obj_is_carrying_obj_pid(self_obj, 280) >= 1) and ((obj_pid(critter_inven_obj(self_obj, 1)) != 280) and (obj_pid(critter_inven_obj(self_obj, 2)) != 280))) then begin
+            wield_obj_critter(self_obj, obj_carrying_pid_obj(self_obj, 280));
+        end
+    end
+end
+
+procedure combat_p_proc
+begin
+    if (((global_var(911) bwand 1) != 0) and not((global_var(911) bwand 8388608) != 0)) then begin
+        set_global_var(911, global_var(911) bwor 8388608);
+    end
+    if (((global_var(911) bwand 131072) != 0) and (local_var(4) < 10)) then begin
+        critter_add_trait(self_obj, 1, 6, 92);
+        set_local_var(4, 10);
+    end
+    if (fixed_param == 4) then begin
+        probability := random(0, 30);
+        if (not(critter_is_fleeing(self_obj))) then begin
+            if (local_var(5) == 6) then begin
+                if ((global_var(911) bwand 131072) != 0) then begin
+                    if ((probability == 1) or (probability == 2)) then begin
+                        float_msg(self_obj, message_str(23, 401), 2);
+                    end
+                    if ((probability == 4) or (probability == 5)) then begin
+                        float_msg(self_obj, message_str(23, 402), 2);
+                    end
+                end
+                else begin
+                    if ((probability == 1) or (probability == 2)) then begin
+                        float_msg(self_obj, message_str(23, 472), 2);
+                    end
+                    if ((probability == 4) or (probability == 5)) then begin
+                        float_msg(self_obj, message_str(23, 473), 2);
+                    end
+                end
+            end
+            else begin
+                if (local_var(5) == 1) then begin
+                    if ((global_var(911) bwand 131072) != 0) then begin
+                        if ((probability == 1) or (probability == 2) or (probability == 3)) then begin
+                            float_msg(self_obj, message_str(23, 455), 2);
+                        end
+                        if ((probability == 4) or (probability == 5) or (probability == 6)) then begin
+                            float_msg(self_obj, message_str(23, 456), 2);
+                        end
+                    end
+                    else begin
+                        if ((probability == 1) or (probability == 2)) then begin
+                            float_msg(self_obj, message_str(23, 451), 2);
+                        end
+                        if ((probability == 4) or (probability == 5)) then begin
+                            float_msg(self_obj, message_str(23, 452), 2);
+                        end
+                    end
+                end
+                else begin
+                    if (not((global_var(911) bwand 131072) != 0)) then begin
+                        if (probability == 1) then begin
+                            float_msg(self_obj, message_str(23, 463), 2);
+                        end
+                        if (probability == 2) then begin
+                            float_msg(self_obj, message_str(23, 464), 2);
+                        end
+                        if (probability == 3) then begin
+                            float_msg(self_obj, message_str(23, 465), 2);
+                        end
+                        if (probability == 4) then begin
+                            float_msg(self_obj, message_str(23, 466), 2);
+                        end
+                        if (probability == 5) then begin
+                            float_msg(self_obj, message_str(23, 467), 2);
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure way_destination_load_not_functional
+begin
+end
+

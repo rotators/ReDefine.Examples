@@ -1,0 +1,929 @@
+variable ProtoOfItemGiven;
+variable ValueOfRollCheck := 1;
+variable Scenery_Creation;
+variable Scenery_Creation_Hex;
+variable Scenery_Creation_Count;
+variable Temp_Scenery_Creation_Hex;
+variable Scenery_Creation_Ptr;
+variable lPartyWornArmor;
+variable How_Many_Party_Members_Are_Injured;
+variable How_Many_Party_Members_Armed;
+variable PartyHealingItem;
+
+procedure checkPartyMembersNearDoor;
+
+variable global_temp;
+variable dest_tile;
+variable step_tile;
+variable in_dialog;
+variable forced_node;
+variable restock_amt;
+variable restock_obj;
+variable restock_trash;
+variable removed_qty;
+variable toRemove_qty;
+
+procedure div(variable arg0, variable arg1);
+procedure start;
+procedure map_exit_p_proc;
+procedure map_enter_p_proc;
+procedure map_update_p_proc;
+procedure timed_event_p_proc;
+procedure Create_hunters;
+procedure Wield_hunters;
+procedure Kill_hunters;
+procedure Kill_Obroda_guards;
+procedure Set_ending_globals;
+
+export variable Elev_Surface;
+
+variable hunter1;
+variable hunter2;
+variable hunter3;
+variable hunter4;
+variable hunter5;
+variable destruction_countdown;
+variable KeriComment;
+variable GabrielComment;
+variable LystraComment;
+
+
+procedure checkPartyMembersNearDoor
+begin
+    if (party_member_obj(16777729) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777729)) <= 5) then begin
+            return 1;
+        end
+    end
+    if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777779)) <= 5) then begin
+            return 1;
+        end
+    end
+    if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777811)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777812) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777812)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777813) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777813)) <= 5) then begin
+            return 1;
+        end
+    end
+    if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777814)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777748) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777748)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777294) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777294)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778017) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778017)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778016) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778016)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778049) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778049)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778050) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778050)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778051) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778051)) <= 5) then begin
+            return 1;
+        end
+    end
+    return 0;
+end
+
+procedure div(variable arg0, variable arg1)
+begin
+    if (0 > arg0) then begin
+        return -(-arg0 / arg1);
+    end
+    return arg0 / arg1;
+end
+
+procedure start
+begin
+end
+
+procedure map_exit_p_proc
+begin
+    if ((global_var(GVAR_G_BASE_TIME_OF_DESTRUCTION) != 0) and (global_var(GVAR_G_ELEVATOR) == 0)) then begin
+        script_overrides;
+        gfade_out(600);
+        call Set_ending_globals();
+        play_gmovie(11);
+        play_gmovie(10);
+        endgame_slideshow;
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    if (map_first_run) then begin
+        display_mstr(100 + (dude_gender == 1));
+        give_exp_points(10000);
+        display_msg(g_mstr(100) + 10000 + g_mstr(101));
+        add_timer_event(self_obj, 5, 3);
+    end
+    if ((get_month >= 3) and (get_month < 5)) then begin
+        if ((game_time_hour >= 600) and (game_time_hour < (600 + 100))) then begin
+            set_light_level(game_time_hour - 600 + 40);
+        end
+        else begin
+            if ((game_time_hour >= (600 + 100)) and (game_time_hour < 1800)) then begin
+                set_light_level(100);
+            end
+            else begin
+                if ((game_time_hour >= 1800) and (game_time_hour < (1800 + 100))) then begin
+                    set_light_level(100 - (game_time_hour - 1800));
+                end
+                else begin
+                    set_light_level(40);
+                end
+            end
+        end
+    end
+    else begin
+        if ((get_month >= 5) and (get_month < 9)) then begin
+            if ((game_time_hour >= 500) and (game_time_hour < (500 + 100))) then begin
+                set_light_level(game_time_hour - 500 + 40);
+            end
+            else begin
+                if ((game_time_hour >= (500 + 100)) and (game_time_hour < 1900)) then begin
+                    set_light_level(100);
+                end
+                else begin
+                    if ((game_time_hour >= 1900) and (game_time_hour < (1900 + 100))) then begin
+                        set_light_level(100 - (game_time_hour - 1900));
+                    end
+                    else begin
+                        set_light_level(40);
+                    end
+                end
+            end
+        end
+        else begin
+            if ((get_month >= 9) and (get_month < 11)) then begin
+                if ((game_time_hour >= 600) and (game_time_hour < (600 + 100))) then begin
+                    set_light_level(game_time_hour - 600 + 40);
+                end
+                else begin
+                    if ((game_time_hour >= (600 + 100)) and (game_time_hour < 1800)) then begin
+                        set_light_level(100);
+                    end
+                    else begin
+                        if ((game_time_hour >= 1800) and (game_time_hour < (1800 + 100))) then begin
+                            set_light_level(100 - (game_time_hour - 1800));
+                        end
+                        else begin
+                            set_light_level(40);
+                        end
+                    end
+                end
+            end
+            else begin
+                if ((game_time_hour >= 700) and (game_time_hour < (700 + 100))) then begin
+                    set_light_level(game_time_hour - 700 + 40);
+                end
+                else begin
+                    if ((game_time_hour >= (700 + 100)) and (game_time_hour < 1700)) then begin
+                        set_light_level(100);
+                    end
+                    else begin
+                        if ((game_time_hour >= 1700) and (game_time_hour < (1700 + 100))) then begin
+                            set_light_level(100 - (game_time_hour - 1700));
+                        end
+                        else begin
+                            set_light_level(40);
+                        end
+                    end
+                end
+            end
+        end
+    end
+    if (global_var(GVAR_G_ELEVATOR) == 1) then begin
+        add_timer_event(self_obj, 1, 1);
+    end
+    else begin
+        anim(dude_obj, 1000, 2);
+    end
+    if (global_var(GVAR_G_BASE_TIME_OF_DESTRUCTION) != 0) then begin
+        rm_fixed_timer_event(self_obj, 9);
+        add_timer_event(self_obj, game_ticks(1), 9);
+        set_exit_grids(0, 101, 0, 0, 0);
+    end
+    if (map_var(1) == 0) then begin
+        if (global_var(GVAR_MH_MUTANT_HUNTERS_ATACK_STATUS) > 0) then begin
+            set_map_var(1, 1);
+            call Create_hunters();
+        end
+        if (global_var(GVAR_MH_MUTANT_HUNTERS_ATACK_STATUS) == 1) then begin
+            set_global_var(GVAR_G_HUNTERS_COUNTER, 5);
+            call Wield_hunters();
+        end
+        if (global_var(GVAR_MH_MUTANT_HUNTERS_ATACK_STATUS) == 2) then begin
+            game_ui_disable;
+            fade_out;
+            add_timer_event(self_obj, 1, 2);
+        end
+    end
+end
+
+procedure map_update_p_proc
+begin
+    if ((get_month >= 3) and (get_month < 5)) then begin
+        if ((game_time_hour >= 600) and (game_time_hour < (600 + 100))) then begin
+            set_light_level(game_time_hour - 600 + 40);
+        end
+        else begin
+            if ((game_time_hour >= (600 + 100)) and (game_time_hour < 1800)) then begin
+                set_light_level(100);
+            end
+            else begin
+                if ((game_time_hour >= 1800) and (game_time_hour < (1800 + 100))) then begin
+                    set_light_level(100 - (game_time_hour - 1800));
+                end
+                else begin
+                    set_light_level(40);
+                end
+            end
+        end
+    end
+    else begin
+        if ((get_month >= 5) and (get_month < 9)) then begin
+            if ((game_time_hour >= 500) and (game_time_hour < (500 + 100))) then begin
+                set_light_level(game_time_hour - 500 + 40);
+            end
+            else begin
+                if ((game_time_hour >= (500 + 100)) and (game_time_hour < 1900)) then begin
+                    set_light_level(100);
+                end
+                else begin
+                    if ((game_time_hour >= 1900) and (game_time_hour < (1900 + 100))) then begin
+                        set_light_level(100 - (game_time_hour - 1900));
+                    end
+                    else begin
+                        set_light_level(40);
+                    end
+                end
+            end
+        end
+        else begin
+            if ((get_month >= 9) and (get_month < 11)) then begin
+                if ((game_time_hour >= 600) and (game_time_hour < (600 + 100))) then begin
+                    set_light_level(game_time_hour - 600 + 40);
+                end
+                else begin
+                    if ((game_time_hour >= (600 + 100)) and (game_time_hour < 1800)) then begin
+                        set_light_level(100);
+                    end
+                    else begin
+                        if ((game_time_hour >= 1800) and (game_time_hour < (1800 + 100))) then begin
+                            set_light_level(100 - (game_time_hour - 1800));
+                        end
+                        else begin
+                            set_light_level(40);
+                        end
+                    end
+                end
+            end
+            else begin
+                if ((game_time_hour >= 700) and (game_time_hour < (700 + 100))) then begin
+                    set_light_level(game_time_hour - 700 + 40);
+                end
+                else begin
+                    if ((game_time_hour >= (700 + 100)) and (game_time_hour < 1700)) then begin
+                        set_light_level(100);
+                    end
+                    else begin
+                        if ((game_time_hour >= 1700) and (game_time_hour < (1700 + 100))) then begin
+                            set_light_level(100 - (game_time_hour - 1700));
+                        end
+                        else begin
+                            set_light_level(40);
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure timed_event_p_proc
+begin
+    if (fixed_param == 1) then begin
+        move_to(dude_obj, 20299, 0);
+        anim(dude_obj, 1000, 2);
+        if (party_member_obj(16777729) != 0) then begin
+            anim(party_member_obj(16777729), 1000, obj_get_rot(dude_obj));
+        end
+        if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+            anim(party_member_obj(16777779), 1000, obj_get_rot(dude_obj));
+        end
+        if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+            anim(party_member_obj(16777811), 1000, obj_get_rot(dude_obj));
+        end
+        if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+            anim(party_member_obj(16777814), 1000, obj_get_rot(dude_obj));
+        end
+        if (party_member_obj(16778017) != 0) then begin
+            anim(party_member_obj(16778017), 1000, obj_get_rot(dude_obj));
+        end
+        if (party_member_obj(16778016) != 0) then begin
+            anim(party_member_obj(16778016), 1000, obj_get_rot(dude_obj));
+        end
+        if (party_member_obj(16778049) != 0) then begin
+            anim(party_member_obj(16778049), 1000, obj_get_rot(dude_obj));
+        end
+        if (party_member_obj(16778050) != 0) then begin
+            anim(party_member_obj(16778050), 1000, obj_get_rot(dude_obj));
+        end
+        if (party_member_obj(16778051) != 0) then begin
+            anim(party_member_obj(16778051), 1000, obj_get_rot(dude_obj));
+        end
+        if (party_member_obj(16777812) != 0) then begin
+            anim(party_member_obj(16777812), 1000, obj_get_rot(dude_obj));
+        end
+        if (party_member_obj(16777729) != 0) then begin
+            if (party_member_obj(16777729) != 0) then begin
+                if (obj_is_visible_flag(party_member_obj(16777729))) then begin
+                    critter_attempt_placement(party_member_obj(16777729), tile_num_in_direction(dude_tile, obj_get_rot(dude_obj), 2), dude_elevation);
+                end
+            end
+        end
+        if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+            if (party_member_obj(16777779) != 0) then begin
+                if (obj_is_visible_flag(party_member_obj(16777779))) then begin
+                    critter_attempt_placement(party_member_obj(16777779), tile_num_in_direction(dude_tile, obj_get_rot(dude_obj), 2), dude_elevation);
+                end
+            end
+        end
+        if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+            if (party_member_obj(16777811) != 0) then begin
+                if (obj_is_visible_flag(party_member_obj(16777811))) then begin
+                    critter_attempt_placement(party_member_obj(16777811), tile_num_in_direction(dude_tile, obj_get_rot(dude_obj), 2), dude_elevation);
+                end
+            end
+        end
+        if (party_member_obj(16777812) != 0) then begin
+            if (party_member_obj(16777812) != 0) then begin
+                if (obj_is_visible_flag(party_member_obj(16777812))) then begin
+                    critter_attempt_placement(party_member_obj(16777812), tile_num_in_direction(dude_tile, obj_get_rot(dude_obj), 2), dude_elevation);
+                end
+            end
+        end
+        if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+            if (party_member_obj(16777814) != 0) then begin
+                if (obj_is_visible_flag(party_member_obj(16777814))) then begin
+                    critter_attempt_placement(party_member_obj(16777814), tile_num_in_direction(dude_tile, obj_get_rot(dude_obj), 2), dude_elevation);
+                end
+            end
+        end
+        if (party_member_obj(16777748) != 0) then begin
+            if (party_member_obj(16777748) != 0) then begin
+                if (obj_is_visible_flag(party_member_obj(16777748))) then begin
+                    critter_attempt_placement(party_member_obj(16777748), tile_num_in_direction(dude_tile, obj_get_rot(dude_obj), 2), dude_elevation);
+                end
+            end
+        end
+        if (party_member_obj(16778017) != 0) then begin
+            if (party_member_obj(16778017) != 0) then begin
+                if (obj_is_visible_flag(party_member_obj(16778017))) then begin
+                    critter_attempt_placement(party_member_obj(16778017), tile_num_in_direction(dude_tile, obj_get_rot(dude_obj), 2), dude_elevation);
+                end
+            end
+        end
+        if (party_member_obj(16778016) != 0) then begin
+            if (party_member_obj(16778016) != 0) then begin
+                if (obj_is_visible_flag(party_member_obj(16778016))) then begin
+                    critter_attempt_placement(party_member_obj(16778016), tile_num_in_direction(dude_tile, obj_get_rot(dude_obj), 2), dude_elevation);
+                end
+            end
+        end
+        if (party_member_obj(16778049) != 0) then begin
+            if (party_member_obj(16778049) != 0) then begin
+                if (obj_is_visible_flag(party_member_obj(16778049))) then begin
+                    critter_attempt_placement(party_member_obj(16778049), tile_num_in_direction(dude_tile, obj_get_rot(dude_obj), 2), dude_elevation);
+                end
+            end
+        end
+        if (party_member_obj(16778050) != 0) then begin
+            if (party_member_obj(16778050) != 0) then begin
+                if (obj_is_visible_flag(party_member_obj(16778050))) then begin
+                    critter_attempt_placement(party_member_obj(16778050), tile_num_in_direction(dude_tile, obj_get_rot(dude_obj), 2), dude_elevation);
+                end
+            end
+        end
+        if (party_member_obj(16778051) != 0) then begin
+            if (party_member_obj(16778051) != 0) then begin
+                if (obj_is_visible_flag(party_member_obj(16778051))) then begin
+                    critter_attempt_placement(party_member_obj(16778051), tile_num_in_direction(dude_tile, obj_get_rot(dude_obj), 2), dude_elevation);
+                end
+            end
+        end
+        if (party_member_obj(16777294) != 0) then begin
+            if (party_member_obj(16777294) != 0) then begin
+                if (obj_is_visible_flag(party_member_obj(16777294))) then begin
+                    critter_attempt_placement(party_member_obj(16777294), tile_num_in_direction(dude_tile, obj_get_rot(dude_obj), 2), dude_elevation);
+                end
+            end
+        end
+        set_map_var(0, 1);
+        game_ui_enable;
+        fade_in;
+        set_global_var(GVAR_G_ELEVATOR, 0);
+    end
+    if (fixed_param == 9) then begin
+        destruction_countdown := (global_var(GVAR_G_BASE_TIME_OF_DESTRUCTION) - game_time) / 10;
+        if ((destruction_countdown > 0) and (destruction_countdown <= (5 * 60 * 10 / 10))) then begin
+            display_msg(mstr(401) + destruction_countdown + mstr(402));
+            if (destruction_countdown <= 10) then begin
+                rm_fixed_timer_event(self_obj, 9);
+                add_timer_event(self_obj, game_ticks(1), 9);
+            end
+            else begin
+                rm_fixed_timer_event(self_obj, 9);
+                add_timer_event(self_obj, game_ticks(10), 9);
+            end
+        end
+        else begin
+            display_msg(mstr(401) + 0 + mstr(402));
+            play_sfx("pluto");
+            kill_critter(dude_obj, 0);
+        end
+    end
+    if (fixed_param == 3) then begin
+        if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0) and (KeriComment == 0)) then begin
+            KeriComment := 1;
+            add_timer_event(party_member_obj(16777779), 0, 14);
+            add_timer_event(self_obj, 5, 3);
+        end
+        else begin
+            if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0) and (GabrielComment == 0)) then begin
+                GabrielComment := 1;
+                add_timer_event(party_member_obj(16777811), 0, 26);
+                add_timer_event(self_obj, 5, 3);
+            end
+            else begin
+                if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0) and (LystraComment == 0)) then begin
+                    LystraComment := 1;
+                    add_timer_event(party_member_obj(16777814), 0, 29);
+                end
+            end
+        end
+    end
+    if (fixed_param == 2) then begin
+        call Kill_hunters();
+        call Kill_Obroda_guards();
+    end
+end
+
+procedure Create_hunters
+begin
+    hunter1 := create_object_sid(16778017, 11917, 0, SCRIPT_GLOVEC);
+    anim(hunter1, 1000, 2);
+    hunter2 := create_object_sid(16778016, 11514, 0, SCRIPT_GLOVEC);
+    anim(hunter2, 1000, 2);
+    hunter3 := create_object_sid(16778049, 11511, 0, SCRIPT_GLOVEC);
+    anim(hunter3, 1000, 2);
+    hunter4 := create_object_sid(16778050, 11709, 0, SCRIPT_GLOVEC);
+    anim(hunter4, 1000, 3);
+    hunter5 := create_object_sid(16778051, 12109, 0, SCRIPT_GLOVEC);
+    anim(hunter5, 1000, 3);
+end
+
+procedure Wield_hunters
+begin
+    restock_obj := create_object(603, 0, 0);
+    add_mult_objs_to_inven(hunter1, restock_obj, 1);
+    restock_obj := create_object(363, 0, 0);
+    add_mult_objs_to_inven(hunter1, restock_obj, 5);
+    restock_obj := create_object(144, 0, 0);
+    add_mult_objs_to_inven(hunter1, restock_obj, 1);
+    wield_obj_critter(hunter1, obj_carrying_pid_obj(hunter1, 603));
+    restock_obj := create_object(118, 0, 0);
+    add_mult_objs_to_inven(hunter2, restock_obj, 1);
+    restock_obj := create_object(39, 0, 0);
+    add_mult_objs_to_inven(hunter2, restock_obj, 1);
+    restock_obj := create_object(144, 0, 0);
+    add_mult_objs_to_inven(hunter2, restock_obj, 1);
+    wield_obj_critter(hunter2, obj_carrying_pid_obj(hunter2, 118));
+    restock_obj := create_object(400, 0, 0);
+    add_mult_objs_to_inven(hunter3, restock_obj, 1);
+    restock_obj := create_object(382, 0, 0);
+    add_mult_objs_to_inven(hunter3, restock_obj, 5);
+    restock_obj := create_object(144, 0, 0);
+    add_mult_objs_to_inven(hunter3, restock_obj, 2);
+    wield_obj_critter(hunter3, obj_carrying_pid_obj(hunter3, 400));
+    restock_obj := create_object(115, 0, 0);
+    add_mult_objs_to_inven(hunter4, restock_obj, 1);
+    restock_obj := create_object(144, 0, 0);
+    add_mult_objs_to_inven(hunter4, restock_obj, 2);
+    wield_obj_critter(hunter4, obj_carrying_pid_obj(hunter4, 115));
+    restock_obj := create_object(587, 0, 0);
+    add_mult_objs_to_inven(hunter5, restock_obj, 1);
+    restock_obj := create_object(363, 0, 0);
+    add_mult_objs_to_inven(hunter5, restock_obj, 1);
+    restock_obj := create_object(144, 0, 0);
+    add_mult_objs_to_inven(hunter5, restock_obj, 2);
+    wield_obj_critter(hunter5, obj_carrying_pid_obj(hunter5, 587));
+end
+
+procedure Kill_hunters
+begin
+    float_msg_clear(hunter1);
+    move_to(hunter1, 21527, 0);
+    kill_critter(hunter1, 57);
+    float_msg_clear(hunter2);
+    move_to(hunter2, 20929, 0);
+    kill_critter(hunter2, 51);
+    float_msg_clear(hunter3);
+    move_to(hunter3, 18719, 0);
+    kill_critter(hunter3, 60);
+    float_msg_clear(hunter4);
+    move_to(hunter4, 17125, 0);
+    kill_critter(hunter4, 61);
+    float_msg_clear(hunter5);
+    move_to(hunter5, 22721, 0);
+    kill_critter(hunter5, 57);
+end
+
+procedure Kill_Obroda_guards
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    LVar1 := create_object(133, 0, 0);
+    LVar0 := tile_contains_pid_obj(19910, 0, 16777830);
+    move_to(LVar0, 20321, 0);
+    move_obj_inven_to_obj(LVar0, LVar1);
+    kill_critter(LVar0, 53);
+    LVar0 := tile_contains_pid_obj(20305, 0, 16777830);
+    move_to(LVar0, 22917, 0);
+    move_obj_inven_to_obj(LVar0, LVar1);
+    kill_critter(LVar0, 51);
+    LVar0 := tile_contains_pid_obj(23300, 0, 16777830);
+    move_to(LVar0, 19518, 0);
+    move_obj_inven_to_obj(LVar0, LVar1);
+    kill_critter(LVar0, 59);
+    destroy_object(LVar1);
+    fade_in;
+    game_ui_enable;
+end
+
+procedure Set_ending_globals
+begin
+    variable LVar0 := 0;
+    give_exp_points(20000);
+    display_msg(g_mstr(100) + 20000 + g_mstr(101));
+    if ((global_var(GVAR_NH_DEATH_HELEN) == 1) and (global_var(GVAR_NH_DEATH_COUNTER) >= 5)) then begin
+        set_global_var(GVAR_END_NEWHOPE, 5);
+    end
+    else begin
+        if ((global_var(GVAR_NH_DEATH_HELEN) == 0) and (global_var(GVAR_QUEST_S_NHCARAVANS) == 3)) then begin
+            if ((global_var(GVAR_RH_JULIAN_DEAD) == 1) and (global_var(GVAR_RH_ALEXA_DEAD) == 1)) then begin
+                set_global_var(GVAR_END_NEWHOPE, 2);
+            end
+            else begin
+                if ((global_var(GVAR_RH_JULIAN_DEAD) == 0) and (global_var(GVAR_RH_ALEXA_DEAD) == 0)) then begin
+                    set_global_var(GVAR_END_NEWHOPE, 2);
+                end
+                else begin
+                    if (global_var(GVAR_RH_JULIAN_DEAD) == 1) then begin
+                        set_global_var(GVAR_END_NEWHOPE, 3);
+                    end
+                    if (global_var(GVAR_RH_ALEXA_DEAD) == 1) then begin
+                        set_global_var(GVAR_END_NEWHOPE, 4);
+                    end
+                end
+            end
+        end
+        else begin
+            if (global_var(GVAR_NH_DEATH_HELEN) == 0) then begin
+                set_global_var(GVAR_END_NEWHOPE, 1);
+            end
+        end
+    end
+    if (global_var(GVAR_RH_GEORGE_DEAD) == 0) then begin
+        if ((global_var(GVAR_RH_Q_QUEST_MARIE) == 4) and (global_var(GVAR_RH_AlexaMayKilledMarie) == 0)) then begin
+            set_global_var(GVAR_END_RATHOLE_GEORGE, 1);
+        end
+        if ((global_var(GVAR_RH_Q_QUEST_MARIE) == 4) and (global_var(GVAR_RH_AlexaMayKilledMarie) == 1)) then begin
+            set_global_var(GVAR_END_RATHOLE_GEORGE, 2);
+        end
+        if (global_var(GVAR_RH_Q_QUEST_MARIE) == 8) then begin
+            set_global_var(GVAR_END_RATHOLE_GEORGE, 3);
+        end
+    end
+    if (town_known(1)) then begin
+        if ((global_var(GVAR_RH_ALEXA_DEAD) == 1) and (global_var(GVAR_RH_JULIAN_DEAD) == 0)) then begin
+            set_global_var(GVAR_END_RATHOLE, 1);
+        end
+        if ((global_var(GVAR_RH_ALEXA_DEAD) == 0) and (global_var(GVAR_RH_JULIAN_DEAD) == 1)) then begin
+            set_global_var(GVAR_END_RATHOLE, 2);
+        end
+        if ((global_var(GVAR_RH_ALEXA_DEAD) == 0) and (global_var(GVAR_RH_JULIAN_DEAD) == 0)) then begin
+            set_global_var(GVAR_END_RATHOLE, 3);
+        end
+        if ((global_var(GVAR_RH_ALEXA_DEAD) == 1) and (global_var(GVAR_RH_JULIAN_DEAD) == 1)) then begin
+            set_global_var(GVAR_END_RATHOLE, 4);
+        end
+    end
+    if (global_var(GVAR_SEDIT_DEAD_GANGSTERS) == 2) then begin
+        if (global_var(GVAR_S_PATER_DEAD) == 1) then begin
+            set_global_var(GVAR_END_SEDIT_LOST, 1);
+        end
+        else begin
+            set_global_var(GVAR_END_SEDIT_LOST, 2);
+        end
+    end
+    if ((global_var(GVAR_SEDIT_DEAD_GANGSTERS) != 2) and (global_var(GVAR_SEDIT_TYLER_IS_SHERIFF) == 0) and (global_var(GVAR_QUEST_S_RODRIGUES_GHOULS) == 3)) then begin
+        set_global_var(GVAR_END_SEDIT_LOST, 3);
+    end
+    if (global_var(GVAR_KARAVAN_FREDERYK_ELIMINATED) == 0) then begin
+        if ((global_var(GVAR_QUEST_S_FREDERYK_RAIDERS) == 3) and (global_var(GVAR_DEAL_WITH_RAIDERS) == 0)) then begin
+            set_global_var(GVAR_END_SEDIT_FREDERYK, 1);
+            LVar0 := 1;
+        end
+        if ((global_var(GVAR_QUEST_S_FREDERYK_RAIDERS) == 3) and (global_var(GVAR_DEAL_WITH_RAIDERS) == 1)) then begin
+            set_global_var(GVAR_END_SEDIT_FREDERYK, 2);
+            LVar0 := 1;
+        end
+        if ((global_var(GVAR_QUEST_S_KEVIN_MEETING) == 3) and (global_var(GVAR_QUEST_S_NICOL_BRAHMINS) < 2)) then begin
+            set_global_var(GVAR_END_SEDIT_FREDERYK, 3);
+            LVar0 := 1;
+        end
+        if ((global_var(GVAR_QUEST_S_KEVIN_MEETING) == 3) and (global_var(GVAR_QUEST_S_NICOL_BRAHMINS) >= 2)) then begin
+            set_global_var(GVAR_END_SEDIT_FREDERYK, 4);
+            LVar0 := 1;
+        end
+    end
+    if ((global_var(GVAR_DEMETRE_FEV) == 1) and (global_var(GVAR_S_DEMETRE_DEAD) == 0) and (global_var(GVAR_KERI_DEAD) == 0)) then begin
+        set_global_var(GVAR_END_SEDIT_CRIMSON, 1);
+        set_global_var(GVAR_END_KERI, 1);
+        LVar0 := 1;
+    end
+    if ((global_var(GVAR_DEMETRE_FEV) == 1) and (global_var(GVAR_S_DEMETRE_DEAD) == 0) and (global_var(GVAR_KERI_DEAD) == 1)) then begin
+        set_global_var(GVAR_END_SEDIT_CRIMSON, 2);
+        LVar0 := 1;
+    end
+    if ((global_var(GVAR_DEMETRE_FEV) == 0) and (global_var(GVAR_S_DEMETRE_DEAD) == 0) and (global_var(GVAR_KERI_DEAD) == 1)) then begin
+        set_global_var(GVAR_END_SEDIT_CRIMSON, 3);
+        LVar0 := 1;
+    end
+    if ((global_var(GVAR_DEMETRE_FEV) == 0) and (global_var(GVAR_S_DEMETRE_DEAD) == 1) and (global_var(GVAR_KERI_DEAD) == 0)) then begin
+        set_global_var(GVAR_END_SEDIT_CRIMSON, 4);
+        LVar0 := 1;
+    end
+    if ((global_var(GVAR_DEMETRE_FEV) == 0) and (global_var(GVAR_S_DEMETRE_DEAD) == 0) and (global_var(GVAR_KERI_DEAD) == 0) and (global_var(GVAR_QUEST_S_PETERS_FEED) == 5)) then begin
+        set_global_var(GVAR_END_SEDIT_CRIMSON, 5);
+        LVar0 := 1;
+    end
+    if ((global_var(GVAR_SEDIT_TYLER_IS_SHERIFF) == 1) and (global_var(GVAR_S_TYLER_DEAD) == 0)) then begin
+        if ((global_var(GVAR_END_SEDIT_CRIMSON) == 1) or (global_var(GVAR_END_SEDIT_CRIMSON) == 4)) then begin
+            if (global_var(GVAR_SEDIT_DEAD_GANGSTERS) == 2) then begin
+                set_global_var(GVAR_END_SEDIT_TYLER, 4);
+                LVar0 := 1;
+            end
+            else begin
+                set_global_var(GVAR_END_SEDIT_TYLER, 3);
+                LVar0 := 1;
+            end
+        end
+        else begin
+            if (global_var(GVAR_SEDIT_DEAD_GANGSTERS) == 2) then begin
+                set_global_var(GVAR_END_SEDIT_TYLER, 1);
+                LVar0 := 1;
+            end
+            else begin
+                set_global_var(GVAR_END_SEDIT_TYLER, 2);
+                LVar0 := 1;
+            end
+        end
+    end
+    if (town_known(2) and (LVar0 == 0)) then begin
+        if ((global_var(GVAR_KARAVAN_FREDERYK_ELIMINATED) > 0) and (global_var(GVAR_S_DEMETRE_DEAD) == 1) and (global_var(GVAR_KERI_DEAD) == 1) and (global_var(GVAR_S_TYLER_DEAD) == 1) and (global_var(GVAR_KARAVAN_SEDIT_ELIMINATED) >= 2)) then begin
+            set_global_var(GVAR_END_SEDIT_TYLER, 6);
+        end
+        else begin
+            set_global_var(GVAR_END_SEDIT_TYLER, 5);
+        end
+    end
+    if (((global_var(GVAR_C_CORATH_STATUS) bwand 131072) == 0) and (global_var(GVAR_C_QUEST_UNCLE_Q4) >= 2)) then begin
+        set_global_var(GVAR_END_CORATH, 1);
+    end
+    if (((global_var(GVAR_C_CORATH_STATUS) bwand 33554432) == 0) and (global_var(GVAR_C_QUEST_NESTOR_Q4) >= 2)) then begin
+        set_global_var(GVAR_END_CORATH, 2);
+    end
+    if (((global_var(GVAR_C_CORATH_STATUS) bwand 131072) == 0) and ((global_var(GVAR_C_CORATH_STATUS) bwand 33554432) == 0) and (global_var(GVAR_C_QUEST_UNCLE_Q3) >= 2)) then begin
+        set_global_var(GVAR_END_CORATH, 3);
+    end
+    if (((global_var(GVAR_C_CORATH_STATUS) bwand 33554432) != 0) and ((global_var(GVAR_C_CORATH_STATUS) bwand 131072) != 0)) then begin
+        set_global_var(GVAR_END_CORATH, 4);
+    end
+    if ((global_var(GVAR_AQ_EMPEROR_STATUS) == 2) and (global_var(GVAR_AQ_VAULT_16_STATUS) == 0) and not((global_var(GVAR_AQ_ALBUQ_DEATHS) bwand 1) != 0)) then begin
+        if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+            set_global_var(GVAR_END_ALBU_LYSTRA, 1);
+        end
+        else begin
+            set_global_var(GVAR_END_ALBU_CITY, 1);
+        end
+    end
+    if ((global_var(GVAR_AQ_EMPEROR_STATUS) == 2) and (global_var(GVAR_AQ_VAULT_16_STATUS) == 1) and not((global_var(GVAR_AQ_ALBUQ_DEATHS) bwand 1) != 0)) then begin
+        if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+            set_global_var(GVAR_END_ALBU_LYSTRA, 2);
+        end
+        else begin
+            set_global_var(GVAR_END_ALBU_CITY, 2);
+        end
+    end
+    if ((global_var(GVAR_AQ_EMPEROR_STATUS) == 2) and ((global_var(GVAR_AQ_ALBUQ_DEATHS) bwand 1) != 0)) then begin
+        if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+            set_global_var(GVAR_END_ALBU_LYSTRA, 3);
+        end
+        else begin
+            set_global_var(GVAR_END_ALBU_CITY, 3);
+        end
+    end
+    if ((global_var(GVAR_AQ_EMPEROR_STATUS) == 1) and (global_var(GVAR_AQ_VAULT_16_STATUS) == 0) and not((global_var(GVAR_AQ_ALBUQ_DEATHS) bwand 1) != 0)) then begin
+        if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+            set_global_var(GVAR_END_ALBU_LYSTRA, 4);
+        end
+        else begin
+            set_global_var(GVAR_END_ALBU_CITY, 4);
+        end
+    end
+    if ((global_var(GVAR_AQ_EMPEROR_STATUS) == 1) and (global_var(GVAR_AQ_VAULT_16_STATUS) == 1) and not((global_var(GVAR_AQ_ALBUQ_DEATHS) bwand 1) != 0)) then begin
+        if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+            set_global_var(GVAR_END_ALBU_LYSTRA, 5);
+        end
+        else begin
+            set_global_var(GVAR_END_ALBU_CITY, 5);
+        end
+    end
+    if ((global_var(GVAR_AQ_EMPEROR_STATUS) == 1) and ((global_var(GVAR_AQ_ALBUQ_DEATHS) bwand 1) != 0)) then begin
+        if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+            set_global_var(GVAR_END_ALBU_LYSTRA, 6);
+        end
+        else begin
+            set_global_var(GVAR_END_ALBU_CITY, 6);
+        end
+    end
+    if ((global_var(GVAR_AQ_EMPEROR_STATUS) == 0) or (global_var(GVAR_AQ_EMPEROR_STATUS) == 3)) then begin
+        if ((global_var(GVAR_AQ_ALBUQ_DEATHS) bwand 1) != 0) then begin
+            if ((global_var(GVAR_AQ_EMPEROR_STATUS) == 3) or ((global_var(GVAR_AQE_ALBUQ_EMPEROR_EVENTS) bwand 32) != 0)) then begin
+                if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+                    set_global_var(GVAR_END_ALBU_LYSTRA, 8);
+                end
+                else begin
+                    set_global_var(GVAR_END_ALBU_CITY, 8);
+                end
+            end
+            if ((global_var(GVAR_AQ_EMPEROR_STATUS) == 0) and (global_var(GVAR_END_ARAN_DEAD) == 0)) then begin
+                if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+                    set_global_var(GVAR_END_ALBU_LYSTRA, 9);
+                end
+                else begin
+                    set_global_var(GVAR_END_ALBU_CITY, 9);
+                end
+            end
+            if ((global_var(GVAR_AQ_EMPEROR_STATUS) == 0) and (global_var(GVAR_END_ARAN_DEAD) == 1) and (global_var(GVAR_END_ELISA_DEAD) == 0)) then begin
+                if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+                    set_global_var(GVAR_END_ALBU_LYSTRA, 10);
+                end
+                else begin
+                    set_global_var(GVAR_END_ALBU_CITY, 10);
+                end
+            end
+        end
+        else begin
+            if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+                set_global_var(GVAR_END_ALBU_LYSTRA, 7);
+            end
+            else begin
+                set_global_var(GVAR_END_ALBU_CITY, 7);
+            end
+        end
+    end
+    if ((global_var(GVAR_AQ_QUEST_TRIBE_HELP_REVEGE) == 5) and not((global_var(GVAR_AQ_ALBUQ_DEATHS) bwand 2097152) != 0)) then begin
+        if ((global_var(GVAR_END_ALBU_CITY) == 4) or (global_var(GVAR_END_ALBU_CITY) == 6) or (global_var(GVAR_END_ALBU_CITY) == 10) or (global_var(GVAR_END_ALBU_LYSTRA) == 4) or (global_var(GVAR_END_ALBU_LYSTRA) == 6) or (global_var(GVAR_END_ALBU_LYSTRA) == 10)) then begin
+            set_global_var(GVAR_END_ALBU_HOSPITAL, 1);
+        end
+        else begin
+            set_global_var(GVAR_END_ALBU_HOSPITAL, 2);
+        end
+    end
+    else begin
+        if ((global_var(GVAR_AQ_QUEST_HOSPITAL_TO_KILL_PRIMITIVES) == 4) or ((global_var(GVAR_AQ_ALBUQ_EVENTS) bwand 8388608) != 0) or ((global_var(GVAR_AQ_ALBUQ_EVENTS) bwand 32768) != 0) and not((global_var(GVAR_AQ_ALBUQ_DEATHS) bwand 131072) != 0) and (global_var(GVAR_AQ_DOCTORS_COUNTER) < 6)) then begin
+            if ((global_var(GVAR_END_ALBU_CITY) == 4) or (global_var(GVAR_END_ALBU_CITY) == 6) or (global_var(GVAR_END_ALBU_CITY) == 10) or (global_var(GVAR_END_ALBU_LYSTRA) == 4) or (global_var(GVAR_END_ALBU_LYSTRA) == 6) or (global_var(GVAR_END_ALBU_LYSTRA) == 10)) then begin
+                set_global_var(GVAR_END_ALBU_HOSPITAL, 3);
+            end
+            else begin
+                if ((global_var(GVAR_END_ALBU_CITY) == 7) or (global_var(GVAR_END_ALBU_LYSTRA) == 7)) then begin
+                    set_global_var(GVAR_END_ALBU_HOSPITAL, 4);
+                end
+                else begin
+                    set_global_var(GVAR_END_ALBU_HOSPITAL, 5);
+                end
+            end
+        end
+        else begin
+            if ((global_var(GVAR_AQ_QUEST_TRIBE_HUNTINGS) > 0) and (global_var(GVAR_AQ_DOCTORS_COUNTER) >= 6) and not((global_var(GVAR_AQ_ALBUQ_DEATHS) bwand 2097152) != 0) and not((global_var(GVAR_AQ_ALBUQ_DEATHS) bwand 512) != 0)) then begin
+                if ((global_var(GVAR_END_ALBU_CITY) == 4) or (global_var(GVAR_END_ALBU_CITY) == 6) or (global_var(GVAR_END_ALBU_CITY) == 10) or (global_var(GVAR_END_ALBU_LYSTRA) == 4) or (global_var(GVAR_END_ALBU_LYSTRA) == 6) or (global_var(GVAR_END_ALBU_LYSTRA) == 10)) then begin
+                    set_global_var(GVAR_END_ALBU_HOSPITAL, 1);
+                end
+                else begin
+                    set_global_var(GVAR_END_ALBU_HOSPITAL, 2);
+                end
+            end
+            else begin
+                if ((global_var(GVAR_AQ_QUEST_HOSPITAL_HUNTINGS) > 0) and not((global_var(GVAR_AQ_ALBUQ_DEATHS) bwand 131072) != 0) and (global_var(GVAR_AQ_DOCTORS_COUNTER) < 6)) then begin
+                    if ((global_var(GVAR_END_ALBU_CITY) == 4) or (global_var(GVAR_END_ALBU_CITY) == 6) or (global_var(GVAR_END_ALBU_CITY) == 10) or (global_var(GVAR_END_ALBU_LYSTRA) == 4) or (global_var(GVAR_END_ALBU_LYSTRA) == 6) or (global_var(GVAR_END_ALBU_LYSTRA) == 10)) then begin
+                        set_global_var(GVAR_END_ALBU_HOSPITAL, 3);
+                    end
+                    else begin
+                        if ((global_var(GVAR_END_ALBU_CITY) == 7) or (global_var(GVAR_END_ALBU_LYSTRA) == 7)) then begin
+                            set_global_var(GVAR_END_ALBU_HOSPITAL, 4);
+                        end
+                        else begin
+                            set_global_var(GVAR_END_ALBU_HOSPITAL, 5);
+                        end
+                    end
+                end
+            end
+        end
+    end
+    if ((global_var(GVAR_AQ_QUEST_KILL_WILLIAM_WIFE) == 3) and not((global_var(GVAR_AQ_ALBUQ_DEATHS) bwand 16) != 0)) then begin
+        if ((global_var(GVAR_END_ALBU_CITY) == 4) or (global_var(GVAR_END_ALBU_CITY) == 6) or (global_var(GVAR_END_ALBU_CITY) == 10) or (global_var(GVAR_END_ALBU_LYSTRA) == 4) or (global_var(GVAR_END_ALBU_LYSTRA) == 6) or (global_var(GVAR_END_ALBU_LYSTRA) == 10)) then begin
+            set_global_var(GVAR_END_ALBU_WILLIAM, 1);
+        end
+        else begin
+            set_global_var(GVAR_END_ALBU_WILLIAM, 2);
+        end
+    end
+    if ((global_var(GVAR_AQ_QUEST_BRING_VEX_HEAD) == 2) and not((global_var(GVAR_AQ_ALBUQ_DEATHS) bwand 2) != 0) and not((global_var(GVAR_AQ_ALBUQ_DEATHS) bwand 4) != 0) and not((global_var(GVAR_AQ_ALBUQ_DEATHS) bwand 8) != 0)) then begin
+        if ((global_var(GVAR_END_ALBU_CITY) == 4) or (global_var(GVAR_END_ALBU_CITY) == 6) or (global_var(GVAR_END_ALBU_CITY) == 10) or (global_var(GVAR_END_ALBU_LYSTRA) == 4) or (global_var(GVAR_END_ALBU_LYSTRA) == 6) or (global_var(GVAR_END_ALBU_LYSTRA) == 10)) then begin
+            set_global_var(GVAR_END_ALBU_WILLIAM, 3);
+        end
+        else begin
+            set_global_var(GVAR_END_ALBU_WILLIAM, 4);
+        end
+    end
+    if ((global_var(GVAR_MC_MUTANT_CAMP_EVENTS) bwand 64) != 0) then begin
+        set_global_var(GVAR_END_MUTANTS, 1);
+    end
+    else begin
+        if ((global_var(GVAR_MC_QUEST_BRING_SEBASTIAN) >= 3) and ((global_var(GVAR_MC_MUTANT_CAMP_EVENTS) bwand 2) == 0)) then begin
+            set_global_var(GVAR_END_MUTANTS, 2);
+        end
+    end
+    if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+        set_global_var(GVAR_END_GABRIEL, 1);
+    end
+    if (global_var(GVAR_G_BASE_DESTROYED) == 4) then begin
+        if ((global_var(GVAR_G_QUEST_FREE_PRISONERS_FIGHT) == 2) or (global_var(GVAR_G_QUEST_FREE_PRISONERS_SNEAK) == 2)) then begin
+            set_global_var(GVAR_END_OBRODA, 1);
+        end
+        else begin
+            set_global_var(GVAR_END_OBRODA, 2);
+        end
+    end
+    else begin
+        if ((global_var(GVAR_G_QUEST_FREE_PRISONERS_FIGHT) == 2) or (global_var(GVAR_G_QUEST_FREE_PRISONERS_SNEAK) == 2)) then begin
+            set_global_var(GVAR_END_OBRODA, 3);
+        end
+        else begin
+            set_global_var(GVAR_END_OBRODA, 4);
+        end
+    end
+    if (dude_gender == 0) then begin
+        set_global_var(GVAR_END_PLAYER, 1);
+    end
+    else begin
+        set_global_var(GVAR_END_PLAYER, 2);
+    end
+end

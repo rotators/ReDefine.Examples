@@ -1,0 +1,452 @@
+variable ProtoOfItemGiven;
+variable ValueOfRollCheck := 1;
+variable Scenery_Creation;
+variable Scenery_Creation_Hex;
+variable Scenery_Creation_Count;
+variable Temp_Scenery_Creation_Hex;
+variable Scenery_Creation_Ptr;
+variable lPartyWornArmor;
+variable How_Many_Party_Members_Are_Injured;
+variable How_Many_Party_Members_Armed;
+variable PartyHealingItem;
+
+procedure checkPartyMembersNearDoor;
+
+variable global_temp;
+variable dest_tile;
+variable step_tile;
+variable in_dialog;
+variable forced_node;
+variable restock_amt;
+variable restock_obj;
+variable restock_trash;
+variable removed_qty;
+variable toRemove_qty;
+
+procedure div(variable arg0, variable arg1);
+procedure start;
+procedure critter_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure look_at_p_proc;
+procedure description_p_proc;
+procedure timed_event_p_proc;
+procedure map_enter_p_proc;
+procedure map_exit_p_proc;
+procedure damage_p_proc;
+procedure combat_p_proc;
+procedure destroy_p_proc;
+procedure Node998;
+procedure Node999;
+procedure Node500;
+procedure Node550;
+procedure Node600;
+procedure Node650;
+procedure Node700;
+procedure Bet_1;
+procedure Bet_2;
+procedure Bet_3;
+procedure Bet_4;
+procedure Bet_5;
+
+variable bet_amt;
+variable girl_rotation;
+variable ShootingDist;
+variable ShootingTile;
+
+
+procedure checkPartyMembersNearDoor
+begin
+    if (party_member_obj(16777729) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777729)) <= 5) then begin
+            return 1;
+        end
+    end
+    if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777779)) <= 5) then begin
+            return 1;
+        end
+    end
+    if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777811)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777812) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777812)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777813) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777813)) <= 5) then begin
+            return 1;
+        end
+    end
+    if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777814)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777748) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777748)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777293) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777293)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778017) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778017)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778016) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778016)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778049) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778049)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778050) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778050)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778051) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778051)) <= 5) then begin
+            return 1;
+        end
+    end
+    return 0;
+end
+
+procedure div(variable arg0, variable arg1)
+begin
+    if (0 > arg0) then begin
+        return -(-arg0 / arg1);
+    end
+    return arg0 / arg1;
+end
+
+procedure start
+begin
+end
+
+procedure critter_p_proc
+begin
+    if ((local_var(5) == 2) and obj_can_see_obj(self_obj, dude_obj)) then begin
+        set_local_var(5, 1);
+        attack(dude_obj);
+    end
+    if (global_var(GVAR_ENEMY_LOST_QUARTER) > 2) then begin
+        if ((tile_distance_objs(self_obj, dude_obj) < 8) or obj_can_see_obj(self_obj, dude_obj)) then begin
+            if (anim_busy(self_obj) == 0) then begin
+                global_temp := rotation_to_tile(dude_tile, tile_num(self_obj));
+                animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                global_temp := (global_temp + 1) % 6;
+                while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(dude_tile, tile_num(self_obj)))) do begin
+                    debug_msg("flee loop: rot == " + global_temp);
+                    animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                    global_temp := (global_temp + 1) % 6;
+                end
+            end
+        end
+    end
+    if (map_var(9) > 0) then begin
+        if (ShootingTile == 0) then begin
+            ShootingDist := tile_distance(tile_num(self_obj), 14102);
+            ShootingTile := 14102;
+            if (tile_distance(tile_num(self_obj), 23133) < ShootingDist) then begin
+                ShootingDist := tile_distance(tile_num(self_obj), 23133);
+                ShootingTile := 23133;
+            end
+            if (tile_distance(tile_num(self_obj), 23123) < ShootingDist) then begin
+                ShootingDist := tile_distance(tile_num(self_obj), 23123);
+                ShootingTile := 23123;
+            end
+        end
+        if ((map_var(9) == 1) and (art_anim(obj_art_fid(self_obj)) != 1) and (ShootingTile != 0)) then begin
+            animate_move_obj_to_tile(self_obj, ShootingTile, 1);
+        end
+        if (map_var(9) == 2) then begin
+            destroy_object(self_obj);
+        end
+    end
+end
+
+procedure pickup_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_local_var(5, 2);
+    end
+end
+
+procedure talk_p_proc
+begin
+    if ((global_var(GVAR_ENEMY_RODRIGUES) == 1) or (global_var(GVAR_ENEMY_LOST_QUARTER) > 0)) then begin
+        if ((tile_distance_objs(self_obj, dude_obj) < 8) or obj_can_see_obj(self_obj, dude_obj)) then begin
+            if (anim_busy(self_obj) == 0) then begin
+                global_temp := rotation_to_tile(dude_tile, tile_num(self_obj));
+                animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                global_temp := (global_temp + 1) % 6;
+                while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(dude_tile, tile_num(self_obj)))) do begin
+                    debug_msg("flee loop: rot == " + global_temp);
+                    animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                    global_temp := (global_temp + 1) % 6;
+                end
+            end
+        end
+    end
+    else begin
+        anim(dude_obj, 1000, rotation_to_tile(dude_tile, tile_num(self_obj)));
+        anim(self_obj, 1000, rotation_to_tile(tile_num(self_obj), dude_tile));
+        start_gdialog(1431, self_obj, 4, -1, -1);
+        gsay_start;
+        if (global_var(GVAR_SEDIT_DEAD_GANGSTERS) == 2) then begin
+            call Node650();
+        end
+        else begin
+            if (obj_carrying_pid_obj(self_obj, 325)) then begin
+                call Node500();
+            end
+            else begin
+                call Node550();
+            end
+        end
+        gsay_end;
+        end_dialogue;
+    end
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    display_mstr(100 + (10 * (((dude_iq > 3) and (dude_skill(SKILL_GAMBLING) >= 25)) == 0)));
+end
+
+procedure description_p_proc
+begin
+    script_overrides;
+    display_mstr(random(150, 154) + (10 * (((dude_iq > 3) and (dude_skill(SKILL_GAMBLING) >= 25)) == 0)));
+end
+
+procedure timed_event_p_proc
+begin
+    if (fixed_param == 1) then begin
+        if ((combat_is_initialized == 0) and (map_var(9) == 0)) then begin
+            if (tile_distance(tile_num(self_obj), dude_tile) <= 4) then begin
+                if (random(0, 2) == 0) then begin
+                    play_sfx("dice1");
+                end
+                else begin
+                    if (global_var(GVAR_NEW_RENO_PRIZEFIGHTER) == 1) then begin
+                        if (dude_gender == 0) then begin
+                            float_msg(self_obj, mstr(random(300, 311)), FLOAT_MSG_YELLOW);
+                        end
+                        if (dude_gender == 1) then begin
+                            float_msg(self_obj, mstr(random(302, 313)), FLOAT_MSG_YELLOW);
+                        end
+                    end
+                    else begin
+                        float_msg(self_obj, mstr(random(302, 311)), FLOAT_MSG_YELLOW);
+                    end
+                end
+            end
+        end
+        rm_fixed_timer_event(self_obj, 1);
+        add_timer_event(self_obj, game_ticks(random(10, 25)), 1);
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 212);
+    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_COWARD);
+    girl_rotation := obj_get_rot(self_obj);
+    rm_fixed_timer_event(self_obj, 1);
+    add_timer_event(self_obj, game_ticks(random(10, 25)), 1);
+end
+
+procedure map_exit_p_proc
+begin
+    if (global_var(GVAR_SEDIT_DEAD_GANGSTERS) == 2) then begin
+        destroy_object(self_obj);
+    end
+end
+
+procedure damage_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_global_var(GVAR_ENEMY_RODRIGUES, 1);
+        if (global_var(GVAR_ENEMY_LOST_QUARTER) < 3) then begin
+            set_global_var(GVAR_ENEMY_LOST_QUARTER, global_var(GVAR_ENEMY_LOST_QUARTER) + 1);
+        end
+        set_global_var(GVAR_PTR_KERI_REACTIONS, global_var(GVAR_PTR_KERI_REACTIONS) bwand (-1 - 256));
+        set_global_var(GVAR_PTR_GABRIEL_REACTIONS, global_var(GVAR_PTR_GABRIEL_REACTIONS) bwand (-1 - 1));
+        set_global_var(GVAR_PTR_LYSTRA_REACTIONS_1, global_var(GVAR_PTR_LYSTRA_REACTIONS_1) bwand (-1 - 256));
+    end
+end
+
+procedure combat_p_proc
+begin
+    if ((fixed_param == 4) and ((global_var(GVAR_ENEMY_RODRIGUES) == 1) or (global_var(GVAR_ENEMY_LOST_QUARTER) > 0))) then begin
+        critter_set_flee_state(self_obj, 1);
+    end
+end
+
+procedure destroy_p_proc
+begin
+end
+
+procedure Node998
+begin
+    set_local_var(5, 2);
+end
+
+procedure Node999
+begin
+    anim(self_obj, 1000, girl_rotation);
+end
+
+procedure Node500
+begin
+    if ((dude_iq + has_trait(TRAIT_PERK, dude_obj, PERK_smooth_talker)) <= 3) then begin
+        Reply(500);
+    end
+    else begin
+        if (global_var(GVAR_MADE_MAN_SALVATORE) == 1) then begin
+            Reply(501 + (dude_gender == 1));
+        end
+        else begin
+            Reply(503);
+        end
+    end
+    if (item_caps_total(dude_obj) >= 5) then begin
+        giq_option(4, NAME, mstr(504) + 5 + mstr(505), Bet_1, NEUTRAL_REACTION);
+    end
+    if (item_caps_total(dude_obj) >= 15) then begin
+        giq_option(4, NAME, mstr(504) + 15 + mstr(505), Bet_2, NEUTRAL_REACTION);
+    end
+    if (item_caps_total(dude_obj) >= 25) then begin
+        giq_option(4, NAME, mstr(504) + 25 + mstr(505), Bet_3, NEUTRAL_REACTION);
+    end
+    if (item_caps_total(dude_obj) >= 50) then begin
+        giq_option(4, NAME, mstr(504) + 50 + mstr(505), Bet_4, NEUTRAL_REACTION);
+    end
+    if (item_caps_total(dude_obj) >= 100) then begin
+        giq_option(4, NAME, mstr(504) + 100 + mstr(505), Bet_5, NEUTRAL_REACTION);
+    end
+    if (item_caps_total(dude_obj) >= 5) then begin
+        giq_option(4, NAME, 506, Node999, NEUTRAL_REACTION);
+    end
+    else begin
+        giq_option(4, NAME, 507, Node999, NEUTRAL_REACTION);
+    end
+    if (item_caps_total(dude_obj) >= 5) then begin
+        giq_option(-3, NAME, mstr(508) + 5 + mstr(509), Bet_1, NEUTRAL_REACTION);
+    end
+    if (item_caps_total(dude_obj) >= 15) then begin
+        giq_option(-3, NAME, mstr(508) + 15 + mstr(509), Bet_2, NEUTRAL_REACTION);
+    end
+    if (item_caps_total(dude_obj) >= 25) then begin
+        giq_option(-3, NAME, mstr(508) + 25 + mstr(509), Bet_3, NEUTRAL_REACTION);
+    end
+    if (item_caps_total(dude_obj) >= 50) then begin
+        giq_option(-3, NAME, mstr(508) + 50 + mstr(509), Bet_4, NEUTRAL_REACTION);
+    end
+    if (item_caps_total(dude_obj) >= 100) then begin
+        giq_option(-3, NAME, mstr(508) + 100 + mstr(509), Bet_5, NEUTRAL_REACTION);
+    end
+    giq_option(-3, NAME, 510, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node550
+begin
+    Reply(550);
+    if (obj_carrying_pid_obj(dude_obj, 325)) then begin
+        giq_option(4, NAME, 551, Node600, NEUTRAL_REACTION);
+    end
+    giq_option(4, NAME, 552, Node999, NEUTRAL_REACTION);
+    giq_option(-3, NAME, 553, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node600
+begin
+    Reply(600);
+    giq_option(4, NAME, 601, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node650
+begin
+    Reply(650);
+    giq_option(4, NAME, 651, Node999, NEUTRAL_REACTION);
+    giq_option(-3, NAME, 652, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node700
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    if (random(0, 1)) then begin
+        play_sfx("dice");
+    end
+    else begin
+        play_sfx("dice1");
+    end
+    LVar0 := roll_vs_skill(dude_obj, 16, ((bet_amt == 5) * 0) + ((bet_amt == 15) * -10) + ((bet_amt == 25) * -25) + ((bet_amt == 50) * -50) + ((bet_amt == 100) * -75));
+    if (is_success(LVar0)) then begin
+        LVar1 := 2;
+        if (is_critical(LVar0)) then begin
+            LVar1 := 3;
+            if (is_success(LVar0)) then begin
+                LVar1 := 4;
+            end
+        end
+    end
+    item_caps_adjust(dude_obj, (LVar1 * bet_amt) - bet_amt);
+    if (global_var(GVAR_MADE_MAN_SALVATORE) == 1) then begin
+        Reply(701 + (10 * LVar1) + (dude_gender == 1));
+    end
+    else begin
+        Reply(700 + (10 * LVar1));
+    end
+    giq_option(4, NAME, 750, Node500, NEUTRAL_REACTION);
+    giq_option(4, NAME, 751, Node999, NEUTRAL_REACTION);
+    giq_option(-3, NAME, 752, Node500, NEUTRAL_REACTION);
+    giq_option(-3, NAME, 753, Node999, NEUTRAL_REACTION);
+end
+
+procedure Bet_1
+begin
+    bet_amt := 5;
+    call Node700();
+end
+
+procedure Bet_2
+begin
+    bet_amt := 15;
+    call Node700();
+end
+
+procedure Bet_3
+begin
+    bet_amt := 25;
+    call Node700();
+end
+
+procedure Bet_4
+begin
+    bet_amt := 50;
+    call Node700();
+end
+
+procedure Bet_5
+begin
+    bet_amt := 100;
+    call Node700();
+end

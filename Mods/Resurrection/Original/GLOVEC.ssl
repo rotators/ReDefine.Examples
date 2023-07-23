@@ -1,0 +1,404 @@
+variable ProtoOfItemGiven;
+variable ValueOfRollCheck := 1;
+variable Scenery_Creation;
+variable Scenery_Creation_Hex;
+variable Scenery_Creation_Count;
+variable Temp_Scenery_Creation_Hex;
+variable Scenery_Creation_Ptr;
+variable How_Many_Party_Members_Are_Injured;
+variable How_Many_Party_Members_Armed;
+variable PartyHealingItem;
+
+procedure checkPartyMembersNearDoor;
+
+variable global_temp;
+variable dest_tile;
+variable step_tile;
+variable in_dialog;
+variable forced_node;
+variable restock_amt;
+variable restock_obj;
+variable restock_trash;
+variable removed_qty;
+variable toRemove_qty;
+
+procedure div(variable arg0, variable arg1);
+procedure start;
+procedure map_enter_p_proc;
+procedure combat_p_proc;
+procedure map_exit_p_proc;
+procedure critter_p_proc;
+procedure damage_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure destroy_p_proc;
+procedure look_at_p_proc;
+procedure description_p_proc;
+procedure timed_event_p_proc;
+procedure use_skill_on_p_proc;
+procedure push_p_proc;
+
+variable floated;
+
+
+procedure checkPartyMembersNearDoor
+begin
+    if (party_member_obj(16777729) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777729)) <= 5) then begin
+            return 1;
+        end
+    end
+    if ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0)) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777779)) <= 5) then begin
+            return 1;
+        end
+    end
+    if ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0)) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777811)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777812) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777812)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777813) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777813)) <= 5) then begin
+            return 1;
+        end
+    end
+    if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777814)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777748) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777748)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777293) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777293)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778017) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778017)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778016) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778016)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778049) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778049)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778050) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778050)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778051) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778051)) <= 5) then begin
+            return 1;
+        end
+    end
+    return 0;
+end
+
+procedure div(variable arg0, variable arg1)
+begin
+    if (0 > arg0) then begin
+        return -(-arg0 / arg1);
+    end
+    return arg0 / arg1;
+end
+
+procedure start
+begin
+end
+
+procedure map_enter_p_proc
+begin
+    critter_add_trait(self_obj, 1, 6, 0);
+    critter_add_trait(self_obj, 1, 5, 3);
+    if (cur_map_index == 30) then begin
+        if (not(has_trait(1, self_obj, 666))) then begin
+            set_obj_visibility(self_obj, 0);
+            critter_attempt_placement(self_obj, tile_num_in_direction(tile_num(dude_obj), has_trait(1, dude_obj, 10), 2), 0);
+            anim(self_obj, 1000, has_trait(1, dude_obj, 10));
+        end
+        if ((global_var(964) bwand 16384) != 0) then begin
+            set_global_var(964, global_var(964) bwand (-1 - 16384));
+        end
+    end
+    if ((cur_map_index != 30) and (cur_map_index != 31) and (cur_map_index != 32) and has_trait(1, self_obj, 666)) then begin
+        set_obj_visibility(self_obj, 1);
+        if ((global_var(964) bwand 16384) == 0) then begin
+            set_global_var(964, global_var(964) bwor 16384);
+            display_msg(message_str(520, 250));
+        end
+    end
+    if (local_var(6) == 0) then begin
+        set_local_var(6, 1);
+        party_add(self_obj);
+        add_timer_event(self_obj, 5, 1);
+    end
+end
+
+procedure combat_p_proc
+begin
+    if (fixed_param == 4) then begin
+        if ((cur_map_index == 31) and (elevation(self_obj) == 0)) then begin
+            if ((global_var(964) bwand 4) == 0) then begin
+                set_global_var(964, global_var(964) bwor 4);
+                floated := 1;
+                float_msg(self_obj, message_str(520, 302), 2);
+            end
+            else begin
+                if ((global_var(964) bwand 8) == 0) then begin
+                    set_global_var(964, global_var(964) bwor 8);
+                    floated := 1;
+                    float_msg(self_obj, message_str(520, 303), 2);
+                end
+            end
+        end
+        if ((cur_map_index == 31) and (elevation(self_obj) == 1)) then begin
+            if ((global_var(964) bwand 16) == 0) then begin
+                set_global_var(964, global_var(964) bwor 16);
+                floated := 1;
+                float_msg(self_obj, message_str(520, 305), 2);
+            end
+            else begin
+                if ((global_var(964) bwand 32) == 0) then begin
+                    set_global_var(964, global_var(964) bwor 32);
+                    floated := 1;
+                    float_msg(self_obj, message_str(520, 306), 2);
+                end
+            end
+        end
+        if ((cur_map_index == 31) and (elevation(self_obj) == 2)) then begin
+            if ((global_var(964) bwand 64) == 0) then begin
+                set_global_var(964, global_var(964) bwor 64);
+                floated := 1;
+                float_msg(self_obj, message_str(520, 307), 2);
+            end
+            else begin
+                if ((global_var(964) bwand 128) == 0) then begin
+                    set_global_var(964, global_var(964) bwor 128);
+                    floated := 1;
+                    float_msg(self_obj, message_str(520, 308), 2);
+                end
+            end
+        end
+        if ((cur_map_index == 32) and (elevation(self_obj) == 0)) then begin
+            if ((global_var(964) bwand 256) == 0) then begin
+                set_global_var(964, global_var(964) bwor 256);
+                floated := 1;
+                float_msg(self_obj, message_str(520, 309), 2);
+            end
+            else begin
+                if ((global_var(964) bwand 512) == 0) then begin
+                    set_global_var(964, global_var(964) bwor 512);
+                    floated := 1;
+                    float_msg(self_obj, message_str(520, 310), 2);
+                end
+            end
+        end
+        if ((cur_map_index == 32) and (elevation(self_obj) == 1)) then begin
+            if ((global_var(964) bwand 1024) == 0) then begin
+                set_global_var(964, global_var(964) bwor 1024);
+                floated := 1;
+                float_msg(self_obj, message_str(520, 311), 2);
+            end
+            else begin
+                if ((global_var(964) bwand 2048) == 0) then begin
+                    set_global_var(964, global_var(964) bwor 2048);
+                    floated := 1;
+                    float_msg(self_obj, message_str(520, 312), 2);
+                end
+            end
+        end
+        if ((cur_map_index == 32) and (elevation(self_obj) == 2)) then begin
+            if ((global_var(964) bwand 4096) == 0) then begin
+                set_global_var(964, global_var(964) bwor 4096);
+                floated := 1;
+                float_msg(self_obj, message_str(520, 313), 2);
+            end
+            else begin
+                if ((global_var(964) bwand 8192) == 0) then begin
+                    set_global_var(964, global_var(964) bwor 8192);
+                    floated := 1;
+                    float_msg(self_obj, message_str(520, 314), 2);
+                end
+            end
+        end
+        if ((random(1, 6) == 1) and (floated == 0) and has_trait(1, self_obj, 666)) then begin
+            float_msg(self_obj, message_str(520, random(400, 409)), 2);
+        end
+        floated := 0;
+    end
+end
+
+procedure map_exit_p_proc
+begin
+end
+
+procedure critter_p_proc
+begin
+    if (not(combat_is_initialized) and has_trait(1, self_obj, 666)) then begin
+        if (tile_distance_objs(self_obj, dude_obj) > 5) then begin
+            if (tile_distance_objs(self_obj, dude_obj) > (5 * 2)) then begin
+                if ((tile_num(self_obj) != tile_num_in_direction(tile_num(dude_obj), rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)), 3)) and (tile_num_in_direction(tile_num(dude_obj), rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)), 3) != 0)) then begin
+                    if ((dest_tile == tile_num_in_direction(tile_num(dude_obj), rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)), 3)) and (step_tile < 0)) then begin
+                        step_tile := step_tile + 1;
+                    end
+                    else begin
+                        if (anim_busy(self_obj) == 0) then begin
+                            dest_tile := tile_num_in_direction(tile_num(dude_obj), rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)), 3);
+                            step_tile := tile_num_in_direction(tile_num(dude_obj), rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)), 3);
+                            animate_move_obj_to_tile(self_obj, step_tile, 1);
+                            debug_msg("move_to_point: self_tile == " + tile_num(self_obj));
+                            while ((anim_busy(self_obj) == 0) and (tile_distance(tile_num(self_obj), tile_num_in_direction(tile_num(dude_obj), rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)), 3)) >= tile_distance(step_tile, tile_num_in_direction(tile_num(dude_obj), rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)), 3)))) do begin
+                                step_tile := tile_num_in_direction(step_tile, rotation_to_tile(step_tile, tile_num(self_obj)), ((tile_distance_objs(dude_obj, self_obj) / 5) + 1) % tile_distance(step_tile, tile_num(self_obj)));
+                                debug_msg("move_to_point: step_tile == " + step_tile);
+                                animate_move_obj_to_tile(self_obj, step_tile, 1);
+                            end
+                            if (anim_busy(self_obj) == 0) then begin
+                                if (metarule3(106, tile_num_in_direction(tile_num(self_obj), has_trait(1, self_obj, 10), 1), elevation(self_obj), 0) != 0) then begin
+                                    if (anim_busy(self_obj) == 0) then begin
+                                        global_temp := rotation_to_tile(tile_num_in_direction(tile_num(self_obj), rotation_to_tile(tile_num_in_direction(tile_num(self_obj), has_trait(1, self_obj, 10), 1), tile_num(self_obj)), 1), tile_num(self_obj));
+                                        animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(2, 5)), 0);
+                                        global_temp := (global_temp + 1) % 6;
+                                        while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(tile_num_in_direction(tile_num(self_obj), rotation_to_tile(tile_num_in_direction(tile_num(self_obj), has_trait(1, self_obj, 10), 1), tile_num(self_obj)), 1), tile_num(self_obj)))) do begin
+                                            debug_msg("flee loop: rot == " + global_temp);
+                                            animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(2, 5)), 0);
+                                            global_temp := (global_temp + 1) % 6;
+                                        end
+                                    end
+                                end
+                                else begin
+                                    step_tile := -10;
+                                end
+                            end
+                        end
+                        else begin
+                            if (tile_distance(tile_num(self_obj), tile_num_in_direction(tile_num(dude_obj), rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)), 3)) < tile_distance(dest_tile, tile_num_in_direction(tile_num(dude_obj), rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)), 3))) then begin
+                                reg_anim_func(2, self_obj);
+                            end
+                        end
+                    end
+                end
+            end
+            else begin
+                if ((tile_num(self_obj) != tile_num_in_direction(tile_num(dude_obj), rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)), 3)) and (tile_num_in_direction(tile_num(dude_obj), rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)), 3) != 0)) then begin
+                    if ((dest_tile == tile_num_in_direction(tile_num(dude_obj), rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)), 3)) and (step_tile < 0)) then begin
+                        step_tile := step_tile + 1;
+                    end
+                    else begin
+                        if (anim_busy(self_obj) == 0) then begin
+                            dest_tile := tile_num_in_direction(tile_num(dude_obj), rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)), 3);
+                            step_tile := tile_num_in_direction(tile_num(dude_obj), rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)), 3);
+                            animate_move_obj_to_tile(self_obj, step_tile, 0);
+                            debug_msg("move_to_point: self_tile == " + tile_num(self_obj));
+                            while ((anim_busy(self_obj) == 0) and (tile_distance(tile_num(self_obj), tile_num_in_direction(tile_num(dude_obj), rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)), 3)) >= tile_distance(step_tile, tile_num_in_direction(tile_num(dude_obj), rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)), 3)))) do begin
+                                step_tile := tile_num_in_direction(step_tile, rotation_to_tile(step_tile, tile_num(self_obj)), ((tile_distance_objs(dude_obj, self_obj) / 5) + 1) % tile_distance(step_tile, tile_num(self_obj)));
+                                debug_msg("move_to_point: step_tile == " + step_tile);
+                                animate_move_obj_to_tile(self_obj, step_tile, 0);
+                            end
+                            if (anim_busy(self_obj) == 0) then begin
+                                if (metarule3(106, tile_num_in_direction(tile_num(self_obj), has_trait(1, self_obj, 10), 1), elevation(self_obj), 0) != 0) then begin
+                                    if (anim_busy(self_obj) == 0) then begin
+                                        global_temp := rotation_to_tile(tile_num_in_direction(tile_num(self_obj), rotation_to_tile(tile_num_in_direction(tile_num(self_obj), has_trait(1, self_obj, 10), 1), tile_num(self_obj)), 1), tile_num(self_obj));
+                                        animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(2, 5)), 0);
+                                        global_temp := (global_temp + 1) % 6;
+                                        while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(tile_num_in_direction(tile_num(self_obj), rotation_to_tile(tile_num_in_direction(tile_num(self_obj), has_trait(1, self_obj, 10), 1), tile_num(self_obj)), 1), tile_num(self_obj)))) do begin
+                                            debug_msg("flee loop: rot == " + global_temp);
+                                            animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(2, 5)), 0);
+                                            global_temp := (global_temp + 1) % 6;
+                                        end
+                                    end
+                                end
+                                else begin
+                                    step_tile := -10;
+                                end
+                            end
+                        end
+                        else begin
+                            if (tile_distance(tile_num(self_obj), tile_num_in_direction(tile_num(dude_obj), rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)), 3)) < tile_distance(dest_tile, tile_num_in_direction(tile_num(dude_obj), rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)), 3))) then begin
+                                reg_anim_func(2, self_obj);
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure damage_p_proc
+begin
+end
+
+procedure pickup_p_proc
+begin
+end
+
+procedure talk_p_proc
+begin
+    if (get_critter_stat(dude_obj, 34) == 0) then begin
+        float_msg(self_obj, message_str(520, random(350, 359)), 8);
+    end
+    if (get_critter_stat(dude_obj, 34) == 1) then begin
+        float_msg(self_obj, message_str(520, random(351, 360)), 8);
+    end
+end
+
+procedure destroy_p_proc
+begin
+    set_global_var(930, global_var(930) - 1);
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    display_msg(message_str(520, 100));
+end
+
+procedure description_p_proc
+begin
+    script_overrides;
+    display_msg(message_str(520, 200));
+end
+
+procedure timed_event_p_proc
+begin
+    if (fixed_param == 1) then begin
+        if (cur_map_index == 30) then begin
+            if ((global_var(964) bwand 1) == 0) then begin
+                set_global_var(964, global_var(964) bwor 1);
+                float_msg(self_obj, message_str(520, 300), 2);
+            end
+            else begin
+                if ((global_var(964) bwand 2) == 0) then begin
+                    set_global_var(964, global_var(964) bwor 2);
+                    float_msg(self_obj, message_str(520, 301), 2);
+                end
+            end
+        end
+    end
+end
+
+procedure use_skill_on_p_proc
+begin
+end
+
+procedure push_p_proc
+begin
+end
+

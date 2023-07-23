@@ -1,0 +1,788 @@
+procedure start;
+
+variable global_temp;
+variable dest_tile;
+variable step_tile;
+variable in_dialog;
+variable forced_node;
+variable restock_amt;
+variable restock_obj;
+variable restock_trash;
+variable removed_qty;
+variable toRemove_qty;
+
+procedure div(variable arg0, variable arg1);
+
+variable ProtoOfItemGiven;
+variable ValueOfRollCheck := 1;
+variable Scenery_Creation;
+variable Scenery_Creation_Hex;
+variable Scenery_Creation_Count;
+variable Temp_Scenery_Creation_Hex;
+variable Scenery_Creation_Ptr;
+variable lPartyWornArmor;
+variable How_Many_Party_Members_Are_Injured;
+variable How_Many_Party_Members_Armed;
+variable PartyHealingItem;
+
+procedure checkPartyMembersNearDoor;
+
+variable down;
+variable holster_key;
+variable healing_key;
+variable looting_key;
+variable regroup_key;
+variable spread_key;
+variable pickup_key;
+variable switch_key;
+variable loot_items;
+variable current_order;
+variable tWaiting_time;
+variable oWho;
+variable iNum_npcs;
+variable sWho_name;
+variable L_list;
+variable oLooter;
+variable oCorpse;
+variable oGItem;
+variable tLooting_time;
+variable looting_stage;
+variable cant_carry_all;
+variable dude_picking_up;
+variable dude_pickup_delay;
+
+procedure check_party_orders;
+procedure put_away_weapon(variable arg0);
+procedure npc_heal_yourself(variable arg0);
+procedure loot_nearby_corpses(variable arg0);
+procedure npc_regroup(variable arg0);
+procedure npc_spread(variable arg0);
+procedure find_next_corpse;
+procedure cancel_looting;
+procedure get_ground_item_near_critter(variable arg0, variable arg1);
+procedure loot_n_drop(variable arg0, variable arg1);
+procedure test_(variable arg0, variable arg1);
+
+
+procedure start
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    if (game_loaded) then begin
+        set_global_script_repeat(1);
+        down := 0;
+        holster_key := get_ini_setting("party_op.ini|" + "SETTINGS|" + "HolsterOrderKey");
+        healing_key := get_ini_setting("party_op.ini|" + "SETTINGS|" + "HealingOrderKey");
+        looting_key := get_ini_setting("party_op.ini|" + "SETTINGS|" + "LootingOrderKey");
+        regroup_key := get_ini_setting("party_op.ini|" + "SETTINGS|" + "RegroupOrderKey");
+        spread_key := get_ini_setting("party_op.ini|" + "SETTINGS|" + "SpreadOrderKey");
+        pickup_key := get_ini_setting("party_op.ini|" + "SETTINGS|" + "PickUpKey");
+        switch_key := get_ini_setting("party_op.ini|" + "SETTINGS|" + "SwitchKey");
+        loot_items := get_ini_setting("party_op.ini|" + "SETTINGS|" + "PLootNearbyItems");
+        if ((holster_key < 0) or (holster_key > 88)) then begin
+            holster_key := 35;
+        end
+        if ((healing_key < 0) or (healing_key > 88)) then begin
+            healing_key := 33;
+        end
+        if ((looting_key < 0) or (looting_key > 88)) then begin
+            looting_key := 34;
+        end
+        if ((regroup_key < 0) or (regroup_key > 88)) then begin
+            regroup_key := 19;
+        end
+        if ((spread_key < 0) or (spread_key > 88)) then begin
+            spread_key := 45;
+        end
+        if ((pickup_key < 0) or (pickup_key > 88)) then begin
+            pickup_key := 20;
+        end
+        if ((switch_key < 0) or (switch_key > 88)) then begin
+            switch_key := 11;
+        end
+        if ((loot_items < 0) or (loot_items > 1)) then begin
+            loot_items := 1;
+        end
+        tWaiting_time := game_time;
+        iNum_npcs := 0;
+        oWho := 0;
+        oLooter := 0;
+        tLooting_time := game_time;
+        looting_stage := 0;
+        cant_carry_all := 0;
+        set_sfall_global("p_looter", 0);
+        set_sfall_global("p_corpse", 0);
+        set_sfall_global("p_gitem0", 0);
+    end
+    LVar0 := metarule(16, 0) - (((global_var(910) bwand 32) != 0) and not((global_var(632) bwand 2) != 0)) - (((global_var(910) bwand 64) != 0) and not((global_var(632) bwand 4) != 0)) - (((global_var(910) bwand 128) != 0) and not((global_var(632) bwand 32) != 0)) - 1;
+    if (key_pressed(holster_key)) then begin
+        if (not(down) and (tWaiting_time <= game_time)) then begin
+            down := 1;
+            if (LVar0) then begin
+                if (not(combat_is_initialized)) then begin
+                    current_order := 1;
+                    call check_party_orders();
+                    tWaiting_time := game_time + (1 * 10);
+                end
+            end
+        end
+    end
+    else begin
+        if (key_pressed(healing_key)) then begin
+            if (not(down) and (tWaiting_time <= game_time)) then begin
+                down := 1;
+                if (LVar0) then begin
+                    if (not(combat_is_initialized)) then begin
+                        tWaiting_time := game_time + (5 * 10);
+                    end
+                    else begin
+                        tWaiting_time := game_time + (1 * 10);
+                    end
+                    current_order := 2;
+                    call check_party_orders();
+                end
+            end
+        end
+        else begin
+            if (key_pressed(looting_key)) then begin
+                if (not(down)) then begin
+                    down := 1;
+                    if ((looting_stage == 0) or (oLooter == dude_obj)) then begin
+                        if (tWaiting_time <= game_time) then begin
+                            if (LVar0) then begin
+                                if (not(combat_is_initialized)) then begin
+                                    current_order := 4;
+                                    call check_party_orders();
+                                    tWaiting_time := game_time + (3 * 10);
+                                end
+                            end
+                        end
+                    end
+                    else begin
+                        call cancel_looting();
+                    end
+                end
+            end
+            else begin
+                if (key_pressed(regroup_key)) then begin
+                    if (not(down) and (tWaiting_time <= game_time)) then begin
+                        down := 1;
+                        if (LVar0) then begin
+                            if (not(combat_is_initialized)) then begin
+                                current_order := 5;
+                                call check_party_orders();
+                                tWaiting_time := game_time + (5 * 10);
+                            end
+                        end
+                    end
+                end
+                else begin
+                    if (key_pressed(spread_key)) then begin
+                        if (not(down) and (tWaiting_time <= game_time)) then begin
+                            down := 1;
+                            if (LVar0) then begin
+                                if (not(combat_is_initialized)) then begin
+                                    current_order := 6;
+                                    call check_party_orders();
+                                    tWaiting_time := game_time + (3 * 10);
+                                end
+                            end
+                        end
+                    end
+                    else begin
+                        if (key_pressed(pickup_key)) then begin
+                            if (not(down)) then begin
+                                down := 1;
+                                if (not(combat_is_initialized)) then begin
+                                    if (oLooter == dude_obj) then begin
+                                        call cancel_looting();
+                                    end
+                                    else begin
+                                        if (get_sfall_global_int("p_opti01") == 1) then begin
+                                            if (oLooter) then begin
+                                                call cancel_looting();
+                                            end
+                                            call loot_nearby_corpses(dude_obj);
+                                        end
+                                        else begin
+                                            dude_picking_up := 1;
+                                            dude_pickup_delay := game_time;
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                        else begin
+                            if (key_pressed(switch_key)) then begin
+                                if (not(down)) then begin
+                                    down := 1;
+                                    LVar1 := get_sfall_global_int("p_opti01");
+                                    if (LVar1 == 1) then begin
+                                        LVar1 := 0;
+                                        set_sfall_global("p_opti01", LVar1);
+                                        float_msg(dude_obj, get_ini_string("party_op.ini|" + "MESSAGE|" + 0), 2);
+                                    end
+                                    else begin
+                                        LVar1 := 1;
+                                        set_sfall_global("p_opti01", LVar1);
+                                        float_msg(dude_obj, get_ini_string("party_op.ini|" + "MESSAGE|" + 1), 3);
+                                    end
+                                end
+                            end
+                            else begin
+                                down := 0;
+                                if (not(combat_is_initialized)) then begin
+                                    if (oLooter) then begin
+                                        if ((looting_stage == 0) and (tLooting_time <= game_time)) then begin
+                                            set_global_var(910, global_var(910) bwand (-1 - 1048576));
+                                            if (oLooter == dude_obj) then begin
+                                                LVar1 := 4;
+                                            end
+                                            else begin
+                                                LVar1 := 8;
+                                            end
+                                            if (cant_carry_all == 1) then begin
+                                                float_msg(oLooter, get_ini_string("party_op.ini|" + "MESSAGE|" + (((10 + 4) * 100) + 15)), LVar1);
+                                            end
+                                            else begin
+                                                if (cant_carry_all == 2) then begin
+                                                    float_msg(oLooter, get_ini_string("party_op.ini|" + "MESSAGE|" + (((10 + 4) * 100) + random(20, 24))), LVar1);
+                                                end
+                                            end
+                                            oLooter := 0;
+                                            set_sfall_global("p_looter", 0);
+                                            cant_carry_all := 0;
+                                        end
+                                        else begin
+                                            if ((looting_stage == 1) and (tLooting_time <= game_time)) then begin
+                                                looting_stage := looting_stage + 1;
+                                                tLooting_time := game_time;
+                                            end
+                                            else begin
+                                                if ((looting_stage == 2) and (tLooting_time <= game_time)) then begin
+                                                    set_global_var(910, global_var(910) bwor 1048576);
+                                                    reg_anim_func(1, 1);
+                                                    reg_anim_obj_run_to_obj(oLooter, oCorpse, -1);
+                                                    reg_anim_func(3, 0);
+                                                    tLooting_time := game_time;
+                                                    if (tile_distance_objs(oLooter, oCorpse) <= 1) then begin
+                                                        looting_stage := looting_stage + 1;
+                                                        tLooting_time := game_time;
+                                                    end
+                                                    tLooting_time := game_time;
+                                                end
+                                                else begin
+                                                    if ((looting_stage == 3) and (tLooting_time <= game_time)) then begin
+                                                        if (critter_inven_obj(oCorpse, -2) > 0) then begin
+                                                            reg_anim_func(2, oLooter);
+                                                            reg_anim_func(1, 1);
+                                                            reg_anim_animate(oLooter, 10, -1);
+                                                            reg_anim_func(3, 0);
+                                                            if (loot_items and ((get_critter_stat(oLooter, 12) - has_trait(1, oLooter, 669)) < has_trait(1, oCorpse, 669))) then begin
+                                                                metarule(42, oCorpse);
+                                                                cant_carry_all := 1;
+                                                            end
+                                                            else begin
+                                                                if (cant_carry_all == 0) then begin
+                                                                    cant_carry_all := 2;
+                                                                end
+                                                                move_obj_inven_to_obj(oCorpse, oLooter);
+                                                            end
+                                                        end
+                                                        tLooting_time := game_time;
+                                                        oGItem := get_ground_item_near_critter(oLooter, oCorpse);
+                                                        looting_stage := looting_stage + 1;
+                                                    end
+                                                    else begin
+                                                        if ((looting_stage == 4) and (tLooting_time <= game_time)) then begin
+                                                            if (oGItem) then begin
+                                                                set_self(oLooter);
+                                                                pickup_obj(oGItem);
+                                                                looting_stage := looting_stage - 1;
+                                                            end
+                                                            else begin
+                                                                oCorpse := find_next_corpse();
+                                                            end
+                                                            tLooting_time := game_time + (1 * 10);
+                                                        end
+                                                    end
+                                                end
+                                            end
+                                        end
+                                    end
+                                    if ((dude_picking_up == 1) and (dude_pickup_delay <= game_time)) then begin
+                                        LVar1 := get_ground_item_near_critter(dude_obj, dude_obj);
+                                        if (LVar1) then begin
+                                            set_self(dude_obj);
+                                            pickup_obj(LVar1);
+                                            dude_pickup_delay := game_time + (1 * 10);
+                                        end
+                                        else begin
+                                            dude_picking_up := 0;
+                                        end
+                                    end
+                                end
+                                else begin
+                                    if (oLooter) then begin
+                                        call cancel_looting();
+                                    end
+                                    if (dude_picking_up) then begin
+                                        dude_picking_up := 0;
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure div(variable arg0, variable arg1)
+begin
+    if (0 > arg0) then begin
+        return -(-arg0 / arg1);
+    end
+    return arg0 / arg1;
+end
+
+procedure checkPartyMembersNearDoor
+begin
+    if (party_member_obj(16777729) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777729)) <= 5) then begin
+            return 1;
+        end
+    end
+    if ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0)) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777779)) <= 5) then begin
+            return 1;
+        end
+    end
+    if ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0)) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777811)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777812) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777812)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777813) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777813)) <= 5) then begin
+            return 1;
+        end
+    end
+    if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777814)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777748) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777748)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777294) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777294)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778017) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778017)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778016) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778016)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778049) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778049)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778050) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778050)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778051) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778051)) <= 5) then begin
+            return 1;
+        end
+    end
+    return 0;
+end
+
+procedure check_party_orders
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    variable LVar3 := 0;
+    variable LVar4 := 0;
+    variable LVar5 := 0;
+    variable LVar6 := 0;
+    LVar6 := "";
+    iNum_npcs := 0;
+    oWho := 0;
+    sWho_name := "";
+    LVar4 := 0;
+    LVar5 := -1;
+    LVar0 := 0;
+    LVar3 := 0;
+    if (current_order == 4) then begin
+        LVar1 := "party_op.ini|" + "LOOTER|";
+        LVar2 := "party_op.ini|" + "N_LOOTER|";
+    end
+    else begin
+        LVar1 := "party_op.ini|" + "NPC|";
+        LVar2 := "party_op.ini|" + "N_NPC|";
+        for (/* O_NOOP */; get_ini_setting(LVar1 + LVar0) != -1; LVar0 := LVar0 + 1) begin
+            LVar3 := get_ini_setting(LVar1 + LVar0);
+            if ((LVar3 == 16777729) and (party_member_obj(16777729) != 0) or ((LVar3 == 16777779) and ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0))) or ((LVar3 == 16777811) and ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0))) or ((LVar3 == 16777812) and (party_member_obj(16777812) != 0)) or ((LVar3 == 16777814) and ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0))) or ((LVar3 == 16777748) and (party_member_obj(16777748) != 0))) then begin
+                if (current_order == 1) then begin
+                    if ((obj_item_subtype(critter_inven_obj(party_member_obj(LVar3), 1)) == 3) or (obj_item_subtype(critter_inven_obj(party_member_obj(LVar3), 2)) == 3)) then begin
+                        if (get_ini_string(LVar2 + LVar0) != "") then begin
+                            sWho_name := get_ini_string(LVar2 + LVar0);
+                        end
+                        else begin
+                            sWho_name := obj_name(party_member_obj(LVar3));
+                        end
+                        call put_away_weapon(party_member_obj(LVar3));
+                    end
+                    continue;
+                end
+                if (current_order == 2) then begin
+                    if (((get_critter_stat(party_member_obj(LVar3), 7) - get_critter_stat(party_member_obj(LVar3), 35)) >= 10) and (proto_data(LVar3, 11) == 0) and (LVar3 != 16777812)) then begin
+                        if (get_ini_string(LVar2 + LVar0) != "") then begin
+                            sWho_name := get_ini_string(LVar2 + LVar0);
+                        end
+                        else begin
+                            sWho_name := obj_name(party_member_obj(LVar3));
+                        end
+                        call npc_heal_yourself(party_member_obj(LVar3));
+                    end
+                    continue;
+                end
+                if (current_order == 4) then begin
+                    if ((get_critter_stat(party_member_obj(LVar3), 12) - has_trait(1, party_member_obj(LVar3), 669)) > LVar5) then begin
+                        LVar5 := get_critter_stat(party_member_obj(LVar3), 12) - has_trait(1, party_member_obj(LVar3), 669);
+                        LVar4 := party_member_obj(LVar3);
+                        if (get_ini_string(LVar2 + LVar0) != "") then begin
+                            sWho_name := get_ini_string(LVar2 + LVar0);
+                        end
+                        else begin
+                            sWho_name := obj_name(party_member_obj(LVar3));
+                        end
+                    end
+                    continue;
+                end
+                if (current_order == 5) then begin
+                    if (tile_distance(tile_num(dude_obj), tile_num(party_member_obj(LVar3))) > 3) then begin
+                        if (get_ini_string(LVar2 + LVar0) != "") then begin
+                            sWho_name := get_ini_string(LVar2 + LVar0);
+                        end
+                        else begin
+                            sWho_name := obj_name(party_member_obj(LVar3));
+                        end
+                        call npc_regroup(party_member_obj(LVar3));
+                    end
+                    continue;
+                end
+                if (current_order == 6) then begin
+                    if (tile_distance(tile_num(dude_obj), tile_num(party_member_obj(LVar3))) < 5) then begin
+                        if (get_ini_string(LVar2 + LVar0) != "") then begin
+                            sWho_name := get_ini_string(LVar2 + LVar0);
+                        end
+                        else begin
+                            sWho_name := obj_name(party_member_obj(LVar3));
+                        end
+                        call npc_spread(party_member_obj(LVar3));
+                    end
+                end
+            end
+        end
+        if (current_order == 4) then begin
+            if (LVar4) then begin
+                if (oLooter == dude_obj) then begin
+                    call cancel_looting();
+                end
+                call loot_nearby_corpses(LVar4);
+            end
+            else begin
+                display_msg(get_ini_string("party_op.ini|" + "MESSAGE|" + (((10 + current_order) * 100) + 99)));
+            end
+        end
+        if (iNum_npcs or cant_carry_all) then begin
+            if (iNum_npcs > 1) then begin
+                LVar6 := get_ini_string("party_op.ini|" + "MESSAGE|" + ((((10 + current_order) * 100) + 1) * (((get_critter_stat(dude_obj, 4) <= 3) * 9) + 1)));
+            end
+            else begin
+                LVar6 := get_ini_string("party_op.ini|" + "MESSAGE|" + ((10 + current_order) * 100 * (((get_critter_stat(dude_obj, 4) <= 3) * 9) + 1))) + " " + sWho_name;
+                if (current_order == 5) then begin
+                    LVar6 := LVar6 + "!";
+                end
+                if (not(cant_carry_all) and (obj_pid(oWho) != 16777729) and (obj_pid(oWho) != 16777812)) then begin
+                    float_msg(oWho, get_ini_string("party_op.ini|" + "MESSAGE|" + random(100, 105)), 8);
+                end
+            end
+            float_msg(dude_obj, LVar6, 4);
+        end
+        else begin
+        end
+        current_order := 0;
+    end
+
+procedure put_away_weapon(variable arg0)
+begin
+    metarule(43, arg0);
+    reg_anim_func(2, arg0);
+    iNum_npcs := iNum_npcs + 1;
+    oWho := arg0;
+end
+
+procedure npc_heal_yourself(variable arg0)
+begin
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    variable LVar3 := 0;
+    variable LVar4 := 0;
+    variable LVar5 := 0;
+    reg_anim_func(2, arg0);
+    reg_anim_func(1, 1);
+    if (((get_critter_stat(arg0, 7) - get_critter_stat(arg0, 35)) >= 60) and obj_is_carrying_obj_pid(arg0, 144)) then begin
+        LVar4 := obj_carrying_pid_obj(arg0, 144);
+        rm_obj_from_inven(arg0, LVar4);
+        destroy_object(LVar4);
+        LVar3 := 90;
+        critter_heal(arg0, LVar3);
+        reg_anim_animate(arg0, 11, -1);
+        display_msg(obj_name(arg0) + " " + get_ini_string("party_op.ini|" + "MESSAGE|" + (((10 + current_order) * 100) + 10)));
+    end
+    else begin
+        if ((floor(get_critter_stat(arg0, 35) * 100 / get_critter_stat(arg0, 7)) <= 75) and not(combat_is_initialized)) then begin
+            LVar1 := random(0, 100) + has_skill(arg0, 6 + (has_skill(arg0, 7) > has_skill(arg0, 6)));
+            LVar2 := random(0, 100);
+            if (LVar1 >= LVar2) then begin
+                LVar3 := floor(20 * LVar1 / 100);
+                critter_heal(arg0, LVar3);
+                display_msg(obj_name(arg0) + " " + get_ini_string("party_op.ini|" + "MESSAGE|" + (((10 + current_order) * 100) + 12)) + " " + LVar3 + " " + get_ini_string("party_op.ini|" + "MESSAGE|" + (((10 + current_order) * 100) + 13)));
+            end
+            else begin
+                display_msg(obj_name(arg0) + " " + get_ini_string("party_op.ini|" + "MESSAGE|" + (((10 + current_order) * 100) + 14)));
+            end
+            reg_anim_animate(arg0, 11, -1);
+        end
+        else begin
+            if (obj_is_carrying_obj_pid(arg0, 40)) then begin
+                LVar4 := obj_carrying_pid_obj(arg0, 40);
+                rm_obj_from_inven(arg0, LVar4);
+                destroy_object(LVar4);
+                LVar3 := random(10, 20);
+                critter_heal(arg0, LVar3);
+                reg_anim_animate(arg0, 11, -1);
+                display_msg(obj_name(arg0) + " " + get_ini_string("party_op.ini|" + "MESSAGE|" + (((10 + current_order) * 100) + 11)));
+            end
+            else begin
+                display_msg(obj_name(arg0) + " " + get_ini_string("party_op.ini|" + "MESSAGE|" + (((10 + current_order) * 100) + 15)));
+            end
+        end
+    end
+    reg_anim_func(3, 0);
+    iNum_npcs := iNum_npcs + 1;
+    oWho := arg0;
+end
+
+procedure loot_nearby_corpses(variable arg0)
+begin
+    oLooter := arg0;
+    L_list := list_begin(0);
+    while (L_list != 0) do begin
+        oCorpse := list_next(L_list);
+        if (oCorpse) then begin
+            if (critter_state(oCorpse) bwand 1) then begin
+                if (not(get_proto_data(obj_pid(oCorpse), 32) bwand 64)) then begin
+                    if (tile_distance_objs(dude_obj, oCorpse) <= 24) then begin
+                        oGItem := get_ground_item_near_critter(arg0, oCorpse);
+                        if (oGItem or (critter_inven_obj(oCorpse, -2) != 0)) then begin
+                            set_sfall_global("p_looter", oLooter);
+                            set_sfall_global("p_corpse", oCorpse);
+                            iNum_npcs := iNum_npcs + 1;
+                            oWho := arg0;
+                            looting_stage := 1;
+                            list_end(L_list);
+                            L_list := 0;
+                            return 0;
+                        end
+                    end
+                end
+            end
+        end
+        else begin
+            set_sfall_global("p_corpse", 0);
+            looting_stage := 0;
+            list_end(L_list);
+            L_list := 0;
+            return 0;
+        end
+    end
+end
+
+procedure npc_regroup(variable arg0)
+begin
+    variable LVar1 := 0;
+    LVar1 := tile_num_in_direction(tile_num(dude_obj), random(0, 5), 2 + random(0, 1));
+    reg_anim_func(2, arg0);
+    reg_anim_func(1, 1);
+    reg_anim_obj_run_to_tile(arg0, LVar1, -1);
+    reg_anim_func(3, 0);
+    iNum_npcs := iNum_npcs + 1;
+    oWho := arg0;
+end
+
+procedure npc_spread(variable arg0)
+begin
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    LVar2 := rotation_to_tile(tile_num(dude_obj), tile_num(arg0));
+    LVar1 := tile_num_in_direction(tile_num(arg0), LVar2, random(4, 6));
+    reg_anim_func(2, arg0);
+    reg_anim_func(1, 1);
+    reg_anim_obj_run_to_tile(arg0, LVar1, -1);
+    reg_anim_func(3, 0);
+    iNum_npcs := iNum_npcs + 1;
+    oWho := arg0;
+end
+
+procedure find_next_corpse
+begin
+    variable LVar0 := 0;
+    L_list := list_begin(0);
+    while (L_list != 0) do begin
+        LVar0 := list_next(L_list);
+        if (LVar0) then begin
+            if (critter_state(LVar0) bwand 1) then begin
+                if (not(get_proto_data(obj_pid(LVar0), 32) bwand 64)) then begin
+                    if ((tile_distance_objs(oLooter, LVar0) <= 24) or (tile_distance_objs(dude_obj, LVar0) <= 24)) then begin
+                        oGItem := get_ground_item_near_critter(oLooter, LVar0);
+                        if (oGItem or (critter_inven_obj(LVar0, -2) != 0)) then begin
+                            set_sfall_global("p_corpse", LVar0);
+                            looting_stage := 1;
+                            list_end(L_list);
+                            L_list := 0;
+                            return LVar0;
+                        end
+                    end
+                end
+            end
+        end
+        else begin
+            set_sfall_global("p_corpse", 0);
+            looting_stage := 0;
+            list_end(L_list);
+            L_list := 0;
+            return 0;
+        end
+    end
+end
+
+procedure cancel_looting
+begin
+    if (oLooter) then begin
+        reg_anim_func(2, oLooter);
+        set_global_var(910, global_var(910) bwand (-1 - 1048576));
+        looting_stage := 0;
+        if (iNum_npcs and (oLooter != dude_obj)) then begin
+            float_msg(dude_obj, get_ini_string("party_op.ini|" + "MESSAGE|" + ((((10 + 4) * 100) + 10) * (((get_critter_stat(dude_obj, 4) <= 3) * 9) + 1))) + " " + sWho_name, 4);
+            float_msg(oLooter, get_ini_string("party_op.ini|" + "MESSAGE|" + random(100, 105)), 8);
+        end
+        oLooter := 0;
+        oCorpse := 0;
+        set_sfall_global("p_looter", 0);
+        set_sfall_global("p_corpse", 0);
+    end
+    if (L_list) then begin
+        list_end(L_list);
+        L_list := 0;
+    end
+end
+
+procedure get_ground_item_near_critter(variable arg0, variable arg1)
+begin
+    variable LVar2 := 0;
+    variable LVar3 := 0;
+    variable LVar4 := 0;
+    variable LVar5 := 0;
+    variable LVar6 := 0;
+    variable LVar7 := 0;
+    variable LVar8 := 0;
+    if (loot_items) then begin
+        LVar2 := list_begin(1);
+        while (LVar2 != 0) do begin
+            LVar3 := list_next(LVar2);
+            if (LVar3) then begin
+                if ((obj_item_subtype(LVar3) != 1) and not((obj_pid(LVar3) >= 205) and (obj_pid(LVar3) <= 210)) and (tile_distance_objs(arg1, LVar3) <= 3)) then begin
+                    LVar8 := proto_data(obj_pid(LVar3), 13);
+                    if (obj_item_subtype(LVar3) == 3) then begin
+                        LVar4 := get_weapon_ammo_count(LVar3);
+                        if (LVar4 > 0) then begin
+                            LVar5 := proto_data(get_weapon_ammo_pid(LVar3), 13);
+                            LVar6 := get_proto_data(get_weapon_ammo_pid(LVar3), 40);
+                            LVar7 := floor(LVar4 / LVar6);
+                            if ((LVar4 % LVar6) != 0) then begin
+                                LVar7 := LVar7 + 1;
+                            end
+                            LVar8 := LVar8 + (LVar5 * LVar7);
+                        end
+                    end
+                    if ((get_critter_stat(arg0, 12) - has_trait(1, arg0, 669)) >= LVar8) then begin
+                        list_end(LVar2);
+                        LVar2 := 0;
+                        set_sfall_global("p_gitem0", LVar3);
+                        if (cant_carry_all == 0) then begin
+                            cant_carry_all := 2;
+                        end
+                        return LVar3;
+                    end
+                    else begin
+                        cant_carry_all := 1;
+                    end
+                end
+            end
+            else begin
+                list_end(LVar2);
+                LVar2 := 0;
+                set_sfall_global("p_gitem0", 0);
+                return 0;
+            end
+        end
+    end
+    else begin
+        return 0;
+    end
+end
+
+procedure loot_n_drop(variable arg0, variable arg1)
+begin
+end
+
+procedure test_(variable arg0, variable arg1)
+begin
+    variable LVar2 := 0;
+    variable LVar3 := 0;
+    display_msg(obj_name(arg0));
+    display_msg("----------------");
+    LVar2 := 0;
+    while (LVar2 <= 69) do begin
+        LVar3 := get_proto_data(obj_pid(arg0), LVar2);
+        if (LVar3 != 0) then begin
+            display_msg(LVar2 + ": " + LVar3);
+        end
+        LVar2 := LVar2 + 1;
+    end
+end
+

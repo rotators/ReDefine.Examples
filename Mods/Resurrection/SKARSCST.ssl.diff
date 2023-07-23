@@ -1,0 +1,1657 @@
+diff --git a/Mods/Resurrection/Original/SKARSCST.ssl b/Mods/Resurrection/ReDefine/SKARSCST.ssl
+index a23a226..a042e87 100644
+--- a/Mods/Resurrection/Original/SKARSCST.ssl
++++ b/Mods/Resurrection/ReDefine/SKARSCST.ssl
+@@ -65,12 +65,12 @@ begin
+             return 1;
+         end
+     end
+-    if ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0)) then begin
++    if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+         if (tile_distance_objs(self_obj, party_member_obj(16777779)) <= 5) then begin
+             return 1;
+         end
+     end
+-    if ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0)) then begin
++    if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+         if (tile_distance_objs(self_obj, party_member_obj(16777811)) <= 5) then begin
+             return 1;
+         end
+@@ -85,7 +85,7 @@ begin
+             return 1;
+         end
+     end
+-    if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
++    if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+         if (tile_distance_objs(self_obj, party_member_obj(16777814)) <= 5) then begin
+             return 1;
+         end
+@@ -142,15 +142,15 @@ end
+ 
+ procedure critter_p_proc
+ begin
+-    if ((has_trait(1, self_obj, 666) == 1) and ((local_var(4) == 1) or ((global_var(1023) bwand 65536) != 0)) and obj_can_see_obj(self_obj, dude_obj)) then begin
++    if ((obj_is_visible_flag(self_obj) == 1) and ((local_var(4) == 1) or ((global_var(GVAR_CARAVANS_RANDOM_ECCS) bwand 65536) != 0)) and obj_can_see_obj(self_obj, dude_obj)) then begin
+         if (critter_is_fleeing(self_obj)) then begin
+             if (anim_busy(self_obj) == 0) then begin
+                 if ((tile_distance_objs(self_obj, dude_obj) < 8) or obj_can_see_obj(self_obj, dude_obj)) then begin
+                     if (anim_busy(self_obj) == 0) then begin
+-                        global_temp := rotation_to_tile(tile_num(dude_obj), tile_num(self_obj));
++                        global_temp := rotation_to_tile(dude_tile, tile_num(self_obj));
+                         animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                         global_temp := (global_temp + 1) % 6;
+-                        while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)))) do begin
++                        while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(dude_tile, tile_num(self_obj)))) do begin
+                             debug_msg("flee loop: rot == " + global_temp);
+                             animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                             global_temp := (global_temp + 1) % 6;
+@@ -160,83 +160,83 @@ begin
+             end
+         end
+         else begin
+-            attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++            attack(dude_obj);
+         end
+     end
+ end
+ 
+ procedure map_exit_p_proc
+ begin
+-    set_global_var(1023, 0);
++    set_global_var(GVAR_CARAVANS_RANDOM_ECCS, 0);
+ end
+ 
+ procedure pickup_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+         set_local_var(4, 1);
+-        set_global_var(1023, global_var(1023) bwor 65536);
++        set_global_var(GVAR_CARAVANS_RANDOM_ECCS, global_var(GVAR_CARAVANS_RANDOM_ECCS) bwor 65536);
+     end
+ end
+ 
+ procedure talk_p_proc
+ begin
+-    float_msg(self_obj, message_str(39, random(340, 346)), 8);
++    float_msg(self_obj, mstr(random(340, 346)), FLOAT_MSG_YELLOW);
+ end
+ 
+ procedure destroy_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        if (((global_var(4) + global_var(5)) >= 25) and ((global_var(4) > (3 * global_var(5))) or (global_var(2) == 1)) and (global_var(1) == 0)) then begin
+-            set_global_var(2, 1);
+-            set_global_var(3, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(4) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1)) and (global_var(GVAR_CHILDKILLER_REPUTATION) == 0)) then begin
++            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+         end
+-        if (metarule(51, self_obj) == 2) then begin
++        if (critter_kill_type(self_obj) == KILL_TYPE_children_kills) then begin
+             if (source_obj == dude_obj) then begin
+-                set_global_var(2, 0);
+-                set_global_var(1, global_var(1) + 1);
+-                set_global_var(0, global_var(0) - -15);
+-                set_global_var(37, 0);
+-                set_global_var(38, 0);
+-                set_global_var(39, 0);
+-                set_global_var(40, 0);
+-                set_global_var(41, 0);
+-                set_global_var(42, 0);
+-                set_global_var(43, 0);
+-                set_global_var(44, 0);
+-                set_global_var(45, 0);
+-                if (global_var(0) >= 1000) then begin
+-                    set_global_var(37, 1);
++                set_global_var(GVAR_CHAMPION_REPUTATION, 0);
++                set_global_var(GVAR_CHILDKILLER_REPUTATION, global_var(GVAR_CHILDKILLER_REPUTATION) + 1);
++                set_global_var(GVAR_PLAYER_REPUTATION, global_var(GVAR_PLAYER_REPUTATION) - -15);
++                set_global_var(GVAR_KARMA_HOLY_WARRIOR, 0);
++                set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 0);
++                set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 0);
++                set_global_var(GVAR_KARMA_DEFENDER, 0);
++                set_global_var(GVAR_KARMA_WANDERER, 0);
++                set_global_var(GVAR_KARMA_BETRAYER, 0);
++                set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 0);
++                set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 0);
++                set_global_var(GVAR_KARMA_DEMON_SPAWN, 0);
++                if (global_var(GVAR_PLAYER_REPUTATION) >= 1000) then begin
++                    set_global_var(GVAR_KARMA_HOLY_WARRIOR, 1);
+                 end
+                 else begin
+-                    if (global_var(0) >= 750) then begin
+-                        set_global_var(38, 1);
++                    if (global_var(GVAR_PLAYER_REPUTATION) >= 750) then begin
++                        set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 1);
+                     end
+                     else begin
+-                        if (global_var(0) >= 500) then begin
+-                            set_global_var(39, 1);
++                        if (global_var(GVAR_PLAYER_REPUTATION) >= 500) then begin
++                            set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 1);
+                         end
+                         else begin
+-                            if (global_var(0) >= 250) then begin
+-                                set_global_var(40, 1);
++                            if (global_var(GVAR_PLAYER_REPUTATION) >= 250) then begin
++                                set_global_var(GVAR_KARMA_DEFENDER, 1);
+                             end
+                             else begin
+-                                if (global_var(0) > -250) then begin
+-                                    set_global_var(41, 1);
++                                if (global_var(GVAR_PLAYER_REPUTATION) > -250) then begin
++                                    set_global_var(GVAR_KARMA_WANDERER, 1);
+                                 end
+                                 else begin
+-                                    if (global_var(0) > -500) then begin
+-                                        set_global_var(42, 1);
++                                    if (global_var(GVAR_PLAYER_REPUTATION) > -500) then begin
++                                        set_global_var(GVAR_KARMA_BETRAYER, 1);
+                                     end
+                                     else begin
+-                                        if (global_var(0) > -750) then begin
+-                                            set_global_var(43, 1);
++                                        if (global_var(GVAR_PLAYER_REPUTATION) > -750) then begin
++                                            set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 1);
+                                         end
+                                         else begin
+-                                            if (global_var(0) > -1000) then begin
+-                                                set_global_var(44, 1);
++                                            if (global_var(GVAR_PLAYER_REPUTATION) > -1000) then begin
++                                                set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 1);
+                                             end
+                                             else begin
+-                                                set_global_var(45, 1);
++                                                set_global_var(GVAR_KARMA_DEMON_SPAWN, 1);
+                                             end
+                                         end
+                                     end
+@@ -247,54 +247,54 @@ begin
+                 end
+             end
+         end
+-        if (((global_var(4) + global_var(5)) >= 25) and ((global_var(5) > (2 * global_var(4))) or (global_var(3) == 1))) then begin
+-            set_global_var(3, 1);
+-            set_global_var(2, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+         end
+-        set_global_var(0, global_var(0) + 0);
++        set_global_var(GVAR_PLAYER_REPUTATION, global_var(GVAR_PLAYER_REPUTATION) + 0);
+         debug_msg("Player gains " + 0 + " Karma Points.");
+-        set_global_var(37, 0);
+-        set_global_var(38, 0);
+-        set_global_var(39, 0);
+-        set_global_var(40, 0);
+-        set_global_var(41, 0);
+-        set_global_var(42, 0);
+-        set_global_var(43, 0);
+-        set_global_var(44, 0);
+-        set_global_var(45, 0);
+-        if (global_var(0) >= 1000) then begin
+-            set_global_var(37, 1);
++        set_global_var(GVAR_KARMA_HOLY_WARRIOR, 0);
++        set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 0);
++        set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 0);
++        set_global_var(GVAR_KARMA_DEFENDER, 0);
++        set_global_var(GVAR_KARMA_WANDERER, 0);
++        set_global_var(GVAR_KARMA_BETRAYER, 0);
++        set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 0);
++        set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 0);
++        set_global_var(GVAR_KARMA_DEMON_SPAWN, 0);
++        if (global_var(GVAR_PLAYER_REPUTATION) >= 1000) then begin
++            set_global_var(GVAR_KARMA_HOLY_WARRIOR, 1);
+         end
+         else begin
+-            if (global_var(0) >= 750) then begin
+-                set_global_var(38, 1);
++            if (global_var(GVAR_PLAYER_REPUTATION) >= 750) then begin
++                set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 1);
+             end
+             else begin
+-                if (global_var(0) >= 500) then begin
+-                    set_global_var(39, 1);
++                if (global_var(GVAR_PLAYER_REPUTATION) >= 500) then begin
++                    set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 1);
+                 end
+                 else begin
+-                    if (global_var(0) >= 250) then begin
+-                        set_global_var(40, 1);
++                    if (global_var(GVAR_PLAYER_REPUTATION) >= 250) then begin
++                        set_global_var(GVAR_KARMA_DEFENDER, 1);
+                     end
+                     else begin
+-                        if (global_var(0) > -250) then begin
+-                            set_global_var(41, 1);
++                        if (global_var(GVAR_PLAYER_REPUTATION) > -250) then begin
++                            set_global_var(GVAR_KARMA_WANDERER, 1);
+                         end
+                         else begin
+-                            if (global_var(0) > -500) then begin
+-                                set_global_var(42, 1);
++                            if (global_var(GVAR_PLAYER_REPUTATION) > -500) then begin
++                                set_global_var(GVAR_KARMA_BETRAYER, 1);
+                             end
+                             else begin
+-                                if (global_var(0) > -750) then begin
+-                                    set_global_var(43, 1);
++                                if (global_var(GVAR_PLAYER_REPUTATION) > -750) then begin
++                                    set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 1);
+                                 end
+                                 else begin
+-                                    if (global_var(0) > -1000) then begin
+-                                        set_global_var(44, 1);
++                                    if (global_var(GVAR_PLAYER_REPUTATION) > -1000) then begin
++                                        set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 1);
+                                     end
+                                     else begin
+-                                        set_global_var(45, 1);
++                                        set_global_var(GVAR_KARMA_DEMON_SPAWN, 1);
+                                     end
+                                 end
+                             end
+@@ -304,32 +304,32 @@ begin
+             end
+         end
+     end
+-    if ((global_var(1023) bwand 65536) != 0) then begin
++    if ((global_var(GVAR_CARAVANS_RANDOM_ECCS) bwand 65536) != 0) then begin
+         caravan_enemy_bit_control := 1;
+     end
+-    set_global_var(1023, 0);
++    set_global_var(GVAR_CARAVANS_RANDOM_ECCS, 0);
+     if (caravan_enemy_bit_control == 1) then begin
+-        set_global_var(1023, global_var(1023) bwor 65536);
++        set_global_var(GVAR_CARAVANS_RANDOM_ECCS, global_var(GVAR_CARAVANS_RANDOM_ECCS) bwor 65536);
+     end
+ end
+ 
+ procedure look_at_p_proc
+ begin
+     script_overrides;
+-    display_msg(message_str(39, 101));
++    display_mstr(101);
+ end
+ 
+ procedure description_p_proc
+ begin
+     script_overrides;
+-    if ((global_var(1023) bwand 2) != 0) then begin
+-        display_msg(message_str(39, 200));
++    if ((global_var(GVAR_CARAVANS_RANDOM_ECCS) bwand 2) != 0) then begin
++        display_mstr(200);
+     end
+-    if ((global_var(1023) bwand 4) != 0) then begin
+-        display_msg(message_str(39, 201));
++    if ((global_var(GVAR_CARAVANS_RANDOM_ECCS) bwand 4) != 0) then begin
++        display_mstr(201);
+     end
+-    if ((global_var(1023) bwand 8) != 0) then begin
+-        display_msg(message_str(39, 202));
++    if ((global_var(GVAR_CARAVANS_RANDOM_ECCS) bwand 8) != 0) then begin
++        display_mstr(202);
+     end
+ end
+ 
+@@ -341,184 +341,184 @@ procedure damage_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+         set_local_var(4, 1);
+-        set_global_var(1023, global_var(1023) bwor 65536);
++        set_global_var(GVAR_CARAVANS_RANDOM_ECCS, global_var(GVAR_CARAVANS_RANDOM_ECCS) bwor 65536);
+     end
+ end
+ 
+ procedure map_enter_p_proc
+ begin
+-    critter_add_trait(self_obj, 1, 6, 92);
+-    critter_add_trait(self_obj, 1, 5, 181);
+-    if (not(metarule(22, 0))) then begin
+-        if (global_var(1044) >= 1) then begin
++    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 92);
++    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_CARAVAN_GUARD);
++    if (not(is_loading_game)) then begin
++        if (global_var(GVAR_ENC_NUMBERS_CARAVANS) >= 1) then begin
+             destroy_object(self_obj);
+         end
+         else begin
+-            set_global_var(1044, global_var(1044) + 1);
++            set_global_var(GVAR_ENC_NUMBERS_CARAVANS, global_var(GVAR_ENC_NUMBERS_CARAVANS) + 1);
+         end
+     end
+-    if (not(metarule(22, 0))) then begin
+-        set_global_var(1023, 0);
+-        if ((global_var(912) == 0) or (global_var(913) == 0) or (global_var(914) == 0)) then begin
+-            set_global_var(1023, global_var(1023) bwor 1);
++    if (not(is_loading_game)) then begin
++        set_global_var(GVAR_CARAVANS_RANDOM_ECCS, 0);
++        if ((global_var(GVAR_KARAVAN_FREDERYK_ELIMINATED) == 0) or (global_var(GVAR_KARAVAN_SEDIT_ELIMINATED) == 0) or (global_var(GVAR_KARAVAN_CRIMSON_ELIMINATED) == 0)) then begin
++            set_global_var(GVAR_CARAVANS_RANDOM_ECCS, global_var(GVAR_CARAVANS_RANDOM_ECCS) bwor 1);
+             probability := random(1, 3);
+             if (probability == 1) then begin
+-                if (global_var(913) == 0) then begin
+-                    set_global_var(1023, global_var(1023) bwor 2);
++                if (global_var(GVAR_KARAVAN_SEDIT_ELIMINATED) == 0) then begin
++                    set_global_var(GVAR_CARAVANS_RANDOM_ECCS, global_var(GVAR_CARAVANS_RANDOM_ECCS) bwor 2);
+                 end
+                 else begin
+-                    if (global_var(914) == 0) then begin
+-                        set_global_var(1023, global_var(1023) bwor 4);
++                    if (global_var(GVAR_KARAVAN_CRIMSON_ELIMINATED) == 0) then begin
++                        set_global_var(GVAR_CARAVANS_RANDOM_ECCS, global_var(GVAR_CARAVANS_RANDOM_ECCS) bwor 4);
+                     end
+                     else begin
+-                        set_global_var(1023, global_var(1023) bwor 8);
++                        set_global_var(GVAR_CARAVANS_RANDOM_ECCS, global_var(GVAR_CARAVANS_RANDOM_ECCS) bwor 8);
+                     end
+                 end
+             end
+             else begin
+                 if (probability == 2) then begin
+-                    if (global_var(914) == 0) then begin
+-                        set_global_var(1023, global_var(1023) bwor 4);
++                    if (global_var(GVAR_KARAVAN_CRIMSON_ELIMINATED) == 0) then begin
++                        set_global_var(GVAR_CARAVANS_RANDOM_ECCS, global_var(GVAR_CARAVANS_RANDOM_ECCS) bwor 4);
+                     end
+                     else begin
+-                        if (global_var(913) == 0) then begin
+-                            set_global_var(1023, global_var(1023) bwor 2);
++                        if (global_var(GVAR_KARAVAN_SEDIT_ELIMINATED) == 0) then begin
++                            set_global_var(GVAR_CARAVANS_RANDOM_ECCS, global_var(GVAR_CARAVANS_RANDOM_ECCS) bwor 2);
+                         end
+                         else begin
+-                            set_global_var(1023, global_var(1023) bwor 8);
++                            set_global_var(GVAR_CARAVANS_RANDOM_ECCS, global_var(GVAR_CARAVANS_RANDOM_ECCS) bwor 8);
+                         end
+                     end
+                 end
+                 else begin
+-                    if (global_var(912) == 0) then begin
+-                        set_global_var(1023, global_var(1023) bwor 8);
++                    if (global_var(GVAR_KARAVAN_FREDERYK_ELIMINATED) == 0) then begin
++                        set_global_var(GVAR_CARAVANS_RANDOM_ECCS, global_var(GVAR_CARAVANS_RANDOM_ECCS) bwor 8);
+                     end
+                     else begin
+-                        if (global_var(913) == 0) then begin
+-                            set_global_var(1023, global_var(1023) bwor 2);
++                        if (global_var(GVAR_KARAVAN_SEDIT_ELIMINATED) == 0) then begin
++                            set_global_var(GVAR_CARAVANS_RANDOM_ECCS, global_var(GVAR_CARAVANS_RANDOM_ECCS) bwor 2);
+                         end
+                         else begin
+-                            set_global_var(1023, global_var(1023) bwor 4);
++                            set_global_var(GVAR_CARAVANS_RANDOM_ECCS, global_var(GVAR_CARAVANS_RANDOM_ECCS) bwor 4);
+                         end
+                     end
+                 end
+             end
+-            if (cur_map_index == 0) then begin
++            if (CUR_MAP_DESERT1) then begin
+                 move_to(self_obj, 21502, 1);
+                 move_to(dude_obj, 23916, 1);
+                 if (party_member_obj(16777729) != 0) then begin
+                     if (party_member_obj(16777729) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777729), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777729), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777729))) then begin
++                            critter_attempt_placement(party_member_obj(16777729), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+-                if ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0)) then begin
++                if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+                     if (party_member_obj(16777779) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777779), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777779), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777779))) then begin
++                            critter_attempt_placement(party_member_obj(16777779), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+-                if ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0)) then begin
++                if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+                     if (party_member_obj(16777811) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777811), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777811), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777811))) then begin
++                            critter_attempt_placement(party_member_obj(16777811), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16777812) != 0) then begin
+                     if (party_member_obj(16777812) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777812), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777812), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777812))) then begin
++                            critter_attempt_placement(party_member_obj(16777812), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+-                if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
++                if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+                     if (party_member_obj(16777814) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777814), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777814), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777814))) then begin
++                            critter_attempt_placement(party_member_obj(16777814), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16777748) != 0) then begin
+                     if (party_member_obj(16777748) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777748), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777748), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777748))) then begin
++                            critter_attempt_placement(party_member_obj(16777748), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16778017) != 0) then begin
+                     if (party_member_obj(16778017) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16778017), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16778017), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16778017))) then begin
++                            critter_attempt_placement(party_member_obj(16778017), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16778016) != 0) then begin
+                     if (party_member_obj(16778016) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16778016), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16778016), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16778016))) then begin
++                            critter_attempt_placement(party_member_obj(16778016), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16778049) != 0) then begin
+                     if (party_member_obj(16778049) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16778049), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16778049), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16778049))) then begin
++                            critter_attempt_placement(party_member_obj(16778049), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16778050) != 0) then begin
+                     if (party_member_obj(16778050) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16778050), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16778050), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16778050))) then begin
++                            critter_attempt_placement(party_member_obj(16778050), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16778051) != 0) then begin
+                     if (party_member_obj(16778051) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16778051), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16778051), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16778051))) then begin
++                            critter_attempt_placement(party_member_obj(16778051), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16777293) != 0) then begin
+                     if (party_member_obj(16777293) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777293), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777293), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777293))) then begin
++                            critter_attempt_placement(party_member_obj(16777293), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+-                if ((global_var(1023) bwand 2) != 0) then begin
+-                    Karavan_Guard1 := create_object_sid(16777800, 22506, 1, 79);
+-                    Karavan_Guard2 := create_object_sid(16777799, 20106, 1, 79);
+-                    Karavan_Guard3 := create_object_sid(16777800, 22715, 1, 79);
+-                    Karavan_Guard4 := create_object_sid(16777799, 20518, 1, 79);
++                if ((global_var(GVAR_CARAVANS_RANDOM_ECCS) bwand 2) != 0) then begin
++                    Karavan_Guard1 := create_object_sid(16777800, 22506, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard2 := create_object_sid(16777799, 20106, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard3 := create_object_sid(16777800, 22715, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard4 := create_object_sid(16777799, 20518, 1, SCRIPT_SKARCCST);
+                 end
+                 else begin
+-                    if ((global_var(1023) bwand 4) != 0) then begin
+-                        metarule3(107, self_obj, 16777260, 0);
++                    if ((global_var(GVAR_CARAVANS_RANDOM_ECCS) bwand 4) != 0) then begin
++                        art_change_fid_num(self_obj, 16777260);
+                     end
+                     else begin
+-                        metarule3(107, self_obj, 16777223, 0);
++                        art_change_fid_num(self_obj, 16777223);
+                     end
+-                    Karavan_Guard1 := create_object_sid(16777797, 22506, 1, 79);
+-                    Karavan_Guard2 := create_object_sid(16777798, 20106, 1, 79);
+-                    Karavan_Guard3 := create_object_sid(16777797, 22715, 1, 79);
+-                    Karavan_Guard4 := create_object_sid(16777798, 20518, 1, 79);
++                    Karavan_Guard1 := create_object_sid(16777797, 22506, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard2 := create_object_sid(16777798, 20106, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard3 := create_object_sid(16777797, 22715, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard4 := create_object_sid(16777798, 20518, 1, SCRIPT_SKARCCST);
+                 end
+                 anim(dude_obj, 1000, 0);
+                 if (party_member_obj(16777729) != 0) then begin
+                     anim(party_member_obj(16777729), 1000, 0);
+                 end
+-                if ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0)) then begin
++                if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+                     anim(party_member_obj(16777779), 1000, 0);
+                 end
+-                if ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0)) then begin
++                if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+                     anim(party_member_obj(16777811), 1000, 0);
+                 end
+-                if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
++                if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+                     anim(party_member_obj(16777814), 1000, 0);
+                 end
+                 if (party_member_obj(16778017) != 0) then begin
+@@ -545,122 +545,122 @@ begin
+                 anim(Karavan_Guard3, 1000, 1);
+                 anim(Karavan_Guard4, 1000, 1);
+             end
+-            if (cur_map_index == 1) then begin
++            if (CUR_MAP_DESERT2) then begin
+                 move_to(self_obj, 21104, 1);
+                 move_to(dude_obj, 23517, 1);
+                 if (party_member_obj(16777729) != 0) then begin
+                     if (party_member_obj(16777729) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777729), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777729), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777729))) then begin
++                            critter_attempt_placement(party_member_obj(16777729), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+-                if ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0)) then begin
++                if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+                     if (party_member_obj(16777779) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777779), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777779), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777779))) then begin
++                            critter_attempt_placement(party_member_obj(16777779), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+-                if ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0)) then begin
++                if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+                     if (party_member_obj(16777811) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777811), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777811), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777811))) then begin
++                            critter_attempt_placement(party_member_obj(16777811), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16777812) != 0) then begin
+                     if (party_member_obj(16777812) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777812), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777812), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777812))) then begin
++                            critter_attempt_placement(party_member_obj(16777812), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+-                if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
++                if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+                     if (party_member_obj(16777814) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777814), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777814), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777814))) then begin
++                            critter_attempt_placement(party_member_obj(16777814), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16777748) != 0) then begin
+                     if (party_member_obj(16777748) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777748), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777748), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777748))) then begin
++                            critter_attempt_placement(party_member_obj(16777748), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16778017) != 0) then begin
+                     if (party_member_obj(16778017) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16778017), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16778017), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16778017))) then begin
++                            critter_attempt_placement(party_member_obj(16778017), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16778016) != 0) then begin
+                     if (party_member_obj(16778016) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16778016), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16778016), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16778016))) then begin
++                            critter_attempt_placement(party_member_obj(16778016), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16778049) != 0) then begin
+                     if (party_member_obj(16778049) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16778049), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16778049), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16778049))) then begin
++                            critter_attempt_placement(party_member_obj(16778049), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16778050) != 0) then begin
+                     if (party_member_obj(16778050) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16778050), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16778050), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16778050))) then begin
++                            critter_attempt_placement(party_member_obj(16778050), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16778051) != 0) then begin
+                     if (party_member_obj(16778051) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16778051), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16778051), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16778051))) then begin
++                            critter_attempt_placement(party_member_obj(16778051), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16777293) != 0) then begin
+                     if (party_member_obj(16777293) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777293), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777293), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777293))) then begin
++                            critter_attempt_placement(party_member_obj(16777293), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+-                if ((global_var(1023) bwand 2) != 0) then begin
+-                    Karavan_Guard1 := create_object_sid(16777800, 21899, 1, 79);
+-                    Karavan_Guard2 := create_object_sid(16777799, 24109, 1, 79);
+-                    Karavan_Guard3 := create_object_sid(16777800, 25300, 1, 79);
+-                    Karavan_Guard4 := create_object_sid(16777799, 21909, 1, 79);
++                if ((global_var(GVAR_CARAVANS_RANDOM_ECCS) bwand 2) != 0) then begin
++                    Karavan_Guard1 := create_object_sid(16777800, 21899, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard2 := create_object_sid(16777799, 24109, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard3 := create_object_sid(16777800, 25300, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard4 := create_object_sid(16777799, 21909, 1, SCRIPT_SKARCCST);
+                 end
+                 else begin
+-                    if ((global_var(1023) bwand 4) != 0) then begin
+-                        metarule3(107, self_obj, 16777260, 0);
++                    if ((global_var(GVAR_CARAVANS_RANDOM_ECCS) bwand 4) != 0) then begin
++                        art_change_fid_num(self_obj, 16777260);
+                     end
+                     else begin
+-                        metarule3(107, self_obj, 16777223, 0);
++                        art_change_fid_num(self_obj, 16777223);
+                     end
+-                    Karavan_Guard1 := create_object_sid(16777797, 21899, 1, 79);
+-                    Karavan_Guard2 := create_object_sid(16777798, 24109, 1, 79);
+-                    Karavan_Guard3 := create_object_sid(16777797, 25300, 1, 79);
+-                    Karavan_Guard4 := create_object_sid(16777798, 21909, 1, 79);
++                    Karavan_Guard1 := create_object_sid(16777797, 21899, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard2 := create_object_sid(16777798, 24109, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard3 := create_object_sid(16777797, 25300, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard4 := create_object_sid(16777798, 21909, 1, SCRIPT_SKARCCST);
+                 end
+                 anim(dude_obj, 1000, 0);
+                 if (party_member_obj(16777729) != 0) then begin
+                     anim(party_member_obj(16777729), 1000, 0);
+                 end
+-                if ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0)) then begin
++                if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+                     anim(party_member_obj(16777779), 1000, 0);
+                 end
+-                if ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0)) then begin
++                if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+                     anim(party_member_obj(16777811), 1000, 0);
+                 end
+-                if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
++                if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+                     anim(party_member_obj(16777814), 1000, 0);
+                 end
+                 if (party_member_obj(16778017) != 0) then begin
+@@ -687,122 +687,122 @@ begin
+                 anim(Karavan_Guard3, 1000, 5);
+                 anim(Karavan_Guard4, 1000, 5);
+             end
+-            if (cur_map_index == 2) then begin
++            if (CUR_MAP_DESERT3) then begin
+                 move_to(self_obj, 20710, 1);
+                 move_to(dude_obj, 24328, 1);
+                 if (party_member_obj(16777729) != 0) then begin
+                     if (party_member_obj(16777729) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777729), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777729), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777729))) then begin
++                            critter_attempt_placement(party_member_obj(16777729), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+-                if ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0)) then begin
++                if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+                     if (party_member_obj(16777779) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777779), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777779), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777779))) then begin
++                            critter_attempt_placement(party_member_obj(16777779), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+-                if ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0)) then begin
++                if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+                     if (party_member_obj(16777811) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777811), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777811), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777811))) then begin
++                            critter_attempt_placement(party_member_obj(16777811), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16777812) != 0) then begin
+                     if (party_member_obj(16777812) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777812), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777812), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777812))) then begin
++                            critter_attempt_placement(party_member_obj(16777812), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+-                if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
++                if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+                     if (party_member_obj(16777814) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777814), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777814), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777814))) then begin
++                            critter_attempt_placement(party_member_obj(16777814), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16777748) != 0) then begin
+                     if (party_member_obj(16777748) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777748), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777748), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777748))) then begin
++                            critter_attempt_placement(party_member_obj(16777748), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16778017) != 0) then begin
+                     if (party_member_obj(16778017) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16778017), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16778017), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16778017))) then begin
++                            critter_attempt_placement(party_member_obj(16778017), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16778016) != 0) then begin
+                     if (party_member_obj(16778016) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16778016), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16778016), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16778016))) then begin
++                            critter_attempt_placement(party_member_obj(16778016), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16778049) != 0) then begin
+                     if (party_member_obj(16778049) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16778049), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16778049), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16778049))) then begin
++                            critter_attempt_placement(party_member_obj(16778049), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16778050) != 0) then begin
+                     if (party_member_obj(16778050) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16778050), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16778050), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16778050))) then begin
++                            critter_attempt_placement(party_member_obj(16778050), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16778051) != 0) then begin
+                     if (party_member_obj(16778051) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16778051), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16778051), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16778051))) then begin
++                            critter_attempt_placement(party_member_obj(16778051), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16777293) != 0) then begin
+                     if (party_member_obj(16777293) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777293), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777293), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777293))) then begin
++                            critter_attempt_placement(party_member_obj(16777293), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+-                if ((global_var(1023) bwand 2) != 0) then begin
+-                    Karavan_Guard1 := create_object_sid(16777800, 21714, 1, 79);
+-                    Karavan_Guard2 := create_object_sid(16777799, 22505, 1, 79);
+-                    Karavan_Guard3 := create_object_sid(16777800, 23514, 1, 79);
+-                    Karavan_Guard4 := create_object_sid(16777799, 24909, 1, 79);
++                if ((global_var(GVAR_CARAVANS_RANDOM_ECCS) bwand 2) != 0) then begin
++                    Karavan_Guard1 := create_object_sid(16777800, 21714, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard2 := create_object_sid(16777799, 22505, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard3 := create_object_sid(16777800, 23514, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard4 := create_object_sid(16777799, 24909, 1, SCRIPT_SKARCCST);
+                 end
+                 else begin
+-                    if ((global_var(1023) bwand 4) != 0) then begin
+-                        metarule3(107, self_obj, 16777260, 0);
++                    if ((global_var(GVAR_CARAVANS_RANDOM_ECCS) bwand 4) != 0) then begin
++                        art_change_fid_num(self_obj, 16777260);
+                     end
+                     else begin
+-                        metarule3(107, self_obj, 16777223, 0);
++                        art_change_fid_num(self_obj, 16777223);
+                     end
+-                    Karavan_Guard1 := create_object_sid(16777797, 21714, 1, 79);
+-                    Karavan_Guard2 := create_object_sid(16777798, 22505, 1, 79);
+-                    Karavan_Guard3 := create_object_sid(16777797, 23514, 1, 79);
+-                    Karavan_Guard4 := create_object_sid(16777798, 24909, 1, 79);
++                    Karavan_Guard1 := create_object_sid(16777797, 21714, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard2 := create_object_sid(16777798, 22505, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard3 := create_object_sid(16777797, 23514, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard4 := create_object_sid(16777798, 24909, 1, SCRIPT_SKARCCST);
+                 end
+                 anim(dude_obj, 1000, 0);
+                 if (party_member_obj(16777729) != 0) then begin
+                     anim(party_member_obj(16777729), 1000, 0);
+                 end
+-                if ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0)) then begin
++                if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+                     anim(party_member_obj(16777779), 1000, 0);
+                 end
+-                if ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0)) then begin
++                if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+                     anim(party_member_obj(16777811), 1000, 0);
+                 end
+-                if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
++                if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+                     anim(party_member_obj(16777814), 1000, 0);
+                 end
+                 if (party_member_obj(16778017) != 0) then begin
+@@ -829,122 +829,122 @@ begin
+                 anim(Karavan_Guard3, 1000, 5);
+                 anim(Karavan_Guard4, 1000, 5);
+             end
+-            if (cur_map_index == 49) then begin
++            if (CUR_MAP_DESERT4) then begin
+                 move_to(self_obj, 20710, 1);
+                 move_to(dude_obj, 17306, 1);
+                 if (party_member_obj(16777729) != 0) then begin
+                     if (party_member_obj(16777729) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777729), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777729), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777729))) then begin
++                            critter_attempt_placement(party_member_obj(16777729), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+-                if ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0)) then begin
++                if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+                     if (party_member_obj(16777779) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777779), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777779), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777779))) then begin
++                            critter_attempt_placement(party_member_obj(16777779), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+-                if ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0)) then begin
++                if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+                     if (party_member_obj(16777811) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777811), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777811), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777811))) then begin
++                            critter_attempt_placement(party_member_obj(16777811), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16777812) != 0) then begin
+                     if (party_member_obj(16777812) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777812), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777812), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777812))) then begin
++                            critter_attempt_placement(party_member_obj(16777812), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+-                if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
++                if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+                     if (party_member_obj(16777814) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777814), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777814), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777814))) then begin
++                            critter_attempt_placement(party_member_obj(16777814), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16777748) != 0) then begin
+                     if (party_member_obj(16777748) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777748), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777748), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777748))) then begin
++                            critter_attempt_placement(party_member_obj(16777748), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16778017) != 0) then begin
+                     if (party_member_obj(16778017) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16778017), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16778017), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16778017))) then begin
++                            critter_attempt_placement(party_member_obj(16778017), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16778016) != 0) then begin
+                     if (party_member_obj(16778016) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16778016), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16778016), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16778016))) then begin
++                            critter_attempt_placement(party_member_obj(16778016), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16778049) != 0) then begin
+                     if (party_member_obj(16778049) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16778049), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16778049), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16778049))) then begin
++                            critter_attempt_placement(party_member_obj(16778049), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16778050) != 0) then begin
+                     if (party_member_obj(16778050) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16778050), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16778050), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16778050))) then begin
++                            critter_attempt_placement(party_member_obj(16778050), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16778051) != 0) then begin
+                     if (party_member_obj(16778051) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16778051), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16778051), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16778051))) then begin
++                            critter_attempt_placement(party_member_obj(16778051), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16777293) != 0) then begin
+                     if (party_member_obj(16777293) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777293), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777293), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777293))) then begin
++                            critter_attempt_placement(party_member_obj(16777293), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+-                if ((global_var(1023) bwand 2) != 0) then begin
+-                    Karavan_Guard1 := create_object_sid(16777800, 21514, 1, 79);
+-                    Karavan_Guard2 := create_object_sid(16777799, 19312, 1, 79);
+-                    Karavan_Guard3 := create_object_sid(16777800, 19524, 1, 79);
+-                    Karavan_Guard4 := create_object_sid(16777799, 21734, 1, 79);
++                if ((global_var(GVAR_CARAVANS_RANDOM_ECCS) bwand 2) != 0) then begin
++                    Karavan_Guard1 := create_object_sid(16777800, 21514, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard2 := create_object_sid(16777799, 19312, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard3 := create_object_sid(16777800, 19524, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard4 := create_object_sid(16777799, 21734, 1, SCRIPT_SKARCCST);
+                 end
+                 else begin
+-                    if ((global_var(1023) bwand 4) != 0) then begin
+-                        metarule3(107, self_obj, 16777260, 0);
++                    if ((global_var(GVAR_CARAVANS_RANDOM_ECCS) bwand 4) != 0) then begin
++                        art_change_fid_num(self_obj, 16777260);
+                     end
+                     else begin
+-                        metarule3(107, self_obj, 16777223, 0);
++                        art_change_fid_num(self_obj, 16777223);
+                     end
+-                    Karavan_Guard1 := create_object_sid(16777797, 21514, 1, 79);
+-                    Karavan_Guard2 := create_object_sid(16777798, 19312, 1, 79);
+-                    Karavan_Guard3 := create_object_sid(16777797, 19524, 1, 79);
+-                    Karavan_Guard4 := create_object_sid(16777798, 21734, 1, 79);
++                    Karavan_Guard1 := create_object_sid(16777797, 21514, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard2 := create_object_sid(16777798, 19312, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard3 := create_object_sid(16777797, 19524, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard4 := create_object_sid(16777798, 21734, 1, SCRIPT_SKARCCST);
+                 end
+                 anim(dude_obj, 1000, 2);
+                 if (party_member_obj(16777729) != 0) then begin
+                     anim(party_member_obj(16777729), 1000, 2);
+                 end
+-                if ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0)) then begin
++                if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+                     anim(party_member_obj(16777779), 1000, 2);
+                 end
+-                if ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0)) then begin
++                if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+                     anim(party_member_obj(16777811), 1000, 2);
+                 end
+-                if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
++                if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+                     anim(party_member_obj(16777814), 1000, 2);
+                 end
+                 if (party_member_obj(16778017) != 0) then begin
+@@ -971,122 +971,122 @@ begin
+                 anim(Karavan_Guard3, 1000, 1);
+                 anim(Karavan_Guard4, 1000, 1);
+             end
+-            if (cur_map_index == 50) then begin
++            if (CUR_MAP_DESERT5) then begin
+                 move_to(self_obj, 21903, 1);
+                 move_to(dude_obj, 18105, 1);
+                 if (party_member_obj(16777729) != 0) then begin
+                     if (party_member_obj(16777729) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777729), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777729), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777729))) then begin
++                            critter_attempt_placement(party_member_obj(16777729), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+-                if ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0)) then begin
++                if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+                     if (party_member_obj(16777779) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777779), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777779), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777779))) then begin
++                            critter_attempt_placement(party_member_obj(16777779), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+-                if ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0)) then begin
++                if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+                     if (party_member_obj(16777811) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777811), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777811), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777811))) then begin
++                            critter_attempt_placement(party_member_obj(16777811), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16777812) != 0) then begin
+                     if (party_member_obj(16777812) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777812), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777812), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777812))) then begin
++                            critter_attempt_placement(party_member_obj(16777812), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+-                if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
++                if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+                     if (party_member_obj(16777814) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777814), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777814), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777814))) then begin
++                            critter_attempt_placement(party_member_obj(16777814), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16777748) != 0) then begin
+                     if (party_member_obj(16777748) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777748), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777748), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777748))) then begin
++                            critter_attempt_placement(party_member_obj(16777748), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16778017) != 0) then begin
+                     if (party_member_obj(16778017) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16778017), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16778017), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16778017))) then begin
++                            critter_attempt_placement(party_member_obj(16778017), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16778016) != 0) then begin
+                     if (party_member_obj(16778016) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16778016), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16778016), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16778016))) then begin
++                            critter_attempt_placement(party_member_obj(16778016), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16778049) != 0) then begin
+                     if (party_member_obj(16778049) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16778049), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16778049), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16778049))) then begin
++                            critter_attempt_placement(party_member_obj(16778049), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16778050) != 0) then begin
+                     if (party_member_obj(16778050) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16778050), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16778050), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16778050))) then begin
++                            critter_attempt_placement(party_member_obj(16778050), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16778051) != 0) then begin
+                     if (party_member_obj(16778051) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16778051), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16778051), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16778051))) then begin
++                            critter_attempt_placement(party_member_obj(16778051), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16777293) != 0) then begin
+                     if (party_member_obj(16777293) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777293), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777293), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777293))) then begin
++                            critter_attempt_placement(party_member_obj(16777293), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+-                if ((global_var(1023) bwand 2) != 0) then begin
+-                    Karavan_Guard1 := create_object_sid(16777800, 23316, 1, 79);
+-                    Karavan_Guard2 := create_object_sid(16777799, 20904, 1, 79);
+-                    Karavan_Guard3 := create_object_sid(16777800, 24326, 1, 79);
+-                    Karavan_Guard4 := create_object_sid(16777799, 21915, 1, 79);
++                if ((global_var(GVAR_CARAVANS_RANDOM_ECCS) bwand 2) != 0) then begin
++                    Karavan_Guard1 := create_object_sid(16777800, 23316, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard2 := create_object_sid(16777799, 20904, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard3 := create_object_sid(16777800, 24326, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard4 := create_object_sid(16777799, 21915, 1, SCRIPT_SKARCCST);
+                 end
+                 else begin
+-                    if ((global_var(1023) bwand 4) != 0) then begin
+-                        metarule3(107, self_obj, 16777260, 0);
++                    if ((global_var(GVAR_CARAVANS_RANDOM_ECCS) bwand 4) != 0) then begin
++                        art_change_fid_num(self_obj, 16777260);
+                     end
+                     else begin
+-                        metarule3(107, self_obj, 16777223, 0);
++                        art_change_fid_num(self_obj, 16777223);
+                     end
+-                    Karavan_Guard1 := create_object_sid(16777797, 23316, 1, 79);
+-                    Karavan_Guard2 := create_object_sid(16777798, 20904, 1, 79);
+-                    Karavan_Guard3 := create_object_sid(16777797, 24326, 1, 79);
+-                    Karavan_Guard4 := create_object_sid(16777798, 21915, 1, 79);
++                    Karavan_Guard1 := create_object_sid(16777797, 23316, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard2 := create_object_sid(16777798, 20904, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard3 := create_object_sid(16777797, 24326, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard4 := create_object_sid(16777798, 21915, 1, SCRIPT_SKARCCST);
+                 end
+                 anim(dude_obj, 1000, 2);
+                 if (party_member_obj(16777729) != 0) then begin
+                     anim(party_member_obj(16777729), 1000, 2);
+                 end
+-                if ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0)) then begin
++                if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+                     anim(party_member_obj(16777779), 1000, 2);
+                 end
+-                if ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0)) then begin
++                if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+                     anim(party_member_obj(16777811), 1000, 2);
+                 end
+-                if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
++                if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+                     anim(party_member_obj(16777814), 1000, 2);
+                 end
+                 if (party_member_obj(16778017) != 0) then begin
+@@ -1113,122 +1113,122 @@ begin
+                 anim(Karavan_Guard3, 1000, 1);
+                 anim(Karavan_Guard4, 1000, 1);
+             end
+-            if (cur_map_index == 44) then begin
++            if (CUR_MAP_MOUNTN1) then begin
+                 move_to(self_obj, 18882, 1);
+                 move_to(dude_obj, 21084, 1);
+                 if (party_member_obj(16777729) != 0) then begin
+                     if (party_member_obj(16777729) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777729), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777729), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777729))) then begin
++                            critter_attempt_placement(party_member_obj(16777729), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+-                if ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0)) then begin
++                if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+                     if (party_member_obj(16777779) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777779), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777779), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777779))) then begin
++                            critter_attempt_placement(party_member_obj(16777779), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+-                if ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0)) then begin
++                if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+                     if (party_member_obj(16777811) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777811), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777811), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777811))) then begin
++                            critter_attempt_placement(party_member_obj(16777811), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16777812) != 0) then begin
+                     if (party_member_obj(16777812) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777812), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777812), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777812))) then begin
++                            critter_attempt_placement(party_member_obj(16777812), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+-                if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
++                if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+                     if (party_member_obj(16777814) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777814), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777814), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777814))) then begin
++                            critter_attempt_placement(party_member_obj(16777814), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16777748) != 0) then begin
+                     if (party_member_obj(16777748) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777748), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777748), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777748))) then begin
++                            critter_attempt_placement(party_member_obj(16777748), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16778017) != 0) then begin
+                     if (party_member_obj(16778017) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16778017), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16778017), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16778017))) then begin
++                            critter_attempt_placement(party_member_obj(16778017), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16778016) != 0) then begin
+                     if (party_member_obj(16778016) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16778016), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16778016), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16778016))) then begin
++                            critter_attempt_placement(party_member_obj(16778016), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16778049) != 0) then begin
+                     if (party_member_obj(16778049) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16778049), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16778049), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16778049))) then begin
++                            critter_attempt_placement(party_member_obj(16778049), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16778050) != 0) then begin
+                     if (party_member_obj(16778050) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16778050), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16778050), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16778050))) then begin
++                            critter_attempt_placement(party_member_obj(16778050), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16778051) != 0) then begin
+                     if (party_member_obj(16778051) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16778051), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16778051), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16778051))) then begin
++                            critter_attempt_placement(party_member_obj(16778051), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16777293) != 0) then begin
+                     if (party_member_obj(16777293) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777293), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777293), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777293))) then begin
++                            critter_attempt_placement(party_member_obj(16777293), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+-                if ((global_var(1023) bwand 2) != 0) then begin
+-                    Karavan_Guard1 := create_object_sid(16777800, 19688, 1, 79);
+-                    Karavan_Guard2 := create_object_sid(16777799, 17487, 1, 79);
+-                    Karavan_Guard3 := create_object_sid(16777800, 19500, 1, 79);
+-                    Karavan_Guard4 := create_object_sid(16777799, 17497, 1, 79);
++                if ((global_var(GVAR_CARAVANS_RANDOM_ECCS) bwand 2) != 0) then begin
++                    Karavan_Guard1 := create_object_sid(16777800, 19688, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard2 := create_object_sid(16777799, 17487, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard3 := create_object_sid(16777800, 19500, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard4 := create_object_sid(16777799, 17497, 1, SCRIPT_SKARCCST);
+                 end
+                 else begin
+-                    if ((global_var(1023) bwand 4) != 0) then begin
+-                        metarule3(107, self_obj, 16777260, 0);
++                    if ((global_var(GVAR_CARAVANS_RANDOM_ECCS) bwand 4) != 0) then begin
++                        art_change_fid_num(self_obj, 16777260);
+                     end
+                     else begin
+-                        metarule3(107, self_obj, 16777223, 0);
++                        art_change_fid_num(self_obj, 16777223);
+                     end
+-                    Karavan_Guard1 := create_object_sid(16777797, 19688, 1, 79);
+-                    Karavan_Guard2 := create_object_sid(16777798, 17487, 1, 79);
+-                    Karavan_Guard3 := create_object_sid(16777797, 19500, 1, 79);
+-                    Karavan_Guard4 := create_object_sid(16777798, 17497, 1, 79);
++                    Karavan_Guard1 := create_object_sid(16777797, 19688, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard2 := create_object_sid(16777798, 17487, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard3 := create_object_sid(16777797, 19500, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard4 := create_object_sid(16777798, 17497, 1, SCRIPT_SKARCCST);
+                 end
+                 anim(dude_obj, 1000, 5);
+                 if (party_member_obj(16777729) != 0) then begin
+                     anim(party_member_obj(16777729), 1000, 5);
+                 end
+-                if ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0)) then begin
++                if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+                     anim(party_member_obj(16777779), 1000, 5);
+                 end
+-                if ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0)) then begin
++                if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+                     anim(party_member_obj(16777811), 1000, 5);
+                 end
+-                if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
++                if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+                     anim(party_member_obj(16777814), 1000, 5);
+                 end
+                 if (party_member_obj(16778017) != 0) then begin
+@@ -1257,122 +1257,122 @@ begin
+                 add_timer_event(self_obj, game_ticks(0), 2);
+                 add_timer_event(self_obj, 1, 2);
+             end
+-            if (cur_map_index == 45) then begin
++            if (CUR_MAP_MOUNTN2) then begin
+                 move_to(self_obj, 18482, 1);
+                 move_to(dude_obj, 21084, 1);
+                 if (party_member_obj(16777729) != 0) then begin
+                     if (party_member_obj(16777729) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777729), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777729), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777729))) then begin
++                            critter_attempt_placement(party_member_obj(16777729), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+-                if ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0)) then begin
++                if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+                     if (party_member_obj(16777779) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777779), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777779), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777779))) then begin
++                            critter_attempt_placement(party_member_obj(16777779), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+-                if ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0)) then begin
++                if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+                     if (party_member_obj(16777811) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777811), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777811), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777811))) then begin
++                            critter_attempt_placement(party_member_obj(16777811), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16777812) != 0) then begin
+                     if (party_member_obj(16777812) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777812), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777812), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777812))) then begin
++                            critter_attempt_placement(party_member_obj(16777812), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+-                if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
++                if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+                     if (party_member_obj(16777814) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777814), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777814), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777814))) then begin
++                            critter_attempt_placement(party_member_obj(16777814), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16777748) != 0) then begin
+                     if (party_member_obj(16777748) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777748), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777748), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777748))) then begin
++                            critter_attempt_placement(party_member_obj(16777748), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16778017) != 0) then begin
+                     if (party_member_obj(16778017) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16778017), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16778017), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16778017))) then begin
++                            critter_attempt_placement(party_member_obj(16778017), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16778016) != 0) then begin
+                     if (party_member_obj(16778016) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16778016), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16778016), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16778016))) then begin
++                            critter_attempt_placement(party_member_obj(16778016), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16778049) != 0) then begin
+                     if (party_member_obj(16778049) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16778049), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16778049), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16778049))) then begin
++                            critter_attempt_placement(party_member_obj(16778049), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16778050) != 0) then begin
+                     if (party_member_obj(16778050) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16778050), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16778050), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16778050))) then begin
++                            critter_attempt_placement(party_member_obj(16778050), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16778051) != 0) then begin
+                     if (party_member_obj(16778051) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16778051), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16778051), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16778051))) then begin
++                            critter_attempt_placement(party_member_obj(16778051), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+                 if (party_member_obj(16777293) != 0) then begin
+                     if (party_member_obj(16777293) != 0) then begin
+-                        if (has_trait(1, party_member_obj(16777293), 666)) then begin
+-                            critter_attempt_placement(party_member_obj(16777293), tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 2), elevation(dude_obj));
++                        if (obj_is_visible_flag(party_member_obj(16777293))) then begin
++                            critter_attempt_placement(party_member_obj(16777293), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 2), dude_elevation);
+                         end
+                     end
+                 end
+-                if ((global_var(1023) bwand 2) != 0) then begin
+-                    Karavan_Guard1 := create_object_sid(16777800, 19289, 1, 79);
+-                    Karavan_Guard2 := create_object_sid(16777799, 17090, 1, 79);
+-                    Karavan_Guard3 := create_object_sid(16777800, 19302, 1, 79);
+-                    Karavan_Guard4 := create_object_sid(16777799, 19889, 1, 79);
++                if ((global_var(GVAR_CARAVANS_RANDOM_ECCS) bwand 2) != 0) then begin
++                    Karavan_Guard1 := create_object_sid(16777800, 19289, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard2 := create_object_sid(16777799, 17090, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard3 := create_object_sid(16777800, 19302, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard4 := create_object_sid(16777799, 19889, 1, SCRIPT_SKARCCST);
+                 end
+                 else begin
+-                    if ((global_var(1023) bwand 4) != 0) then begin
+-                        metarule3(107, self_obj, 16777260, 0);
++                    if ((global_var(GVAR_CARAVANS_RANDOM_ECCS) bwand 4) != 0) then begin
++                        art_change_fid_num(self_obj, 16777260);
+                     end
+                     else begin
+-                        metarule3(107, self_obj, 16777223, 0);
++                        art_change_fid_num(self_obj, 16777223);
+                     end
+-                    Karavan_Guard1 := create_object_sid(16777797, 19289, 1, 79);
+-                    Karavan_Guard2 := create_object_sid(16777798, 17090, 1, 79);
+-                    Karavan_Guard3 := create_object_sid(16777797, 19302, 1, 79);
+-                    Karavan_Guard4 := create_object_sid(16777798, 19889, 1, 79);
++                    Karavan_Guard1 := create_object_sid(16777797, 19289, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard2 := create_object_sid(16777798, 17090, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard3 := create_object_sid(16777797, 19302, 1, SCRIPT_SKARCCST);
++                    Karavan_Guard4 := create_object_sid(16777798, 19889, 1, SCRIPT_SKARCCST);
+                 end
+                 anim(dude_obj, 1000, 5);
+                 if (party_member_obj(16777729) != 0) then begin
+                     anim(party_member_obj(16777729), 1000, 5);
+                 end
+-                if ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0)) then begin
++                if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+                     anim(party_member_obj(16777779), 1000, 5);
+                 end
+-                if ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0)) then begin
++                if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+                     anim(party_member_obj(16777811), 1000, 5);
+                 end
+-                if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
++                if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+                     anim(party_member_obj(16777814), 1000, 5);
+                 end
+                 if (party_member_obj(16778017) != 0) then begin
+@@ -1413,32 +1413,32 @@ end
+ procedure timed_event_p_proc
+ begin
+     if (fixed_param == 2) then begin
+-        metarule3(108, 18284, 0, 0);
++        tile_set_center(18284);
+     end
+     if (fixed_param == 20) then begin
+         if (obj_is_carrying_obj_pid(self_obj, 18) >= 1) then begin
+-            wield_obj_critter(self_obj, obj_carrying_pid_obj(self_obj, 18));
++            wield_obj(obj_carrying_pid_obj(self_obj, 18));
+         end
+         if (obj_is_carrying_obj_pid(self_obj, 9) >= 1) then begin
+-            wield_obj_critter(self_obj, obj_carrying_pid_obj(self_obj, 9));
++            wield_obj(obj_carrying_pid_obj(self_obj, 9));
+         end
+         if (obj_is_carrying_obj_pid(self_obj, 10) >= 1) then begin
+-            wield_obj_critter(self_obj, obj_carrying_pid_obj(self_obj, 10));
++            wield_obj(obj_carrying_pid_obj(self_obj, 10));
+         end
+         if (obj_is_carrying_obj_pid(self_obj, 8) >= 1) then begin
+-            wield_obj_critter(self_obj, obj_carrying_pid_obj(self_obj, 8));
++            wield_obj(obj_carrying_pid_obj(self_obj, 8));
+         end
+         if (obj_is_carrying_obj_pid(self_obj, 234) >= 1) then begin
+-            wield_obj_critter(self_obj, obj_carrying_pid_obj(self_obj, 234));
++            wield_obj(obj_carrying_pid_obj(self_obj, 234));
+         end
+         if (obj_is_carrying_obj_pid(self_obj, 94) >= 1) then begin
+-            wield_obj_critter(self_obj, obj_carrying_pid_obj(self_obj, 94));
++            wield_obj(obj_carrying_pid_obj(self_obj, 94));
+         end
+         if (obj_is_carrying_obj_pid(self_obj, 4) >= 1) then begin
+-            wield_obj_critter(self_obj, obj_carrying_pid_obj(self_obj, 4));
++            wield_obj(obj_carrying_pid_obj(self_obj, 4));
+         end
+         if (obj_is_carrying_obj_pid(self_obj, 280) >= 1) then begin
+-            wield_obj_critter(self_obj, obj_carrying_pid_obj(self_obj, 280));
++            wield_obj(obj_carrying_pid_obj(self_obj, 280));
+         end
+     end
+ end
+@@ -1450,7 +1450,7 @@ begin
+             probability := random(0, 10);
+             if (not(critter_is_fleeing(self_obj))) then begin
+                 if (probability == 9) then begin
+-                    float_msg(self_obj, message_str(39, random(400, 401)), 2);
++                    float_msg(self_obj, mstr(random(400, 401)), FLOAT_MSG_RED);
+                 end
+             end
+         end
+@@ -1459,42 +1459,42 @@ end
+ 
+ procedure equip_caravan_team
+ begin
+-    if ((global_var(1023) bwand 4) != 0) then begin
++    if ((global_var(GVAR_CARAVANS_RANDOM_ECCS) bwand 4) != 0) then begin
+         item := 10;
+     end
+     else begin
+         call choose_random_weapon_for_caravan();
+     end
+-    add_obj_to_inven(self_obj, create_object_sid(item, 0, 0, -1));
++    add_obj_to_inven(self_obj, create_object(item, 0, 0));
+     call choose_random_weapon_for_caravan();
+-    add_obj_to_inven(Karavan_Guard1, create_object_sid(item, 0, 0, -1));
++    add_obj_to_inven(Karavan_Guard1, create_object(item, 0, 0));
+     wield_obj_critter(Karavan_Guard1, obj_carrying_pid_obj(Karavan_Guard1, item));
+     call choose_random_weapon_for_caravan();
+-    add_obj_to_inven(Karavan_Guard2, create_object_sid(item, 0, 0, -1));
++    add_obj_to_inven(Karavan_Guard2, create_object(item, 0, 0));
+     wield_obj_critter(Karavan_Guard2, obj_carrying_pid_obj(Karavan_Guard2, item));
+     call choose_random_weapon_for_caravan();
+-    add_obj_to_inven(Karavan_Guard3, create_object_sid(item, 0, 0, -1));
++    add_obj_to_inven(Karavan_Guard3, create_object(item, 0, 0));
+     wield_obj_critter(Karavan_Guard3, obj_carrying_pid_obj(Karavan_Guard3, item));
+     call choose_random_weapon_for_caravan();
+-    add_obj_to_inven(Karavan_Guard4, create_object_sid(item, 0, 0, -1));
++    add_obj_to_inven(Karavan_Guard4, create_object(item, 0, 0));
+     wield_obj_critter(Karavan_Guard4, obj_carrying_pid_obj(Karavan_Guard4, item));
+-    restock_obj := create_object_sid(40, 0, 0, -1);
++    restock_obj := create_object(40, 0, 0);
+     add_mult_objs_to_inven(self_obj, restock_obj, 1);
+-    restock_obj := create_object_sid(41, 0, 0, -1);
++    restock_obj := create_object(41, 0, 0);
+     add_mult_objs_to_inven(self_obj, restock_obj, random(20, 100));
+-    restock_obj := create_object_sid(41, 0, 0, -1);
++    restock_obj := create_object(41, 0, 0);
+     add_mult_objs_to_inven(Karavan_Guard1, restock_obj, random(10, 50));
+-    restock_obj := create_object_sid(41, 0, 0, -1);
++    restock_obj := create_object(41, 0, 0);
+     add_mult_objs_to_inven(Karavan_Guard2, restock_obj, random(10, 50));
+-    restock_obj := create_object_sid(41, 0, 0, -1);
++    restock_obj := create_object(41, 0, 0);
+     add_mult_objs_to_inven(Karavan_Guard3, restock_obj, random(10, 50));
+-    restock_obj := create_object_sid(41, 0, 0, -1);
++    restock_obj := create_object(41, 0, 0);
+     add_mult_objs_to_inven(Karavan_Guard4, restock_obj, random(10, 50));
+ end
+ 
+ procedure choose_random_weapon_for_caravan
+ begin
+-    if ((global_var(911) bwand 4) != 0) then begin
++    if ((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 4) != 0) then begin
+         probability := random(1, 4);
+     end
+     else begin
+@@ -1513,4 +1513,3 @@ begin
+         item := 8;
+     end
+ end
+-

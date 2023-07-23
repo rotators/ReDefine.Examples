@@ -1,0 +1,221 @@
+variable ProtoOfItemGiven;
+variable ValueOfRollCheck := 1;
+variable Scenery_Creation;
+variable Scenery_Creation_Hex;
+variable Scenery_Creation_Count;
+variable Temp_Scenery_Creation_Hex;
+variable Scenery_Creation_Ptr;
+variable lPartyWornArmor;
+variable How_Many_Party_Members_Are_Injured;
+variable How_Many_Party_Members_Armed;
+variable PartyHealingItem;
+
+procedure checkPartyMembersNearDoor;
+
+variable global_temp;
+variable dest_tile;
+variable step_tile;
+variable in_dialog;
+variable forced_node;
+variable restock_amt;
+variable restock_obj;
+variable restock_trash;
+variable removed_qty;
+variable toRemove_qty;
+
+procedure div(variable arg0, variable arg1);
+procedure start;
+procedure map_enter_p_proc;
+procedure critter_p_proc;
+procedure damage_p_proc;
+procedure destroy_p_proc;
+
+import variable Map_event;
+
+
+procedure checkPartyMembersNearDoor
+begin
+    if (party_member_obj(16777729) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777729)) <= 5) then begin
+            return 1;
+        end
+    end
+    if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777779)) <= 5) then begin
+            return 1;
+        end
+    end
+    if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777811)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777812) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777812)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777813) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777813)) <= 5) then begin
+            return 1;
+        end
+    end
+    if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777814)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777748) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777748)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777294) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777294)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778017) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778017)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778016) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778016)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778049) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778049)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778050) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778050)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778051) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778051)) <= 5) then begin
+            return 1;
+        end
+    end
+    return 0;
+end
+
+procedure div(variable arg0, variable arg1)
+begin
+    if (0 > arg0) then begin
+        return -(-arg0 / arg1);
+    end
+    return arg0 / arg1;
+end
+
+procedure start
+begin
+end
+
+procedure map_enter_p_proc
+begin
+    if ((map_var(1) == 1) and (local_var(1) == 1)) then begin
+        if (global_var(GVAR_AQE_QUEST_GET_OUR_VAULT_BACK) >= 4) then begin
+            critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 282);
+        end
+        else begin
+            critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 258);
+        end
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_GUN_TURRET);
+    end
+    else begin
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 291);
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_PEASANTS_NO_TALKING);
+    end
+end
+
+procedure critter_p_proc
+begin
+    variable LVar0 := 0;
+    if ((map_var(1) == 1) and (local_var(1) == 1)) then begin
+        if ((global_var(GVAR_AQ_ENEMY_HUNTERS) == 1) and obj_can_see_obj(self_obj, dude_obj) and (global_var(GVAR_AQE_QUEST_GET_OUR_VAULT_BACK) != 5) and not((global_var(GVAR_AQ_ALBUQ_EVENTS) bwand 67108864) != 0)) then begin
+            if (critter_is_fleeing(self_obj)) then begin
+                if (anim_busy(self_obj) == 0) then begin
+                    if ((tile_distance_objs(self_obj, dude_obj) < 8) or obj_can_see_obj(self_obj, dude_obj)) then begin
+                        if (anim_busy(self_obj) == 0) then begin
+                            global_temp := rotation_to_tile(dude_tile, tile_num(self_obj));
+                            animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                            global_temp := (global_temp + 1) % 6;
+                            while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(dude_tile, tile_num(self_obj)))) do begin
+                                debug_msg("flee loop: rot == " + global_temp);
+                                animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                                global_temp := (global_temp + 1) % 6;
+                            end
+                        end
+                    end
+                end
+            end
+            else begin
+                attack(dude_obj);
+            end
+        end
+        if ((global_var(GVAR_AQE_ENEMY_EMPEROR) == 1) and obj_can_see_obj(self_obj, dude_obj) and (global_var(GVAR_AQE_QUEST_GET_OUR_VAULT_BACK) == 5)) then begin
+            if (critter_is_fleeing(self_obj)) then begin
+                if (anim_busy(self_obj) == 0) then begin
+                    if ((tile_distance_objs(self_obj, dude_obj) < 8) or obj_can_see_obj(self_obj, dude_obj)) then begin
+                        if (anim_busy(self_obj) == 0) then begin
+                            global_temp := rotation_to_tile(dude_tile, tile_num(self_obj));
+                            animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                            global_temp := (global_temp + 1) % 6;
+                            while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(dude_tile, tile_num(self_obj)))) do begin
+                                debug_msg("flee loop: rot == " + global_temp);
+                                animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                                global_temp := (global_temp + 1) % 6;
+                            end
+                        end
+                    end
+                end
+            end
+            else begin
+                attack(dude_obj);
+            end
+        end
+        if ((global_var(GVAR_AQ_ALBUQ_EVENTS) bwand 4194304) != 0) then begin
+        end
+    end
+    if ((map_var(1) == 1) and (local_var(1) == 0)) then begin
+        LVar0 := create_object(520, 0, 0);
+        add_obj_to_inven(self_obj, LVar0);
+        LVar0 := obj_carrying_pid_obj(self_obj, 520);
+        wield_obj(LVar0);
+        if (global_var(GVAR_AQE_QUEST_GET_OUR_VAULT_BACK) >= 4) then begin
+            critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 282);
+        end
+        else begin
+            critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 258);
+        end
+        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_GUN_TURRET);
+        set_local_var(1, 1);
+    end
+end
+
+procedure damage_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        if (global_var(GVAR_AQE_QUEST_GET_OUR_VAULT_BACK) >= 4) then begin
+            set_global_var(GVAR_AQE_ENEMY_EMPEROR, 1);
+        end
+        else begin
+            set_global_var(GVAR_AQ_ENEMY_HUNTERS, 1);
+        end
+    end
+end
+
+procedure destroy_p_proc
+begin
+    set_map_var(4, map_var(4) + 1);
+    if (map_var(1) == 1) then begin
+        set_global_var(GVAR_AQE_VAULT_HUNTERS_KILLED, global_var(GVAR_AQE_VAULT_HUNTERS_KILLED) + 1);
+        if ((global_var(GVAR_AQE_VAULT_HUNTERS_KILLED) >= (20 + (2 * map_var(1)))) and ((global_var(GVAR_AQ_ALBUQ_EVENTS) bwand 268435456) != 0) and (dude_elevation == 2)) then begin
+            add_timer_event(Map_event, game_ticks(0), 25);
+        end
+    end
+end

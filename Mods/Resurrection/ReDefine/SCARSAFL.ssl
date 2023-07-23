@@ -1,0 +1,441 @@
+variable ProtoOfItemGiven;
+variable ValueOfRollCheck := 1;
+variable Scenery_Creation;
+variable Scenery_Creation_Hex;
+variable Scenery_Creation_Count;
+variable Temp_Scenery_Creation_Hex;
+variable Scenery_Creation_Ptr;
+variable How_Many_Party_Members_Are_Injured;
+variable How_Many_Party_Members_Armed;
+variable PartyHealingItem;
+
+procedure checkPartyMembersNearDoor;
+
+variable global_temp;
+variable dest_tile;
+variable step_tile;
+variable in_dialog;
+variable forced_node;
+variable restock_amt;
+variable restock_obj;
+variable restock_trash;
+variable removed_qty;
+variable toRemove_qty;
+
+procedure div(variable arg0, variable arg1);
+procedure start;
+procedure map_enter_p_proc;
+procedure map_update_p_proc;
+procedure damage_p_proc;
+procedure use_p_proc;
+procedure timed_event_p_proc;
+procedure map_exit_p_proc;
+procedure use_skill_on_p_proc;
+procedure use_obj_on_p_proc;
+procedure look_at_p_proc;
+procedure description_p_proc;
+procedure spin_dial;
+
+import variable Carpenter_safe_Lucy;
+import variable Carpenter_Lucy;
+
+
+procedure checkPartyMembersNearDoor
+begin
+    if (party_member_obj(16777729) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777729)) <= 5) then begin
+            return 1;
+        end
+    end
+    if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777779)) <= 5) then begin
+            return 1;
+        end
+    end
+    if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777811)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777812) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777812)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777813) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777813)) <= 5) then begin
+            return 1;
+        end
+    end
+    if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777814)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777748) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777748)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777293) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777293)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777958) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777958)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777957) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777957)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778018) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778018)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778017) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778017)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778016) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778016)) <= 5) then begin
+            return 1;
+        end
+    end
+    return 0;
+end
+
+procedure div(variable arg0, variable arg1)
+begin
+    if (0 > arg0) then begin
+        return -(-arg0 / arg1);
+    end
+    return arg0 / arg1;
+end
+
+procedure start
+begin
+    Carpenter_safe_Lucy := self_obj;
+end
+
+procedure map_enter_p_proc
+begin
+    if (not(is_loading_game)) then begin
+        obj_close(self_obj);
+        set_local_var(5, 1);
+    end
+    if ((global_var(GVAR_QUEST_S_NICOL_NECKLACE) == 1) and (local_var(4) != 1)) then begin
+        set_local_var(4, 1);
+        restock_obj := create_object(543, 0, 0);
+        add_mult_objs_to_inven(self_obj, restock_obj, 1);
+    end
+    if ((global_var(GVAR_QUEST_S_NICOL_NECKLACE) == 1) and (local_var(4) == 1) and (obj_is_carrying_obj_pid(self_obj, 543) == 0)) then begin
+        set_global_var(GVAR_QUEST_S_NICOL_NECKLACE, 2);
+    end
+    if ((global_var(GVAR_QUEST_S_NICOL_NECKLACE) >= 2) and (local_var(4) == 1)) then begin
+        set_local_var(4, 2);
+        if (obj_is_carrying_obj_pid(self_obj, 543) >= 1) then begin
+            removed_qty := obj_is_carrying_obj_pid(self_obj, 543);
+            if (1 < removed_qty) then begin
+                removed_qty := 1;
+            end
+            if (removed_qty > 0) then begin
+                restock_obj := obj_carrying_pid_obj(self_obj, 543);
+                if (obj_type(self_obj) == 1) then begin
+                    restock_obj := obj_carrying_pid_obj(self_obj, 543);
+                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
+                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
+                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                            debug_msg("armour pid == " + obj_pid(restock_obj));
+                            rm_obj_from_inven(self_obj, restock_obj);
+                            add_obj_to_inven(self_obj, restock_obj);
+                        end
+                    end
+                    else begin
+                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
+                            inven_unwield(self_obj);
+                        end
+                    end
+                end
+                restock_amt := rm_mult_objs_from_inven(self_obj, restock_obj, removed_qty);
+                if (restock_amt == 0) then begin
+                    toRemove_qty := 1;
+                    while ((toRemove_qty > 0) and obj_carrying_pid_obj(self_obj, 543)) do begin
+                        restock_obj := obj_carrying_pid_obj(self_obj, 543);
+                        rm_obj_from_inven(self_obj, restock_obj);
+                        destroy_object(restock_obj);
+                        toRemove_qty := toRemove_qty - 1;
+                    end
+                end
+                else begin
+                    destroy_object(restock_obj);
+                end
+            end
+            restock_obj := 0;
+            restock_amt := 0;
+        end
+    end
+end
+
+procedure map_update_p_proc
+begin
+    if ((global_var(GVAR_QUEST_S_NICOL_NECKLACE) == 1) and (local_var(4) != 1)) then begin
+        set_local_var(4, 1);
+        restock_obj := create_object(543, 0, 0);
+        add_mult_objs_to_inven(self_obj, restock_obj, 1);
+    end
+    if ((global_var(GVAR_QUEST_S_NICOL_NECKLACE) == 1) and (local_var(4) == 1) and (obj_is_carrying_obj_pid(self_obj, 543) == 0)) then begin
+        set_global_var(GVAR_QUEST_S_NICOL_NECKLACE, 2);
+    end
+    if ((global_var(GVAR_QUEST_S_NICOL_NECKLACE) >= 2) and (local_var(4) == 1)) then begin
+        set_local_var(4, 2);
+        if (obj_is_carrying_obj_pid(self_obj, 543) >= 1) then begin
+            removed_qty := obj_is_carrying_obj_pid(self_obj, 543);
+            if (1 < removed_qty) then begin
+                removed_qty := 1;
+            end
+            if (removed_qty > 0) then begin
+                restock_obj := obj_carrying_pid_obj(self_obj, 543);
+                if (obj_type(self_obj) == 1) then begin
+                    restock_obj := obj_carrying_pid_obj(self_obj, 543);
+                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
+                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
+                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                            debug_msg("armour pid == " + obj_pid(restock_obj));
+                            rm_obj_from_inven(self_obj, restock_obj);
+                            add_obj_to_inven(self_obj, restock_obj);
+                        end
+                    end
+                    else begin
+                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
+                            inven_unwield(self_obj);
+                        end
+                    end
+                end
+                restock_amt := rm_mult_objs_from_inven(self_obj, restock_obj, removed_qty);
+                if (restock_amt == 0) then begin
+                    toRemove_qty := 1;
+                    while ((toRemove_qty > 0) and obj_carrying_pid_obj(self_obj, 543)) do begin
+                        restock_obj := obj_carrying_pid_obj(self_obj, 543);
+                        rm_obj_from_inven(self_obj, restock_obj);
+                        destroy_object(restock_obj);
+                        toRemove_qty := toRemove_qty - 1;
+                    end
+                end
+                else begin
+                    destroy_object(restock_obj);
+                end
+            end
+            restock_obj := 0;
+            restock_amt := 0;
+        end
+    end
+end
+
+procedure damage_p_proc
+begin
+    if (weapon_dmg_type(target_obj) == 6) then begin
+        display_mstr(344);
+    end
+end
+
+procedure use_p_proc
+begin
+    if (combat_is_initialized) then begin
+        script_overrides;
+        display_mstr(343);
+    end
+    else begin
+        if (Carpenter_Lucy and obj_is_visible_flag(Carpenter_Lucy) and (not(using_skill(dude_obj, 8)) or not(is_success(roll_vs_skill(dude_obj, 8, -60))))) then begin
+            script_overrides;
+            add_timer_event(Carpenter_Lucy, 0, 10);
+        end
+        else begin
+            if (local_var(5) == 1) then begin
+                script_overrides;
+                if ((dude_perception > 8) and (dude_iq > 3)) then begin
+                    obj_open(self_obj);
+                    set_local_var(5, 0);
+                    display_mstr(205);
+                end
+                else begin
+                    if (spin_dial() == 1) then begin
+                        obj_open(self_obj);
+                        set_local_var(5, 0);
+                        display_mstr(206);
+                    end
+                    else begin
+                        display_mstr(207);
+                    end
+                end
+            end
+        end
+    end
+end
+
+procedure timed_event_p_proc
+begin
+end
+
+procedure map_exit_p_proc
+begin
+    if ((global_var(GVAR_QUEST_S_NICOL_NECKLACE) == 1) and (local_var(4) != 1)) then begin
+        set_local_var(4, 1);
+        restock_obj := create_object(543, 0, 0);
+        add_mult_objs_to_inven(self_obj, restock_obj, 1);
+    end
+    if ((global_var(GVAR_QUEST_S_NICOL_NECKLACE) == 1) and (local_var(4) == 1) and (obj_is_carrying_obj_pid(self_obj, 543) == 0)) then begin
+        set_global_var(GVAR_QUEST_S_NICOL_NECKLACE, 2);
+    end
+    if ((global_var(GVAR_QUEST_S_NICOL_NECKLACE) >= 2) and (local_var(4) == 1)) then begin
+        set_local_var(4, 2);
+        if (obj_is_carrying_obj_pid(self_obj, 543) >= 1) then begin
+            removed_qty := obj_is_carrying_obj_pid(self_obj, 543);
+            if (1 < removed_qty) then begin
+                removed_qty := 1;
+            end
+            if (removed_qty > 0) then begin
+                restock_obj := obj_carrying_pid_obj(self_obj, 543);
+                if (obj_type(self_obj) == 1) then begin
+                    restock_obj := obj_carrying_pid_obj(self_obj, 543);
+                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
+                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
+                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                            debug_msg("armour pid == " + obj_pid(restock_obj));
+                            rm_obj_from_inven(self_obj, restock_obj);
+                            add_obj_to_inven(self_obj, restock_obj);
+                        end
+                    end
+                    else begin
+                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
+                            inven_unwield(self_obj);
+                        end
+                    end
+                end
+                restock_amt := rm_mult_objs_from_inven(self_obj, restock_obj, removed_qty);
+                if (restock_amt == 0) then begin
+                    toRemove_qty := 1;
+                    while ((toRemove_qty > 0) and obj_carrying_pid_obj(self_obj, 543)) do begin
+                        restock_obj := obj_carrying_pid_obj(self_obj, 543);
+                        rm_obj_from_inven(self_obj, restock_obj);
+                        destroy_object(restock_obj);
+                        toRemove_qty := toRemove_qty - 1;
+                    end
+                end
+                else begin
+                    destroy_object(restock_obj);
+                end
+            end
+            restock_obj := 0;
+            restock_amt := 0;
+        end
+    end
+end
+
+procedure use_skill_on_p_proc
+begin
+    if (combat_is_initialized) then begin
+        script_overrides;
+        display_mstr(343);
+    end
+    else begin
+        if (Carpenter_Lucy and obj_is_visible_flag(Carpenter_Lucy) and (not(using_skill(dude_obj, 8)) or not(is_success(roll_vs_skill(dude_obj, 8, -60))))) then begin
+            script_overrides;
+            add_timer_event(Carpenter_Lucy, 0, 10);
+        end
+        else begin
+            script_overrides;
+            if (action_being_used == 9) then begin
+                if (local_var(5) == 1) then begin
+                    if (is_success(roll_vs_skill(source_obj, 9, -40))) then begin
+                        display_mstr(203);
+                        set_local_var(5, 0);
+                        obj_open(self_obj);
+                    end
+                    else begin
+                        display_mstr(204);
+                    end
+                end
+                else begin
+                    display_mstr(202);
+                end
+            end
+        end
+    end
+end
+
+procedure use_obj_on_p_proc
+begin
+    variable LVar0 := 0;
+    LVar0 := obj_pid(obj_being_used_with);
+    if ((LVar0 == 84) or (LVar0 == 410)) then begin
+        if (combat_is_initialized) then begin
+            script_overrides;
+            display_mstr(343);
+        end
+        else begin
+            if (Carpenter_Lucy and obj_is_visible_flag(Carpenter_Lucy) and (not(using_skill(dude_obj, 8)) or not(is_success(roll_vs_skill(dude_obj, 8, -60))))) then begin
+                script_overrides;
+                add_timer_event(Carpenter_Lucy, 0, 10);
+            end
+            else begin
+                script_overrides;
+                if (local_var(5) == 1) then begin
+                    if (is_success(roll_vs_skill(source_obj, 9, -40))) then begin
+                        display_mstr(203);
+                        set_local_var(5, 0);
+                        obj_open(self_obj);
+                    end
+                    else begin
+                        display_mstr(204);
+                    end
+                end
+                else begin
+                    display_mstr(202);
+                end
+            end
+        end
+    end
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    display_mstr(100);
+end
+
+procedure description_p_proc
+begin
+    script_overrides;
+    if (obj_is_open(self_obj)) then begin
+        display_mstr(201);
+    end
+    else begin
+        display_mstr(200);
+    end
+end
+
+procedure spin_dial
+begin
+    if (dude_luck < 9) then begin
+        return 0;
+    end
+    else begin
+        if (dude_luck == 10) then begin
+            return 1;
+        end
+        else begin
+            if (random(1, 100) > 90) then begin
+                return 1;
+            end
+            else begin
+                return 0;
+            end
+        end
+    end
+end

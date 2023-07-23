@@ -1,0 +1,2175 @@
+diff --git a/Mods/Resurrection/Original/ACHUTBL1.ssl b/Mods/Resurrection/ReDefine/ACHUTBL1.ssl
+index 39d3284..5664bef 100644
+--- a/Mods/Resurrection/Original/ACHUTBL1.ssl
++++ b/Mods/Resurrection/ReDefine/ACHUTBL1.ssl
+@@ -47,12 +47,12 @@ begin
+             return 1;
+         end
+     end
+-    if ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0)) then begin
++    if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+         if (tile_distance_objs(self_obj, party_member_obj(16777779)) <= 5) then begin
+             return 1;
+         end
+     end
+-    if ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0)) then begin
++    if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+         if (tile_distance_objs(self_obj, party_member_obj(16777811)) <= 5) then begin
+             return 1;
+         end
+@@ -67,7 +67,7 @@ begin
+             return 1;
+         end
+     end
+-    if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
++    if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+         if (tile_distance_objs(self_obj, party_member_obj(16777814)) <= 5) then begin
+             return 1;
+         end
+@@ -134,8 +134,8 @@ begin
+             script_overrides;
+             if (local_var(2) == 0) then begin
+                 set_local_var(2, 1);
+-                if (has_skill(dude_obj, 11) > 50) then begin
+-                    display_msg(message_str(1695, 200 + (get_critter_stat(dude_obj, 34) == 1)));
++                if (dude_skill(SKILL_TRAPS) > 50) then begin
++                    display_mstr(200 + (dude_gender == 1));
+                 end
+                 else begin
+                     call TrapExplosion();
+@@ -170,20 +170,20 @@ begin
+                 script_overrides;
+                 if (local_var(2) == 0) then begin
+                     set_local_var(2, 1);
+-                    if (has_skill(dude_obj, 11) > 50) then begin
+-                        display_msg(message_str(1695, 200 + (get_critter_stat(dude_obj, 34) == 1)));
++                    if (dude_skill(SKILL_TRAPS) > 50) then begin
++                        display_mstr(200 + (dude_gender == 1));
+                     end
+                     else begin
+                         call TrapExplosion();
+                     end
+                 end
+                 else begin
+-                    if (has_skill(dude_obj, 11) > 90) then begin
++                    if (dude_skill(SKILL_TRAPS) > 90) then begin
+                         set_local_var(3, 1);
+-                        display_msg(message_str(1695, 400));
++                        display_mstr(400);
+                     end
+                     else begin
+-                        display_msg(message_str(1695, 300));
++                        display_mstr(300);
+                     end
+                 end
+             end
+@@ -215,11 +215,11 @@ begin
+         end
+         if (local_var(1) < game_time) then begin
+             item_caps_adjust(self_obj, random(1200, 1500) - item_caps_total(self_obj));
+-            restock_amt := random(1, 1);
++            restock_amt := 1;
+             if (obj_is_carrying_obj_pid(self_obj, 17) < restock_amt) then begin
+                 if (100 >= random(1, 100)) then begin
+                     if (obj_is_carrying_obj_pid(self_obj, 17) < restock_amt) then begin
+-                        restock_obj := create_object_sid(17, 0, 0, -1);
++                        restock_obj := create_object(17, 0, 0);
+                         add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 17));
+                     end
+                     else begin
+@@ -232,17 +232,17 @@ begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 17);
+                                 if (obj_type(self_obj) == 1) then begin
+                                     restock_obj := obj_carrying_pid_obj(self_obj, 17);
+-                                    if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                        if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                            restock_obj := critter_inven_obj(self_obj, 0);
++                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                             debug_msg("armour pid == " + obj_pid(restock_obj));
+                                             rm_obj_from_inven(self_obj, restock_obj);
+                                             add_obj_to_inven(self_obj, restock_obj);
+                                         end
+                                     end
+                                     else begin
+-                                        if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                            metarule(43, self_obj);
++                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                            inven_unwield(self_obj);
+                                         end
+                                     end
+                                 end
+@@ -271,7 +271,7 @@ begin
+             end
+             else begin
+                 if (obj_is_carrying_obj_pid(self_obj, 17) < restock_amt) then begin
+-                    restock_obj := create_object_sid(17, 0, 0, -1);
++                    restock_obj := create_object(17, 0, 0);
+                     add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 17));
+                 end
+                 else begin
+@@ -284,17 +284,17 @@ begin
+                             restock_obj := obj_carrying_pid_obj(self_obj, 17);
+                             if (obj_type(self_obj) == 1) then begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 17);
+-                                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                    if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                        restock_obj := critter_inven_obj(self_obj, 0);
++                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                                         rm_obj_from_inven(self_obj, restock_obj);
+                                         add_obj_to_inven(self_obj, restock_obj);
+                                     end
+                                 end
+                                 else begin
+-                                    if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                        metarule(43, self_obj);
++                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                        inven_unwield(self_obj);
+                                     end
+                                 end
+                             end
+@@ -320,11 +320,11 @@ begin
+                     end
+                 end
+             end
+-            restock_amt := random(1, 1);
++            restock_amt := 1;
+             if (obj_is_carrying_obj_pid(self_obj, 11) < restock_amt) then begin
+                 if (90 >= random(1, 100)) then begin
+                     if (obj_is_carrying_obj_pid(self_obj, 11) < restock_amt) then begin
+-                        restock_obj := create_object_sid(11, 0, 0, -1);
++                        restock_obj := create_object(11, 0, 0);
+                         add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 11));
+                     end
+                     else begin
+@@ -337,17 +337,17 @@ begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 11);
+                                 if (obj_type(self_obj) == 1) then begin
+                                     restock_obj := obj_carrying_pid_obj(self_obj, 11);
+-                                    if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                        if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                            restock_obj := critter_inven_obj(self_obj, 0);
++                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                             debug_msg("armour pid == " + obj_pid(restock_obj));
+                                             rm_obj_from_inven(self_obj, restock_obj);
+                                             add_obj_to_inven(self_obj, restock_obj);
+                                         end
+                                     end
+                                     else begin
+-                                        if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                            metarule(43, self_obj);
++                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                            inven_unwield(self_obj);
+                                         end
+                                     end
+                                 end
+@@ -376,7 +376,7 @@ begin
+             end
+             else begin
+                 if (obj_is_carrying_obj_pid(self_obj, 11) < restock_amt) then begin
+-                    restock_obj := create_object_sid(11, 0, 0, -1);
++                    restock_obj := create_object(11, 0, 0);
+                     add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 11));
+                 end
+                 else begin
+@@ -389,17 +389,17 @@ begin
+                             restock_obj := obj_carrying_pid_obj(self_obj, 11);
+                             if (obj_type(self_obj) == 1) then begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 11);
+-                                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                    if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                        restock_obj := critter_inven_obj(self_obj, 0);
++                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                                         rm_obj_from_inven(self_obj, restock_obj);
+                                         add_obj_to_inven(self_obj, restock_obj);
+                                     end
+                                 end
+                                 else begin
+-                                    if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                        metarule(43, self_obj);
++                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                        inven_unwield(self_obj);
+                                     end
+                                 end
+                             end
+@@ -425,11 +425,11 @@ begin
+                     end
+                 end
+             end
+-            restock_amt := random(1, 1);
++            restock_amt := 1;
+             if (obj_is_carrying_obj_pid(self_obj, 12) < restock_amt) then begin
+                 if (80 >= random(1, 100)) then begin
+                     if (obj_is_carrying_obj_pid(self_obj, 12) < restock_amt) then begin
+-                        restock_obj := create_object_sid(12, 0, 0, -1);
++                        restock_obj := create_object(12, 0, 0);
+                         add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 12));
+                     end
+                     else begin
+@@ -442,17 +442,17 @@ begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 12);
+                                 if (obj_type(self_obj) == 1) then begin
+                                     restock_obj := obj_carrying_pid_obj(self_obj, 12);
+-                                    if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                        if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                            restock_obj := critter_inven_obj(self_obj, 0);
++                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                             debug_msg("armour pid == " + obj_pid(restock_obj));
+                                             rm_obj_from_inven(self_obj, restock_obj);
+                                             add_obj_to_inven(self_obj, restock_obj);
+                                         end
+                                     end
+                                     else begin
+-                                        if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                            metarule(43, self_obj);
++                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                            inven_unwield(self_obj);
+                                         end
+                                     end
+                                 end
+@@ -481,7 +481,7 @@ begin
+             end
+             else begin
+                 if (obj_is_carrying_obj_pid(self_obj, 12) < restock_amt) then begin
+-                    restock_obj := create_object_sid(12, 0, 0, -1);
++                    restock_obj := create_object(12, 0, 0);
+                     add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 12));
+                 end
+                 else begin
+@@ -494,17 +494,17 @@ begin
+                             restock_obj := obj_carrying_pid_obj(self_obj, 12);
+                             if (obj_type(self_obj) == 1) then begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 12);
+-                                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                    if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                        restock_obj := critter_inven_obj(self_obj, 0);
++                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                                         rm_obj_from_inven(self_obj, restock_obj);
+                                         add_obj_to_inven(self_obj, restock_obj);
+                                     end
+                                 end
+                                 else begin
+-                                    if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                        metarule(43, self_obj);
++                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                        inven_unwield(self_obj);
+                                     end
+                                 end
+                             end
+@@ -530,11 +530,11 @@ begin
+                     end
+                 end
+             end
+-            restock_amt := random(1, 1);
++            restock_amt := 1;
+             if (obj_is_carrying_obj_pid(self_obj, 13) < restock_amt) then begin
+                 if (60 >= random(1, 100)) then begin
+                     if (obj_is_carrying_obj_pid(self_obj, 13) < restock_amt) then begin
+-                        restock_obj := create_object_sid(13, 0, 0, -1);
++                        restock_obj := create_object(13, 0, 0);
+                         add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 13));
+                     end
+                     else begin
+@@ -547,17 +547,17 @@ begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 13);
+                                 if (obj_type(self_obj) == 1) then begin
+                                     restock_obj := obj_carrying_pid_obj(self_obj, 13);
+-                                    if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                        if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                            restock_obj := critter_inven_obj(self_obj, 0);
++                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                             debug_msg("armour pid == " + obj_pid(restock_obj));
+                                             rm_obj_from_inven(self_obj, restock_obj);
+                                             add_obj_to_inven(self_obj, restock_obj);
+                                         end
+                                     end
+                                     else begin
+-                                        if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                            metarule(43, self_obj);
++                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                            inven_unwield(self_obj);
+                                         end
+                                     end
+                                 end
+@@ -586,7 +586,7 @@ begin
+             end
+             else begin
+                 if (obj_is_carrying_obj_pid(self_obj, 13) < restock_amt) then begin
+-                    restock_obj := create_object_sid(13, 0, 0, -1);
++                    restock_obj := create_object(13, 0, 0);
+                     add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 13));
+                 end
+                 else begin
+@@ -599,17 +599,17 @@ begin
+                             restock_obj := obj_carrying_pid_obj(self_obj, 13);
+                             if (obj_type(self_obj) == 1) then begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 13);
+-                                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                    if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                        restock_obj := critter_inven_obj(self_obj, 0);
++                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                                         rm_obj_from_inven(self_obj, restock_obj);
+                                         add_obj_to_inven(self_obj, restock_obj);
+                                     end
+                                 end
+                                 else begin
+-                                    if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                        metarule(43, self_obj);
++                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                        inven_unwield(self_obj);
+                                     end
+                                 end
+                             end
+@@ -635,11 +635,11 @@ begin
+                     end
+                 end
+             end
+-            restock_amt := random(1, 1);
++            restock_amt := 1;
+             if (obj_is_carrying_obj_pid(self_obj, 236) < restock_amt) then begin
+                 if (90 >= random(1, 100)) then begin
+                     if (obj_is_carrying_obj_pid(self_obj, 236) < restock_amt) then begin
+-                        restock_obj := create_object_sid(236, 0, 0, -1);
++                        restock_obj := create_object(236, 0, 0);
+                         add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 236));
+                     end
+                     else begin
+@@ -652,17 +652,17 @@ begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 236);
+                                 if (obj_type(self_obj) == 1) then begin
+                                     restock_obj := obj_carrying_pid_obj(self_obj, 236);
+-                                    if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                        if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                            restock_obj := critter_inven_obj(self_obj, 0);
++                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                             debug_msg("armour pid == " + obj_pid(restock_obj));
+                                             rm_obj_from_inven(self_obj, restock_obj);
+                                             add_obj_to_inven(self_obj, restock_obj);
+                                         end
+                                     end
+                                     else begin
+-                                        if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                            metarule(43, self_obj);
++                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                            inven_unwield(self_obj);
+                                         end
+                                     end
+                                 end
+@@ -691,7 +691,7 @@ begin
+             end
+             else begin
+                 if (obj_is_carrying_obj_pid(self_obj, 236) < restock_amt) then begin
+-                    restock_obj := create_object_sid(236, 0, 0, -1);
++                    restock_obj := create_object(236, 0, 0);
+                     add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 236));
+                 end
+                 else begin
+@@ -704,17 +704,17 @@ begin
+                             restock_obj := obj_carrying_pid_obj(self_obj, 236);
+                             if (obj_type(self_obj) == 1) then begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 236);
+-                                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                    if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                        restock_obj := critter_inven_obj(self_obj, 0);
++                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                                         rm_obj_from_inven(self_obj, restock_obj);
+                                         add_obj_to_inven(self_obj, restock_obj);
+                                     end
+                                 end
+                                 else begin
+-                                    if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                        metarule(43, self_obj);
++                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                        inven_unwield(self_obj);
+                                     end
+                                 end
+                             end
+@@ -740,11 +740,11 @@ begin
+                     end
+                 end
+             end
+-            restock_amt := random(1, 1);
++            restock_amt := 1;
+             if (obj_is_carrying_obj_pid(self_obj, 143) < restock_amt) then begin
+                 if (90 >= random(1, 100)) then begin
+                     if (obj_is_carrying_obj_pid(self_obj, 143) < restock_amt) then begin
+-                        restock_obj := create_object_sid(143, 0, 0, -1);
++                        restock_obj := create_object(143, 0, 0);
+                         add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 143));
+                     end
+                     else begin
+@@ -757,17 +757,17 @@ begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 143);
+                                 if (obj_type(self_obj) == 1) then begin
+                                     restock_obj := obj_carrying_pid_obj(self_obj, 143);
+-                                    if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                        if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                            restock_obj := critter_inven_obj(self_obj, 0);
++                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                             debug_msg("armour pid == " + obj_pid(restock_obj));
+                                             rm_obj_from_inven(self_obj, restock_obj);
+                                             add_obj_to_inven(self_obj, restock_obj);
+                                         end
+                                     end
+                                     else begin
+-                                        if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                            metarule(43, self_obj);
++                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                            inven_unwield(self_obj);
+                                         end
+                                     end
+                                 end
+@@ -796,7 +796,7 @@ begin
+             end
+             else begin
+                 if (obj_is_carrying_obj_pid(self_obj, 143) < restock_amt) then begin
+-                    restock_obj := create_object_sid(143, 0, 0, -1);
++                    restock_obj := create_object(143, 0, 0);
+                     add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 143));
+                 end
+                 else begin
+@@ -809,17 +809,17 @@ begin
+                             restock_obj := obj_carrying_pid_obj(self_obj, 143);
+                             if (obj_type(self_obj) == 1) then begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 143);
+-                                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                    if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                        restock_obj := critter_inven_obj(self_obj, 0);
++                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                                         rm_obj_from_inven(self_obj, restock_obj);
+                                         add_obj_to_inven(self_obj, restock_obj);
+                                     end
+                                 end
+                                 else begin
+-                                    if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                        metarule(43, self_obj);
++                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                        inven_unwield(self_obj);
+                                     end
+                                 end
+                             end
+@@ -845,11 +845,11 @@ begin
+                     end
+                 end
+             end
+-            restock_amt := random(1, 1);
++            restock_amt := 1;
+             if (obj_is_carrying_obj_pid(self_obj, 16) < restock_amt) then begin
+                 if (30 >= random(1, 100)) then begin
+                     if (obj_is_carrying_obj_pid(self_obj, 16) < restock_amt) then begin
+-                        restock_obj := create_object_sid(16, 0, 0, -1);
++                        restock_obj := create_object(16, 0, 0);
+                         add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 16));
+                     end
+                     else begin
+@@ -862,17 +862,17 @@ begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 16);
+                                 if (obj_type(self_obj) == 1) then begin
+                                     restock_obj := obj_carrying_pid_obj(self_obj, 16);
+-                                    if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                        if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                            restock_obj := critter_inven_obj(self_obj, 0);
++                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                             debug_msg("armour pid == " + obj_pid(restock_obj));
+                                             rm_obj_from_inven(self_obj, restock_obj);
+                                             add_obj_to_inven(self_obj, restock_obj);
+                                         end
+                                     end
+                                     else begin
+-                                        if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                            metarule(43, self_obj);
++                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                            inven_unwield(self_obj);
+                                         end
+                                     end
+                                 end
+@@ -901,7 +901,7 @@ begin
+             end
+             else begin
+                 if (obj_is_carrying_obj_pid(self_obj, 16) < restock_amt) then begin
+-                    restock_obj := create_object_sid(16, 0, 0, -1);
++                    restock_obj := create_object(16, 0, 0);
+                     add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 16));
+                 end
+                 else begin
+@@ -914,17 +914,17 @@ begin
+                             restock_obj := obj_carrying_pid_obj(self_obj, 16);
+                             if (obj_type(self_obj) == 1) then begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 16);
+-                                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                    if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                        restock_obj := critter_inven_obj(self_obj, 0);
++                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                                         rm_obj_from_inven(self_obj, restock_obj);
+                                         add_obj_to_inven(self_obj, restock_obj);
+                                     end
+                                 end
+                                 else begin
+-                                    if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                        metarule(43, self_obj);
++                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                        inven_unwield(self_obj);
+                                     end
+                                 end
+                             end
+@@ -950,11 +950,11 @@ begin
+                     end
+                 end
+             end
+-            restock_amt := random(1, 1);
++            restock_amt := 1;
+             if (obj_is_carrying_obj_pid(self_obj, 9) < restock_amt) then begin
+                 if (10 >= random(1, 100)) then begin
+                     if (obj_is_carrying_obj_pid(self_obj, 9) < restock_amt) then begin
+-                        restock_obj := create_object_sid(9, 0, 0, -1);
++                        restock_obj := create_object(9, 0, 0);
+                         add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 9));
+                     end
+                     else begin
+@@ -967,17 +967,17 @@ begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 9);
+                                 if (obj_type(self_obj) == 1) then begin
+                                     restock_obj := obj_carrying_pid_obj(self_obj, 9);
+-                                    if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                        if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                            restock_obj := critter_inven_obj(self_obj, 0);
++                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                             debug_msg("armour pid == " + obj_pid(restock_obj));
+                                             rm_obj_from_inven(self_obj, restock_obj);
+                                             add_obj_to_inven(self_obj, restock_obj);
+                                         end
+                                     end
+                                     else begin
+-                                        if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                            metarule(43, self_obj);
++                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                            inven_unwield(self_obj);
+                                         end
+                                     end
+                                 end
+@@ -1006,7 +1006,7 @@ begin
+             end
+             else begin
+                 if (obj_is_carrying_obj_pid(self_obj, 9) < restock_amt) then begin
+-                    restock_obj := create_object_sid(9, 0, 0, -1);
++                    restock_obj := create_object(9, 0, 0);
+                     add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 9));
+                 end
+                 else begin
+@@ -1019,17 +1019,17 @@ begin
+                             restock_obj := obj_carrying_pid_obj(self_obj, 9);
+                             if (obj_type(self_obj) == 1) then begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 9);
+-                                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                    if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                        restock_obj := critter_inven_obj(self_obj, 0);
++                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                                         rm_obj_from_inven(self_obj, restock_obj);
+                                         add_obj_to_inven(self_obj, restock_obj);
+                                     end
+                                 end
+                                 else begin
+-                                    if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                        metarule(43, self_obj);
++                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                        inven_unwield(self_obj);
+                                     end
+                                 end
+                             end
+@@ -1055,11 +1055,11 @@ begin
+                     end
+                 end
+             end
+-            restock_amt := random(1, 1);
++            restock_amt := 1;
+             if (obj_is_carrying_obj_pid(self_obj, 18) < restock_amt) then begin
+                 if (40 >= random(1, 100)) then begin
+                     if (obj_is_carrying_obj_pid(self_obj, 18) < restock_amt) then begin
+-                        restock_obj := create_object_sid(18, 0, 0, -1);
++                        restock_obj := create_object(18, 0, 0);
+                         add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 18));
+                     end
+                     else begin
+@@ -1072,17 +1072,17 @@ begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 18);
+                                 if (obj_type(self_obj) == 1) then begin
+                                     restock_obj := obj_carrying_pid_obj(self_obj, 18);
+-                                    if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                        if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                            restock_obj := critter_inven_obj(self_obj, 0);
++                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                             debug_msg("armour pid == " + obj_pid(restock_obj));
+                                             rm_obj_from_inven(self_obj, restock_obj);
+                                             add_obj_to_inven(self_obj, restock_obj);
+                                         end
+                                     end
+                                     else begin
+-                                        if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                            metarule(43, self_obj);
++                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                            inven_unwield(self_obj);
+                                         end
+                                     end
+                                 end
+@@ -1111,7 +1111,7 @@ begin
+             end
+             else begin
+                 if (obj_is_carrying_obj_pid(self_obj, 18) < restock_amt) then begin
+-                    restock_obj := create_object_sid(18, 0, 0, -1);
++                    restock_obj := create_object(18, 0, 0);
+                     add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 18));
+                 end
+                 else begin
+@@ -1124,17 +1124,17 @@ begin
+                             restock_obj := obj_carrying_pid_obj(self_obj, 18);
+                             if (obj_type(self_obj) == 1) then begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 18);
+-                                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                    if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                        restock_obj := critter_inven_obj(self_obj, 0);
++                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                                         rm_obj_from_inven(self_obj, restock_obj);
+                                         add_obj_to_inven(self_obj, restock_obj);
+                                     end
+                                 end
+                                 else begin
+-                                    if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                        metarule(43, self_obj);
++                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                        inven_unwield(self_obj);
+                                     end
+                                 end
+                             end
+@@ -1160,11 +1160,11 @@ begin
+                     end
+                 end
+             end
+-            restock_amt := random(1, 1);
++            restock_amt := 1;
+             if (obj_is_carrying_obj_pid(self_obj, 235) < restock_amt) then begin
+                 if (70 >= random(1, 100)) then begin
+                     if (obj_is_carrying_obj_pid(self_obj, 235) < restock_amt) then begin
+-                        restock_obj := create_object_sid(235, 0, 0, -1);
++                        restock_obj := create_object(235, 0, 0);
+                         add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 235));
+                     end
+                     else begin
+@@ -1177,17 +1177,17 @@ begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 235);
+                                 if (obj_type(self_obj) == 1) then begin
+                                     restock_obj := obj_carrying_pid_obj(self_obj, 235);
+-                                    if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                        if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                            restock_obj := critter_inven_obj(self_obj, 0);
++                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                             debug_msg("armour pid == " + obj_pid(restock_obj));
+                                             rm_obj_from_inven(self_obj, restock_obj);
+                                             add_obj_to_inven(self_obj, restock_obj);
+                                         end
+                                     end
+                                     else begin
+-                                        if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                            metarule(43, self_obj);
++                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                            inven_unwield(self_obj);
+                                         end
+                                     end
+                                 end
+@@ -1216,7 +1216,7 @@ begin
+             end
+             else begin
+                 if (obj_is_carrying_obj_pid(self_obj, 235) < restock_amt) then begin
+-                    restock_obj := create_object_sid(235, 0, 0, -1);
++                    restock_obj := create_object(235, 0, 0);
+                     add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 235));
+                 end
+                 else begin
+@@ -1229,17 +1229,17 @@ begin
+                             restock_obj := obj_carrying_pid_obj(self_obj, 235);
+                             if (obj_type(self_obj) == 1) then begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 235);
+-                                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                    if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                        restock_obj := critter_inven_obj(self_obj, 0);
++                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                                         rm_obj_from_inven(self_obj, restock_obj);
+                                         add_obj_to_inven(self_obj, restock_obj);
+                                     end
+                                 end
+                                 else begin
+-                                    if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                        metarule(43, self_obj);
++                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                        inven_unwield(self_obj);
+                                     end
+                                 end
+                             end
+@@ -1265,11 +1265,11 @@ begin
+                     end
+                 end
+             end
+-            restock_amt := random(1, 1);
++            restock_amt := 1;
+             if (obj_is_carrying_obj_pid(self_obj, 115) < restock_amt) then begin
+                 if (80 >= random(1, 100)) then begin
+                     if (obj_is_carrying_obj_pid(self_obj, 115) < restock_amt) then begin
+-                        restock_obj := create_object_sid(115, 0, 0, -1);
++                        restock_obj := create_object(115, 0, 0);
+                         add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 115));
+                     end
+                     else begin
+@@ -1282,17 +1282,17 @@ begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 115);
+                                 if (obj_type(self_obj) == 1) then begin
+                                     restock_obj := obj_carrying_pid_obj(self_obj, 115);
+-                                    if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                        if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                            restock_obj := critter_inven_obj(self_obj, 0);
++                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                             debug_msg("armour pid == " + obj_pid(restock_obj));
+                                             rm_obj_from_inven(self_obj, restock_obj);
+                                             add_obj_to_inven(self_obj, restock_obj);
+                                         end
+                                     end
+                                     else begin
+-                                        if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                            metarule(43, self_obj);
++                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                            inven_unwield(self_obj);
+                                         end
+                                     end
+                                 end
+@@ -1321,7 +1321,7 @@ begin
+             end
+             else begin
+                 if (obj_is_carrying_obj_pid(self_obj, 115) < restock_amt) then begin
+-                    restock_obj := create_object_sid(115, 0, 0, -1);
++                    restock_obj := create_object(115, 0, 0);
+                     add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 115));
+                 end
+                 else begin
+@@ -1334,17 +1334,17 @@ begin
+                             restock_obj := obj_carrying_pid_obj(self_obj, 115);
+                             if (obj_type(self_obj) == 1) then begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 115);
+-                                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                    if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                        restock_obj := critter_inven_obj(self_obj, 0);
++                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                                         rm_obj_from_inven(self_obj, restock_obj);
+                                         add_obj_to_inven(self_obj, restock_obj);
+                                     end
+                                 end
+                                 else begin
+-                                    if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                        metarule(43, self_obj);
++                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                        inven_unwield(self_obj);
+                                     end
+                                 end
+                             end
+@@ -1370,11 +1370,11 @@ begin
+                     end
+                 end
+             end
+-            restock_amt := random(1, 1);
++            restock_amt := 1;
+             if (obj_is_carrying_obj_pid(self_obj, 116) < restock_amt) then begin
+                 if (80 >= random(1, 100)) then begin
+                     if (obj_is_carrying_obj_pid(self_obj, 116) < restock_amt) then begin
+-                        restock_obj := create_object_sid(116, 0, 0, -1);
++                        restock_obj := create_object(116, 0, 0);
+                         add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 116));
+                     end
+                     else begin
+@@ -1387,17 +1387,17 @@ begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 116);
+                                 if (obj_type(self_obj) == 1) then begin
+                                     restock_obj := obj_carrying_pid_obj(self_obj, 116);
+-                                    if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                        if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                            restock_obj := critter_inven_obj(self_obj, 0);
++                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                             debug_msg("armour pid == " + obj_pid(restock_obj));
+                                             rm_obj_from_inven(self_obj, restock_obj);
+                                             add_obj_to_inven(self_obj, restock_obj);
+                                         end
+                                     end
+                                     else begin
+-                                        if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                            metarule(43, self_obj);
++                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                            inven_unwield(self_obj);
+                                         end
+                                     end
+                                 end
+@@ -1426,7 +1426,7 @@ begin
+             end
+             else begin
+                 if (obj_is_carrying_obj_pid(self_obj, 116) < restock_amt) then begin
+-                    restock_obj := create_object_sid(116, 0, 0, -1);
++                    restock_obj := create_object(116, 0, 0);
+                     add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 116));
+                 end
+                 else begin
+@@ -1439,17 +1439,17 @@ begin
+                             restock_obj := obj_carrying_pid_obj(self_obj, 116);
+                             if (obj_type(self_obj) == 1) then begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 116);
+-                                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                    if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                        restock_obj := critter_inven_obj(self_obj, 0);
++                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                                         rm_obj_from_inven(self_obj, restock_obj);
+                                         add_obj_to_inven(self_obj, restock_obj);
+                                     end
+                                 end
+                                 else begin
+-                                    if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                        metarule(43, self_obj);
++                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                        inven_unwield(self_obj);
+                                     end
+                                 end
+                             end
+@@ -1479,7 +1479,7 @@ begin
+             if (obj_is_carrying_obj_pid(self_obj, 25) < restock_amt) then begin
+                 if (80 >= random(1, 100)) then begin
+                     if (obj_is_carrying_obj_pid(self_obj, 25) < restock_amt) then begin
+-                        restock_obj := create_object_sid(25, 0, 0, -1);
++                        restock_obj := create_object(25, 0, 0);
+                         add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 25));
+                     end
+                     else begin
+@@ -1492,17 +1492,17 @@ begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 25);
+                                 if (obj_type(self_obj) == 1) then begin
+                                     restock_obj := obj_carrying_pid_obj(self_obj, 25);
+-                                    if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                        if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                            restock_obj := critter_inven_obj(self_obj, 0);
++                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                             debug_msg("armour pid == " + obj_pid(restock_obj));
+                                             rm_obj_from_inven(self_obj, restock_obj);
+                                             add_obj_to_inven(self_obj, restock_obj);
+                                         end
+                                     end
+                                     else begin
+-                                        if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                            metarule(43, self_obj);
++                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                            inven_unwield(self_obj);
+                                         end
+                                     end
+                                 end
+@@ -1531,7 +1531,7 @@ begin
+             end
+             else begin
+                 if (obj_is_carrying_obj_pid(self_obj, 25) < restock_amt) then begin
+-                    restock_obj := create_object_sid(25, 0, 0, -1);
++                    restock_obj := create_object(25, 0, 0);
+                     add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 25));
+                 end
+                 else begin
+@@ -1544,17 +1544,17 @@ begin
+                             restock_obj := obj_carrying_pid_obj(self_obj, 25);
+                             if (obj_type(self_obj) == 1) then begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 25);
+-                                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                    if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                        restock_obj := critter_inven_obj(self_obj, 0);
++                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                                         rm_obj_from_inven(self_obj, restock_obj);
+                                         add_obj_to_inven(self_obj, restock_obj);
+                                     end
+                                 end
+                                 else begin
+-                                    if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                        metarule(43, self_obj);
++                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                        inven_unwield(self_obj);
+                                     end
+                                 end
+                             end
+@@ -1584,7 +1584,7 @@ begin
+             if (obj_is_carrying_obj_pid(self_obj, 26) < restock_amt) then begin
+                 if (70 >= random(1, 100)) then begin
+                     if (obj_is_carrying_obj_pid(self_obj, 26) < restock_amt) then begin
+-                        restock_obj := create_object_sid(26, 0, 0, -1);
++                        restock_obj := create_object(26, 0, 0);
+                         add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 26));
+                     end
+                     else begin
+@@ -1597,17 +1597,17 @@ begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 26);
+                                 if (obj_type(self_obj) == 1) then begin
+                                     restock_obj := obj_carrying_pid_obj(self_obj, 26);
+-                                    if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                        if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                            restock_obj := critter_inven_obj(self_obj, 0);
++                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                             debug_msg("armour pid == " + obj_pid(restock_obj));
+                                             rm_obj_from_inven(self_obj, restock_obj);
+                                             add_obj_to_inven(self_obj, restock_obj);
+                                         end
+                                     end
+                                     else begin
+-                                        if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                            metarule(43, self_obj);
++                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                            inven_unwield(self_obj);
+                                         end
+                                     end
+                                 end
+@@ -1636,7 +1636,7 @@ begin
+             end
+             else begin
+                 if (obj_is_carrying_obj_pid(self_obj, 26) < restock_amt) then begin
+-                    restock_obj := create_object_sid(26, 0, 0, -1);
++                    restock_obj := create_object(26, 0, 0);
+                     add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 26));
+                 end
+                 else begin
+@@ -1649,17 +1649,17 @@ begin
+                             restock_obj := obj_carrying_pid_obj(self_obj, 26);
+                             if (obj_type(self_obj) == 1) then begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 26);
+-                                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                    if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                        restock_obj := critter_inven_obj(self_obj, 0);
++                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                                         rm_obj_from_inven(self_obj, restock_obj);
+                                         add_obj_to_inven(self_obj, restock_obj);
+                                     end
+                                 end
+                                 else begin
+-                                    if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                        metarule(43, self_obj);
++                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                        inven_unwield(self_obj);
+                                     end
+                                 end
+                             end
+@@ -1685,11 +1685,11 @@ begin
+                     end
+                 end
+             end
+-            restock_amt := random(1, 1);
++            restock_amt := 1;
+             if (obj_is_carrying_obj_pid(self_obj, 160) < restock_amt) then begin
+                 if (90 >= random(1, 100)) then begin
+                     if (obj_is_carrying_obj_pid(self_obj, 160) < restock_amt) then begin
+-                        restock_obj := create_object_sid(160, 0, 0, -1);
++                        restock_obj := create_object(160, 0, 0);
+                         add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 160));
+                     end
+                     else begin
+@@ -1702,17 +1702,17 @@ begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 160);
+                                 if (obj_type(self_obj) == 1) then begin
+                                     restock_obj := obj_carrying_pid_obj(self_obj, 160);
+-                                    if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                        if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                            restock_obj := critter_inven_obj(self_obj, 0);
++                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                             debug_msg("armour pid == " + obj_pid(restock_obj));
+                                             rm_obj_from_inven(self_obj, restock_obj);
+                                             add_obj_to_inven(self_obj, restock_obj);
+                                         end
+                                     end
+                                     else begin
+-                                        if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                            metarule(43, self_obj);
++                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                            inven_unwield(self_obj);
+                                         end
+                                     end
+                                 end
+@@ -1741,7 +1741,7 @@ begin
+             end
+             else begin
+                 if (obj_is_carrying_obj_pid(self_obj, 160) < restock_amt) then begin
+-                    restock_obj := create_object_sid(160, 0, 0, -1);
++                    restock_obj := create_object(160, 0, 0);
+                     add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 160));
+                 end
+                 else begin
+@@ -1754,17 +1754,17 @@ begin
+                             restock_obj := obj_carrying_pid_obj(self_obj, 160);
+                             if (obj_type(self_obj) == 1) then begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 160);
+-                                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                    if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                        restock_obj := critter_inven_obj(self_obj, 0);
++                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                                         rm_obj_from_inven(self_obj, restock_obj);
+                                         add_obj_to_inven(self_obj, restock_obj);
+                                     end
+                                 end
+                                 else begin
+-                                    if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                        metarule(43, self_obj);
++                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                        inven_unwield(self_obj);
+                                     end
+                                 end
+                             end
+@@ -1790,11 +1790,11 @@ begin
+                     end
+                 end
+             end
+-            restock_amt := random(1, 1);
++            restock_amt := 1;
+             if (obj_is_carrying_obj_pid(self_obj, 595) < restock_amt) then begin
+                 if (90 >= random(1, 100)) then begin
+                     if (obj_is_carrying_obj_pid(self_obj, 595) < restock_amt) then begin
+-                        restock_obj := create_object_sid(595, 0, 0, -1);
++                        restock_obj := create_object(595, 0, 0);
+                         add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 595));
+                     end
+                     else begin
+@@ -1807,17 +1807,17 @@ begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 595);
+                                 if (obj_type(self_obj) == 1) then begin
+                                     restock_obj := obj_carrying_pid_obj(self_obj, 595);
+-                                    if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                        if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                            restock_obj := critter_inven_obj(self_obj, 0);
++                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                             debug_msg("armour pid == " + obj_pid(restock_obj));
+                                             rm_obj_from_inven(self_obj, restock_obj);
+                                             add_obj_to_inven(self_obj, restock_obj);
+                                         end
+                                     end
+                                     else begin
+-                                        if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                            metarule(43, self_obj);
++                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                            inven_unwield(self_obj);
+                                         end
+                                     end
+                                 end
+@@ -1846,7 +1846,7 @@ begin
+             end
+             else begin
+                 if (obj_is_carrying_obj_pid(self_obj, 595) < restock_amt) then begin
+-                    restock_obj := create_object_sid(595, 0, 0, -1);
++                    restock_obj := create_object(595, 0, 0);
+                     add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 595));
+                 end
+                 else begin
+@@ -1859,17 +1859,17 @@ begin
+                             restock_obj := obj_carrying_pid_obj(self_obj, 595);
+                             if (obj_type(self_obj) == 1) then begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 595);
+-                                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                    if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                        restock_obj := critter_inven_obj(self_obj, 0);
++                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                                         rm_obj_from_inven(self_obj, restock_obj);
+                                         add_obj_to_inven(self_obj, restock_obj);
+                                     end
+                                 end
+                                 else begin
+-                                    if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                        metarule(43, self_obj);
++                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                        inven_unwield(self_obj);
+                                     end
+                                 end
+                             end
+@@ -1895,11 +1895,11 @@ begin
+                     end
+                 end
+             end
+-            restock_amt := random(1, 1);
++            restock_amt := 1;
+             if (obj_is_carrying_obj_pid(self_obj, 588) < restock_amt) then begin
+                 if (90 >= random(1, 100)) then begin
+                     if (obj_is_carrying_obj_pid(self_obj, 588) < restock_amt) then begin
+-                        restock_obj := create_object_sid(588, 0, 0, -1);
++                        restock_obj := create_object(588, 0, 0);
+                         add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 588));
+                     end
+                     else begin
+@@ -1912,17 +1912,17 @@ begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 588);
+                                 if (obj_type(self_obj) == 1) then begin
+                                     restock_obj := obj_carrying_pid_obj(self_obj, 588);
+-                                    if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                        if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                            restock_obj := critter_inven_obj(self_obj, 0);
++                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                             debug_msg("armour pid == " + obj_pid(restock_obj));
+                                             rm_obj_from_inven(self_obj, restock_obj);
+                                             add_obj_to_inven(self_obj, restock_obj);
+                                         end
+                                     end
+                                     else begin
+-                                        if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                            metarule(43, self_obj);
++                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                            inven_unwield(self_obj);
+                                         end
+                                     end
+                                 end
+@@ -1951,7 +1951,7 @@ begin
+             end
+             else begin
+                 if (obj_is_carrying_obj_pid(self_obj, 588) < restock_amt) then begin
+-                    restock_obj := create_object_sid(588, 0, 0, -1);
++                    restock_obj := create_object(588, 0, 0);
+                     add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 588));
+                 end
+                 else begin
+@@ -1964,17 +1964,17 @@ begin
+                             restock_obj := obj_carrying_pid_obj(self_obj, 588);
+                             if (obj_type(self_obj) == 1) then begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 588);
+-                                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                    if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                        restock_obj := critter_inven_obj(self_obj, 0);
++                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                                         rm_obj_from_inven(self_obj, restock_obj);
+                                         add_obj_to_inven(self_obj, restock_obj);
+                                     end
+                                 end
+                                 else begin
+-                                    if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                        metarule(43, self_obj);
++                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                        inven_unwield(self_obj);
+                                     end
+                                 end
+                             end
+@@ -2000,11 +2000,11 @@ begin
+                     end
+                 end
+             end
+-            restock_amt := random(1, 1);
++            restock_amt := 1;
+             if (obj_is_carrying_obj_pid(self_obj, 591) < restock_amt) then begin
+                 if (60 >= random(1, 100)) then begin
+                     if (obj_is_carrying_obj_pid(self_obj, 591) < restock_amt) then begin
+-                        restock_obj := create_object_sid(591, 0, 0, -1);
++                        restock_obj := create_object(591, 0, 0);
+                         add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 591));
+                     end
+                     else begin
+@@ -2017,17 +2017,17 @@ begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 591);
+                                 if (obj_type(self_obj) == 1) then begin
+                                     restock_obj := obj_carrying_pid_obj(self_obj, 591);
+-                                    if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                        if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                            restock_obj := critter_inven_obj(self_obj, 0);
++                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                             debug_msg("armour pid == " + obj_pid(restock_obj));
+                                             rm_obj_from_inven(self_obj, restock_obj);
+                                             add_obj_to_inven(self_obj, restock_obj);
+                                         end
+                                     end
+                                     else begin
+-                                        if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                            metarule(43, self_obj);
++                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                            inven_unwield(self_obj);
+                                         end
+                                     end
+                                 end
+@@ -2056,7 +2056,7 @@ begin
+             end
+             else begin
+                 if (obj_is_carrying_obj_pid(self_obj, 591) < restock_amt) then begin
+-                    restock_obj := create_object_sid(591, 0, 0, -1);
++                    restock_obj := create_object(591, 0, 0);
+                     add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 591));
+                 end
+                 else begin
+@@ -2069,17 +2069,17 @@ begin
+                             restock_obj := obj_carrying_pid_obj(self_obj, 591);
+                             if (obj_type(self_obj) == 1) then begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 591);
+-                                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                    if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                        restock_obj := critter_inven_obj(self_obj, 0);
++                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                                         rm_obj_from_inven(self_obj, restock_obj);
+                                         add_obj_to_inven(self_obj, restock_obj);
+                                     end
+                                 end
+                                 else begin
+-                                    if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                        metarule(43, self_obj);
++                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                        inven_unwield(self_obj);
+                                     end
+                                 end
+                             end
+@@ -2109,7 +2109,7 @@ begin
+             if (obj_is_carrying_obj_pid(self_obj, 600) < restock_amt) then begin
+                 if (80 >= random(1, 100)) then begin
+                     if (obj_is_carrying_obj_pid(self_obj, 600) < restock_amt) then begin
+-                        restock_obj := create_object_sid(600, 0, 0, -1);
++                        restock_obj := create_object(600, 0, 0);
+                         add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 600));
+                     end
+                     else begin
+@@ -2122,17 +2122,17 @@ begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 600);
+                                 if (obj_type(self_obj) == 1) then begin
+                                     restock_obj := obj_carrying_pid_obj(self_obj, 600);
+-                                    if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                        if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                            restock_obj := critter_inven_obj(self_obj, 0);
++                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                             debug_msg("armour pid == " + obj_pid(restock_obj));
+                                             rm_obj_from_inven(self_obj, restock_obj);
+                                             add_obj_to_inven(self_obj, restock_obj);
+                                         end
+                                     end
+                                     else begin
+-                                        if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                            metarule(43, self_obj);
++                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                            inven_unwield(self_obj);
+                                         end
+                                     end
+                                 end
+@@ -2161,7 +2161,7 @@ begin
+             end
+             else begin
+                 if (obj_is_carrying_obj_pid(self_obj, 600) < restock_amt) then begin
+-                    restock_obj := create_object_sid(600, 0, 0, -1);
++                    restock_obj := create_object(600, 0, 0);
+                     add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 600));
+                 end
+                 else begin
+@@ -2174,17 +2174,17 @@ begin
+                             restock_obj := obj_carrying_pid_obj(self_obj, 600);
+                             if (obj_type(self_obj) == 1) then begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 600);
+-                                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                    if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                        restock_obj := critter_inven_obj(self_obj, 0);
++                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                                         rm_obj_from_inven(self_obj, restock_obj);
+                                         add_obj_to_inven(self_obj, restock_obj);
+                                     end
+                                 end
+                                 else begin
+-                                    if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                        metarule(43, self_obj);
++                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                        inven_unwield(self_obj);
+                                     end
+                                 end
+                             end
+@@ -2214,7 +2214,7 @@ begin
+             if (obj_is_carrying_obj_pid(self_obj, 38) < restock_amt) then begin
+                 if (100 >= random(1, 100)) then begin
+                     if (obj_is_carrying_obj_pid(self_obj, 38) < restock_amt) then begin
+-                        restock_obj := create_object_sid(38, 0, 0, -1);
++                        restock_obj := create_object(38, 0, 0);
+                         add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 38));
+                     end
+                     else begin
+@@ -2227,17 +2227,17 @@ begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 38);
+                                 if (obj_type(self_obj) == 1) then begin
+                                     restock_obj := obj_carrying_pid_obj(self_obj, 38);
+-                                    if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                        if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                            restock_obj := critter_inven_obj(self_obj, 0);
++                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                             debug_msg("armour pid == " + obj_pid(restock_obj));
+                                             rm_obj_from_inven(self_obj, restock_obj);
+                                             add_obj_to_inven(self_obj, restock_obj);
+                                         end
+                                     end
+                                     else begin
+-                                        if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                            metarule(43, self_obj);
++                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                            inven_unwield(self_obj);
+                                         end
+                                     end
+                                 end
+@@ -2266,7 +2266,7 @@ begin
+             end
+             else begin
+                 if (obj_is_carrying_obj_pid(self_obj, 38) < restock_amt) then begin
+-                    restock_obj := create_object_sid(38, 0, 0, -1);
++                    restock_obj := create_object(38, 0, 0);
+                     add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 38));
+                 end
+                 else begin
+@@ -2279,17 +2279,17 @@ begin
+                             restock_obj := obj_carrying_pid_obj(self_obj, 38);
+                             if (obj_type(self_obj) == 1) then begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 38);
+-                                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                    if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                        restock_obj := critter_inven_obj(self_obj, 0);
++                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                                         rm_obj_from_inven(self_obj, restock_obj);
+                                         add_obj_to_inven(self_obj, restock_obj);
+                                     end
+                                 end
+                                 else begin
+-                                    if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                        metarule(43, self_obj);
++                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                        inven_unwield(self_obj);
+                                     end
+                                 end
+                             end
+@@ -2319,7 +2319,7 @@ begin
+             if (obj_is_carrying_obj_pid(self_obj, 29) < restock_amt) then begin
+                 if (70 >= random(1, 100)) then begin
+                     if (obj_is_carrying_obj_pid(self_obj, 29) < restock_amt) then begin
+-                        restock_obj := create_object_sid(29, 0, 0, -1);
++                        restock_obj := create_object(29, 0, 0);
+                         add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 29));
+                     end
+                     else begin
+@@ -2332,17 +2332,17 @@ begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 29);
+                                 if (obj_type(self_obj) == 1) then begin
+                                     restock_obj := obj_carrying_pid_obj(self_obj, 29);
+-                                    if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                        if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                            restock_obj := critter_inven_obj(self_obj, 0);
++                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                             debug_msg("armour pid == " + obj_pid(restock_obj));
+                                             rm_obj_from_inven(self_obj, restock_obj);
+                                             add_obj_to_inven(self_obj, restock_obj);
+                                         end
+                                     end
+                                     else begin
+-                                        if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                            metarule(43, self_obj);
++                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                            inven_unwield(self_obj);
+                                         end
+                                     end
+                                 end
+@@ -2371,7 +2371,7 @@ begin
+             end
+             else begin
+                 if (obj_is_carrying_obj_pid(self_obj, 29) < restock_amt) then begin
+-                    restock_obj := create_object_sid(29, 0, 0, -1);
++                    restock_obj := create_object(29, 0, 0);
+                     add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 29));
+                 end
+                 else begin
+@@ -2384,17 +2384,17 @@ begin
+                             restock_obj := obj_carrying_pid_obj(self_obj, 29);
+                             if (obj_type(self_obj) == 1) then begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 29);
+-                                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                    if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                        restock_obj := critter_inven_obj(self_obj, 0);
++                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                                         rm_obj_from_inven(self_obj, restock_obj);
+                                         add_obj_to_inven(self_obj, restock_obj);
+                                     end
+                                 end
+                                 else begin
+-                                    if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                        metarule(43, self_obj);
++                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                        inven_unwield(self_obj);
+                                     end
+                                 end
+                             end
+@@ -2424,7 +2424,7 @@ begin
+             if (obj_is_carrying_obj_pid(self_obj, 34) < restock_amt) then begin
+                 if (70 >= random(1, 100)) then begin
+                     if (obj_is_carrying_obj_pid(self_obj, 34) < restock_amt) then begin
+-                        restock_obj := create_object_sid(34, 0, 0, -1);
++                        restock_obj := create_object(34, 0, 0);
+                         add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 34));
+                     end
+                     else begin
+@@ -2437,17 +2437,17 @@ begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 34);
+                                 if (obj_type(self_obj) == 1) then begin
+                                     restock_obj := obj_carrying_pid_obj(self_obj, 34);
+-                                    if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                        if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                            restock_obj := critter_inven_obj(self_obj, 0);
++                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                             debug_msg("armour pid == " + obj_pid(restock_obj));
+                                             rm_obj_from_inven(self_obj, restock_obj);
+                                             add_obj_to_inven(self_obj, restock_obj);
+                                         end
+                                     end
+                                     else begin
+-                                        if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                            metarule(43, self_obj);
++                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                            inven_unwield(self_obj);
+                                         end
+                                     end
+                                 end
+@@ -2476,7 +2476,7 @@ begin
+             end
+             else begin
+                 if (obj_is_carrying_obj_pid(self_obj, 34) < restock_amt) then begin
+-                    restock_obj := create_object_sid(34, 0, 0, -1);
++                    restock_obj := create_object(34, 0, 0);
+                     add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 34));
+                 end
+                 else begin
+@@ -2489,17 +2489,17 @@ begin
+                             restock_obj := obj_carrying_pid_obj(self_obj, 34);
+                             if (obj_type(self_obj) == 1) then begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 34);
+-                                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                    if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                        restock_obj := critter_inven_obj(self_obj, 0);
++                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                                         rm_obj_from_inven(self_obj, restock_obj);
+                                         add_obj_to_inven(self_obj, restock_obj);
+                                     end
+                                 end
+                                 else begin
+-                                    if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                        metarule(43, self_obj);
++                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                        inven_unwield(self_obj);
+                                     end
+                                 end
+                             end
+@@ -2529,7 +2529,7 @@ begin
+             if (obj_is_carrying_obj_pid(self_obj, 35) < restock_amt) then begin
+                 if (75 >= random(1, 100)) then begin
+                     if (obj_is_carrying_obj_pid(self_obj, 35) < restock_amt) then begin
+-                        restock_obj := create_object_sid(35, 0, 0, -1);
++                        restock_obj := create_object(35, 0, 0);
+                         add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 35));
+                     end
+                     else begin
+@@ -2542,17 +2542,17 @@ begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 35);
+                                 if (obj_type(self_obj) == 1) then begin
+                                     restock_obj := obj_carrying_pid_obj(self_obj, 35);
+-                                    if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                        if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                            restock_obj := critter_inven_obj(self_obj, 0);
++                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                             debug_msg("armour pid == " + obj_pid(restock_obj));
+                                             rm_obj_from_inven(self_obj, restock_obj);
+                                             add_obj_to_inven(self_obj, restock_obj);
+                                         end
+                                     end
+                                     else begin
+-                                        if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                            metarule(43, self_obj);
++                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                            inven_unwield(self_obj);
+                                         end
+                                     end
+                                 end
+@@ -2581,7 +2581,7 @@ begin
+             end
+             else begin
+                 if (obj_is_carrying_obj_pid(self_obj, 35) < restock_amt) then begin
+-                    restock_obj := create_object_sid(35, 0, 0, -1);
++                    restock_obj := create_object(35, 0, 0);
+                     add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 35));
+                 end
+                 else begin
+@@ -2594,17 +2594,17 @@ begin
+                             restock_obj := obj_carrying_pid_obj(self_obj, 35);
+                             if (obj_type(self_obj) == 1) then begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 35);
+-                                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                    if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                        restock_obj := critter_inven_obj(self_obj, 0);
++                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                                         rm_obj_from_inven(self_obj, restock_obj);
+                                         add_obj_to_inven(self_obj, restock_obj);
+                                     end
+                                 end
+                                 else begin
+-                                    if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                        metarule(43, self_obj);
++                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                        inven_unwield(self_obj);
+                                     end
+                                 end
+                             end
+@@ -2634,7 +2634,7 @@ begin
+             if (obj_is_carrying_obj_pid(self_obj, 95) < restock_amt) then begin
+                 if (75 >= random(1, 100)) then begin
+                     if (obj_is_carrying_obj_pid(self_obj, 95) < restock_amt) then begin
+-                        restock_obj := create_object_sid(95, 0, 0, -1);
++                        restock_obj := create_object(95, 0, 0);
+                         add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 95));
+                     end
+                     else begin
+@@ -2647,17 +2647,17 @@ begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 95);
+                                 if (obj_type(self_obj) == 1) then begin
+                                     restock_obj := obj_carrying_pid_obj(self_obj, 95);
+-                                    if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                        if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                            restock_obj := critter_inven_obj(self_obj, 0);
++                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                             debug_msg("armour pid == " + obj_pid(restock_obj));
+                                             rm_obj_from_inven(self_obj, restock_obj);
+                                             add_obj_to_inven(self_obj, restock_obj);
+                                         end
+                                     end
+                                     else begin
+-                                        if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                            metarule(43, self_obj);
++                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                            inven_unwield(self_obj);
+                                         end
+                                     end
+                                 end
+@@ -2686,7 +2686,7 @@ begin
+             end
+             else begin
+                 if (obj_is_carrying_obj_pid(self_obj, 95) < restock_amt) then begin
+-                    restock_obj := create_object_sid(95, 0, 0, -1);
++                    restock_obj := create_object(95, 0, 0);
+                     add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 95));
+                 end
+                 else begin
+@@ -2699,17 +2699,17 @@ begin
+                             restock_obj := obj_carrying_pid_obj(self_obj, 95);
+                             if (obj_type(self_obj) == 1) then begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 95);
+-                                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                    if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                        restock_obj := critter_inven_obj(self_obj, 0);
++                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                                         rm_obj_from_inven(self_obj, restock_obj);
+                                         add_obj_to_inven(self_obj, restock_obj);
+                                     end
+                                 end
+                                 else begin
+-                                    if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                        metarule(43, self_obj);
++                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                        inven_unwield(self_obj);
+                                     end
+                                 end
+                             end
+@@ -2739,7 +2739,7 @@ begin
+             if (obj_is_carrying_obj_pid(self_obj, 31) < restock_amt) then begin
+                 if (80 >= random(1, 100)) then begin
+                     if (obj_is_carrying_obj_pid(self_obj, 31) < restock_amt) then begin
+-                        restock_obj := create_object_sid(31, 0, 0, -1);
++                        restock_obj := create_object(31, 0, 0);
+                         add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 31));
+                     end
+                     else begin
+@@ -2752,17 +2752,17 @@ begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 31);
+                                 if (obj_type(self_obj) == 1) then begin
+                                     restock_obj := obj_carrying_pid_obj(self_obj, 31);
+-                                    if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                        if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                            restock_obj := critter_inven_obj(self_obj, 0);
++                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                             debug_msg("armour pid == " + obj_pid(restock_obj));
+                                             rm_obj_from_inven(self_obj, restock_obj);
+                                             add_obj_to_inven(self_obj, restock_obj);
+                                         end
+                                     end
+                                     else begin
+-                                        if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                            metarule(43, self_obj);
++                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                            inven_unwield(self_obj);
+                                         end
+                                     end
+                                 end
+@@ -2791,7 +2791,7 @@ begin
+             end
+             else begin
+                 if (obj_is_carrying_obj_pid(self_obj, 31) < restock_amt) then begin
+-                    restock_obj := create_object_sid(31, 0, 0, -1);
++                    restock_obj := create_object(31, 0, 0);
+                     add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 31));
+                 end
+                 else begin
+@@ -2804,17 +2804,17 @@ begin
+                             restock_obj := obj_carrying_pid_obj(self_obj, 31);
+                             if (obj_type(self_obj) == 1) then begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 31);
+-                                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                    if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                        restock_obj := critter_inven_obj(self_obj, 0);
++                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                                         rm_obj_from_inven(self_obj, restock_obj);
+                                         add_obj_to_inven(self_obj, restock_obj);
+                                     end
+                                 end
+                                 else begin
+-                                    if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                        metarule(43, self_obj);
++                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                        inven_unwield(self_obj);
+                                     end
+                                 end
+                             end
+@@ -2844,7 +2844,7 @@ begin
+             if (obj_is_carrying_obj_pid(self_obj, 32) < restock_amt) then begin
+                 if (100 >= random(1, 100)) then begin
+                     if (obj_is_carrying_obj_pid(self_obj, 32) < restock_amt) then begin
+-                        restock_obj := create_object_sid(32, 0, 0, -1);
++                        restock_obj := create_object(32, 0, 0);
+                         add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 32));
+                     end
+                     else begin
+@@ -2857,17 +2857,17 @@ begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 32);
+                                 if (obj_type(self_obj) == 1) then begin
+                                     restock_obj := obj_carrying_pid_obj(self_obj, 32);
+-                                    if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                        if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                            restock_obj := critter_inven_obj(self_obj, 0);
++                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                             debug_msg("armour pid == " + obj_pid(restock_obj));
+                                             rm_obj_from_inven(self_obj, restock_obj);
+                                             add_obj_to_inven(self_obj, restock_obj);
+                                         end
+                                     end
+                                     else begin
+-                                        if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                            metarule(43, self_obj);
++                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                            inven_unwield(self_obj);
+                                         end
+                                     end
+                                 end
+@@ -2896,7 +2896,7 @@ begin
+             end
+             else begin
+                 if (obj_is_carrying_obj_pid(self_obj, 32) < restock_amt) then begin
+-                    restock_obj := create_object_sid(32, 0, 0, -1);
++                    restock_obj := create_object(32, 0, 0);
+                     add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 32));
+                 end
+                 else begin
+@@ -2909,17 +2909,17 @@ begin
+                             restock_obj := obj_carrying_pid_obj(self_obj, 32);
+                             if (obj_type(self_obj) == 1) then begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 32);
+-                                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                    if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                        restock_obj := critter_inven_obj(self_obj, 0);
++                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                                         rm_obj_from_inven(self_obj, restock_obj);
+                                         add_obj_to_inven(self_obj, restock_obj);
+                                     end
+                                 end
+                                 else begin
+-                                    if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                        metarule(43, self_obj);
++                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                        inven_unwield(self_obj);
+                                     end
+                                 end
+                             end
+@@ -2949,7 +2949,7 @@ begin
+             if (obj_is_carrying_obj_pid(self_obj, 14) < restock_amt) then begin
+                 if (90 >= random(1, 100)) then begin
+                     if (obj_is_carrying_obj_pid(self_obj, 14) < restock_amt) then begin
+-                        restock_obj := create_object_sid(14, 0, 0, -1);
++                        restock_obj := create_object(14, 0, 0);
+                         add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 14));
+                     end
+                     else begin
+@@ -2962,17 +2962,17 @@ begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 14);
+                                 if (obj_type(self_obj) == 1) then begin
+                                     restock_obj := obj_carrying_pid_obj(self_obj, 14);
+-                                    if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                        if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                            restock_obj := critter_inven_obj(self_obj, 0);
++                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                             debug_msg("armour pid == " + obj_pid(restock_obj));
+                                             rm_obj_from_inven(self_obj, restock_obj);
+                                             add_obj_to_inven(self_obj, restock_obj);
+                                         end
+                                     end
+                                     else begin
+-                                        if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                            metarule(43, self_obj);
++                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                            inven_unwield(self_obj);
+                                         end
+                                     end
+                                 end
+@@ -3001,7 +3001,7 @@ begin
+             end
+             else begin
+                 if (obj_is_carrying_obj_pid(self_obj, 14) < restock_amt) then begin
+-                    restock_obj := create_object_sid(14, 0, 0, -1);
++                    restock_obj := create_object(14, 0, 0);
+                     add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 14));
+                 end
+                 else begin
+@@ -3014,17 +3014,17 @@ begin
+                             restock_obj := obj_carrying_pid_obj(self_obj, 14);
+                             if (obj_type(self_obj) == 1) then begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 14);
+-                                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                    if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                        restock_obj := critter_inven_obj(self_obj, 0);
++                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                                         rm_obj_from_inven(self_obj, restock_obj);
+                                         add_obj_to_inven(self_obj, restock_obj);
+                                     end
+                                 end
+                                 else begin
+-                                    if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                        metarule(43, self_obj);
++                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                        inven_unwield(self_obj);
+                                     end
+                                 end
+                             end
+@@ -3054,7 +3054,7 @@ begin
+             if (obj_is_carrying_obj_pid(self_obj, 589) < restock_amt) then begin
+                 if (90 >= random(1, 100)) then begin
+                     if (obj_is_carrying_obj_pid(self_obj, 589) < restock_amt) then begin
+-                        restock_obj := create_object_sid(589, 0, 0, -1);
++                        restock_obj := create_object(589, 0, 0);
+                         add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 589));
+                     end
+                     else begin
+@@ -3067,17 +3067,17 @@ begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 589);
+                                 if (obj_type(self_obj) == 1) then begin
+                                     restock_obj := obj_carrying_pid_obj(self_obj, 589);
+-                                    if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                        if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                            restock_obj := critter_inven_obj(self_obj, 0);
++                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                             debug_msg("armour pid == " + obj_pid(restock_obj));
+                                             rm_obj_from_inven(self_obj, restock_obj);
+                                             add_obj_to_inven(self_obj, restock_obj);
+                                         end
+                                     end
+                                     else begin
+-                                        if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                            metarule(43, self_obj);
++                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                            inven_unwield(self_obj);
+                                         end
+                                     end
+                                 end
+@@ -3106,7 +3106,7 @@ begin
+             end
+             else begin
+                 if (obj_is_carrying_obj_pid(self_obj, 589) < restock_amt) then begin
+-                    restock_obj := create_object_sid(589, 0, 0, -1);
++                    restock_obj := create_object(589, 0, 0);
+                     add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 589));
+                 end
+                 else begin
+@@ -3119,17 +3119,17 @@ begin
+                             restock_obj := obj_carrying_pid_obj(self_obj, 589);
+                             if (obj_type(self_obj) == 1) then begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 589);
+-                                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                    if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                        restock_obj := critter_inven_obj(self_obj, 0);
++                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                                         rm_obj_from_inven(self_obj, restock_obj);
+                                         add_obj_to_inven(self_obj, restock_obj);
+                                     end
+                                 end
+                                 else begin
+-                                    if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                        metarule(43, self_obj);
++                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                        inven_unwield(self_obj);
+                                     end
+                                 end
+                             end
+@@ -3155,11 +3155,11 @@ begin
+                     end
+                 end
+             end
+-            restock_amt := random(1, 1);
++            restock_amt := 1;
+             if (obj_is_carrying_obj_pid(self_obj, 590) < restock_amt) then begin
+                 if (40 >= random(1, 100)) then begin
+                     if (obj_is_carrying_obj_pid(self_obj, 590) < restock_amt) then begin
+-                        restock_obj := create_object_sid(590, 0, 0, -1);
++                        restock_obj := create_object(590, 0, 0);
+                         add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 590));
+                     end
+                     else begin
+@@ -3172,17 +3172,17 @@ begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 590);
+                                 if (obj_type(self_obj) == 1) then begin
+                                     restock_obj := obj_carrying_pid_obj(self_obj, 590);
+-                                    if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                        if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                            restock_obj := critter_inven_obj(self_obj, 0);
++                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                             debug_msg("armour pid == " + obj_pid(restock_obj));
+                                             rm_obj_from_inven(self_obj, restock_obj);
+                                             add_obj_to_inven(self_obj, restock_obj);
+                                         end
+                                     end
+                                     else begin
+-                                        if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                            metarule(43, self_obj);
++                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                            inven_unwield(self_obj);
+                                         end
+                                     end
+                                 end
+@@ -3211,7 +3211,7 @@ begin
+             end
+             else begin
+                 if (obj_is_carrying_obj_pid(self_obj, 590) < restock_amt) then begin
+-                    restock_obj := create_object_sid(590, 0, 0, -1);
++                    restock_obj := create_object(590, 0, 0);
+                     add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 590));
+                 end
+                 else begin
+@@ -3224,17 +3224,17 @@ begin
+                             restock_obj := obj_carrying_pid_obj(self_obj, 590);
+                             if (obj_type(self_obj) == 1) then begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 590);
+-                                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                    if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                        restock_obj := critter_inven_obj(self_obj, 0);
++                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                                         rm_obj_from_inven(self_obj, restock_obj);
+                                         add_obj_to_inven(self_obj, restock_obj);
+                                     end
+                                 end
+                                 else begin
+-                                    if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                        metarule(43, self_obj);
++                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                        inven_unwield(self_obj);
+                                     end
+                                 end
+                             end
+@@ -3264,7 +3264,7 @@ begin
+             if (obj_is_carrying_obj_pid(self_obj, 363) < restock_amt) then begin
+                 if (90 >= random(1, 100)) then begin
+                     if (obj_is_carrying_obj_pid(self_obj, 363) < restock_amt) then begin
+-                        restock_obj := create_object_sid(363, 0, 0, -1);
++                        restock_obj := create_object(363, 0, 0);
+                         add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 363));
+                     end
+                     else begin
+@@ -3277,17 +3277,17 @@ begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 363);
+                                 if (obj_type(self_obj) == 1) then begin
+                                     restock_obj := obj_carrying_pid_obj(self_obj, 363);
+-                                    if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                        if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                            restock_obj := critter_inven_obj(self_obj, 0);
++                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                             debug_msg("armour pid == " + obj_pid(restock_obj));
+                                             rm_obj_from_inven(self_obj, restock_obj);
+                                             add_obj_to_inven(self_obj, restock_obj);
+                                         end
+                                     end
+                                     else begin
+-                                        if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                            metarule(43, self_obj);
++                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                            inven_unwield(self_obj);
+                                         end
+                                     end
+                                 end
+@@ -3316,7 +3316,7 @@ begin
+             end
+             else begin
+                 if (obj_is_carrying_obj_pid(self_obj, 363) < restock_amt) then begin
+-                    restock_obj := create_object_sid(363, 0, 0, -1);
++                    restock_obj := create_object(363, 0, 0);
+                     add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 363));
+                 end
+                 else begin
+@@ -3329,17 +3329,17 @@ begin
+                             restock_obj := obj_carrying_pid_obj(self_obj, 363);
+                             if (obj_type(self_obj) == 1) then begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 363);
+-                                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                    if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                        restock_obj := critter_inven_obj(self_obj, 0);
++                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                                         rm_obj_from_inven(self_obj, restock_obj);
+                                         add_obj_to_inven(self_obj, restock_obj);
+                                     end
+                                 end
+                                 else begin
+-                                    if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                        metarule(43, self_obj);
++                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                        inven_unwield(self_obj);
+                                     end
+                                 end
+                             end
+@@ -3365,11 +3365,11 @@ begin
+                     end
+                 end
+             end
+-            restock_amt := random(1, 1);
++            restock_amt := 1;
+             if (obj_is_carrying_obj_pid(self_obj, 85) < restock_amt) then begin
+                 if (100 >= random(1, 100)) then begin
+                     if (obj_is_carrying_obj_pid(self_obj, 85) < restock_amt) then begin
+-                        restock_obj := create_object_sid(85, 0, 0, -1);
++                        restock_obj := create_object(85, 0, 0);
+                         add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 85));
+                     end
+                     else begin
+@@ -3382,17 +3382,17 @@ begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 85);
+                                 if (obj_type(self_obj) == 1) then begin
+                                     restock_obj := obj_carrying_pid_obj(self_obj, 85);
+-                                    if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                        if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                            restock_obj := critter_inven_obj(self_obj, 0);
++                                    if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                        if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                            restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                             debug_msg("armour pid == " + obj_pid(restock_obj));
+                                             rm_obj_from_inven(self_obj, restock_obj);
+                                             add_obj_to_inven(self_obj, restock_obj);
+                                         end
+                                     end
+                                     else begin
+-                                        if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                            metarule(43, self_obj);
++                                        if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                            inven_unwield(self_obj);
+                                         end
+                                     end
+                                 end
+@@ -3421,7 +3421,7 @@ begin
+             end
+             else begin
+                 if (obj_is_carrying_obj_pid(self_obj, 85) < restock_amt) then begin
+-                    restock_obj := create_object_sid(85, 0, 0, -1);
++                    restock_obj := create_object(85, 0, 0);
+                     add_mult_objs_to_inven(self_obj, restock_obj, restock_amt - obj_is_carrying_obj_pid(self_obj, 85));
+                 end
+                 else begin
+@@ -3434,17 +3434,17 @@ begin
+                             restock_obj := obj_carrying_pid_obj(self_obj, 85);
+                             if (obj_type(self_obj) == 1) then begin
+                                 restock_obj := obj_carrying_pid_obj(self_obj, 85);
+-                                if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                                    if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                                        restock_obj := critter_inven_obj(self_obj, 0);
++                                if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                                    if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                                        restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                                         debug_msg("armour pid == " + obj_pid(restock_obj));
+                                         rm_obj_from_inven(self_obj, restock_obj);
+                                         add_obj_to_inven(self_obj, restock_obj);
+                                     end
+                                 end
+                                 else begin
+-                                    if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                                        metarule(43, self_obj);
++                                    if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                                        inven_unwield(self_obj);
+                                     end
+                                 end
+                             end
+@@ -3494,17 +3494,17 @@ begin
+         restock_obj := obj_carrying_pid_obj(self_obj, 558);
+         if (obj_type(self_obj) == 1) then begin
+             restock_obj := obj_carrying_pid_obj(self_obj, 558);
+-            if (critter_inven_obj(self_obj, 0) == restock_obj) then begin
+-                if (obj_item_subtype(critter_inven_obj(self_obj, 0)) == 0) then begin
+-                    restock_obj := critter_inven_obj(self_obj, 0);
++            if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
++                if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
++                    restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                     debug_msg("armour pid == " + obj_pid(restock_obj));
+                     rm_obj_from_inven(self_obj, restock_obj);
+                     add_obj_to_inven(self_obj, restock_obj);
+                 end
+             end
+             else begin
+-                if ((critter_inven_obj(self_obj, 2) == restock_obj) or (critter_inven_obj(self_obj, 1) == restock_obj)) then begin
+-                    metarule(43, self_obj);
++                if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
++                    inven_unwield(self_obj);
+                 end
+             end
+         end
+@@ -3529,10 +3529,9 @@ end
+ procedure TrapExplosion
+ begin
+     explosion(tile_num(self_obj), elevation(self_obj), random(8, 12));
+-    display_msg(message_str(1695, 100 + (get_critter_stat(dude_obj, 34) == 1)));
++    display_mstr(100 + (dude_gender == 1));
+     set_local_var(2, 1);
+     set_local_var(3, 1);
+-    create_object_sid(obj_pid(self_obj) + 2, tile_num(self_obj), elevation(self_obj), -1);
++    create_object(obj_pid(self_obj) + 2, tile_num(self_obj), elevation(self_obj));
+     destroy_object(self_obj);
+ end
+-

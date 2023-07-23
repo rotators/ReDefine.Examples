@@ -1,0 +1,537 @@
+diff --git a/Mods/Resurrection/Original/KARBLOCK.ssl b/Mods/Resurrection/ReDefine/KARBLOCK.ssl
+index 7152ba6..3e641fc 100644
+--- a/Mods/Resurrection/Original/KARBLOCK.ssl
++++ b/Mods/Resurrection/ReDefine/KARBLOCK.ssl
+@@ -49,12 +49,12 @@ begin
+             return 1;
+         end
+     end
+-    if ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0)) then begin
++    if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+         if (tile_distance_objs(self_obj, party_member_obj(16777779)) <= 5) then begin
+             return 1;
+         end
+     end
+-    if ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0)) then begin
++    if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+         if (tile_distance_objs(self_obj, party_member_obj(16777811)) <= 5) then begin
+             return 1;
+         end
+@@ -69,7 +69,7 @@ begin
+             return 1;
+         end
+     end
+-    if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
++    if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+         if (tile_distance_objs(self_obj, party_member_obj(16777814)) <= 5) then begin
+             return 1;
+         end
+@@ -126,34 +126,34 @@ end
+ 
+ procedure map_enter_p_proc
+ begin
+-    if (((global_var(911) bwand 1) != 0) and not((global_var(911) bwand 131072) != 0)) then begin
+-        critter_add_trait(self_obj, 1, 6, 0);
++    if (((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 1) != 0) and not((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 131072) != 0)) then begin
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 0);
+     end
+     else begin
+-        critter_add_trait(self_obj, 1, 6, 92);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 92);
+     end
+     if (local_var(5) == 6) then begin
+-        critter_add_trait(self_obj, 1, 5, 3);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_TOUGH_GUARD_NO_TALKING);
+     end
+     else begin
+-        critter_add_trait(self_obj, 1, 5, 181);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_CARAVAN_GUARD);
+     end
+-    if (((global_var(911) bwand 8192) != 0) and not(metarule(22, 0))) then begin
++    if (((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 8192) != 0) and not(is_loading_game)) then begin
+         set_local_var(6, 2);
+     end
+ end
+ 
+ procedure critter_p_proc
+ begin
+-    if (((global_var(911) bwand 131072) != 0) and obj_can_see_obj(self_obj, dude_obj)) then begin
++    if (((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 131072) != 0) and obj_can_see_obj(self_obj, dude_obj)) then begin
+         if (critter_is_fleeing(self_obj)) then begin
+             if (anim_busy(self_obj) == 0) then begin
+                 if ((tile_distance_objs(self_obj, dude_obj) < 8) or obj_can_see_obj(self_obj, dude_obj)) then begin
+                     if (anim_busy(self_obj) == 0) then begin
+-                        global_temp := rotation_to_tile(tile_num(dude_obj), tile_num(self_obj));
++                        global_temp := rotation_to_tile(dude_tile, tile_num(self_obj));
+                         animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                         global_temp := (global_temp + 1) % 6;
+-                        while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)))) do begin
++                        while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(dude_tile, tile_num(self_obj)))) do begin
+                             debug_msg("flee loop: rot == " + global_temp);
+                             animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                             global_temp := (global_temp + 1) % 6;
+@@ -163,89 +163,89 @@ begin
+             end
+         end
+         else begin
+-            attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++            attack(dude_obj);
+         end
+     end
+-    if (((global_var(911) bwand 1) != 0) and not((global_var(911) bwand 8388608) != 0)) then begin
++    if (((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 1) != 0) and not((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 8388608) != 0)) then begin
+         if (counter_attack_timer == 0) then begin
+             counter_attack_timer := game_time;
+         end
+         if (game_time > (counter_attack_timer + (1 * 10))) then begin
+-            if ((global_var(1024) == 1) and (cur_map_index == 102)) then begin
++            if ((global_var(GVAR_CARAVAN_JEREMY_ESCAPED) == 1) and (CUR_MAP_KARAVAN1)) then begin
+             end
+             else begin
+-                set_global_var(911, global_var(911) bwor 8388608);
++                set_global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS, global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwor 8388608);
+             end
+         end
+     end
+-    if ((global_var(916) <= 0) and (local_var(6) == 0)) then begin
++    if ((global_var(GVAR_KARAVAN_ATACKERS_COUNTER) <= 0) and (local_var(6) == 0)) then begin
+         if (local_var(5) == 1) then begin
+-            float_msg(self_obj, message_str(23, 300), 8);
++            float_msg(self_obj, mstr(300), FLOAT_MSG_YELLOW);
+             set_local_var(6, 1);
+         end
+         else begin
+-            if ((global_var(911) bwand 8192) != 0) then begin
+-                if ((global_var(911) bwand 4) != 0) then begin
+-                    if (global_var(748) == 2) then begin
++            if ((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 8192) != 0) then begin
++                if ((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 4) != 0) then begin
++                    if (global_var(GVAR_QUEST_S_FREDERYK_CARAVANA) == 2) then begin
+                         if (local_var(5) == 4) then begin
+-                            float_msg(self_obj, message_str(23, 312), 8);
++                            float_msg(self_obj, mstr(312), FLOAT_MSG_YELLOW);
+                         end
+-                        if (((global_var(911) bwand 65536) != 0) and (local_var(5) == 3)) then begin
+-                            float_msg(self_obj, message_str(23, 312), 8);
++                        if (((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 65536) != 0) and (local_var(5) == 3)) then begin
++                            float_msg(self_obj, mstr(312), FLOAT_MSG_YELLOW);
+                         end
+-                        if (((global_var(911) bwand 65536) != 0) and ((global_var(911) bwand 32768) != 0) and (local_var(5) == 2)) then begin
+-                            float_msg(self_obj, message_str(23, 312), 8);
++                        if (((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 65536) != 0) and ((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 32768) != 0) and (local_var(5) == 2)) then begin
++                            float_msg(self_obj, mstr(312), FLOAT_MSG_YELLOW);
+                         end
+                     end
+                     else begin
+                         if (local_var(5) == 4) then begin
+-                            float_msg(self_obj, message_str(23, 311), 8);
++                            float_msg(self_obj, mstr(311), FLOAT_MSG_YELLOW);
+                         end
+-                        if (((global_var(911) bwand 65536) != 0) and (local_var(5) == 3)) then begin
+-                            float_msg(self_obj, message_str(23, 311), 8);
++                        if (((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 65536) != 0) and (local_var(5) == 3)) then begin
++                            float_msg(self_obj, mstr(311), FLOAT_MSG_YELLOW);
+                         end
+-                        if (((global_var(911) bwand 65536) != 0) and ((global_var(911) bwand 32768) != 0) and (local_var(5) == 2)) then begin
+-                            float_msg(self_obj, message_str(23, 311), 8);
++                        if (((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 65536) != 0) and ((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 32768) != 0) and (local_var(5) == 2)) then begin
++                            float_msg(self_obj, mstr(311), FLOAT_MSG_YELLOW);
+                         end
+                     end
+                 end
+                 else begin
+                     if (local_var(5) == 2) then begin
+-                        float_msg(self_obj, message_str(23, 310), 8);
++                        float_msg(self_obj, mstr(310), FLOAT_MSG_YELLOW);
+                     end
+-                    if (((global_var(911) bwand 16384) != 0) and (local_var(5) == 3)) then begin
+-                        float_msg(self_obj, message_str(23, 310), 8);
++                    if (((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 16384) != 0) and (local_var(5) == 3)) then begin
++                        float_msg(self_obj, mstr(310), FLOAT_MSG_YELLOW);
+                     end
+-                    if (((global_var(911) bwand 16384) != 0) and ((global_var(911) bwand 32768) != 0) and (local_var(5) == 4)) then begin
+-                        float_msg(self_obj, message_str(23, 310), 8);
++                    if (((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 16384) != 0) and ((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 32768) != 0) and (local_var(5) == 4)) then begin
++                        float_msg(self_obj, mstr(310), FLOAT_MSG_YELLOW);
+                     end
+                 end
+                 set_local_var(6, 1);
+             end
+         end
+     end
+-    if ((global_var(916) <= 0) and (local_var(6) == 2)) then begin
+-        if ((global_var(911) bwand 8192) != 0) then begin
+-            if ((global_var(911) bwand 4) != 0) then begin
++    if ((global_var(GVAR_KARAVAN_ATACKERS_COUNTER) <= 0) and (local_var(6) == 2)) then begin
++        if ((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 8192) != 0) then begin
++            if ((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 4) != 0) then begin
+                 if (local_var(5) == 4) then begin
+-                    float_msg(self_obj, message_str(23, 300), 8);
++                    float_msg(self_obj, mstr(300), FLOAT_MSG_YELLOW);
+                 end
+-                if (((global_var(911) bwand 65536) != 0) and (local_var(5) == 3)) then begin
+-                    float_msg(self_obj, message_str(23, 300), 8);
++                if (((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 65536) != 0) and (local_var(5) == 3)) then begin
++                    float_msg(self_obj, mstr(300), FLOAT_MSG_YELLOW);
+                 end
+-                if (((global_var(911) bwand 65536) != 0) and ((global_var(911) bwand 32768) != 0) and (local_var(5) == 2)) then begin
+-                    float_msg(self_obj, message_str(23, 300), 8);
++                if (((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 65536) != 0) and ((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 32768) != 0) and (local_var(5) == 2)) then begin
++                    float_msg(self_obj, mstr(300), FLOAT_MSG_YELLOW);
+                 end
+             end
+             else begin
+                 if (local_var(5) == 2) then begin
+-                    float_msg(self_obj, message_str(23, 300), 8);
++                    float_msg(self_obj, mstr(300), FLOAT_MSG_YELLOW);
+                 end
+-                if (((global_var(911) bwand 16384) != 0) and (local_var(5) == 3)) then begin
+-                    float_msg(self_obj, message_str(23, 300), 8);
++                if (((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 16384) != 0) and (local_var(5) == 3)) then begin
++                    float_msg(self_obj, mstr(300), FLOAT_MSG_YELLOW);
+                 end
+-                if (((global_var(911) bwand 16384) != 0) and ((global_var(911) bwand 32768) != 0) and (local_var(5) == 4)) then begin
+-                    float_msg(self_obj, message_str(23, 300), 8);
++                if (((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 16384) != 0) and ((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 32768) != 0) and (local_var(5) == 4)) then begin
++                    float_msg(self_obj, mstr(300), FLOAT_MSG_YELLOW);
+                 end
+             end
+             set_local_var(6, 1);
+@@ -255,10 +255,10 @@ end
+ 
+ procedure damage_p_proc
+ begin
+-    if ((source_obj == dude_obj) and not((global_var(911) bwand 131072) != 0)) then begin
++    if ((source_obj == dude_obj) and not((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 131072) != 0)) then begin
+         set_local_var(4, local_var(4) + 1);
+         if (local_var(4) > 3) then begin
+-            set_global_var(911, global_var(911) bwor 131072);
++            set_global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS, global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwor 131072);
+         end
+     end
+ end
+@@ -266,26 +266,26 @@ end
+ procedure pickup_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        set_global_var(911, global_var(911) bwor 131072);
++        set_global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS, global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwor 131072);
+     end
+ end
+ 
+ procedure talk_p_proc
+ begin
+     if (local_var(5) == 6) then begin
+-        if (get_critter_stat(dude_obj, 34) == 0) then begin
+-            float_msg(self_obj, message_str(23, random(361, 363)), 8);
++        if (dude_gender == 0) then begin
++            float_msg(self_obj, mstr(random(361, 363)), FLOAT_MSG_YELLOW);
+         end
+         else begin
+-            float_msg(self_obj, message_str(23, random(362, 364)), 8);
++            float_msg(self_obj, mstr(random(362, 364)), FLOAT_MSG_YELLOW);
+         end
+     end
+     else begin
+         if (local_var(5) == 1) then begin
+-            float_msg(self_obj, message_str(23, random(301, 304)), 8);
++            float_msg(self_obj, mstr(random(301, 304)), FLOAT_MSG_YELLOW);
+         end
+         else begin
+-            float_msg(self_obj, message_str(23, random(313, 316)), 8);
++            float_msg(self_obj, mstr(random(313, 316)), FLOAT_MSG_YELLOW);
+         end
+     end
+ end
+@@ -293,28 +293,28 @@ end
+ procedure destroy_p_proc
+ begin
+     if (local_var(5) == 1) then begin
+-        set_global_var(911, global_var(911) bwor 8192);
++        set_global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS, global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwor 8192);
+     end
+     if (local_var(5) == 6) then begin
+-        set_global_var(911, global_var(911) bwor 8192);
++        set_global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS, global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwor 8192);
+     end
+     if (local_var(5) == 6) then begin
+-        set_global_var(751, 1);
++        set_global_var(GVAR_FROST_DESTROY, 1);
+     end
+     if (local_var(5) == 2) then begin
+-        set_global_var(911, global_var(911) bwor 16384);
++        set_global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS, global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwor 16384);
+     end
+     if (local_var(5) == 3) then begin
+-        set_global_var(911, global_var(911) bwor 32768);
++        set_global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS, global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwor 32768);
+     end
+     if (local_var(5) == 4) then begin
+-        set_global_var(911, global_var(911) bwor 65536);
++        set_global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS, global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwor 65536);
+     end
+     if (local_var(5) == 5) then begin
+-        set_global_var(911, global_var(911) bwor 524288);
++        set_global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS, global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwor 524288);
+     end
+     if ((local_var(5) == 2) or (local_var(5) == 3) or (local_var(5) == 4) or (local_var(5) == 5)) then begin
+-        set_global_var(915, global_var(915) + 1);
++        set_global_var(GVAR_KARAVAN_GUARDS_COUNTER, global_var(GVAR_KARAVAN_GUARDS_COUNTER) + 1);
+     end
+ end
+ 
+@@ -322,14 +322,14 @@ procedure look_at_p_proc
+ begin
+     script_overrides;
+     if (local_var(5) == 6) then begin
+-        display_msg(message_str(23, 150));
++        display_mstr(150);
+     end
+     else begin
+         if (local_var(5) == 1) then begin
+-            display_msg(message_str(23, 100));
++            display_mstr(100);
+         end
+         else begin
+-            display_msg(message_str(23, 101));
++            display_mstr(101);
+         end
+     end
+ end
+@@ -339,33 +339,33 @@ begin
+     script_overrides;
+     if (local_var(5) == 6) then begin
+         if (not(combat_is_initialized)) then begin
+-            display_msg(message_str(23, 250));
++            display_mstr(250);
+         end
+         else begin
+-            display_msg(message_str(23, 251));
++            display_mstr(251);
+         end
+     end
+     else begin
+         if (local_var(5) == 1) then begin
+-            if ((global_var(911) bwand 8) != 0) then begin
+-                display_msg(message_str(23, 200));
++            if ((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 8) != 0) then begin
++                display_mstr(200);
+             end
+-            if ((global_var(911) bwand 16) != 0) then begin
+-                display_msg(message_str(23, 201));
++            if ((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 16) != 0) then begin
++                display_mstr(201);
+             end
+-            if ((global_var(911) bwand 4) != 0) then begin
+-                display_msg(message_str(23, 202));
++            if ((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 4) != 0) then begin
++                display_mstr(202);
+             end
+         end
+         else begin
+-            if ((global_var(911) bwand 8) != 0) then begin
+-                display_msg(message_str(23, 203));
++            if ((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 8) != 0) then begin
++                display_mstr(203);
+             end
+-            if ((global_var(911) bwand 16) != 0) then begin
+-                display_msg(message_str(23, 204));
++            if ((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 16) != 0) then begin
++                display_mstr(204);
+             end
+-            if ((global_var(911) bwand 4) != 0) then begin
+-                display_msg(message_str(23, 205));
++            if ((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 4) != 0) then begin
++                display_mstr(205);
+             end
+         end
+     end
+@@ -399,137 +399,137 @@ begin
+     end
+     if (fixed_param == 6) then begin
+         set_local_var(5, 6);
+-        critter_add_trait(self_obj, 1, 5, 3);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_TOUGH_GUARD_NO_TALKING);
+         call map_enter_p_proc();
+     end
+     if (fixed_param == 10) then begin
+         if (local_var(5) == 6) then begin
+-            if (global_var(1024) != 1) then begin
++            if (global_var(GVAR_CARAVAN_JEREMY_ESCAPED) != 1) then begin
+                 probability := random(0, 1);
+                 if (probability == 0) then begin
+-                    float_msg(self_obj, message_str(23, 470), 2);
++                    float_msg(self_obj, mstr(470), FLOAT_MSG_RED);
+                 end
+                 if (probability == 1) then begin
+-                    float_msg(self_obj, message_str(23, 471), 2);
++                    float_msg(self_obj, mstr(471), FLOAT_MSG_RED);
+                 end
+             end
+         end
+         else begin
+             if (local_var(5) == 1) then begin
+-                float_msg(self_obj, message_str(23, 450), 2);
+-                set_global_var(911, global_var(911) bwor 8388608);
++                float_msg(self_obj, mstr(450), FLOAT_MSG_RED);
++                set_global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS, global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwor 8388608);
+             end
+             else begin
+-                if ((global_var(1024) == 1) and (cur_map_index == 102)) then begin
++                if ((global_var(GVAR_CARAVAN_JEREMY_ESCAPED) == 1) and (CUR_MAP_KARAVAN1)) then begin
+                 end
+                 else begin
+                     probability := random(0, 7);
+                     if (probability == 1) then begin
+-                        float_msg(self_obj, message_str(23, 460), 2);
++                        float_msg(self_obj, mstr(460), FLOAT_MSG_RED);
+                     end
+                     if (probability == 2) then begin
+-                        float_msg(self_obj, message_str(23, 461), 2);
++                        float_msg(self_obj, mstr(461), FLOAT_MSG_RED);
+                     end
+                     if (probability == 3) then begin
+-                        float_msg(self_obj, message_str(23, 462), 2);
++                        float_msg(self_obj, mstr(462), FLOAT_MSG_RED);
+                     end
+                 end
+             end
+         end
+     end
+     if (fixed_param == 20) then begin
+-        if ((obj_is_carrying_obj_pid(self_obj, 18) >= 1) and ((obj_pid(critter_inven_obj(self_obj, 1)) != 18) and (obj_pid(critter_inven_obj(self_obj, 2)) != 18))) then begin
+-            wield_obj_critter(self_obj, obj_carrying_pid_obj(self_obj, 18));
++        if ((obj_is_carrying_obj_pid(self_obj, 18) >= 1) and ((obj_pid(critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND)) != 18) and (obj_pid(critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND)) != 18))) then begin
++            wield_obj(obj_carrying_pid_obj(self_obj, 18));
+         end
+-        if ((obj_is_carrying_obj_pid(self_obj, 9) >= 1) and ((obj_pid(critter_inven_obj(self_obj, 1)) != 9) and (obj_pid(critter_inven_obj(self_obj, 2)) != 9))) then begin
+-            wield_obj_critter(self_obj, obj_carrying_pid_obj(self_obj, 9));
++        if ((obj_is_carrying_obj_pid(self_obj, 9) >= 1) and ((obj_pid(critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND)) != 9) and (obj_pid(critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND)) != 9))) then begin
++            wield_obj(obj_carrying_pid_obj(self_obj, 9));
+         end
+-        if ((obj_is_carrying_obj_pid(self_obj, 10) >= 1) and ((obj_pid(critter_inven_obj(self_obj, 1)) != 10) and (obj_pid(critter_inven_obj(self_obj, 2)) != 10))) then begin
+-            wield_obj_critter(self_obj, obj_carrying_pid_obj(self_obj, 10));
++        if ((obj_is_carrying_obj_pid(self_obj, 10) >= 1) and ((obj_pid(critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND)) != 10) and (obj_pid(critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND)) != 10))) then begin
++            wield_obj(obj_carrying_pid_obj(self_obj, 10));
+         end
+-        if ((obj_is_carrying_obj_pid(self_obj, 8) >= 1) and ((obj_pid(critter_inven_obj(self_obj, 1)) != 8) and (obj_pid(critter_inven_obj(self_obj, 2)) != 8))) then begin
+-            wield_obj_critter(self_obj, obj_carrying_pid_obj(self_obj, 8));
++        if ((obj_is_carrying_obj_pid(self_obj, 8) >= 1) and ((obj_pid(critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND)) != 8) and (obj_pid(critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND)) != 8))) then begin
++            wield_obj(obj_carrying_pid_obj(self_obj, 8));
+         end
+-        if ((obj_is_carrying_obj_pid(self_obj, 234) >= 1) and ((obj_pid(critter_inven_obj(self_obj, 1)) != 234) and (obj_pid(critter_inven_obj(self_obj, 2)) != 234))) then begin
+-            wield_obj_critter(self_obj, obj_carrying_pid_obj(self_obj, 234));
++        if ((obj_is_carrying_obj_pid(self_obj, 234) >= 1) and ((obj_pid(critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND)) != 234) and (obj_pid(critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND)) != 234))) then begin
++            wield_obj(obj_carrying_pid_obj(self_obj, 234));
+         end
+-        if ((obj_is_carrying_obj_pid(self_obj, 94) >= 1) and ((obj_pid(critter_inven_obj(self_obj, 1)) != 94) and (obj_pid(critter_inven_obj(self_obj, 2)) != 94))) then begin
+-            wield_obj_critter(self_obj, obj_carrying_pid_obj(self_obj, 94));
++        if ((obj_is_carrying_obj_pid(self_obj, 94) >= 1) and ((obj_pid(critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND)) != 94) and (obj_pid(critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND)) != 94))) then begin
++            wield_obj(obj_carrying_pid_obj(self_obj, 94));
+         end
+-        if ((obj_is_carrying_obj_pid(self_obj, 4) >= 1) and ((obj_pid(critter_inven_obj(self_obj, 1)) != 4) and (obj_pid(critter_inven_obj(self_obj, 2)) != 4))) then begin
+-            wield_obj_critter(self_obj, obj_carrying_pid_obj(self_obj, 4));
++        if ((obj_is_carrying_obj_pid(self_obj, 4) >= 1) and ((obj_pid(critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND)) != 4) and (obj_pid(critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND)) != 4))) then begin
++            wield_obj(obj_carrying_pid_obj(self_obj, 4));
+         end
+-        if ((obj_is_carrying_obj_pid(self_obj, 280) >= 1) and ((obj_pid(critter_inven_obj(self_obj, 1)) != 280) and (obj_pid(critter_inven_obj(self_obj, 2)) != 280))) then begin
+-            wield_obj_critter(self_obj, obj_carrying_pid_obj(self_obj, 280));
++        if ((obj_is_carrying_obj_pid(self_obj, 280) >= 1) and ((obj_pid(critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND)) != 280) and (obj_pid(critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND)) != 280))) then begin
++            wield_obj(obj_carrying_pid_obj(self_obj, 280));
+         end
+     end
+ end
+ 
+ procedure combat_p_proc
+ begin
+-    if (((global_var(911) bwand 1) != 0) and not((global_var(911) bwand 8388608) != 0)) then begin
+-        set_global_var(911, global_var(911) bwor 8388608);
++    if (((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 1) != 0) and not((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 8388608) != 0)) then begin
++        set_global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS, global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwor 8388608);
+     end
+-    if (((global_var(911) bwand 131072) != 0) and (local_var(4) < 10)) then begin
+-        critter_add_trait(self_obj, 1, 6, 92);
++    if (((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 131072) != 0) and (local_var(4) < 10)) then begin
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 92);
+         set_local_var(4, 10);
+     end
+     if (fixed_param == 4) then begin
+         probability := random(0, 30);
+         if (not(critter_is_fleeing(self_obj))) then begin
+             if (local_var(5) == 6) then begin
+-                if ((global_var(911) bwand 131072) != 0) then begin
++                if ((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 131072) != 0) then begin
+                     if ((probability == 1) or (probability == 2)) then begin
+-                        float_msg(self_obj, message_str(23, 401), 2);
++                        float_msg(self_obj, mstr(401), FLOAT_MSG_RED);
+                     end
+                     if ((probability == 4) or (probability == 5)) then begin
+-                        float_msg(self_obj, message_str(23, 402), 2);
++                        float_msg(self_obj, mstr(402), FLOAT_MSG_RED);
+                     end
+                 end
+                 else begin
+                     if ((probability == 1) or (probability == 2)) then begin
+-                        float_msg(self_obj, message_str(23, 472), 2);
++                        float_msg(self_obj, mstr(472), FLOAT_MSG_RED);
+                     end
+                     if ((probability == 4) or (probability == 5)) then begin
+-                        float_msg(self_obj, message_str(23, 473), 2);
++                        float_msg(self_obj, mstr(473), FLOAT_MSG_RED);
+                     end
+                 end
+             end
+             else begin
+                 if (local_var(5) == 1) then begin
+-                    if ((global_var(911) bwand 131072) != 0) then begin
++                    if ((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 131072) != 0) then begin
+                         if ((probability == 1) or (probability == 2) or (probability == 3)) then begin
+-                            float_msg(self_obj, message_str(23, 455), 2);
++                            float_msg(self_obj, mstr(455), FLOAT_MSG_RED);
+                         end
+                         if ((probability == 4) or (probability == 5) or (probability == 6)) then begin
+-                            float_msg(self_obj, message_str(23, 456), 2);
++                            float_msg(self_obj, mstr(456), FLOAT_MSG_RED);
+                         end
+                     end
+                     else begin
+                         if ((probability == 1) or (probability == 2)) then begin
+-                            float_msg(self_obj, message_str(23, 451), 2);
++                            float_msg(self_obj, mstr(451), FLOAT_MSG_RED);
+                         end
+                         if ((probability == 4) or (probability == 5)) then begin
+-                            float_msg(self_obj, message_str(23, 452), 2);
++                            float_msg(self_obj, mstr(452), FLOAT_MSG_RED);
+                         end
+                     end
+                 end
+                 else begin
+-                    if (not((global_var(911) bwand 131072) != 0)) then begin
++                    if (not((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 131072) != 0)) then begin
+                         if (probability == 1) then begin
+-                            float_msg(self_obj, message_str(23, 463), 2);
++                            float_msg(self_obj, mstr(463), FLOAT_MSG_RED);
+                         end
+                         if (probability == 2) then begin
+-                            float_msg(self_obj, message_str(23, 464), 2);
++                            float_msg(self_obj, mstr(464), FLOAT_MSG_RED);
+                         end
+                         if (probability == 3) then begin
+-                            float_msg(self_obj, message_str(23, 465), 2);
++                            float_msg(self_obj, mstr(465), FLOAT_MSG_RED);
+                         end
+                         if (probability == 4) then begin
+-                            float_msg(self_obj, message_str(23, 466), 2);
++                            float_msg(self_obj, mstr(466), FLOAT_MSG_RED);
+                         end
+                         if (probability == 5) then begin
+-                            float_msg(self_obj, message_str(23, 467), 2);
++                            float_msg(self_obj, mstr(467), FLOAT_MSG_RED);
+                         end
+                     end
+                 end
+@@ -541,4 +541,3 @@ end
+ procedure way_destination_load_not_functional
+ begin
+ end
+-

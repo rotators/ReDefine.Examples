@@ -1,0 +1,896 @@
+diff --git a/Mods/Resurrection/Original/SRODRIGU.ssl b/Mods/Resurrection/ReDefine/SRODRIGU.ssl
+index 8886ce1..9d35772 100644
+--- a/Mods/Resurrection/Original/SRODRIGU.ssl
++++ b/Mods/Resurrection/ReDefine/SRODRIGU.ssl
+@@ -70,12 +70,12 @@ begin
+             return 1;
+         end
+     end
+-    if ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0)) then begin
++    if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+         if (tile_distance_objs(self_obj, party_member_obj(16777779)) <= 5) then begin
+             return 1;
+         end
+     end
+-    if ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0)) then begin
++    if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+         if (tile_distance_objs(self_obj, party_member_obj(16777811)) <= 5) then begin
+             return 1;
+         end
+@@ -90,7 +90,7 @@ begin
+             return 1;
+         end
+     end
+-    if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
++    if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+         if (tile_distance_objs(self_obj, party_member_obj(16777814)) <= 5) then begin
+             return 1;
+         end
+@@ -150,21 +150,21 @@ procedure critter_p_proc
+ begin
+     if (obj_can_see_obj(self_obj, dude_obj) and (map_var(3) != 1)) then begin
+         if (saw_dude != 1) then begin
+-            if (get_critter_stat(dude_obj, 34) == 0) then begin
+-                float_msg(self_obj, message_str(1466, 300), 2);
++            if (dude_gender == 0) then begin
++                float_msg(self_obj, mstr(300), FLOAT_MSG_RED);
+                 saw_dude := 1;
+             end
+             else begin
+-                float_msg(self_obj, message_str(1466, 301), 2);
++                float_msg(self_obj, mstr(301), FLOAT_MSG_RED);
+                 saw_dude := 1;
+             end
+         end
+         set_local_var(5, 1);
+-        attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++        attack(dude_obj);
+     end
+-    if (global_var(770) == 1) then begin
++    if (global_var(GVAR_ENEMY_RODRIGUES) == 1) then begin
+         if (obj_can_see_obj(self_obj, dude_obj) or obj_can_hear_obj(self_obj, dude_obj)) then begin
+-            attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++            attack(dude_obj);
+         end
+     end
+ end
+@@ -172,20 +172,20 @@ end
+ procedure pickup_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++        attack(dude_obj);
+         set_local_var(5, 1);
+     end
+ end
+ 
+ procedure talk_p_proc
+ begin
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        float_msg(self_obj, message_str(1466, 300), 2);
++    if (dude_gender == 0) then begin
++        float_msg(self_obj, mstr(300), FLOAT_MSG_RED);
+     end
+     else begin
+-        float_msg(self_obj, message_str(1466, 301), 2);
++        float_msg(self_obj, mstr(301), FLOAT_MSG_RED);
+     end
+-    attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++    attack(dude_obj);
+     set_local_var(5, 1);
+ end
+ 
+@@ -193,10 +193,10 @@ procedure look_at_p_proc
+ begin
+     script_overrides;
+     if (local_var(4) == 1) then begin
+-        display_msg(message_str(1466, 150));
++        display_mstr(150);
+     end
+     else begin
+-        display_msg(message_str(1466, 100));
++        display_mstr(100);
+     end
+ end
+ 
+@@ -204,10 +204,10 @@ procedure description_p_proc
+ begin
+     script_overrides;
+     if (local_var(4) == 1) then begin
+-        display_msg(message_str(1466, 250));
++        display_mstr(250);
+     end
+     else begin
+-        display_msg(message_str(1466, 200));
++        display_mstr(200);
+     end
+ end
+ 
+@@ -215,10 +215,10 @@ procedure timed_event_p_proc
+ begin
+     if (fixed_param == 1) then begin
+         game_ui_enable;
+-        gfade_in(1);
++        fade_in;
+         start_gdialog(1466, self_obj, 4, -1, -1);
+         gsay_start;
+-        if (get_critter_stat(dude_obj, 34) == 0) then begin
++        if (dude_gender == 0) then begin
+             call Node500();
+         end
+         else begin
+@@ -230,7 +230,7 @@ begin
+     end
+     if (fixed_param == 2) then begin
+         game_ui_enable;
+-        gfade_in(1);
++        fade_in;
+         start_gdialog(1466, self_obj, 4, -1, -1);
+         gsay_start;
+         call Node1000();
+@@ -241,67 +241,67 @@ end
+ 
+ procedure map_enter_p_proc
+ begin
+-    critter_add_trait(self_obj, 1, 6, 213);
+-    critter_add_trait(self_obj, 1, 5, 1);
++    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 213);
++    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_BERSERKER_NO_TALKING);
+ end
+ 
+ procedure damage_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+         call Node998();
+-        set_global_var(770, 1);
+-        set_global_var(1015, global_var(1015) bwand (-1 - 256));
+-        set_global_var(1018, global_var(1018) bwand (-1 - 1));
+-        set_global_var(1019, global_var(1019) bwand (-1 - 256));
++        set_global_var(GVAR_ENEMY_RODRIGUES, 1);
++        set_global_var(GVAR_PTR_KERI_REACTIONS, global_var(GVAR_PTR_KERI_REACTIONS) bwand (-1 - 256));
++        set_global_var(GVAR_PTR_GABRIEL_REACTIONS, global_var(GVAR_PTR_GABRIEL_REACTIONS) bwand (-1 - 1));
++        set_global_var(GVAR_PTR_LYSTRA_REACTIONS_1, global_var(GVAR_PTR_LYSTRA_REACTIONS_1) bwand (-1 - 256));
+     end
+ end
+ 
+ procedure destroy_p_proc
+ begin
+-    set_global_var(0, global_var(0) + 5);
++    set_global_var(GVAR_PLAYER_REPUTATION, global_var(GVAR_PLAYER_REPUTATION) + 5);
+     debug_msg("Player gains " + 5 + " Karma Points.");
+-    set_global_var(37, 0);
+-    set_global_var(38, 0);
+-    set_global_var(39, 0);
+-    set_global_var(40, 0);
+-    set_global_var(41, 0);
+-    set_global_var(42, 0);
+-    set_global_var(43, 0);
+-    set_global_var(44, 0);
+-    set_global_var(45, 0);
+-    if (global_var(0) >= 1000) then begin
+-        set_global_var(37, 1);
++    set_global_var(GVAR_KARMA_HOLY_WARRIOR, 0);
++    set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 0);
++    set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 0);
++    set_global_var(GVAR_KARMA_DEFENDER, 0);
++    set_global_var(GVAR_KARMA_WANDERER, 0);
++    set_global_var(GVAR_KARMA_BETRAYER, 0);
++    set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 0);
++    set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 0);
++    set_global_var(GVAR_KARMA_DEMON_SPAWN, 0);
++    if (global_var(GVAR_PLAYER_REPUTATION) >= 1000) then begin
++        set_global_var(GVAR_KARMA_HOLY_WARRIOR, 1);
+     end
+     else begin
+-        if (global_var(0) >= 750) then begin
+-            set_global_var(38, 1);
++        if (global_var(GVAR_PLAYER_REPUTATION) >= 750) then begin
++            set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 1);
+         end
+         else begin
+-            if (global_var(0) >= 500) then begin
+-                set_global_var(39, 1);
++            if (global_var(GVAR_PLAYER_REPUTATION) >= 500) then begin
++                set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 1);
+             end
+             else begin
+-                if (global_var(0) >= 250) then begin
+-                    set_global_var(40, 1);
++                if (global_var(GVAR_PLAYER_REPUTATION) >= 250) then begin
++                    set_global_var(GVAR_KARMA_DEFENDER, 1);
+                 end
+                 else begin
+-                    if (global_var(0) > -250) then begin
+-                        set_global_var(41, 1);
++                    if (global_var(GVAR_PLAYER_REPUTATION) > -250) then begin
++                        set_global_var(GVAR_KARMA_WANDERER, 1);
+                     end
+                     else begin
+-                        if (global_var(0) > -500) then begin
+-                            set_global_var(42, 1);
++                        if (global_var(GVAR_PLAYER_REPUTATION) > -500) then begin
++                            set_global_var(GVAR_KARMA_BETRAYER, 1);
+                         end
+                         else begin
+-                            if (global_var(0) > -750) then begin
+-                                set_global_var(43, 1);
++                            if (global_var(GVAR_PLAYER_REPUTATION) > -750) then begin
++                                set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 1);
+                             end
+                             else begin
+-                                if (global_var(0) > -1000) then begin
+-                                    set_global_var(44, 1);
++                                if (global_var(GVAR_PLAYER_REPUTATION) > -1000) then begin
++                                    set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 1);
+                                 end
+                                 else begin
+-                                    set_global_var(45, 1);
++                                    set_global_var(GVAR_KARMA_DEMON_SPAWN, 1);
+                                 end
+                             end
+                         end
+@@ -312,7 +312,7 @@ begin
+     end
+     set_map_var(8, 1);
+     if (map_var(7) == 1) then begin
+-        set_global_var(792, 2);
++        set_global_var(GVAR_SEDIT_DEAD_GANGSTERS, 2);
+     end
+ end
+ 
+@@ -327,162 +327,162 @@ end
+ 
+ procedure Node500
+ begin
+-    gsay_reply(1466, 500);
+-    giq_option(4, 1466, 501, Node550, 50);
+-    giq_option(4, 1466, 502, Node750, 50);
++    Reply(500);
++    giq_option(4, NAME, 501, Node550, NEUTRAL_REACTION);
++    giq_option(4, NAME, 502, Node750, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node550
+ begin
+-    gsay_reply(1466, 550);
+-    giq_option(4, 1466, obj_name(dude_obj) + message_str(1466, 551), Node600, 50);
+-    giq_option(4, 1466, 552, Node750, 50);
++    Reply(550);
++    giq_option(4, NAME, dude_name + mstr(551), Node600, NEUTRAL_REACTION);
++    giq_option(4, NAME, 552, Node750, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node600
+ begin
+-    gsay_reply(1466, message_str(1466, 600) + obj_name(dude_obj) + message_str(1466, 601));
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        giq_option(4, 1466, 602, Node650, 50);
++    Reply(mstr(600) + dude_name + mstr(601));
++    if (dude_gender == 0) then begin
++        giq_option(4, NAME, 602, Node650, NEUTRAL_REACTION);
+     end
+-    if (get_critter_stat(dude_obj, 34) == 1) then begin
+-        giq_option(4, 1466, 602, Node900, 50);
++    if (dude_gender == 1) then begin
++        giq_option(4, NAME, 602, Node900, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 1466, 603, Node750, 50);
++    giq_option(4, NAME, 603, Node750, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node650
+ begin
+-    gsay_reply(1466, 650);
+-    giq_option(4, 1466, 651, Node700, 50);
+-    giq_option(4, 1466, 652, Node750, 50);
++    Reply(650);
++    giq_option(4, NAME, 651, Node700, NEUTRAL_REACTION);
++    giq_option(4, NAME, 652, Node750, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node700
+ begin
+-    gsay_reply(1466, 700);
+-    giq_option(4, 1466, 701, Back_good_1, 50);
+-    giq_option(4, 1466, 702, Node750, 50);
++    Reply(700);
++    giq_option(4, NAME, 701, Back_good_1, NEUTRAL_REACTION);
++    giq_option(4, NAME, 702, Node750, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node750
+ begin
+-    gsay_reply(1466, 750);
+-    giq_option(4, 1466, 751, Back_bad, 50);
+-    giq_option(4, 1466, 752, Node800, 50);
++    Reply(750);
++    giq_option(4, NAME, 751, Back_bad, NEUTRAL_REACTION);
++    giq_option(4, NAME, 752, Node800, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node800
+ begin
+-    gsay_reply(1466, 800);
+-    giq_option(4, 1466, 801, Back_bad, 50);
++    Reply(800);
++    giq_option(4, NAME, 801, Back_bad, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node850
+ begin
+-    gsay_reply(1466, 850);
+-    giq_option(4, 1466, 851, Node550, 50);
+-    giq_option(4, 1466, 852, Node750, 50);
++    Reply(850);
++    giq_option(4, NAME, 851, Node550, NEUTRAL_REACTION);
++    giq_option(4, NAME, 852, Node750, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node900
+ begin
+-    gsay_reply(1466, 900);
+-    giq_option(4, 1466, 901, Node700, 50);
+-    giq_option(4, 1466, 902, Node750, 50);
++    Reply(900);
++    giq_option(4, NAME, 901, Node700, NEUTRAL_REACTION);
++    giq_option(4, NAME, 902, Node750, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1000
+ begin
+-    gsay_reply(1466, 1000);
+-    giq_option(4, 1466, 1001, Node1050, 50);
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        giq_option(4, 1466, 1002, Node1150, 50);
++    Reply(1000);
++    giq_option(4, NAME, 1001, Node1050, NEUTRAL_REACTION);
++    if (dude_gender == 0) then begin
++        giq_option(4, NAME, 1002, Node1150, NEUTRAL_REACTION);
+     end
+-    if (get_critter_stat(dude_obj, 34) == 1) then begin
+-        giq_option(4, 1466, 1002, Node1200, 50);
++    if (dude_gender == 1) then begin
++        giq_option(4, NAME, 1002, Node1200, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure Node1050
+ begin
+-    gsay_reply(1466, 1050);
+-    set_global_var(591, 1);
+-    giq_option(4, 1466, 1051, Node1100, 50);
++    Reply(1050);
++    set_global_var(GVAR_MADE_MAN_SALVATORE, 1);
++    giq_option(4, NAME, 1051, Node1100, NEUTRAL_REACTION);
+     if (upset == 1) then begin
+-        giq_option(4, 1466, 1052, Node750, 50);
++        giq_option(4, NAME, 1052, Node750, NEUTRAL_REACTION);
+     end
+     else begin
+-        giq_option(4, 1466, 1052, Node1250, 50);
++        giq_option(4, NAME, 1052, Node1250, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure Node1100
+ begin
+-    gsay_reply(1466, 1100);
+-    giq_option(4, 1466, 1101, Back_good_2, 50);
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
++    Reply(1100);
++    giq_option(4, NAME, 1101, Back_good_2, NEUTRAL_REACTION);
++    if (dude_gender == 0) then begin
+         if (upset == 1) then begin
+-            giq_option(4, 1466, 1102, Node750, 50);
++            giq_option(4, NAME, 1102, Node750, NEUTRAL_REACTION);
+         end
+         else begin
+-            giq_option(4, 1466, 1102, Node1300, 50);
++            giq_option(4, NAME, 1102, Node1300, NEUTRAL_REACTION);
+         end
+     end
+-    if (get_critter_stat(dude_obj, 34) == 1) then begin
++    if (dude_gender == 1) then begin
+         if (upset == 1) then begin
+-            giq_option(4, 1466, 1103, Node750, 50);
++            giq_option(4, NAME, 1103, Node750, NEUTRAL_REACTION);
+         end
+         else begin
+-            giq_option(4, 1466, 1103, Node1300, 50);
++            giq_option(4, NAME, 1103, Node1300, NEUTRAL_REACTION);
+         end
+     end
+ end
+ 
+ procedure Node1150
+ begin
+-    gsay_reply(1466, 1150);
++    Reply(1150);
+     upset := 1;
+-    giq_option(4, 1466, 1151, Node1050, 50);
+-    giq_option(4, 1466, 1152, Node750, 50);
++    giq_option(4, NAME, 1151, Node1050, NEUTRAL_REACTION);
++    giq_option(4, NAME, 1152, Node750, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1200
+ begin
+-    gsay_reply(1466, 1200);
++    Reply(1200);
+     upset := 1;
+-    giq_option(4, 1466, 1201, Node1050, 50);
+-    giq_option(4, 1466, 1202, Node750, 50);
++    giq_option(4, NAME, 1201, Node1050, NEUTRAL_REACTION);
++    giq_option(4, NAME, 1202, Node750, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1250
+ begin
+-    gsay_reply(1466, 1250);
++    Reply(1250);
+     upset := 1;
+-    giq_option(4, 1466, 1251, Node1100, 50);
+-    giq_option(4, 1466, 1252, Node750, 50);
++    giq_option(4, NAME, 1251, Node1100, NEUTRAL_REACTION);
++    giq_option(4, NAME, 1252, Node750, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1300
+ begin
+-    gsay_reply(1466, 1300);
++    Reply(1300);
+     upset := 1;
+-    giq_option(4, 1466, 1301, Back_good_2, 50);
+-    giq_option(4, 1466, 1302, Node750, 50);
++    giq_option(4, NAME, 1301, Back_good_2, NEUTRAL_REACTION);
++    giq_option(4, NAME, 1302, Node750, NEUTRAL_REACTION);
+ end
+ 
+ procedure Back_good_1
+ begin
+     game_ui_disable;
+-    gfade_out(1);
++    fade_out;
+     move_to(dude_obj, 12928, 0);
+-    set_global_var(632, global_var(632) bwand (-1 - 64));
++    set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 64));
+     if (party_member_obj(16777729) != 0) then begin
+         if (party_member_obj(16777729)) then begin
+-            if (has_trait(1, party_member_obj(16777729), 666) == 0) then begin
+-                if ((global_var(632) bwand 1) != 0) then begin
++            if (obj_is_visible_flag(party_member_obj(16777729)) == 0) then begin
++                if ((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 1) != 0) then begin
+                     debug_msg("unhiding party member " + obj_name(party_member_obj(16777729)));
+-                    set_global_var(632, global_var(632) bwand (-1 - 1));
++                    set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 1));
+                     set_obj_visibility(party_member_obj(16777729), 0);
+                 end
+                 else begin
+@@ -491,18 +491,18 @@ begin
+             end
+             else begin
+                 debug_msg("unhiding party member " + obj_name(party_member_obj(16777729)));
+-                set_global_var(632, global_var(632) bwand (-1 - 1));
++                set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 1));
+                 set_obj_visibility(party_member_obj(16777729), 0);
+                 debug_msg("PARTY.H:::: party member wasn't hidden.. clearing my state");
+             end
+         end
+     end
+-    if ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0)) then begin
++    if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+         if (party_member_obj(16777779)) then begin
+-            if (has_trait(1, party_member_obj(16777779), 666) == 0) then begin
+-                if ((global_var(632) bwand 2) != 0) then begin
++            if (obj_is_visible_flag(party_member_obj(16777779)) == 0) then begin
++                if ((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 2) != 0) then begin
+                     debug_msg("unhiding party member " + obj_name(party_member_obj(16777779)));
+-                    set_global_var(632, global_var(632) bwand (-1 - 2));
++                    set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 2));
+                     set_obj_visibility(party_member_obj(16777779), 0);
+                 end
+                 else begin
+@@ -511,18 +511,18 @@ begin
+             end
+             else begin
+                 debug_msg("unhiding party member " + obj_name(party_member_obj(16777779)));
+-                set_global_var(632, global_var(632) bwand (-1 - 2));
++                set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 2));
+                 set_obj_visibility(party_member_obj(16777779), 0);
+                 debug_msg("PARTY.H:::: party member wasn't hidden.. clearing my state");
+             end
+         end
+     end
+-    if ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0)) then begin
++    if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+         if (party_member_obj(16777811)) then begin
+-            if (has_trait(1, party_member_obj(16777811), 666) == 0) then begin
+-                if ((global_var(632) bwand 4) != 0) then begin
++            if (obj_is_visible_flag(party_member_obj(16777811)) == 0) then begin
++                if ((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 4) != 0) then begin
+                     debug_msg("unhiding party member " + obj_name(party_member_obj(16777811)));
+-                    set_global_var(632, global_var(632) bwand (-1 - 4));
++                    set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 4));
+                     set_obj_visibility(party_member_obj(16777811), 0);
+                 end
+                 else begin
+@@ -531,7 +531,7 @@ begin
+             end
+             else begin
+                 debug_msg("unhiding party member " + obj_name(party_member_obj(16777811)));
+-                set_global_var(632, global_var(632) bwand (-1 - 4));
++                set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 4));
+                 set_obj_visibility(party_member_obj(16777811), 0);
+                 debug_msg("PARTY.H:::: party member wasn't hidden.. clearing my state");
+             end
+@@ -539,10 +539,10 @@ begin
+     end
+     if (party_member_obj(16777812) != 0) then begin
+         if (party_member_obj(16777812)) then begin
+-            if (has_trait(1, party_member_obj(16777812), 666) == 0) then begin
+-                if ((global_var(632) bwand 8) != 0) then begin
++            if (obj_is_visible_flag(party_member_obj(16777812)) == 0) then begin
++                if ((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 8) != 0) then begin
+                     debug_msg("unhiding party member " + obj_name(party_member_obj(16777812)));
+-                    set_global_var(632, global_var(632) bwand (-1 - 8));
++                    set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 8));
+                     set_obj_visibility(party_member_obj(16777812), 0);
+                 end
+                 else begin
+@@ -551,7 +551,7 @@ begin
+             end
+             else begin
+                 debug_msg("unhiding party member " + obj_name(party_member_obj(16777812)));
+-                set_global_var(632, global_var(632) bwand (-1 - 8));
++                set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 8));
+                 set_obj_visibility(party_member_obj(16777812), 0);
+                 debug_msg("PARTY.H:::: party member wasn't hidden.. clearing my state");
+             end
+@@ -559,10 +559,10 @@ begin
+     end
+     if (party_member_obj(16777813) != 0) then begin
+         if (party_member_obj(16777813)) then begin
+-            if (has_trait(1, party_member_obj(16777813), 666) == 0) then begin
+-                if ((global_var(632) bwand 16) != 0) then begin
++            if (obj_is_visible_flag(party_member_obj(16777813)) == 0) then begin
++                if ((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 16) != 0) then begin
+                     debug_msg("unhiding party member " + obj_name(party_member_obj(16777813)));
+-                    set_global_var(632, global_var(632) bwand (-1 - 16));
++                    set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 16));
+                     set_obj_visibility(party_member_obj(16777813), 0);
+                 end
+                 else begin
+@@ -571,18 +571,18 @@ begin
+             end
+             else begin
+                 debug_msg("unhiding party member " + obj_name(party_member_obj(16777813)));
+-                set_global_var(632, global_var(632) bwand (-1 - 16));
++                set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 16));
+                 set_obj_visibility(party_member_obj(16777813), 0);
+                 debug_msg("PARTY.H:::: party member wasn't hidden.. clearing my state");
+             end
+         end
+     end
+-    if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
++    if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+         if (party_member_obj(16777814)) then begin
+-            if (has_trait(1, party_member_obj(16777814), 666) == 0) then begin
+-                if ((global_var(632) bwand 32) != 0) then begin
++            if (obj_is_visible_flag(party_member_obj(16777814)) == 0) then begin
++                if ((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 32) != 0) then begin
+                     debug_msg("unhiding party member " + obj_name(party_member_obj(16777814)));
+-                    set_global_var(632, global_var(632) bwand (-1 - 32));
++                    set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 32));
+                     set_obj_visibility(party_member_obj(16777814), 0);
+                 end
+                 else begin
+@@ -591,7 +591,7 @@ begin
+             end
+             else begin
+                 debug_msg("unhiding party member " + obj_name(party_member_obj(16777814)));
+-                set_global_var(632, global_var(632) bwand (-1 - 32));
++                set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 32));
+                 set_obj_visibility(party_member_obj(16777814), 0);
+                 debug_msg("PARTY.H:::: party member wasn't hidden.. clearing my state");
+             end
+@@ -606,15 +606,15 @@ end
+ procedure Back_good_2
+ begin
+     game_ui_disable;
+-    gfade_out(1);
++    fade_out;
+     move_to(dude_obj, 12928, 0);
+-    set_global_var(632, global_var(632) bwand (-1 - 64));
++    set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 64));
+     if (party_member_obj(16777729) != 0) then begin
+         if (party_member_obj(16777729)) then begin
+-            if (has_trait(1, party_member_obj(16777729), 666) == 0) then begin
+-                if ((global_var(632) bwand 1) != 0) then begin
++            if (obj_is_visible_flag(party_member_obj(16777729)) == 0) then begin
++                if ((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 1) != 0) then begin
+                     debug_msg("unhiding party member " + obj_name(party_member_obj(16777729)));
+-                    set_global_var(632, global_var(632) bwand (-1 - 1));
++                    set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 1));
+                     set_obj_visibility(party_member_obj(16777729), 0);
+                 end
+                 else begin
+@@ -623,18 +623,18 @@ begin
+             end
+             else begin
+                 debug_msg("unhiding party member " + obj_name(party_member_obj(16777729)));
+-                set_global_var(632, global_var(632) bwand (-1 - 1));
++                set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 1));
+                 set_obj_visibility(party_member_obj(16777729), 0);
+                 debug_msg("PARTY.H:::: party member wasn't hidden.. clearing my state");
+             end
+         end
+     end
+-    if ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0)) then begin
++    if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+         if (party_member_obj(16777779)) then begin
+-            if (has_trait(1, party_member_obj(16777779), 666) == 0) then begin
+-                if ((global_var(632) bwand 2) != 0) then begin
++            if (obj_is_visible_flag(party_member_obj(16777779)) == 0) then begin
++                if ((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 2) != 0) then begin
+                     debug_msg("unhiding party member " + obj_name(party_member_obj(16777779)));
+-                    set_global_var(632, global_var(632) bwand (-1 - 2));
++                    set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 2));
+                     set_obj_visibility(party_member_obj(16777779), 0);
+                 end
+                 else begin
+@@ -643,18 +643,18 @@ begin
+             end
+             else begin
+                 debug_msg("unhiding party member " + obj_name(party_member_obj(16777779)));
+-                set_global_var(632, global_var(632) bwand (-1 - 2));
++                set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 2));
+                 set_obj_visibility(party_member_obj(16777779), 0);
+                 debug_msg("PARTY.H:::: party member wasn't hidden.. clearing my state");
+             end
+         end
+     end
+-    if ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0)) then begin
++    if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+         if (party_member_obj(16777811)) then begin
+-            if (has_trait(1, party_member_obj(16777811), 666) == 0) then begin
+-                if ((global_var(632) bwand 4) != 0) then begin
++            if (obj_is_visible_flag(party_member_obj(16777811)) == 0) then begin
++                if ((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 4) != 0) then begin
+                     debug_msg("unhiding party member " + obj_name(party_member_obj(16777811)));
+-                    set_global_var(632, global_var(632) bwand (-1 - 4));
++                    set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 4));
+                     set_obj_visibility(party_member_obj(16777811), 0);
+                 end
+                 else begin
+@@ -663,7 +663,7 @@ begin
+             end
+             else begin
+                 debug_msg("unhiding party member " + obj_name(party_member_obj(16777811)));
+-                set_global_var(632, global_var(632) bwand (-1 - 4));
++                set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 4));
+                 set_obj_visibility(party_member_obj(16777811), 0);
+                 debug_msg("PARTY.H:::: party member wasn't hidden.. clearing my state");
+             end
+@@ -671,10 +671,10 @@ begin
+     end
+     if (party_member_obj(16777812) != 0) then begin
+         if (party_member_obj(16777812)) then begin
+-            if (has_trait(1, party_member_obj(16777812), 666) == 0) then begin
+-                if ((global_var(632) bwand 8) != 0) then begin
++            if (obj_is_visible_flag(party_member_obj(16777812)) == 0) then begin
++                if ((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 8) != 0) then begin
+                     debug_msg("unhiding party member " + obj_name(party_member_obj(16777812)));
+-                    set_global_var(632, global_var(632) bwand (-1 - 8));
++                    set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 8));
+                     set_obj_visibility(party_member_obj(16777812), 0);
+                 end
+                 else begin
+@@ -683,7 +683,7 @@ begin
+             end
+             else begin
+                 debug_msg("unhiding party member " + obj_name(party_member_obj(16777812)));
+-                set_global_var(632, global_var(632) bwand (-1 - 8));
++                set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 8));
+                 set_obj_visibility(party_member_obj(16777812), 0);
+                 debug_msg("PARTY.H:::: party member wasn't hidden.. clearing my state");
+             end
+@@ -691,10 +691,10 @@ begin
+     end
+     if (party_member_obj(16777813) != 0) then begin
+         if (party_member_obj(16777813)) then begin
+-            if (has_trait(1, party_member_obj(16777813), 666) == 0) then begin
+-                if ((global_var(632) bwand 16) != 0) then begin
++            if (obj_is_visible_flag(party_member_obj(16777813)) == 0) then begin
++                if ((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 16) != 0) then begin
+                     debug_msg("unhiding party member " + obj_name(party_member_obj(16777813)));
+-                    set_global_var(632, global_var(632) bwand (-1 - 16));
++                    set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 16));
+                     set_obj_visibility(party_member_obj(16777813), 0);
+                 end
+                 else begin
+@@ -703,18 +703,18 @@ begin
+             end
+             else begin
+                 debug_msg("unhiding party member " + obj_name(party_member_obj(16777813)));
+-                set_global_var(632, global_var(632) bwand (-1 - 16));
++                set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 16));
+                 set_obj_visibility(party_member_obj(16777813), 0);
+                 debug_msg("PARTY.H:::: party member wasn't hidden.. clearing my state");
+             end
+         end
+     end
+-    if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
++    if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+         if (party_member_obj(16777814)) then begin
+-            if (has_trait(1, party_member_obj(16777814), 666) == 0) then begin
+-                if ((global_var(632) bwand 32) != 0) then begin
++            if (obj_is_visible_flag(party_member_obj(16777814)) == 0) then begin
++                if ((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 32) != 0) then begin
+                     debug_msg("unhiding party member " + obj_name(party_member_obj(16777814)));
+-                    set_global_var(632, global_var(632) bwand (-1 - 32));
++                    set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 32));
+                     set_obj_visibility(party_member_obj(16777814), 0);
+                 end
+                 else begin
+@@ -723,7 +723,7 @@ begin
+             end
+             else begin
+                 debug_msg("unhiding party member " + obj_name(party_member_obj(16777814)));
+-                set_global_var(632, global_var(632) bwand (-1 - 32));
++                set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 32));
+                 set_obj_visibility(party_member_obj(16777814), 0);
+                 debug_msg("PARTY.H:::: party member wasn't hidden.. clearing my state");
+             end
+@@ -738,15 +738,15 @@ end
+ procedure Back_bad
+ begin
+     game_ui_disable;
+-    gfade_out(1);
++    fade_out;
+     move_to(dude_obj, 12928, 0);
+-    set_global_var(632, global_var(632) bwand (-1 - 64));
++    set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 64));
+     if (party_member_obj(16777729) != 0) then begin
+         if (party_member_obj(16777729)) then begin
+-            if (has_trait(1, party_member_obj(16777729), 666) == 0) then begin
+-                if ((global_var(632) bwand 1) != 0) then begin
++            if (obj_is_visible_flag(party_member_obj(16777729)) == 0) then begin
++                if ((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 1) != 0) then begin
+                     debug_msg("unhiding party member " + obj_name(party_member_obj(16777729)));
+-                    set_global_var(632, global_var(632) bwand (-1 - 1));
++                    set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 1));
+                     set_obj_visibility(party_member_obj(16777729), 0);
+                 end
+                 else begin
+@@ -755,18 +755,18 @@ begin
+             end
+             else begin
+                 debug_msg("unhiding party member " + obj_name(party_member_obj(16777729)));
+-                set_global_var(632, global_var(632) bwand (-1 - 1));
++                set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 1));
+                 set_obj_visibility(party_member_obj(16777729), 0);
+                 debug_msg("PARTY.H:::: party member wasn't hidden.. clearing my state");
+             end
+         end
+     end
+-    if ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0)) then begin
++    if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+         if (party_member_obj(16777779)) then begin
+-            if (has_trait(1, party_member_obj(16777779), 666) == 0) then begin
+-                if ((global_var(632) bwand 2) != 0) then begin
++            if (obj_is_visible_flag(party_member_obj(16777779)) == 0) then begin
++                if ((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 2) != 0) then begin
+                     debug_msg("unhiding party member " + obj_name(party_member_obj(16777779)));
+-                    set_global_var(632, global_var(632) bwand (-1 - 2));
++                    set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 2));
+                     set_obj_visibility(party_member_obj(16777779), 0);
+                 end
+                 else begin
+@@ -775,18 +775,18 @@ begin
+             end
+             else begin
+                 debug_msg("unhiding party member " + obj_name(party_member_obj(16777779)));
+-                set_global_var(632, global_var(632) bwand (-1 - 2));
++                set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 2));
+                 set_obj_visibility(party_member_obj(16777779), 0);
+                 debug_msg("PARTY.H:::: party member wasn't hidden.. clearing my state");
+             end
+         end
+     end
+-    if ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0)) then begin
++    if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+         if (party_member_obj(16777811)) then begin
+-            if (has_trait(1, party_member_obj(16777811), 666) == 0) then begin
+-                if ((global_var(632) bwand 4) != 0) then begin
++            if (obj_is_visible_flag(party_member_obj(16777811)) == 0) then begin
++                if ((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 4) != 0) then begin
+                     debug_msg("unhiding party member " + obj_name(party_member_obj(16777811)));
+-                    set_global_var(632, global_var(632) bwand (-1 - 4));
++                    set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 4));
+                     set_obj_visibility(party_member_obj(16777811), 0);
+                 end
+                 else begin
+@@ -795,7 +795,7 @@ begin
+             end
+             else begin
+                 debug_msg("unhiding party member " + obj_name(party_member_obj(16777811)));
+-                set_global_var(632, global_var(632) bwand (-1 - 4));
++                set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 4));
+                 set_obj_visibility(party_member_obj(16777811), 0);
+                 debug_msg("PARTY.H:::: party member wasn't hidden.. clearing my state");
+             end
+@@ -803,10 +803,10 @@ begin
+     end
+     if (party_member_obj(16777812) != 0) then begin
+         if (party_member_obj(16777812)) then begin
+-            if (has_trait(1, party_member_obj(16777812), 666) == 0) then begin
+-                if ((global_var(632) bwand 8) != 0) then begin
++            if (obj_is_visible_flag(party_member_obj(16777812)) == 0) then begin
++                if ((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 8) != 0) then begin
+                     debug_msg("unhiding party member " + obj_name(party_member_obj(16777812)));
+-                    set_global_var(632, global_var(632) bwand (-1 - 8));
++                    set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 8));
+                     set_obj_visibility(party_member_obj(16777812), 0);
+                 end
+                 else begin
+@@ -815,7 +815,7 @@ begin
+             end
+             else begin
+                 debug_msg("unhiding party member " + obj_name(party_member_obj(16777812)));
+-                set_global_var(632, global_var(632) bwand (-1 - 8));
++                set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 8));
+                 set_obj_visibility(party_member_obj(16777812), 0);
+                 debug_msg("PARTY.H:::: party member wasn't hidden.. clearing my state");
+             end
+@@ -823,10 +823,10 @@ begin
+     end
+     if (party_member_obj(16777813) != 0) then begin
+         if (party_member_obj(16777813)) then begin
+-            if (has_trait(1, party_member_obj(16777813), 666) == 0) then begin
+-                if ((global_var(632) bwand 16) != 0) then begin
++            if (obj_is_visible_flag(party_member_obj(16777813)) == 0) then begin
++                if ((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 16) != 0) then begin
+                     debug_msg("unhiding party member " + obj_name(party_member_obj(16777813)));
+-                    set_global_var(632, global_var(632) bwand (-1 - 16));
++                    set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 16));
+                     set_obj_visibility(party_member_obj(16777813), 0);
+                 end
+                 else begin
+@@ -835,18 +835,18 @@ begin
+             end
+             else begin
+                 debug_msg("unhiding party member " + obj_name(party_member_obj(16777813)));
+-                set_global_var(632, global_var(632) bwand (-1 - 16));
++                set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 16));
+                 set_obj_visibility(party_member_obj(16777813), 0);
+                 debug_msg("PARTY.H:::: party member wasn't hidden.. clearing my state");
+             end
+         end
+     end
+-    if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
++    if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+         if (party_member_obj(16777814)) then begin
+-            if (has_trait(1, party_member_obj(16777814), 666) == 0) then begin
+-                if ((global_var(632) bwand 32) != 0) then begin
++            if (obj_is_visible_flag(party_member_obj(16777814)) == 0) then begin
++                if ((global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand 32) != 0) then begin
+                     debug_msg("unhiding party member " + obj_name(party_member_obj(16777814)));
+-                    set_global_var(632, global_var(632) bwand (-1 - 32));
++                    set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 32));
+                     set_obj_visibility(party_member_obj(16777814), 0);
+                 end
+                 else begin
+@@ -855,7 +855,7 @@ begin
+             end
+             else begin
+                 debug_msg("unhiding party member " + obj_name(party_member_obj(16777814)));
+-                set_global_var(632, global_var(632) bwand (-1 - 32));
++                set_global_var(GVAR_PARTY_MEMBERS_HIDDEN, global_var(GVAR_PARTY_MEMBERS_HIDDEN) bwand (-1 - 32));
+                 set_obj_visibility(party_member_obj(16777814), 0);
+                 debug_msg("PARTY.H:::: party member wasn't hidden.. clearing my state");
+             end
+@@ -866,4 +866,3 @@ begin
+     anim(dude_obj, 1000, 5);
+     add_timer_event(sanchez, 4, 3);
+ end
+-

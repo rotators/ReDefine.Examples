@@ -1,0 +1,658 @@
+diff --git a/Mods/Resurrection/Original/AVEXMAN.ssl b/Mods/Resurrection/ReDefine/AVEXMAN.ssl
+index 412d939..0bc70bb 100644
+--- a/Mods/Resurrection/Original/AVEXMAN.ssl
++++ b/Mods/Resurrection/ReDefine/AVEXMAN.ssl
+@@ -54,12 +54,12 @@ begin
+             return 1;
+         end
+     end
+-    if ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0)) then begin
++    if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+         if (tile_distance_objs(self_obj, party_member_obj(16777779)) <= 5) then begin
+             return 1;
+         end
+     end
+-    if ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0)) then begin
++    if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+         if (tile_distance_objs(self_obj, party_member_obj(16777811)) <= 5) then begin
+             return 1;
+         end
+@@ -74,7 +74,7 @@ begin
+             return 1;
+         end
+     end
+-    if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
++    if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+         if (tile_distance_objs(self_obj, party_member_obj(16777814)) <= 5) then begin
+             return 1;
+         end
+@@ -131,15 +131,15 @@ end
+ 
+ procedure critter_p_proc
+ begin
+-    if ((local_var(4) == 1) or (global_var(861) == 1) and (has_trait(1, self_obj, 666) == 1) and (obj_can_see_obj(self_obj, dude_obj) or (tile_distance(tile_num(self_obj), tile_num(dude_obj)) < 5))) then begin
++    if ((local_var(4) == 1) or (global_var(GVAR_AQ_ENEMY_VEX) == 1) and (obj_is_visible_flag(self_obj) == 1) and (obj_can_see_obj(self_obj, dude_obj) or (tile_distance(tile_num(self_obj), dude_tile) < 5))) then begin
+         if (critter_is_fleeing(self_obj)) then begin
+             if (anim_busy(self_obj) == 0) then begin
+                 if ((tile_distance_objs(self_obj, dude_obj) < 8) or obj_can_see_obj(self_obj, dude_obj)) then begin
+                     if (anim_busy(self_obj) == 0) then begin
+-                        global_temp := rotation_to_tile(tile_num(dude_obj), tile_num(self_obj));
++                        global_temp := rotation_to_tile(dude_tile, tile_num(self_obj));
+                         animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                         global_temp := (global_temp + 1) % 6;
+-                        while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)))) do begin
++                        while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(dude_tile, tile_num(self_obj)))) do begin
+                             debug_msg("flee loop: rot == " + global_temp);
+                             animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                             global_temp := (global_temp + 1) % 6;
+@@ -149,18 +149,18 @@ begin
+             end
+         end
+         else begin
+-            attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++            attack(dude_obj);
+         end
+     end
+-    if ((global_var(861) == 1) and (has_trait(1, self_obj, 666) == 1) and (elevation(self_obj) == 2) and (elevation(dude_obj) == 2)) then begin
++    if ((global_var(GVAR_AQ_ENEMY_VEX) == 1) and (obj_is_visible_flag(self_obj) == 1) and (elevation(self_obj) == 2) and (dude_elevation == 2)) then begin
+         if (critter_is_fleeing(self_obj)) then begin
+             if (anim_busy(self_obj) == 0) then begin
+                 if ((tile_distance_objs(self_obj, dude_obj) < 8) or obj_can_see_obj(self_obj, dude_obj)) then begin
+                     if (anim_busy(self_obj) == 0) then begin
+-                        global_temp := rotation_to_tile(tile_num(dude_obj), tile_num(self_obj));
++                        global_temp := rotation_to_tile(dude_tile, tile_num(self_obj));
+                         animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                         global_temp := (global_temp + 1) % 6;
+-                        while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)))) do begin
++                        while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(dude_tile, tile_num(self_obj)))) do begin
+                             debug_msg("flee loop: rot == " + global_temp);
+                             animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                             global_temp := (global_temp + 1) % 6;
+@@ -170,22 +170,22 @@ begin
+             end
+         end
+         else begin
+-            attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++            attack(dude_obj);
+         end
+     end
+-    if (((map_var(0) bwand 64) != 0) and (elevation(dude_obj) != 2)) then begin
++    if (((map_var(0) bwand 64) != 0) and (dude_elevation != 2)) then begin
+         set_map_var(0, map_var(0) bwand (-1 - 64));
+     end
+-    if ((elevation(dude_obj) == 2) and (elevation(self_obj) == 2) and (global_var(724) == 0) and (has_trait(1, self_obj, 666) == 1) and obj_can_see_obj(self_obj, dude_obj) and not((map_var(0) bwand 64) != 0)) then begin
++    if ((dude_elevation == 2) and (elevation(self_obj) == 2) and (global_var(GVAR_QUEST_A_DAVID_KIDNAP_COMPLICITY) == 0) and (obj_is_visible_flag(self_obj) == 1) and obj_can_see_obj(self_obj, dude_obj) and not((map_var(0) bwand 64) != 0)) then begin
+         call Node998();
+     end
+-    if (((map_var(0) bwand 64) != 0) and (elevation(dude_obj) == 2) and (has_trait(1, self_obj, 666) == 1) and tile_in_tile_rect(14113, 14105, 15513, 15505, tile_num(self_obj))) then begin
++    if (((map_var(0) bwand 64) != 0) and (dude_elevation == 2) and (obj_is_visible_flag(self_obj) == 1) and tile_in_tile_rect(14113, 14105, 15513, 15505, tile_num(self_obj))) then begin
+         set_obj_visibility(self_obj, 1);
+     end
+-    if (not((map_var(0) bwand 64) != 0) and (has_trait(1, self_obj, 666) == 0)) then begin
++    if (not((map_var(0) bwand 64) != 0) and (obj_is_visible_flag(self_obj) == 0)) then begin
+         set_obj_visibility(self_obj, 0);
+     end
+-    if ((global_var(871) == 2) and ((map_var(0) bwand 131072) != 0) and (elevation(self_obj) == 0) and (local_var(5) == 13720) and (global_var(860) == 0) and not((map_var(0) bwand 262144) != 0) and not(combat_is_initialized)) then begin
++    if ((global_var(GVAR_AQ_QUEST_KILL_WILLIAM_WIFE) == 2) and ((map_var(0) bwand 131072) != 0) and (elevation(self_obj) == 0) and (local_var(5) == 13720) and (global_var(GVAR_AQ_ENEMY_PRISTEH) == 0) and not((map_var(0) bwand 262144) != 0) and not(combat_is_initialized)) then begin
+         if ((map_var(0) bwand 524288) != 0) then begin
+             anim(self_obj, 1000, 1);
+         end
+@@ -196,14 +196,14 @@ begin
+             anim(self_obj, 1000, 3);
+         end
+         if (not(obj_is_carrying_obj_pid(self_obj, 18))) then begin
+-            restock_obj := create_object_sid(18, 0, 0, -1);
++            restock_obj := create_object(18, 0, 0);
+         end
+         add_mult_objs_to_inven(self_obj, restock_obj, 1);
+-        wield_obj_critter(self_obj, obj_carrying_pid_obj(self_obj, 18));
++        wield_obj(obj_carrying_pid_obj(self_obj, 18));
+         add_timer_event(self_obj, game_ticks(1), 5);
+         set_map_var(0, map_var(0) bwor 262144);
+     end
+-    if ((global_var(871) == 2) and ((map_var(0) bwand 131072) != 0) and (elevation(self_obj) == 0) and (local_var(5) == 13727) and (global_var(860) == 0) and not((map_var(0) bwand 4194304) != 0) and not(combat_is_initialized)) then begin
++    if ((global_var(GVAR_AQ_QUEST_KILL_WILLIAM_WIFE) == 2) and ((map_var(0) bwand 131072) != 0) and (elevation(self_obj) == 0) and (local_var(5) == 13727) and (global_var(GVAR_AQ_ENEMY_PRISTEH) == 0) and not((map_var(0) bwand 4194304) != 0) and not(combat_is_initialized)) then begin
+         if ((map_var(0) bwand 524288) != 0) then begin
+             anim(self_obj, 1000, 1);
+         end
+@@ -214,14 +214,14 @@ begin
+             anim(self_obj, 1000, 2);
+         end
+         if (not(obj_is_carrying_obj_pid(self_obj, 18))) then begin
+-            restock_obj := create_object_sid(18, 0, 0, -1);
++            restock_obj := create_object(18, 0, 0);
+         end
+         add_mult_objs_to_inven(self_obj, restock_obj, 1);
+         add_timer_event(self_obj, 6, 6);
+         set_map_var(0, map_var(0) bwor 4194304);
+     end
+     if ((local_var(5) == 12117) and ((map_var(0) bwand 33554432) != 0)) then begin
+-        restock_obj := create_object_sid(90, 0, 0, -1);
++        restock_obj := create_object(90, 0, 0);
+         add_mult_objs_to_inven(self_obj, restock_obj, 1);
+         set_map_var(0, map_var(0) bwand (-1 - 33554432));
+     end
+@@ -236,27 +236,27 @@ end
+ 
+ procedure talk_p_proc
+ begin
+-    if (((global_var(867) bwand 16) != 0) and (Projed_smycku == 0)) then begin
++    if (((global_var(GVAR_AQ_ALBUQ_DEATHS) bwand 16) != 0) and (Projed_smycku == 0)) then begin
+         probability := random(0, 3);
+         if (probability == 0) then begin
+-            if (get_critter_stat(dude_obj, 34) == 0) then begin
+-                float_msg(self_obj, message_str(1672, 300), 8);
++            if (dude_gender == 0) then begin
++                float_msg(self_obj, mstr(300), FLOAT_MSG_YELLOW);
+             end
+-            if (get_critter_stat(dude_obj, 34) == 1) then begin
+-                float_msg(self_obj, message_str(1672, 311), 8);
++            if (dude_gender == 1) then begin
++                float_msg(self_obj, mstr(311), FLOAT_MSG_YELLOW);
+             end
+         end
+         else begin
+             if (probability == 1) then begin
+-                float_msg(self_obj, message_str(1672, 301), 8);
++                float_msg(self_obj, mstr(301), FLOAT_MSG_YELLOW);
+             end
+             else begin
+                 if (probability == 2) then begin
+-                    float_msg(self_obj, message_str(1672, random(305, 306)), 8);
++                    float_msg(self_obj, mstr(random(305, 306)), FLOAT_MSG_YELLOW);
+                 end
+                 else begin
+                     if (probability == 3) then begin
+-                        float_msg(self_obj, message_str(1672, random(308, 309)), 8);
++                        float_msg(self_obj, mstr(random(308, 309)), FLOAT_MSG_YELLOW);
+                     end
+                 end
+             end
+@@ -267,57 +267,57 @@ begin
+         while (Projed_smycku == 0) do begin
+             probability := random(0, 12);
+             if ((party_member_obj(16777812) != 0) and (probability >= DO_FLOAT_PST) and (Projed_smycku == 0)) then begin
+-                if (get_critter_stat(dude_obj, 34) == 0) then begin
+-                    float_msg(self_obj, message_str(1672, random(321, 322)), 8);
++                if (dude_gender == 0) then begin
++                    float_msg(self_obj, mstr(random(321, 322)), FLOAT_MSG_YELLOW);
+                 end
+-                if (get_critter_stat(dude_obj, 34) == 1) then begin
+-                    float_msg(self_obj, message_str(1672, random(322, 323)), 8);
++                if (dude_gender == 1) then begin
++                    float_msg(self_obj, mstr(random(322, 323)), FLOAT_MSG_YELLOW);
+                 end
+                 Projed_smycku := 1;
+             end
+             probability := random(0, 12);
+-            if ((Projed_smycku == 0) and (probability >= DO_FLOAT_PST) and (global_var(859) == 1)) then begin
+-                float_msg(self_obj, message_str(1672, random(313, 314)), 8);
++            if ((Projed_smycku == 0) and (probability >= DO_FLOAT_PST) and (global_var(GVAR_AQ_MUTANT_HUNTER) == 1)) then begin
++                float_msg(self_obj, mstr(random(313, 314)), FLOAT_MSG_YELLOW);
+                 Projed_smycku := 1;
+             end
+             probability := random(0, 10);
+-            if ((Projed_smycku == 0) and (probability >= DO_FLOAT_PST) and (global_var(724) == 11)) then begin
+-                float_msg(self_obj, message_str(1672, 318), 8);
++            if ((Projed_smycku == 0) and (probability >= DO_FLOAT_PST) and (global_var(GVAR_QUEST_A_DAVID_KIDNAP_COMPLICITY) == 11)) then begin
++                float_msg(self_obj, mstr(318), FLOAT_MSG_YELLOW);
+                 Projed_smycku := 1;
+             end
+             probability := random(0, 11);
+-            if ((Projed_smycku == 0) and (probability >= DO_FLOAT_PST) and (global_var(886) == 1)) then begin
+-                float_msg(self_obj, message_str(1672, random(319, 320)), 8);
++            if ((Projed_smycku == 0) and (probability >= DO_FLOAT_PST) and (global_var(GVAR_AQ_FRIEND_OF_THE_TRIBE) == 1)) then begin
++                float_msg(self_obj, mstr(random(319, 320)), FLOAT_MSG_YELLOW);
+                 Projed_smycku := 1;
+             end
+             probability := random(0, 10);
+-            if ((Projed_smycku == 0) and (probability >= DO_FLOAT_PST) and ((global_var(867) bwand 1) != 0)) then begin
+-                float_msg(self_obj, message_str(1672, 317), 8);
++            if ((Projed_smycku == 0) and (probability >= DO_FLOAT_PST) and ((global_var(GVAR_AQ_ALBUQ_DEATHS) bwand 1) != 0)) then begin
++                float_msg(self_obj, mstr(317), FLOAT_MSG_YELLOW);
+                 Projed_smycku := 1;
+             end
+             probability := random(0, 10);
+-            if ((Projed_smycku == 0) and (probability >= DO_FLOAT_PST) and (global_var(878) >= 3)) then begin
+-                float_msg(self_obj, message_str(1672, 315), 8);
++            if ((Projed_smycku == 0) and (probability >= DO_FLOAT_PST) and (global_var(GVAR_AQ_QUEST_HOSPITAL_TO_KILL_PRIMITIVES) >= 3)) then begin
++                float_msg(self_obj, mstr(315), FLOAT_MSG_YELLOW);
+                 Projed_smycku := 1;
+             end
+             probability := random(0, 10);
+-            if ((Projed_smycku == 0) and (probability >= DO_FLOAT_PST) and (global_var(871) == 3)) then begin
+-                float_msg(self_obj, message_str(1672, 316), 8);
++            if ((Projed_smycku == 0) and (probability >= DO_FLOAT_PST) and (global_var(GVAR_AQ_QUEST_KILL_WILLIAM_WIFE) == 3)) then begin
++                float_msg(self_obj, mstr(316), FLOAT_MSG_YELLOW);
+                 Projed_smycku := 1;
+             end
+             probability := random(0, 10);
+-            if ((Projed_smycku == 0) and (probability >= DO_FLOAT_PST) and (global_var(859) == 0)) then begin
+-                float_msg(self_obj, message_str(1672, 312), 8);
++            if ((Projed_smycku == 0) and (probability >= DO_FLOAT_PST) and (global_var(GVAR_AQ_MUTANT_HUNTER) == 0)) then begin
++                float_msg(self_obj, mstr(312), FLOAT_MSG_YELLOW);
+                 Projed_smycku := 1;
+             end
+             pojistka := pojistka + 1;
+             probability := random(0, 12);
+             if ((Projed_smycku == 0) and (probability >= DO_FLOAT_PST) or (pojistka > 4)) then begin
+-                if (get_critter_stat(dude_obj, 34) == 0) then begin
+-                    float_msg(self_obj, message_str(1672, random(300, 310)), 8);
++                if (dude_gender == 0) then begin
++                    float_msg(self_obj, mstr(random(300, 310)), FLOAT_MSG_YELLOW);
+                 end
+-                if (get_critter_stat(dude_obj, 34) == 1) then begin
+-                    float_msg(self_obj, message_str(1672, random(301, 311)), 8);
++                if (dude_gender == 1) then begin
++                    float_msg(self_obj, mstr(random(301, 311)), FLOAT_MSG_YELLOW);
+                 end
+                 pojistka := 0;
+                 Projed_smycku := 1;
+@@ -330,55 +330,55 @@ end
+ procedure destroy_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        set_global_var(4, global_var(4) + 1);
+-        if (metarule(51, self_obj) == 2) then begin
++        set_global_var(GVAR_BAD_MONSTER, global_var(GVAR_BAD_MONSTER) + 1);
++        if (critter_kill_type(self_obj) == KILL_TYPE_children_kills) then begin
+             if (source_obj == dude_obj) then begin
+-                set_global_var(2, 0);
+-                set_global_var(1, global_var(1) + 1);
+-                set_global_var(0, global_var(0) + -15);
++                set_global_var(GVAR_CHAMPION_REPUTATION, 0);
++                set_global_var(GVAR_CHILDKILLER_REPUTATION, global_var(GVAR_CHILDKILLER_REPUTATION) + 1);
++                set_global_var(GVAR_PLAYER_REPUTATION, global_var(GVAR_PLAYER_REPUTATION) + -15);
+                 debug_msg("Player gains " + -15 + " Karma Points.");
+-                set_global_var(37, 0);
+-                set_global_var(38, 0);
+-                set_global_var(39, 0);
+-                set_global_var(40, 0);
+-                set_global_var(41, 0);
+-                set_global_var(42, 0);
+-                set_global_var(43, 0);
+-                set_global_var(44, 0);
+-                set_global_var(45, 0);
+-                if (global_var(0) >= 1000) then begin
+-                    set_global_var(37, 1);
++                set_global_var(GVAR_KARMA_HOLY_WARRIOR, 0);
++                set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 0);
++                set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 0);
++                set_global_var(GVAR_KARMA_DEFENDER, 0);
++                set_global_var(GVAR_KARMA_WANDERER, 0);
++                set_global_var(GVAR_KARMA_BETRAYER, 0);
++                set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 0);
++                set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 0);
++                set_global_var(GVAR_KARMA_DEMON_SPAWN, 0);
++                if (global_var(GVAR_PLAYER_REPUTATION) >= 1000) then begin
++                    set_global_var(GVAR_KARMA_HOLY_WARRIOR, 1);
+                 end
+                 else begin
+-                    if (global_var(0) >= 750) then begin
+-                        set_global_var(38, 1);
++                    if (global_var(GVAR_PLAYER_REPUTATION) >= 750) then begin
++                        set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 1);
+                     end
+                     else begin
+-                        if (global_var(0) >= 500) then begin
+-                            set_global_var(39, 1);
++                        if (global_var(GVAR_PLAYER_REPUTATION) >= 500) then begin
++                            set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 1);
+                         end
+                         else begin
+-                            if (global_var(0) >= 250) then begin
+-                                set_global_var(40, 1);
++                            if (global_var(GVAR_PLAYER_REPUTATION) >= 250) then begin
++                                set_global_var(GVAR_KARMA_DEFENDER, 1);
+                             end
+                             else begin
+-                                if (global_var(0) > -250) then begin
+-                                    set_global_var(41, 1);
++                                if (global_var(GVAR_PLAYER_REPUTATION) > -250) then begin
++                                    set_global_var(GVAR_KARMA_WANDERER, 1);
+                                 end
+                                 else begin
+-                                    if (global_var(0) > -500) then begin
+-                                        set_global_var(42, 1);
++                                    if (global_var(GVAR_PLAYER_REPUTATION) > -500) then begin
++                                        set_global_var(GVAR_KARMA_BETRAYER, 1);
+                                     end
+                                     else begin
+-                                        if (global_var(0) > -750) then begin
+-                                            set_global_var(43, 1);
++                                        if (global_var(GVAR_PLAYER_REPUTATION) > -750) then begin
++                                            set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 1);
+                                         end
+                                         else begin
+-                                            if (global_var(0) > -1000) then begin
+-                                                set_global_var(44, 1);
++                                            if (global_var(GVAR_PLAYER_REPUTATION) > -1000) then begin
++                                                set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 1);
+                                             end
+                                             else begin
+-                                                set_global_var(45, 1);
++                                                set_global_var(GVAR_KARMA_DEMON_SPAWN, 1);
+                                             end
+                                         end
+                                     end
+@@ -387,62 +387,62 @@ begin
+                         end
+                     end
+                 end
+-                set_global_var(51, global_var(51) + -8);
++                set_global_var(GVAR_TOWN_REP_ALBUQUERQUE, global_var(GVAR_TOWN_REP_ALBUQUERQUE) + -8);
+                 debug_msg("Added " + -8 + " to Town Rep");
+             end
+         end
+-        if (((global_var(4) + global_var(5)) >= 25) and ((global_var(5) > (2 * global_var(4))) or (global_var(3) == 1))) then begin
+-            set_global_var(3, 1);
+-            set_global_var(2, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+         end
+-        if (((global_var(4) + global_var(5)) >= 25) and ((global_var(4) > (3 * global_var(5))) or (global_var(2) == 1)) and (global_var(1) == 0)) then begin
+-            set_global_var(2, 1);
+-            set_global_var(3, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(4) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1)) and (global_var(GVAR_CHILDKILLER_REPUTATION) == 0)) then begin
++            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+         end
+-        set_global_var(0, global_var(0) + 5);
++        set_global_var(GVAR_PLAYER_REPUTATION, global_var(GVAR_PLAYER_REPUTATION) + 5);
+         debug_msg("Player gains " + 5 + " Karma Points.");
+-        set_global_var(37, 0);
+-        set_global_var(38, 0);
+-        set_global_var(39, 0);
+-        set_global_var(40, 0);
+-        set_global_var(41, 0);
+-        set_global_var(42, 0);
+-        set_global_var(43, 0);
+-        set_global_var(44, 0);
+-        set_global_var(45, 0);
+-        if (global_var(0) >= 1000) then begin
+-            set_global_var(37, 1);
++        set_global_var(GVAR_KARMA_HOLY_WARRIOR, 0);
++        set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 0);
++        set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 0);
++        set_global_var(GVAR_KARMA_DEFENDER, 0);
++        set_global_var(GVAR_KARMA_WANDERER, 0);
++        set_global_var(GVAR_KARMA_BETRAYER, 0);
++        set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 0);
++        set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 0);
++        set_global_var(GVAR_KARMA_DEMON_SPAWN, 0);
++        if (global_var(GVAR_PLAYER_REPUTATION) >= 1000) then begin
++            set_global_var(GVAR_KARMA_HOLY_WARRIOR, 1);
+         end
+         else begin
+-            if (global_var(0) >= 750) then begin
+-                set_global_var(38, 1);
++            if (global_var(GVAR_PLAYER_REPUTATION) >= 750) then begin
++                set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 1);
+             end
+             else begin
+-                if (global_var(0) >= 500) then begin
+-                    set_global_var(39, 1);
++                if (global_var(GVAR_PLAYER_REPUTATION) >= 500) then begin
++                    set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 1);
+                 end
+                 else begin
+-                    if (global_var(0) >= 250) then begin
+-                        set_global_var(40, 1);
++                    if (global_var(GVAR_PLAYER_REPUTATION) >= 250) then begin
++                        set_global_var(GVAR_KARMA_DEFENDER, 1);
+                     end
+                     else begin
+-                        if (global_var(0) > -250) then begin
+-                            set_global_var(41, 1);
++                        if (global_var(GVAR_PLAYER_REPUTATION) > -250) then begin
++                            set_global_var(GVAR_KARMA_WANDERER, 1);
+                         end
+                         else begin
+-                            if (global_var(0) > -500) then begin
+-                                set_global_var(42, 1);
++                            if (global_var(GVAR_PLAYER_REPUTATION) > -500) then begin
++                                set_global_var(GVAR_KARMA_BETRAYER, 1);
+                             end
+                             else begin
+-                                if (global_var(0) > -750) then begin
+-                                    set_global_var(43, 1);
++                                if (global_var(GVAR_PLAYER_REPUTATION) > -750) then begin
++                                    set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 1);
+                                 end
+                                 else begin
+-                                    if (global_var(0) > -1000) then begin
+-                                        set_global_var(44, 1);
++                                    if (global_var(GVAR_PLAYER_REPUTATION) > -1000) then begin
++                                        set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 1);
+                                     end
+                                     else begin
+-                                        set_global_var(45, 1);
++                                        set_global_var(GVAR_KARMA_DEMON_SPAWN, 1);
+                                     end
+                                 end
+                             end
+@@ -451,21 +451,21 @@ begin
+                 end
+             end
+         end
+-        set_global_var(51, global_var(51) + 2);
++        set_global_var(GVAR_TOWN_REP_ALBUQUERQUE, global_var(GVAR_TOWN_REP_ALBUQUERQUE) + 2);
+         debug_msg("Added " + 2 + " to Town Rep");
+     end
+     set_map_var(5, map_var(5) + 1);
+     if (local_var(5) == 11524) then begin
+-        set_global_var(867, global_var(867) bwor 1024);
++        set_global_var(GVAR_AQ_ALBUQ_DEATHS, global_var(GVAR_AQ_ALBUQ_DEATHS) bwor 1024);
+     end
+     if (local_var(5) == 11704) then begin
+-        set_global_var(867, global_var(867) bwor 2048);
++        set_global_var(GVAR_AQ_ALBUQ_DEATHS, global_var(GVAR_AQ_ALBUQ_DEATHS) bwor 2048);
+     end
+     if (local_var(5) == 12702) then begin
+-        set_global_var(867, global_var(867) bwor 4096);
++        set_global_var(GVAR_AQ_ALBUQ_DEATHS, global_var(GVAR_AQ_ALBUQ_DEATHS) bwor 4096);
+     end
+     if (local_var(5) == 12506) then begin
+-        set_global_var(867, global_var(867) bwor 8192);
++        set_global_var(GVAR_AQ_ALBUQ_DEATHS, global_var(GVAR_AQ_ALBUQ_DEATHS) bwor 8192);
+     end
+     if ((local_var(5) == 16708) and (elevation(self_obj) == 2) and (local_var(6) == 0) and (map_var(6) != 2)) then begin
+         set_map_var(6, 1);
+@@ -475,22 +475,22 @@ end
+ procedure look_at_p_proc
+ begin
+     script_overrides;
+-    if (get_critter_stat(self_obj, 34) == 0) then begin
+-        display_msg(message_str(1672, 100));
++    if (self_gender == 0) then begin
++        display_mstr(100);
+     end
+     else begin
+-        display_msg(message_str(1672, 101));
++        display_mstr(101);
+     end
+ end
+ 
+ procedure description_p_proc
+ begin
+     script_overrides;
+-    if (get_critter_stat(self_obj, 34) == 0) then begin
+-        display_msg(message_str(1672, 200));
++    if (self_gender == 0) then begin
++        display_mstr(200);
+     end
+     else begin
+-        display_msg(message_str(1672, 201));
++        display_mstr(201);
+     end
+ end
+ 
+@@ -501,52 +501,52 @@ end
+ procedure damage_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        set_global_var(861, 1);
++        set_global_var(GVAR_AQ_ENEMY_VEX, 1);
+     end
+ end
+ 
+ procedure map_enter_p_proc
+ begin
+-    critter_add_trait(self_obj, 1, 6, 257);
+-    critter_add_trait(self_obj, 1, 5, 13);
+-    if ((global_var(1059) > 0) and not((global_var(867) bwand 16) != 0) and ((global_var(1059) == get_day) and (game_time_hour >= 131) or (global_var(1059) < get_day))) then begin
+-        set_global_var(861, 1);
++    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 257);
++    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_THUGS);
++    if ((global_var(GVAR_DAY_OF_VEX_AFTER) > 0) and not((global_var(GVAR_AQ_ALBUQ_DEATHS) bwand 16) != 0) and ((global_var(GVAR_DAY_OF_VEX_AFTER) == get_day) and (game_time_hour >= 131) or (global_var(GVAR_DAY_OF_VEX_AFTER) < get_day))) then begin
++        set_global_var(GVAR_AQ_ENEMY_VEX, 1);
+     end
+-    if (global_var(878) == 1) then begin
++    if (global_var(GVAR_AQ_QUEST_HOSPITAL_TO_KILL_PRIMITIVES) == 1) then begin
+         set_local_var(4, 0);
+     end
+     if (local_var(5) == 0) then begin
+         set_local_var(5, tile_num(self_obj));
+     end
+-    if ((local_var(5) == 11524) and ((global_var(867) bwand 1024) != 0)) then begin
++    if ((local_var(5) == 11524) and ((global_var(GVAR_AQ_ALBUQ_DEATHS) bwand 1024) != 0)) then begin
+         destroy_object(self_obj);
+     end
+-    if ((local_var(5) == 11704) and ((global_var(867) bwand 2048) != 0)) then begin
++    if ((local_var(5) == 11704) and ((global_var(GVAR_AQ_ALBUQ_DEATHS) bwand 2048) != 0)) then begin
+         destroy_object(self_obj);
+     end
+-    if ((local_var(5) == 12702) and ((global_var(867) bwand 4096) != 0)) then begin
++    if ((local_var(5) == 12702) and ((global_var(GVAR_AQ_ALBUQ_DEATHS) bwand 4096) != 0)) then begin
+         destroy_object(self_obj);
+     end
+-    if ((local_var(5) == 12506) and ((global_var(867) bwand 8192) != 0)) then begin
++    if ((local_var(5) == 12506) and ((global_var(GVAR_AQ_ALBUQ_DEATHS) bwand 8192) != 0)) then begin
+         destroy_object(self_obj);
+     end
+     if (tile_num(self_obj) == 12512) then begin
+         Vex_Guard := self_obj;
+     end
+-    if ((local_var(5) == 13720) and (tile_num(self_obj) == 13720) and (global_var(861) == 0) and (has_trait(1, self_obj, 10) != 2)) then begin
++    if ((local_var(5) == 13720) and (tile_num(self_obj) == 13720) and (global_var(GVAR_AQ_ENEMY_VEX) == 0) and (obj_get_rot(self_obj) != 2)) then begin
+         anim(self_obj, 1000, 2);
+     end
+-    if ((local_var(5) == 13727) and (tile_num(self_obj) == 13727) and (global_var(861) == 0) and (has_trait(1, self_obj, 10) != 2)) then begin
++    if ((local_var(5) == 13727) and (tile_num(self_obj) == 13727) and (global_var(GVAR_AQ_ENEMY_VEX) == 0) and (obj_get_rot(self_obj) != 2)) then begin
+         anim(self_obj, 1000, 2);
+     end
+-    if ((global_var(724) >= 8) and (global_var(724) <= 10) or ((global_var(723) >= 4) and (global_var(723) <= 6))) then begin
++    if ((global_var(GVAR_QUEST_A_DAVID_KIDNAP_COMPLICITY) >= 8) and (global_var(GVAR_QUEST_A_DAVID_KIDNAP_COMPLICITY) <= 10) or ((global_var(GVAR_QUEST_S_DAVID_KIDNAP_INVESTIGATION) >= 4) and (global_var(GVAR_QUEST_S_DAVID_KIDNAP_INVESTIGATION) <= 6))) then begin
+         if ((local_var(5) == 16708) and (elevation(self_obj) == 2) and (local_var(6) == 0)) then begin
+             add_timer_event(self_obj, 0, 8);
+         end
+     end
+-    if ((global_var(861) == 0) and (map_var(7) != 0) and ((((2 * (60 * (60 * 10))) + map_var(7)) <= game_time) or (global_var(870) == 2))) then begin
++    if ((global_var(GVAR_AQ_ENEMY_VEX) == 0) and (map_var(7) != 0) and ((((2 * (60 * (60 * 10))) + map_var(7)) <= game_time) or (global_var(GVAR_AQ_QUEST_BRING_VEX_HEAD) == 2))) then begin
+         set_map_var(7, 0);
+-        set_global_var(861, 1);
++        set_global_var(GVAR_AQ_ENEMY_VEX, 1);
+         if ((local_var(5) == 13720) or (local_var(5) == 13727)) then begin
+             destroy_object(self_obj);
+         end
+@@ -557,13 +557,13 @@ procedure timed_event_p_proc
+ begin
+     if (fixed_param == 1) then begin
+         if (counter > 2) then begin
+-            set_global_var(861, 1);
++            set_global_var(GVAR_AQ_ENEMY_VEX, 1);
+         end
+-        float_msg(self_obj, message_str(1672, random(330, 333)), 2);
++        float_msg(self_obj, mstr(random(330, 333)), FLOAT_MSG_RED);
+         counter := counter + 1;
+     end
+     if (fixed_param == 2) then begin
+-        float_msg(self_obj, message_str(1672, 334), 8);
++        float_msg(self_obj, mstr(334), FLOAT_MSG_YELLOW);
+     end
+     if (fixed_param == 5) then begin
+         reg_anim_func(2, self_obj);
+@@ -573,7 +573,7 @@ begin
+         play_sfx("whg1sxx1");
+     end
+     if (fixed_param == 6) then begin
+-        wield_obj_critter(self_obj, obj_carrying_pid_obj(self_obj, 18));
++        wield_obj(obj_carrying_pid_obj(self_obj, 18));
+         add_timer_event(self_obj, game_ticks(1), 7);
+     end
+     if (fixed_param == 7) then begin
+@@ -586,7 +586,7 @@ begin
+     if (fixed_param == 8) then begin
+         if (local_var(6) == 0) then begin
+             set_local_var(6, 1);
+-            restock_obj := create_object_sid(298, 0, 0, -1);
++            restock_obj := create_object(298, 0, 0);
+             add_mult_objs_to_inven(self_obj, restock_obj, 1);
+         end
+     end
+@@ -601,34 +601,34 @@ begin
+     while ((Projed_smycku == 0) and not((map_var(0) bwand 32) != 0)) do begin
+         probability := random(0, 10);
+         if ((Projed_smycku == 0) and (probability >= DO_FLOAT_PST)) then begin
+-            if ((get_critter_stat(dude_obj, 34) == 0) and (get_critter_stat(self_obj, 34) == 0)) then begin
+-                float_msg(self_obj, message_str(1672, 351), 2);
++            if ((dude_gender == 0) and (self_gender == 0)) then begin
++                float_msg(self_obj, mstr(351), FLOAT_MSG_RED);
+             end
+-            if ((get_critter_stat(dude_obj, 34) == 1) and (get_critter_stat(self_obj, 34) == 0)) then begin
+-                float_msg(self_obj, message_str(1672, 352), 2);
++            if ((dude_gender == 1) and (self_gender == 0)) then begin
++                float_msg(self_obj, mstr(352), FLOAT_MSG_RED);
+             end
+-            if ((get_critter_stat(dude_obj, 34) == 0) and (get_critter_stat(self_obj, 34) == 1)) then begin
+-                float_msg(self_obj, message_str(1672, 353), 2);
++            if ((dude_gender == 0) and (self_gender == 1)) then begin
++                float_msg(self_obj, mstr(353), FLOAT_MSG_RED);
+             end
+-            if ((get_critter_stat(dude_obj, 34) == 1) and (get_critter_stat(self_obj, 34) == 1)) then begin
+-                float_msg(self_obj, message_str(1672, 354), 2);
++            if ((dude_gender == 1) and (self_gender == 1)) then begin
++                float_msg(self_obj, mstr(354), FLOAT_MSG_RED);
+             end
+             set_map_var(0, map_var(0) bwor 32);
+             Projed_smycku := 1;
+         end
+         probability := random(0, 10);
+         if ((Projed_smycku == 0) and (probability >= DO_FLOAT_PST)) then begin
+-            float_msg(self_obj, message_str(1672, 355), 2);
++            float_msg(self_obj, mstr(355), FLOAT_MSG_RED);
+             set_map_var(0, map_var(0) bwor 32);
+             Projed_smycku := 1;
+         end
+         probability := random(0, 10);
+         if ((Projed_smycku == 0) and (probability >= DO_FLOAT_PST)) then begin
+-            if (get_critter_stat(dude_obj, 34) == 0) then begin
+-                float_msg(self_obj, message_str(1672, 356), 2);
++            if (dude_gender == 0) then begin
++                float_msg(self_obj, mstr(356), FLOAT_MSG_RED);
+             end
+-            if (get_critter_stat(dude_obj, 34) == 1) then begin
+-                float_msg(self_obj, message_str(1672, 357), 2);
++            if (dude_gender == 1) then begin
++                float_msg(self_obj, mstr(357), FLOAT_MSG_RED);
+             end
+             set_map_var(0, map_var(0) bwor 32);
+             Projed_smycku := 1;
+@@ -636,7 +636,7 @@ begin
+         pojistka := pojistka + 1;
+         probability := random(0, 11);
+         if ((Projed_smycku == 0) and (probability >= DO_FLOAT_PST) or (pojistka > 4)) then begin
+-            float_msg(self_obj, message_str(1672, 350), 2);
++            float_msg(self_obj, mstr(350), FLOAT_MSG_RED);
+             pojistka := 0;
+             Projed_smycku := 1;
+             set_map_var(0, map_var(0) bwor 32);
+@@ -644,6 +644,5 @@ begin
+     end
+     Projed_smycku := 0;
+     set_local_var(4, 1);
+-    set_global_var(861, 1);
++    set_global_var(GVAR_AQ_ENEMY_VEX, 1);
+ end
+-

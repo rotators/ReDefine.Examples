@@ -1,0 +1,1145 @@
+diff --git a/Mods/Resurrection/Original/ADUTCH.ssl b/Mods/Resurrection/ReDefine/ADUTCH.ssl
+index 09bb946..7d021e2 100644
+--- a/Mods/Resurrection/Original/ADUTCH.ssl
++++ b/Mods/Resurrection/ReDefine/ADUTCH.ssl
+@@ -102,12 +102,12 @@ begin
+             return 1;
+         end
+     end
+-    if ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0)) then begin
++    if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+         if (tile_distance_objs(self_obj, party_member_obj(16777779)) <= 5) then begin
+             return 1;
+         end
+     end
+-    if ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0)) then begin
++    if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+         if (tile_distance_objs(self_obj, party_member_obj(16777811)) <= 5) then begin
+             return 1;
+         end
+@@ -122,7 +122,7 @@ begin
+             return 1;
+         end
+     end
+-    if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
++    if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+         if (tile_distance_objs(self_obj, party_member_obj(16777814)) <= 5) then begin
+             return 1;
+         end
+@@ -179,15 +179,15 @@ end
+ 
+ procedure critter_p_proc
+ begin
+-    if ((local_var(4) == 1) or (global_var(864) == 1) and obj_can_see_obj(self_obj, dude_obj)) then begin
++    if ((local_var(4) == 1) or (global_var(GVAR_AQ_ENEMY_HUNTERS) == 1) and obj_can_see_obj(self_obj, dude_obj)) then begin
+         if (critter_is_fleeing(self_obj)) then begin
+             if (anim_busy(self_obj) == 0) then begin
+                 if ((tile_distance_objs(self_obj, dude_obj) < 8) or obj_can_see_obj(self_obj, dude_obj)) then begin
+                     if (anim_busy(self_obj) == 0) then begin
+-                        global_temp := rotation_to_tile(tile_num(dude_obj), tile_num(self_obj));
++                        global_temp := rotation_to_tile(dude_tile, tile_num(self_obj));
+                         animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                         global_temp := (global_temp + 1) % 6;
+-                        while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)))) do begin
++                        while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(dude_tile, tile_num(self_obj)))) do begin
+                             debug_msg("flee loop: rot == " + global_temp);
+                             animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                             global_temp := (global_temp + 1) % 6;
+@@ -197,19 +197,19 @@ begin
+             end
+         end
+         else begin
+-            attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++            attack(dude_obj);
+         end
+     end
+-    if (((game_time - local_var(7)) > (60 * 10 * 60)) and (has_trait(1, self_obj, 666) == 0)) then begin
++    if (((game_time - local_var(7)) > (60 * 10 * 60)) and (obj_is_visible_flag(self_obj) == 0)) then begin
+         set_obj_visibility(self_obj, 0);
+     end
+-    if (tile_in_tile_rect(27918, 27909, 29318, 29309, tile_num(dude_obj)) or (tile_distance_objs(self_obj, dude_obj) <= 5) and ((local_var(5) != 1) or ((party_member_obj(16777812) != 0) and ((local_var(6) bwand 1) == 0)))) then begin
++    if (tile_in_tile_rect(27918, 27909, 29318, 29309, dude_tile) or (tile_distance_objs(self_obj, dude_obj) <= 5) and ((local_var(5) != 1) or ((party_member_obj(16777812) != 0) and ((local_var(6) bwand 1) == 0)))) then begin
+         if (Done_before == 0) then begin
+             add_timer_event(self_obj, 15, 666);
+             Done_before := 1;
+         end
+     end
+-    if ((tile_distance(tile_num(self_obj), tile_num(dude_obj)) < 3) and (local_var(5) == 1) and (global_var(864) == 0) and (global_var(859) == 0) and (global_var(883) == 0)) then begin
++    if ((tile_distance(tile_num(self_obj), dude_tile) < 3) and (local_var(5) == 1) and (global_var(GVAR_AQ_ENEMY_HUNTERS) == 0) and (global_var(GVAR_AQ_MUTANT_HUNTER) == 0) and (global_var(GVAR_AQ_QUEST_MTHUNT_DUTCH_QUEST) == 0)) then begin
+         if (((game_time - float_wait) > (10 * 9)) and (float_wait != 0)) then begin
+             add_timer_event(self_obj, game_ticks(0), 1);
+         end
+@@ -217,7 +217,7 @@ begin
+             float_wait := game_time;
+         end
+     end
+-    if ((tile_distance(tile_num(self_obj), tile_num(dude_obj)) >= 3) and (float_wait != 0)) then begin
++    if ((tile_distance(tile_num(self_obj), dude_tile) >= 3) and (float_wait != 0)) then begin
+         float_wait := 0;
+     end
+ end
+@@ -226,35 +226,35 @@ procedure pickup_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+         set_local_var(4, 1);
+-        set_global_var(864, 1);
++        set_global_var(GVAR_AQ_ENEMY_HUNTERS, 1);
+     end
+ end
+ 
+ procedure talk_p_proc
+ begin
+-    anim(dude_obj, 1000, rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)));
+-    anim(self_obj, 1000, rotation_to_tile(tile_num(self_obj), tile_num(dude_obj)));
++    anim(dude_obj, 1000, rotation_to_tile(dude_tile, tile_num(self_obj)));
++    anim(self_obj, 1000, rotation_to_tile(tile_num(self_obj), dude_tile));
+     start_gdialog(1631, self_obj, 4, -1, -1);
+     gsay_start;
+     if ((party_member_obj(16777812) != 0) and ((local_var(6) bwand 1) == 0) and (Projed_smycku == 0)) then begin
+         call Node2100();
+         set_local_var(5, 1);
+-        if ((global_var(864) == 0) and (global_var(859) == 0)) then begin
++        if ((global_var(GVAR_AQ_ENEMY_HUNTERS) == 0) and (global_var(GVAR_AQ_MUTANT_HUNTER) == 0)) then begin
+             add_timer_event(self_obj, game_ticks(10), 1);
+         end
+         Projed_smycku := 1;
+     end
+-    if ((global_var(859) == 1) and (Projed_smycku == 0)) then begin
+-        if (get_critter_stat(dude_obj, 34) == 0) then begin
++    if ((global_var(GVAR_AQ_MUTANT_HUNTER) == 1) and (Projed_smycku == 0)) then begin
++        if (dude_gender == 0) then begin
+             call Node2250();
+         end
+-        if (get_critter_stat(dude_obj, 34) == 1) then begin
++        if (dude_gender == 1) then begin
+             call Node2600();
+         end
+         Projed_smycku := 1;
+     end
+-    if (((local_var(6) bwand 2) != 0) and (global_var(898) == 3) and ((local_var(6) bwand 4) == 0) and (Projed_smycku == 0)) then begin
+-        if ((global_var(1006) == 0) and (global_var(1007) == 0)) then begin
++    if (((local_var(6) bwand 2) != 0) and (global_var(GVAR_AQ_MUTANT_HUNTERS_CANDIDATE) == 3) and ((local_var(6) bwand 4) == 0) and (Projed_smycku == 0)) then begin
++        if ((global_var(GVAR_AQE_MESAGE_FROM_ELISA) == 0) and (global_var(GVAR_AQE_MESAGE_FROM_ARAN) == 0)) then begin
+             call Node1800();
+         end
+         else begin
+@@ -265,7 +265,7 @@ begin
+     if ((local_var(5) != 1) and (Projed_smycku == 0)) then begin
+         call Node500();
+         set_local_var(5, 1);
+-        if ((global_var(864) == 0) and (global_var(859) == 0)) then begin
++        if ((global_var(GVAR_AQ_ENEMY_HUNTERS) == 0) and (global_var(GVAR_AQ_MUTANT_HUNTER) == 0)) then begin
+             add_timer_event(self_obj, game_ticks(10), 1);
+         end
+         Projed_smycku := 1;
+@@ -282,58 +282,58 @@ end
+ procedure destroy_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        if (((global_var(4) + global_var(5)) >= 25) and ((global_var(4) > (3 * global_var(5))) or (global_var(2) == 1)) and (global_var(1) == 0)) then begin
+-            set_global_var(2, 1);
+-            set_global_var(3, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(4) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1)) and (global_var(GVAR_CHILDKILLER_REPUTATION) == 0)) then begin
++            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+         end
+-        if (metarule(51, self_obj) == 2) then begin
++        if (critter_kill_type(self_obj) == KILL_TYPE_children_kills) then begin
+             if (source_obj == dude_obj) then begin
+-                set_global_var(2, 0);
+-                set_global_var(1, global_var(1) + 1);
+-                set_global_var(0, global_var(0) + -15);
++                set_global_var(GVAR_CHAMPION_REPUTATION, 0);
++                set_global_var(GVAR_CHILDKILLER_REPUTATION, global_var(GVAR_CHILDKILLER_REPUTATION) + 1);
++                set_global_var(GVAR_PLAYER_REPUTATION, global_var(GVAR_PLAYER_REPUTATION) + -15);
+                 debug_msg("Player gains " + -15 + " Karma Points.");
+-                set_global_var(37, 0);
+-                set_global_var(38, 0);
+-                set_global_var(39, 0);
+-                set_global_var(40, 0);
+-                set_global_var(41, 0);
+-                set_global_var(42, 0);
+-                set_global_var(43, 0);
+-                set_global_var(44, 0);
+-                set_global_var(45, 0);
+-                if (global_var(0) >= 1000) then begin
+-                    set_global_var(37, 1);
++                set_global_var(GVAR_KARMA_HOLY_WARRIOR, 0);
++                set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 0);
++                set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 0);
++                set_global_var(GVAR_KARMA_DEFENDER, 0);
++                set_global_var(GVAR_KARMA_WANDERER, 0);
++                set_global_var(GVAR_KARMA_BETRAYER, 0);
++                set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 0);
++                set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 0);
++                set_global_var(GVAR_KARMA_DEMON_SPAWN, 0);
++                if (global_var(GVAR_PLAYER_REPUTATION) >= 1000) then begin
++                    set_global_var(GVAR_KARMA_HOLY_WARRIOR, 1);
+                 end
+                 else begin
+-                    if (global_var(0) >= 750) then begin
+-                        set_global_var(38, 1);
++                    if (global_var(GVAR_PLAYER_REPUTATION) >= 750) then begin
++                        set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 1);
+                     end
+                     else begin
+-                        if (global_var(0) >= 500) then begin
+-                            set_global_var(39, 1);
++                        if (global_var(GVAR_PLAYER_REPUTATION) >= 500) then begin
++                            set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 1);
+                         end
+                         else begin
+-                            if (global_var(0) >= 250) then begin
+-                                set_global_var(40, 1);
++                            if (global_var(GVAR_PLAYER_REPUTATION) >= 250) then begin
++                                set_global_var(GVAR_KARMA_DEFENDER, 1);
+                             end
+                             else begin
+-                                if (global_var(0) > -250) then begin
+-                                    set_global_var(41, 1);
++                                if (global_var(GVAR_PLAYER_REPUTATION) > -250) then begin
++                                    set_global_var(GVAR_KARMA_WANDERER, 1);
+                                 end
+                                 else begin
+-                                    if (global_var(0) > -500) then begin
+-                                        set_global_var(42, 1);
++                                    if (global_var(GVAR_PLAYER_REPUTATION) > -500) then begin
++                                        set_global_var(GVAR_KARMA_BETRAYER, 1);
+                                     end
+                                     else begin
+-                                        if (global_var(0) > -750) then begin
+-                                            set_global_var(43, 1);
++                                        if (global_var(GVAR_PLAYER_REPUTATION) > -750) then begin
++                                            set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 1);
+                                         end
+                                         else begin
+-                                            if (global_var(0) > -1000) then begin
+-                                                set_global_var(44, 1);
++                                            if (global_var(GVAR_PLAYER_REPUTATION) > -1000) then begin
++                                                set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 1);
+                                             end
+                                             else begin
+-                                                set_global_var(45, 1);
++                                                set_global_var(GVAR_KARMA_DEMON_SPAWN, 1);
+                                             end
+                                         end
+                                     end
+@@ -342,58 +342,58 @@ begin
+                         end
+                     end
+                 end
+-                set_global_var(51, global_var(51) + -8);
++                set_global_var(GVAR_TOWN_REP_ALBUQUERQUE, global_var(GVAR_TOWN_REP_ALBUQUERQUE) + -8);
+                 debug_msg("Added " + -8 + " to Town Rep");
+             end
+         end
+-        if (((global_var(4) + global_var(5)) >= 25) and ((global_var(5) > (2 * global_var(4))) or (global_var(3) == 1))) then begin
+-            set_global_var(3, 1);
+-            set_global_var(2, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+         end
+-        set_global_var(0, global_var(0) + 0);
++        set_global_var(GVAR_PLAYER_REPUTATION, global_var(GVAR_PLAYER_REPUTATION) + 0);
+         debug_msg("Player gains " + 0 + " Karma Points.");
+-        set_global_var(37, 0);
+-        set_global_var(38, 0);
+-        set_global_var(39, 0);
+-        set_global_var(40, 0);
+-        set_global_var(41, 0);
+-        set_global_var(42, 0);
+-        set_global_var(43, 0);
+-        set_global_var(44, 0);
+-        set_global_var(45, 0);
+-        if (global_var(0) >= 1000) then begin
+-            set_global_var(37, 1);
++        set_global_var(GVAR_KARMA_HOLY_WARRIOR, 0);
++        set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 0);
++        set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 0);
++        set_global_var(GVAR_KARMA_DEFENDER, 0);
++        set_global_var(GVAR_KARMA_WANDERER, 0);
++        set_global_var(GVAR_KARMA_BETRAYER, 0);
++        set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 0);
++        set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 0);
++        set_global_var(GVAR_KARMA_DEMON_SPAWN, 0);
++        if (global_var(GVAR_PLAYER_REPUTATION) >= 1000) then begin
++            set_global_var(GVAR_KARMA_HOLY_WARRIOR, 1);
+         end
+         else begin
+-            if (global_var(0) >= 750) then begin
+-                set_global_var(38, 1);
++            if (global_var(GVAR_PLAYER_REPUTATION) >= 750) then begin
++                set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 1);
+             end
+             else begin
+-                if (global_var(0) >= 500) then begin
+-                    set_global_var(39, 1);
++                if (global_var(GVAR_PLAYER_REPUTATION) >= 500) then begin
++                    set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 1);
+                 end
+                 else begin
+-                    if (global_var(0) >= 250) then begin
+-                        set_global_var(40, 1);
++                    if (global_var(GVAR_PLAYER_REPUTATION) >= 250) then begin
++                        set_global_var(GVAR_KARMA_DEFENDER, 1);
+                     end
+                     else begin
+-                        if (global_var(0) > -250) then begin
+-                            set_global_var(41, 1);
++                        if (global_var(GVAR_PLAYER_REPUTATION) > -250) then begin
++                            set_global_var(GVAR_KARMA_WANDERER, 1);
+                         end
+                         else begin
+-                            if (global_var(0) > -500) then begin
+-                                set_global_var(42, 1);
++                            if (global_var(GVAR_PLAYER_REPUTATION) > -500) then begin
++                                set_global_var(GVAR_KARMA_BETRAYER, 1);
+                             end
+                             else begin
+-                                if (global_var(0) > -750) then begin
+-                                    set_global_var(43, 1);
++                                if (global_var(GVAR_PLAYER_REPUTATION) > -750) then begin
++                                    set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 1);
+                                 end
+                                 else begin
+-                                    if (global_var(0) > -1000) then begin
+-                                        set_global_var(44, 1);
++                                    if (global_var(GVAR_PLAYER_REPUTATION) > -1000) then begin
++                                        set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 1);
+                                     end
+                                     else begin
+-                                        set_global_var(45, 1);
++                                        set_global_var(GVAR_KARMA_DEMON_SPAWN, 1);
+                                     end
+                                 end
+                             end
+@@ -403,17 +403,17 @@ begin
+             end
+         end
+     end
+-    set_global_var(867, global_var(867) bwor 8388608);
++    set_global_var(GVAR_AQ_ALBUQ_DEATHS, global_var(GVAR_AQ_ALBUQ_DEATHS) bwor 8388608);
+ end
+ 
+ procedure look_at_p_proc
+ begin
+     script_overrides;
+     if (local_var(5) == 1) then begin
+-        display_msg(message_str(1631, 150));
++        display_mstr(150);
+     end
+     else begin
+-        display_msg(message_str(1631, 100));
++        display_mstr(100);
+     end
+ end
+ 
+@@ -421,10 +421,10 @@ procedure description_p_proc
+ begin
+     script_overrides;
+     if (local_var(5) == 1) then begin
+-        display_msg(message_str(1631, 250));
++        display_mstr(250);
+     end
+     else begin
+-        display_msg(message_str(1631, 200));
++        display_mstr(200);
+     end
+ end
+ 
+@@ -435,27 +435,27 @@ end
+ procedure damage_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        set_global_var(864, 1);
++        set_global_var(GVAR_AQ_ENEMY_HUNTERS, 1);
+     end
+ end
+ 
+ procedure map_enter_p_proc
+ begin
+-    critter_add_trait(self_obj, 1, 6, 258);
+-    critter_add_trait(self_obj, 1, 5, 3);
+-    if (global_var(878) == 1) then begin
++    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 258);
++    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_TOUGH_GUARD_NO_TALKING);
++    if (global_var(GVAR_AQ_QUEST_HOSPITAL_TO_KILL_PRIMITIVES) == 1) then begin
+         set_local_var(4, 0);
+     end
+-    if (metarule(14, 0) and not((global_var(911) bwand 1) != 0)) then begin
++    if (map_first_run and not((global_var(GVAR_KARAVAN_ROUTES_COMMAND_BITS) bwand 1) != 0)) then begin
+         game_ui_disable;
+     end
+-    if ((global_var(867) bwand 8388608) != 0) then begin
++    if ((global_var(GVAR_AQ_ALBUQ_DEATHS) bwand 8388608) != 0) then begin
+         destroy_object(self_obj);
+     end
+-    if ((global_var(864) == 0) and (global_var(859) == 0) and (local_var(5) == 1) and (global_var(883) == 0)) then begin
++    if ((global_var(GVAR_AQ_ENEMY_HUNTERS) == 0) and (global_var(GVAR_AQ_MUTANT_HUNTER) == 0) and (local_var(5) == 1) and (global_var(GVAR_AQ_QUEST_MTHUNT_DUTCH_QUEST) == 0)) then begin
+         add_timer_event(self_obj, game_ticks(10), 1);
+     end
+-    if (((game_time - local_var(7)) > (60 * 10 * 60)) and (has_trait(1, self_obj, 666) == 0)) then begin
++    if (((game_time - local_var(7)) > (60 * 10 * 60)) and (obj_is_visible_flag(self_obj) == 0)) then begin
+         set_obj_visibility(self_obj, 0);
+     end
+ end
+@@ -466,7 +466,7 @@ begin
+         probability := random(0, 12);
+         if ((probability >= 12) and not(critter_is_fleeing(self_obj))) then begin
+             if ((local_var(4) == 1) and obj_can_see_obj(self_obj, dude_obj)) then begin
+-                float_msg(self_obj, message_str(1631, random(400, 403)), 2);
++                float_msg(self_obj, mstr(random(400, 403)), FLOAT_MSG_RED);
+             end
+         end
+     end
+@@ -475,8 +475,8 @@ end
+ procedure timed_event_p_proc
+ begin
+     if (fixed_param == 1) then begin
+-        if ((tile_distance(tile_num(self_obj), tile_num(dude_obj)) < 3) and obj_can_see_obj(self_obj, dude_obj) and (local_var(5) == 1) and (global_var(859) == 0) and (global_var(883) == 0) and (has_trait(1, self_obj, 666) == 1) and not(combat_is_initialized)) then begin
+-            float_msg(self_obj, message_str(1631, random(300, 304)), 8);
++        if ((tile_distance(tile_num(self_obj), dude_tile) < 3) and obj_can_see_obj(self_obj, dude_obj) and (local_var(5) == 1) and (global_var(GVAR_AQ_MUTANT_HUNTER) == 0) and (global_var(GVAR_AQ_QUEST_MTHUNT_DUTCH_QUEST) == 0) and (obj_is_visible_flag(self_obj) == 1) and not(combat_is_initialized)) then begin
++            float_msg(self_obj, mstr(random(300, 304)), FLOAT_MSG_YELLOW);
+         end
+         float_wait := 0;
+     end
+@@ -489,7 +489,7 @@ begin
+         if ((local_var(6) bwand 2) != 0) then begin
+             set_local_var(6, local_var(6) bwand (-1 - 2));
+         end
+-        set_global_var(883, 1);
++        set_global_var(GVAR_AQ_QUEST_MTHUNT_DUTCH_QUEST, 1);
+         while ((game_time_hour > 600) or (game_time_hour < 330)) do begin
+             game_time_advance(1 * (60 * (60 * 10)));
+         end
+@@ -509,14 +509,14 @@ end
+ procedure Node998
+ begin
+     set_local_var(4, 1);
+-    set_global_var(864, 1);
++    set_global_var(GVAR_AQ_ENEMY_HUNTERS, 1);
+ end
+ 
+ procedure Node998_float405
+ begin
+-    float_msg(self_obj, message_str(1631, 405), 2);
++    float_msg(self_obj, mstr(405), FLOAT_MSG_RED);
+     set_local_var(4, 1);
+-    set_global_var(864, 1);
++    set_global_var(GVAR_AQ_ENEMY_HUNTERS, 1);
+ end
+ 
+ procedure Node999
+@@ -526,477 +526,477 @@ end
+ 
+ procedure Node500
+ begin
+-    gsay_reply(1631, 500);
++    Reply(500);
+     if (obj_is_carrying_obj_pid(dude_obj, 309)) then begin
+-        if (get_critter_stat(dude_obj, 34) == 0) then begin
+-            giq_option(4, 1631, 501, Node750, 50);
++        if (dude_gender == 0) then begin
++            giq_option(4, NAME, 501, Node750, NEUTRAL_REACTION);
+         end
+-        if (get_critter_stat(dude_obj, 34) == 1) then begin
+-            giq_option(4, 1631, 501, Node800, 50);
++        if (dude_gender == 1) then begin
++            giq_option(4, NAME, 501, Node800, NEUTRAL_REACTION);
+         end
+     end
+     else begin
+-        giq_option(4, 1631, 502, Node1000, 50);
++        giq_option(4, NAME, 502, Node1000, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 1631, 503, Node550, 50);
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        giq_option(4, 1631, 504, Node650, 50);
++    giq_option(4, NAME, 503, Node550, NEUTRAL_REACTION);
++    if (dude_gender == 0) then begin
++        giq_option(4, NAME, 504, Node650, NEUTRAL_REACTION);
+     end
+-    if (get_critter_stat(dude_obj, 34) == 1) then begin
+-        giq_option(4, 1631, 504, Node700, 50);
++    if (dude_gender == 1) then begin
++        giq_option(4, NAME, 504, Node700, NEUTRAL_REACTION);
+     end
+-    giq_option(-3, 1631, 505, Node1900, 50);
++    giq_option(-3, NAME, 505, Node1900, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node550
+ begin
+-    gsay_reply(1631, 550);
++    Reply(550);
+     if (obj_is_carrying_obj_pid(dude_obj, 309)) then begin
+-        if (get_critter_stat(dude_obj, 34) == 0) then begin
+-            giq_option(4, 1631, 551, Node750, 50);
++        if (dude_gender == 0) then begin
++            giq_option(4, NAME, 551, Node750, NEUTRAL_REACTION);
+         end
+-        if (get_critter_stat(dude_obj, 34) == 1) then begin
+-            giq_option(4, 1631, 551, Node800, 50);
++        if (dude_gender == 1) then begin
++            giq_option(4, NAME, 551, Node800, NEUTRAL_REACTION);
+         end
+     end
+     else begin
+-        giq_option(4, 1631, 552, Node1000, 50);
++        giq_option(4, NAME, 552, Node1000, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 1631, 553, Node600, 50);
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        giq_option(4, 1631, 554, Node650, 50);
++    giq_option(4, NAME, 553, Node600, NEUTRAL_REACTION);
++    if (dude_gender == 0) then begin
++        giq_option(4, NAME, 554, Node650, NEUTRAL_REACTION);
+     end
+-    if (get_critter_stat(dude_obj, 34) == 1) then begin
+-        giq_option(4, 1631, 554, Node700, 50);
++    if (dude_gender == 1) then begin
++        giq_option(4, NAME, 554, Node700, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure Node600
+ begin
+-    gsay_reply(1631, 600);
+-    giq_option(4, 1631, 601, Node998_float405, 50);
++    Reply(600);
++    giq_option(4, NAME, 601, Node998_float405, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node650
+ begin
+-    gsay_reply(1631, 650);
++    Reply(650);
+     if (obj_is_carrying_obj_pid(dude_obj, 309)) then begin
+-        if (get_critter_stat(dude_obj, 34) == 0) then begin
+-            giq_option(4, 1631, 651, Node750, 50);
++        if (dude_gender == 0) then begin
++            giq_option(4, NAME, 651, Node750, NEUTRAL_REACTION);
+         end
+-        if (get_critter_stat(dude_obj, 34) == 1) then begin
+-            giq_option(4, 1631, 651, Node800, 50);
++        if (dude_gender == 1) then begin
++            giq_option(4, NAME, 651, Node800, NEUTRAL_REACTION);
+         end
+     end
+     else begin
+-        giq_option(4, 1631, 652, Node1000, 50);
++        giq_option(4, NAME, 652, Node1000, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 1631, 653, Node600, 50);
++    giq_option(4, NAME, 653, Node600, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node700
+ begin
+-    gsay_reply(1631, 700);
++    Reply(700);
+     if (obj_is_carrying_obj_pid(dude_obj, 309)) then begin
+-        if (get_critter_stat(dude_obj, 34) == 0) then begin
+-            giq_option(4, 1631, 701, Node750, 50);
++        if (dude_gender == 0) then begin
++            giq_option(4, NAME, 701, Node750, NEUTRAL_REACTION);
+         end
+-        if (get_critter_stat(dude_obj, 34) == 1) then begin
+-            giq_option(4, 1631, 701, Node800, 50);
++        if (dude_gender == 1) then begin
++            giq_option(4, NAME, 701, Node800, NEUTRAL_REACTION);
+         end
+     end
+     else begin
+-        giq_option(4, 1631, 702, Node1000, 50);
++        giq_option(4, NAME, 702, Node1000, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 1631, 703, Node600, 50);
++    giq_option(4, NAME, 703, Node600, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node750
+ begin
+-    gsay_reply(1631, 750);
+-    giq_option(4, 1631, 751, Node850, 50);
+-    giq_option(4, 1631, 752, Node900, 50);
+-    giq_option(4, 1631, 753, Node1050, 50);
++    Reply(750);
++    giq_option(4, NAME, 751, Node850, NEUTRAL_REACTION);
++    giq_option(4, NAME, 752, Node900, NEUTRAL_REACTION);
++    giq_option(4, NAME, 753, Node1050, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node800
+ begin
+-    gsay_reply(1631, 800);
+-    giq_option(4, 1631, 801, Node850, 50);
+-    giq_option(4, 1631, 802, Node900, 50);
+-    giq_option(4, 1631, 803, Node1050, 50);
++    Reply(800);
++    giq_option(4, NAME, 801, Node850, NEUTRAL_REACTION);
++    giq_option(4, NAME, 802, Node900, NEUTRAL_REACTION);
++    giq_option(4, NAME, 803, Node1050, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node850
+ begin
+-    gsay_reply(1631, 850);
+-    giq_option(4, 1631, 851, Node900, 50);
+-    giq_option(4, 1631, 852, Node950, 50);
+-    giq_option(4, 1631, 853, Node1050, 50);
++    Reply(850);
++    giq_option(4, NAME, 851, Node900, NEUTRAL_REACTION);
++    giq_option(4, NAME, 852, Node950, NEUTRAL_REACTION);
++    giq_option(4, NAME, 853, Node1050, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node900
+ begin
+-    gsay_reply(1631, 900);
+-    giq_option(4, 1631, 901, Node850, 50);
+-    giq_option(4, 1631, 902, Node950, 50);
+-    giq_option(4, 1631, 903, Node1050, 50);
++    Reply(900);
++    giq_option(4, NAME, 901, Node850, NEUTRAL_REACTION);
++    giq_option(4, NAME, 902, Node950, NEUTRAL_REACTION);
++    giq_option(4, NAME, 903, Node1050, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node950
+ begin
+-    gsay_reply(1631, 950);
+-    giq_option(4, 1631, 951, Node1050, 50);
++    Reply(950);
++    giq_option(4, NAME, 951, Node1050, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1000
+ begin
+-    gsay_reply(1631, 1000);
+-    giq_option(4, 1631, 1001, Node950, 50);
+-    giq_option(4, 1631, 1002, Node1050, 50);
++    Reply(1000);
++    giq_option(4, NAME, 1001, Node950, NEUTRAL_REACTION);
++    giq_option(4, NAME, 1002, Node1050, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1050
+ begin
+-    gsay_reply(1631, 1050);
+-    giq_option(4, 1631, 1051, Node1100, 50);
+-    giq_option(4, 1631, 1052, Node999, 50);
++    Reply(1050);
++    giq_option(4, NAME, 1051, Node1100, NEUTRAL_REACTION);
++    giq_option(4, NAME, 1052, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1100
+ begin
+-    gsay_reply(1631, 1100);
+-    giq_option(4, 1631, 1101, Node1150, 50);
+-    giq_option(4, 1631, 1102, Node1600, 50);
+-    giq_option(4, 1631, 1103, Node1200, 50);
+-    giq_option(4, 1631, 1104, Node1300, 50);
+-    giq_option(4, 1631, 1105, Node1350, 50);
+-    giq_option(4, 1631, 1106, Node1450, 50);
+-    giq_option(4, 1631, 1107, Node1550, 50);
+-    giq_option(4, 1631, 1108, Node999, 50);
++    Reply(1100);
++    giq_option(4, NAME, 1101, Node1150, NEUTRAL_REACTION);
++    giq_option(4, NAME, 1102, Node1600, NEUTRAL_REACTION);
++    giq_option(4, NAME, 1103, Node1200, NEUTRAL_REACTION);
++    giq_option(4, NAME, 1104, Node1300, NEUTRAL_REACTION);
++    giq_option(4, NAME, 1105, Node1350, NEUTRAL_REACTION);
++    giq_option(4, NAME, 1106, Node1450, NEUTRAL_REACTION);
++    giq_option(4, NAME, 1107, Node1550, NEUTRAL_REACTION);
++    giq_option(4, NAME, 1108, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1150
+ begin
+-    gsay_reply(1631, 1150);
+-    giq_option(4, 1631, 1151, Node1500, 50);
+-    giq_option(4, 1631, 1152, Node1100, 50);
++    Reply(1150);
++    giq_option(4, NAME, 1151, Node1500, NEUTRAL_REACTION);
++    giq_option(4, NAME, 1152, Node1100, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1200
+ begin
+-    gsay_reply(1631, 1200);
+-    giq_option(4, 1631, 1201, Node1250, 50);
+-    giq_option(4, 1631, 1202, Node1100, 50);
++    Reply(1200);
++    giq_option(4, NAME, 1201, Node1250, NEUTRAL_REACTION);
++    giq_option(4, NAME, 1202, Node1100, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1250
+ begin
+-    gsay_reply(1631, 1250);
+-    giq_option(4, 1631, 1251, Node1300, 50);
+-    giq_option(4, 1631, 1252, Node1100, 50);
++    Reply(1250);
++    giq_option(4, NAME, 1251, Node1300, NEUTRAL_REACTION);
++    giq_option(4, NAME, 1252, Node1100, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1300
+ begin
+-    gsay_reply(1631, 1300);
+-    giq_option(4, 1631, 1301, Node1550, 50);
+-    giq_option(4, 1631, 1302, Node1350, 50);
+-    giq_option(4, 1631, 1303, Node1100, 50);
++    Reply(1300);
++    giq_option(4, NAME, 1301, Node1550, NEUTRAL_REACTION);
++    giq_option(4, NAME, 1302, Node1350, NEUTRAL_REACTION);
++    giq_option(4, NAME, 1303, Node1100, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1350
+ begin
+-    gsay_reply(1631, 1350);
+-    giq_option(4, 1631, 1351, Node1400, 50);
+-    giq_option(4, 1631, 1352, Node1100, 50);
++    Reply(1350);
++    giq_option(4, NAME, 1351, Node1400, NEUTRAL_REACTION);
++    giq_option(4, NAME, 1352, Node1100, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1400
+ begin
+-    gsay_reply(1631, 1400);
+-    giq_option(4, 1631, 1401, Node1650, 50);
+-    giq_option(4, 1631, 1402, Node1100, 50);
++    Reply(1400);
++    giq_option(4, NAME, 1401, Node1650, NEUTRAL_REACTION);
++    giq_option(4, NAME, 1402, Node1100, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1450
+ begin
+-    gsay_reply(1631, 1450);
+-    giq_option(4, 1631, 1451, Node1100, 50);
++    Reply(1450);
++    giq_option(4, NAME, 1451, Node1100, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1500
+ begin
+-    gsay_reply(1631, 1500);
+-    giq_option(4, 1631, 1501, Node1350, 50);
+-    giq_option(4, 1631, 1502, Node1100, 50);
++    Reply(1500);
++    giq_option(4, NAME, 1501, Node1350, NEUTRAL_REACTION);
++    giq_option(4, NAME, 1502, Node1100, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1550
+ begin
+-    gsay_reply(1631, 1550);
+-    giq_option(4, 1631, 1551, Node1100, 50);
++    Reply(1550);
++    giq_option(4, NAME, 1551, Node1100, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1600
+ begin
+-    gsay_reply(1631, 1600);
+-    giq_option(4, 1631, 1601, Node1550, 50);
+-    giq_option(4, 1631, 1602, Node1100, 50);
++    Reply(1600);
++    giq_option(4, NAME, 1601, Node1550, NEUTRAL_REACTION);
++    giq_option(4, NAME, 1602, Node1100, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1650
+ begin
+-    gsay_reply(1631, 1650);
+-    giq_option(4, 1631, 1651, Node1100, 50);
++    Reply(1650);
++    giq_option(4, NAME, 1651, Node1100, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1700
+ begin
+-    gsay_reply(1631, 1700);
+-    giq_option(4, 1631, 1701, Node1100, 50);
++    Reply(1700);
++    giq_option(4, NAME, 1701, Node1100, NEUTRAL_REACTION);
+     if ((local_var(6) bwand 4) == 0) then begin
+-        if ((global_var(1006) == 0) and (global_var(1007) == 0)) then begin
+-            if ((get_critter_stat(dude_obj, 34) == 0) and (global_var(898) == 3) and (global_var(883) == 0)) then begin
+-                giq_option(4, 1631, 1702, Node1750, 50);
++        if ((global_var(GVAR_AQE_MESAGE_FROM_ELISA) == 0) and (global_var(GVAR_AQE_MESAGE_FROM_ARAN) == 0)) then begin
++            if ((dude_gender == 0) and (global_var(GVAR_AQ_MUTANT_HUNTERS_CANDIDATE) == 3) and (global_var(GVAR_AQ_QUEST_MTHUNT_DUTCH_QUEST) == 0)) then begin
++                giq_option(4, NAME, 1702, Node1750, NEUTRAL_REACTION);
+             end
+-            if ((get_critter_stat(dude_obj, 34) == 1) and (global_var(898) == 3) and (global_var(883) == 0)) then begin
+-                giq_option(4, 1631, 1703, Node1750, 50);
++            if ((dude_gender == 1) and (global_var(GVAR_AQ_MUTANT_HUNTERS_CANDIDATE) == 3) and (global_var(GVAR_AQ_QUEST_MTHUNT_DUTCH_QUEST) == 0)) then begin
++                giq_option(4, NAME, 1703, Node1750, NEUTRAL_REACTION);
+             end
+         end
+         else begin
+-            if ((get_critter_stat(dude_obj, 34) == 0) and (global_var(898) == 3) and (global_var(883) == 0)) then begin
+-                giq_option(4, 1631, 1702, Node2750, 50);
++            if ((dude_gender == 0) and (global_var(GVAR_AQ_MUTANT_HUNTERS_CANDIDATE) == 3) and (global_var(GVAR_AQ_QUEST_MTHUNT_DUTCH_QUEST) == 0)) then begin
++                giq_option(4, NAME, 1702, Node2750, NEUTRAL_REACTION);
+             end
+-            if ((get_critter_stat(dude_obj, 34) == 1) and (global_var(898) == 3) and (global_var(883) == 0)) then begin
+-                giq_option(4, 1631, 1703, Node2750, 50);
++            if ((dude_gender == 1) and (global_var(GVAR_AQ_MUTANT_HUNTERS_CANDIDATE) == 3) and (global_var(GVAR_AQ_QUEST_MTHUNT_DUTCH_QUEST) == 0)) then begin
++                giq_option(4, NAME, 1703, Node2750, NEUTRAL_REACTION);
+             end
+         end
+     end
+-    giq_option(4, 1631, 1704, Node999, 50);
+-    giq_option(-3, 1631, 1705, Node999, 50);
++    giq_option(4, NAME, 1704, Node999, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 1705, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1750
+ begin
+-    gsay_reply(1631, 1750);
+-    giq_option(4, 1631, 1751, GoTo_Watching, 50);
+-    giq_option(4, 1631, 1752, Wait_for_Me, 50);
++    Reply(1750);
++    giq_option(4, NAME, 1751, GoTo_Watching, NEUTRAL_REACTION);
++    giq_option(4, NAME, 1752, Wait_for_Me, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1800
+ begin
+-    gsay_reply(1631, 1800);
+-    giq_option(4, 1631, 1801, GoTo_Watching, 50);
+-    giq_option(4, 1631, 1802, Node999, 50);
+-    giq_option(-3, 1631, 1803, Node999, 50);
++    Reply(1800);
++    giq_option(4, NAME, 1801, GoTo_Watching, NEUTRAL_REACTION);
++    giq_option(4, NAME, 1802, Node999, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 1803, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node1900
+ begin
+-    gsay_reply(1631, 1900);
++    Reply(1900);
+     if (obj_is_carrying_obj_pid(dude_obj, 309)) then begin
+-        if (get_critter_stat(dude_obj, 34) == 0) then begin
+-            giq_option(-3, 1631, 1901, Node2000, 50);
++        if (dude_gender == 0) then begin
++            giq_option(-3, NAME, 1901, Node2000, NEUTRAL_REACTION);
+         end
+-        if (get_critter_stat(dude_obj, 34) == 1) then begin
+-            giq_option(-3, 1631, 1901, Node2050, 50);
++        if (dude_gender == 1) then begin
++            giq_option(-3, NAME, 1901, Node2050, NEUTRAL_REACTION);
+         end
+     end
+     else begin
+-        giq_option(-3, 1631, 1902, Node1950, 50);
++        giq_option(-3, NAME, 1902, Node1950, NEUTRAL_REACTION);
+     end
+ end
+ 
+ procedure Node1950
+ begin
+-    gsay_reply(1631, 1950);
+-    giq_option(-3, 1631, 1951, Node999, 50);
++    Reply(1950);
++    giq_option(-3, NAME, 1951, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node2000
+ begin
+-    gsay_reply(1631, 2000);
+-    giq_option(-3, 1631, 2001, Node999, 50);
++    Reply(2000);
++    giq_option(-3, NAME, 2001, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node2050
+ begin
+-    gsay_reply(1631, 2050);
+-    giq_option(-3, 1631, 2051, Node999, 50);
++    Reply(2050);
++    giq_option(-3, NAME, 2051, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node2100
+ begin
+-    gsay_reply(1631, 2100);
++    Reply(2100);
+     set_local_var(6, local_var(6) bwor 1);
+-    giq_option(4, 1631, 2101, Node2200, 50);
+-    giq_option(-3, 1631, 2101, Node2150, 50);
++    giq_option(4, NAME, 2101, Node2200, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 2101, Node2150, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node2150
+ begin
+-    gsay_reply(1631, 2150);
+-    giq_option(-3, 1631, 2151, Node2200, 50);
++    Reply(2150);
++    giq_option(-3, NAME, 2151, Node2200, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node2200
+ begin
+-    if (get_critter_stat(dude_obj, 34) == 0) then begin
+-        gsay_reply(1631, 2200);
++    if (dude_gender == 0) then begin
++        Reply(2200);
+     end
+-    if (get_critter_stat(dude_obj, 34) == 1) then begin
+-        gsay_reply(1631, 2201);
++    if (dude_gender == 1) then begin
++        Reply(2201);
+     end
+-    giq_option(-3, 1631, 2202, Node999, 50);
+-    giq_option(-3, 1631, 2203, Node998, 50);
+-    giq_option(4, 1631, 2104, Node999, 50);
++    giq_option(-3, NAME, 2202, Node999, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 2203, Node998, NEUTRAL_REACTION);
++    giq_option(4, NAME, 2104, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node2250
+ begin
+-    gsay_reply(1631, 2250);
+-    giq_option(4, 1631, 2251, Node2300, 50);
+-    giq_option(4, 1631, 2252, Node999, 50);
+-    giq_option(-3, 1631, 2253, Node999, 50);
++    Reply(2250);
++    giq_option(4, NAME, 2251, Node2300, NEUTRAL_REACTION);
++    giq_option(4, NAME, 2252, Node999, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 2253, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node2300
+ begin
+-    gsay_reply(1631, 2300);
+-    giq_option(4, 1631, 2301, Node2350, 50);
+-    giq_option(4, 1631, 2302, Node2400, 50);
+-    if ((global_var(867) bwand 1) != 0) then begin
+-        giq_option(4, 1631, 2303, Node2700, 50);
++    Reply(2300);
++    giq_option(4, NAME, 2301, Node2350, NEUTRAL_REACTION);
++    giq_option(4, NAME, 2302, Node2400, NEUTRAL_REACTION);
++    if ((global_var(GVAR_AQ_ALBUQ_DEATHS) bwand 1) != 0) then begin
++        giq_option(4, NAME, 2303, Node2700, NEUTRAL_REACTION);
+     end
+     else begin
+-        giq_option(4, 1631, 2303, Node2650, 50);
++        giq_option(4, NAME, 2303, Node2650, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 1631, 2304, Node2450, 50);
+-    giq_option(4, 1631, 2305, Node2500, 50);
+-    giq_option(6, 1631, 2306, Node2550, 50);
+-    giq_option(4, 1631, 2307, Node999, 50);
++    giq_option(4, NAME, 2304, Node2450, NEUTRAL_REACTION);
++    giq_option(4, NAME, 2305, Node2500, NEUTRAL_REACTION);
++    giq_option(6, NAME, 2306, Node2550, NEUTRAL_REACTION);
++    giq_option(4, NAME, 2307, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node2350
+ begin
+-    gsay_reply(1631, 2350);
+-    giq_option(4, 1631, 2351, Node2400, 50);
+-    if ((global_var(867) bwand 1) != 0) then begin
+-        giq_option(4, 1631, 2352, Node2700, 50);
++    Reply(2350);
++    giq_option(4, NAME, 2351, Node2400, NEUTRAL_REACTION);
++    if ((global_var(GVAR_AQ_ALBUQ_DEATHS) bwand 1) != 0) then begin
++        giq_option(4, NAME, 2352, Node2700, NEUTRAL_REACTION);
+     end
+     else begin
+-        giq_option(4, 1631, 2352, Node2650, 50);
++        giq_option(4, NAME, 2352, Node2650, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 1631, 2353, Node2450, 50);
+-    giq_option(4, 1631, 2354, Node2500, 50);
+-    giq_option(6, 1631, 2355, Node2550, 50);
+-    giq_option(4, 1631, 2356, Node999, 50);
++    giq_option(4, NAME, 2353, Node2450, NEUTRAL_REACTION);
++    giq_option(4, NAME, 2354, Node2500, NEUTRAL_REACTION);
++    giq_option(6, NAME, 2355, Node2550, NEUTRAL_REACTION);
++    giq_option(4, NAME, 2356, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node2400
+ begin
+-    gsay_reply(1631, 2400);
+-    giq_option(4, 1631, 2401, Node2350, 50);
+-    if ((global_var(867) bwand 1) != 0) then begin
+-        giq_option(4, 1631, 2402, Node2700, 50);
++    Reply(2400);
++    giq_option(4, NAME, 2401, Node2350, NEUTRAL_REACTION);
++    if ((global_var(GVAR_AQ_ALBUQ_DEATHS) bwand 1) != 0) then begin
++        giq_option(4, NAME, 2402, Node2700, NEUTRAL_REACTION);
+     end
+     else begin
+-        giq_option(4, 1631, 2402, Node2650, 50);
++        giq_option(4, NAME, 2402, Node2650, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 1631, 2403, Node2450, 50);
+-    giq_option(4, 1631, 2404, Node2500, 50);
+-    giq_option(6, 1631, 2405, Node2550, 50);
+-    giq_option(4, 1631, 2406, Node999, 50);
++    giq_option(4, NAME, 2403, Node2450, NEUTRAL_REACTION);
++    giq_option(4, NAME, 2404, Node2500, NEUTRAL_REACTION);
++    giq_option(6, NAME, 2405, Node2550, NEUTRAL_REACTION);
++    giq_option(4, NAME, 2406, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node2450
+ begin
+-    gsay_reply(1631, 2450);
+-    giq_option(4, 1631, 2451, Node2350, 50);
+-    giq_option(4, 1631, 2452, Node2400, 50);
+-    if ((global_var(867) bwand 1) != 0) then begin
+-        giq_option(4, 1631, 2453, Node2700, 50);
++    Reply(2450);
++    giq_option(4, NAME, 2451, Node2350, NEUTRAL_REACTION);
++    giq_option(4, NAME, 2452, Node2400, NEUTRAL_REACTION);
++    if ((global_var(GVAR_AQ_ALBUQ_DEATHS) bwand 1) != 0) then begin
++        giq_option(4, NAME, 2453, Node2700, NEUTRAL_REACTION);
+     end
+     else begin
+-        giq_option(4, 1631, 2453, Node2650, 50);
++        giq_option(4, NAME, 2453, Node2650, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 1631, 2454, Node2500, 50);
+-    giq_option(6, 1631, 2455, Node2550, 50);
+-    giq_option(4, 1631, 2456, Node999, 50);
++    giq_option(4, NAME, 2454, Node2500, NEUTRAL_REACTION);
++    giq_option(6, NAME, 2455, Node2550, NEUTRAL_REACTION);
++    giq_option(4, NAME, 2456, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node2500
+ begin
+-    gsay_reply(1631, 2500);
+-    giq_option(4, 1631, 2501, Node2350, 50);
+-    giq_option(4, 1631, 2502, Node2400, 50);
+-    if ((global_var(867) bwand 1) != 0) then begin
+-        giq_option(4, 1631, 2503, Node2700, 50);
++    Reply(2500);
++    giq_option(4, NAME, 2501, Node2350, NEUTRAL_REACTION);
++    giq_option(4, NAME, 2502, Node2400, NEUTRAL_REACTION);
++    if ((global_var(GVAR_AQ_ALBUQ_DEATHS) bwand 1) != 0) then begin
++        giq_option(4, NAME, 2503, Node2700, NEUTRAL_REACTION);
+     end
+     else begin
+-        giq_option(4, 1631, 2503, Node2650, 50);
++        giq_option(4, NAME, 2503, Node2650, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 1631, 2504, Node2450, 50);
+-    giq_option(6, 1631, 2505, Node2550, 50);
+-    giq_option(4, 1631, 2506, Node999, 50);
++    giq_option(4, NAME, 2504, Node2450, NEUTRAL_REACTION);
++    giq_option(6, NAME, 2505, Node2550, NEUTRAL_REACTION);
++    giq_option(4, NAME, 2506, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node2550
+ begin
+-    gsay_reply(1631, 2550);
+-    giq_option(4, 1631, 2551, Node2350, 50);
+-    giq_option(4, 1631, 2552, Node2400, 50);
+-    if ((global_var(867) bwand 1) != 0) then begin
+-        giq_option(4, 1631, 2553, Node2700, 50);
++    Reply(2550);
++    giq_option(4, NAME, 2551, Node2350, NEUTRAL_REACTION);
++    giq_option(4, NAME, 2552, Node2400, NEUTRAL_REACTION);
++    if ((global_var(GVAR_AQ_ALBUQ_DEATHS) bwand 1) != 0) then begin
++        giq_option(4, NAME, 2553, Node2700, NEUTRAL_REACTION);
+     end
+     else begin
+-        giq_option(4, 1631, 2553, Node2650, 50);
++        giq_option(4, NAME, 2553, Node2650, NEUTRAL_REACTION);
+     end
+-    giq_option(4, 1631, 2554, Node2450, 50);
+-    giq_option(4, 1631, 2555, Node2500, 50);
+-    giq_option(4, 1631, 2556, Node999, 50);
++    giq_option(4, NAME, 2554, Node2450, NEUTRAL_REACTION);
++    giq_option(4, NAME, 2555, Node2500, NEUTRAL_REACTION);
++    giq_option(4, NAME, 2556, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node2600
+ begin
+-    gsay_reply(1631, 2600);
+-    giq_option(4, 1631, 2601, Node2300, 50);
+-    giq_option(4, 1631, 2602, Node999, 50);
+-    giq_option(-3, 1631, 2603, Node999, 50);
++    Reply(2600);
++    giq_option(4, NAME, 2601, Node2300, NEUTRAL_REACTION);
++    giq_option(4, NAME, 2602, Node999, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 2603, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node2650
+ begin
+-    gsay_reply(1631, 2650);
+-    giq_option(4, 1631, 2651, Node2350, 50);
+-    giq_option(4, 1631, 2652, Node2400, 50);
+-    giq_option(4, 1631, 2653, Node2450, 50);
+-    giq_option(4, 1631, 2654, Node2500, 50);
+-    giq_option(6, 1631, 2655, Node2550, 50);
+-    giq_option(4, 1631, 2656, Node999, 50);
++    Reply(2650);
++    giq_option(4, NAME, 2651, Node2350, NEUTRAL_REACTION);
++    giq_option(4, NAME, 2652, Node2400, NEUTRAL_REACTION);
++    giq_option(4, NAME, 2653, Node2450, NEUTRAL_REACTION);
++    giq_option(4, NAME, 2654, Node2500, NEUTRAL_REACTION);
++    giq_option(6, NAME, 2655, Node2550, NEUTRAL_REACTION);
++    giq_option(4, NAME, 2656, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node2700
+ begin
+-    gsay_reply(1631, 2700);
+-    giq_option(4, 1631, 2701, Node2350, 50);
+-    giq_option(4, 1631, 2702, Node2400, 50);
+-    giq_option(4, 1631, 2703, Node2450, 50);
+-    giq_option(4, 1631, 2704, Node2500, 50);
+-    giq_option(6, 1631, 2705, Node2550, 50);
+-    giq_option(4, 1631, 2706, Node999, 50);
++    Reply(2700);
++    giq_option(4, NAME, 2701, Node2350, NEUTRAL_REACTION);
++    giq_option(4, NAME, 2702, Node2400, NEUTRAL_REACTION);
++    giq_option(4, NAME, 2703, Node2450, NEUTRAL_REACTION);
++    giq_option(4, NAME, 2704, Node2500, NEUTRAL_REACTION);
++    giq_option(6, NAME, 2705, Node2550, NEUTRAL_REACTION);
++    giq_option(4, NAME, 2706, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure Node2750
+ begin
+-    gsay_reply(1631, 2750);
++    Reply(2750);
+     set_local_var(6, local_var(6) bwor 4);
+-    if (global_var(883) != 2) then begin
+-        set_global_var(883, 0);
++    if (global_var(GVAR_AQ_QUEST_MTHUNT_DUTCH_QUEST) != 2) then begin
++        set_global_var(GVAR_AQ_QUEST_MTHUNT_DUTCH_QUEST, 0);
+     end
+-    giq_option(4, 1631, 2751, Node999, 50);
+-    giq_option(-3, 1631, 2752, Node999, 50);
++    giq_option(4, NAME, 2751, Node999, NEUTRAL_REACTION);
++    giq_option(-3, NAME, 2752, Node999, NEUTRAL_REACTION);
+ end
+ 
+ procedure GoTo_Watching
+@@ -1009,4 +1009,3 @@ begin
+     set_local_var(6, local_var(6) bwor 2);
+     call Node999();
+ end
+-

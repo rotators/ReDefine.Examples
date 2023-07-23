@@ -1,0 +1,180 @@
+diff --git a/Mods/Resurrection/Original/ACISVOJ7.ssl b/Mods/Resurrection/ReDefine/ACISVOJ7.ssl
+index 6430b53..b9e2b9a 100644
+--- a/Mods/Resurrection/Original/ACISVOJ7.ssl
++++ b/Mods/Resurrection/ReDefine/ACISVOJ7.ssl
+@@ -60,12 +60,12 @@ begin
+             return 1;
+         end
+     end
+-    if ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0)) then begin
++    if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+         if (tile_distance_objs(self_obj, party_member_obj(16777779)) <= 5) then begin
+             return 1;
+         end
+     end
+-    if ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0)) then begin
++    if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+         if (tile_distance_objs(self_obj, party_member_obj(16777811)) <= 5) then begin
+             return 1;
+         end
+@@ -80,7 +80,7 @@ begin
+             return 1;
+         end
+     end
+-    if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
++    if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+         if (tile_distance_objs(self_obj, party_member_obj(16777814)) <= 5) then begin
+             return 1;
+         end
+@@ -137,13 +137,13 @@ end
+ 
+ procedure map_enter_p_proc
+ begin
+-    if (global_var(998) == 1) then begin
+-        critter_add_trait(self_obj, 1, 6, 282);
++    if (global_var(GVAR_AQE_ENEMY_EMPEROR) == 1) then begin
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 282);
+     end
+     else begin
+-        critter_add_trait(self_obj, 1, 6, 0);
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 0);
+     end
+-    critter_add_trait(self_obj, 1, 5, 29);
++    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_IMPERIAL_SOLDIER_NO_TALKING);
+     if (local_var(4) == 1) then begin
+         EmperorSoldier1_obj := self_obj;
+     end
+@@ -168,15 +168,15 @@ end
+ 
+ procedure critter_p_proc
+ begin
+-    if ((global_var(998) == 1) and obj_can_see_obj(self_obj, dude_obj)) then begin
++    if ((global_var(GVAR_AQE_ENEMY_EMPEROR) == 1) and obj_can_see_obj(self_obj, dude_obj)) then begin
+         if (critter_is_fleeing(self_obj)) then begin
+             if (anim_busy(self_obj) == 0) then begin
+                 if ((tile_distance_objs(self_obj, dude_obj) < 8) or obj_can_see_obj(self_obj, dude_obj)) then begin
+                     if (anim_busy(self_obj) == 0) then begin
+-                        global_temp := rotation_to_tile(tile_num(dude_obj), tile_num(self_obj));
++                        global_temp := rotation_to_tile(dude_tile, tile_num(self_obj));
+                         animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                         global_temp := (global_temp + 1) % 6;
+-                        while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)))) do begin
++                        while ((anim_busy(self_obj) == 0) and (global_temp != rotation_to_tile(dude_tile, tile_num(self_obj)))) do begin
+                             debug_msg("flee loop: rot == " + global_temp);
+                             animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), global_temp, random(3, 10)), 1);
+                             global_temp := (global_temp + 1) % 6;
+@@ -186,19 +186,19 @@ begin
+             end
+         end
+         else begin
+-            attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++            attack(dude_obj);
+         end
+     end
+     if ((map_var(0) bwand 256) != 0) then begin
+         destroy_object(self_obj);
+     end
+-    if ((global_var(863) == 1) and (global_var(876) != 4)) then begin
++    if ((global_var(GVAR_AQ_ENEMY_HOSPITAL) == 1) and (global_var(GVAR_AQ_QUEST_TRIBE_HELP_REVEGE) != 4)) then begin
+         if (tile_distance_objs(self_obj, dude_obj) > 10) then begin
+             if (tile_distance_objs(self_obj, dude_obj) > (10 * 2)) then begin
+-                animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 5), 1);
++                animate_move_obj_to_tile(self_obj, tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 5), 1);
+             end
+             else begin
+-                animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(dude_obj), (has_trait(1, dude_obj, 10) + 3) % 6, 5), 0);
++                animate_move_obj_to_tile(self_obj, tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 5), 0);
+             end
+         end
+     end
+@@ -221,28 +221,28 @@ begin
+         end
+         call map_enter_p_proc();
+     end
+-    if ((global_var(876) == 4) and not(combat_is_initialized) and not((map_var(0) bwand 128) != 0)) then begin
++    if ((global_var(GVAR_AQ_QUEST_TRIBE_HELP_REVEGE) == 4) and not(combat_is_initialized) and not((map_var(0) bwand 128) != 0)) then begin
+         set_map_var(0, map_var(0) bwor 128);
+         add_timer_event(Map_event, game_ticks(0), 3);
+     end
+-    if ((global_var(863) == 1) and (global_var(876) == 3)) then begin
++    if ((global_var(GVAR_AQ_ENEMY_HOSPITAL) == 1) and (global_var(GVAR_AQ_QUEST_TRIBE_HELP_REVEGE) == 3)) then begin
+         if ((Doktor1_obj != -1) and obj_can_see_obj(self_obj, Doktor1_obj)) then begin
+-            attack_complex(Doktor1_obj, 0, 1, 0, 0, 30000, 0, 0);
++            attack(Doktor1_obj);
+         end
+         if ((Doktor2_obj != -1) and obj_can_see_obj(self_obj, Doktor2_obj)) then begin
+-            attack_complex(Doktor2_obj, 0, 1, 0, 0, 30000, 0, 0);
++            attack(Doktor2_obj);
+         end
+         if ((Doktor3_obj != -1) and obj_can_see_obj(self_obj, Doktor3_obj)) then begin
+-            attack_complex(Doktor3_obj, 0, 1, 0, 0, 30000, 0, 0);
++            attack(Doktor3_obj);
+         end
+         if ((Doktor4_obj != -1) and obj_can_see_obj(self_obj, Doktor4_obj)) then begin
+-            attack_complex(Doktor4_obj, 0, 1, 0, 0, 30000, 0, 0);
++            attack(Doktor4_obj);
+         end
+         if ((Doktor5_obj != -1) and obj_can_see_obj(self_obj, Doktor5_obj)) then begin
+-            attack_complex(Doktor5_obj, 0, 1, 0, 0, 30000, 0, 0);
++            attack(Doktor5_obj);
+         end
+         if ((Falber_obj != -1) and obj_can_see_obj(self_obj, Falber_obj)) then begin
+-            attack_complex(Falber_obj, 0, 1, 0, 0, 30000, 0, 0);
++            attack(Falber_obj);
+         end
+     end
+ end
+@@ -250,7 +250,7 @@ end
+ procedure pickup_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        set_global_var(998, 1);
++        set_global_var(GVAR_AQE_ENEMY_EMPEROR, 1);
+     end
+ end
+ 
+@@ -265,13 +265,13 @@ end
+ procedure look_at_p_proc
+ begin
+     script_overrides;
+-    display_msg(message_str(141, 100));
++    display_mstr(100);
+ end
+ 
+ procedure description_p_proc
+ begin
+     script_overrides;
+-    display_msg(message_str(141, 200));
++    display_mstr(200);
+ end
+ 
+ procedure use_skill_on_p_proc
+@@ -281,22 +281,21 @@ end
+ procedure damage_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        set_global_var(857, global_var(857) + 1);
+-        if ((global_var(857) > 3) and (global_var(998) == 0)) then begin
+-            critter_add_trait(self_obj, 1, 6, 282);
+-            set_global_var(998, 1);
++        set_global_var(GVAR_FRIENDLY_FIRE, global_var(GVAR_FRIENDLY_FIRE) + 1);
++        if ((global_var(GVAR_FRIENDLY_FIRE) > 3) and (global_var(GVAR_AQE_ENEMY_EMPEROR) == 0)) then begin
++            critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 282);
++            set_global_var(GVAR_AQE_ENEMY_EMPEROR, 1);
+         end
+     end
+ end
+ 
+ procedure combat_p_proc
+ begin
+-    if (global_var(998) == 1) then begin
+-        critter_add_trait(self_obj, 1, 6, 282);
++    if (global_var(GVAR_AQE_ENEMY_EMPEROR) == 1) then begin
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 282);
+     end
+ end
+ 
+ procedure push_p_proc
+ begin
+ end
+-

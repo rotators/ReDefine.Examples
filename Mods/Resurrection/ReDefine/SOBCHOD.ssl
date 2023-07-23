@@ -1,0 +1,608 @@
+variable ProtoOfItemGiven;
+variable ValueOfRollCheck := 1;
+variable Scenery_Creation;
+variable Scenery_Creation_Hex;
+variable Scenery_Creation_Count;
+variable Temp_Scenery_Creation_Hex;
+variable Scenery_Creation_Ptr;
+variable lPartyWornArmor;
+variable How_Many_Party_Members_Are_Injured;
+variable How_Many_Party_Members_Armed;
+variable PartyHealingItem;
+
+procedure checkPartyMembersNearDoor;
+
+variable global_temp;
+variable dest_tile;
+variable step_tile;
+variable in_dialog;
+variable forced_node;
+variable restock_amt;
+variable restock_obj;
+variable restock_trash;
+variable removed_qty;
+variable toRemove_qty;
+
+procedure div(variable arg0, variable arg1);
+procedure start;
+procedure critter_p_proc;
+procedure pickup_p_proc;
+procedure talk_p_proc;
+procedure look_at_p_proc;
+procedure description_p_proc;
+procedure timed_event_p_proc;
+procedure map_enter_p_proc;
+procedure damage_p_proc;
+procedure destroy_p_proc;
+procedure Node998;
+procedure Node999;
+procedure Node999swap;
+procedure Node500;
+procedure Node550;
+procedure Node600;
+procedure Node650;
+procedure ThrowOutFromShop;
+procedure Barter;
+procedure Open_hours;
+procedure Time_check;
+
+variable time1;
+variable time2;
+variable dude_seen;
+
+import variable obchodnik_table_trade1;
+import variable obchodnik_table_trade2;
+import variable obchodnik_box_swap;
+import variable obchodnik;
+import variable obchod_door;
+
+
+procedure checkPartyMembersNearDoor
+begin
+    if (party_member_obj(16777729) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777729)) <= 5) then begin
+            return 1;
+        end
+    end
+    if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777779)) <= 5) then begin
+            return 1;
+        end
+    end
+    if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777811)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777812) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777812)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777813) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777813)) <= 5) then begin
+            return 1;
+        end
+    end
+    if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777814)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777748) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777748)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16777293) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16777293)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778017) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778017)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778016) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778016)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778049) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778049)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778050) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778050)) <= 5) then begin
+            return 1;
+        end
+    end
+    if (party_member_obj(16778051) != 0) then begin
+        if (tile_distance_objs(self_obj, party_member_obj(16778051)) <= 5) then begin
+            return 1;
+        end
+    end
+    return 0;
+end
+
+procedure div(variable arg0, variable arg1)
+begin
+    if (0 > arg0) then begin
+        return -(-arg0 / arg1);
+    end
+    return arg0 / arg1;
+end
+
+procedure start
+begin
+    obchodnik := self_obj;
+end
+
+procedure critter_p_proc
+begin
+    if ((local_var(5) == 2) and obj_can_see_obj(self_obj, dude_obj)) then begin
+        set_local_var(5, 1);
+        obchodnik := -1;
+        attack(dude_obj);
+    end
+    if ((local_var(7) == 1) and obj_can_see_obj(self_obj, dude_obj)) then begin
+        if ((combat_is_initialized == 0) and (dude_seen != 1)) then begin
+            dude_seen := 1;
+            dialogue_system_enter;
+        end
+    end
+    if (global_var(GVAR_ENEMY_SEDIT) == 1) then begin
+        if (obj_can_see_obj(self_obj, dude_obj) or obj_can_hear_obj(self_obj, dude_obj)) then begin
+            attack(dude_obj);
+        end
+    end
+end
+
+procedure pickup_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        set_local_var(5, 2);
+    end
+end
+
+procedure talk_p_proc
+begin
+    if (local_var(7) == 1) then begin
+        anim(dude_obj, 1000, rotation_to_tile(dude_tile, tile_num(self_obj)));
+        anim(self_obj, 1000, rotation_to_tile(tile_num(self_obj), dude_tile));
+        start_gdialog(1361, self_obj, 4, -1, -1);
+        gsay_start;
+        call Node650();
+        gsay_end;
+        end_dialogue;
+    end
+    else begin
+        anim(dude_obj, 1000, rotation_to_tile(dude_tile, tile_num(self_obj)));
+        anim(self_obj, 1000, rotation_to_tile(tile_num(self_obj), dude_tile));
+        start_gdialog(1361, self_obj, 4, -1, -1);
+        gsay_start;
+        call Node500();
+        gsay_end;
+        end_dialogue;
+    end
+end
+
+procedure look_at_p_proc
+begin
+    script_overrides;
+    display_mstr(100);
+end
+
+procedure description_p_proc
+begin
+    script_overrides;
+    display_mstr(200);
+end
+
+procedure timed_event_p_proc
+begin
+    if (fixed_param == 1) then begin
+        time1 := game_time_hour;
+        rm_fixed_timer_event(self_obj, 2);
+        add_timer_event(self_obj, game_ticks(60), 2);
+    end
+    if (fixed_param == 2) then begin
+        time2 := game_time_hour;
+        if (((time2 - time1) > 15) or ((time2 - time1) < -15)) then begin
+            call Time_check();
+        end
+        rm_fixed_timer_event(self_obj, 1);
+        add_timer_event(self_obj, game_ticks(1), 1);
+    end
+    if (fixed_param == 10) then begin
+        dialogue_system_enter;
+    end
+end
+
+procedure map_enter_p_proc
+begin
+    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 212);
+    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_STORE_OWNER);
+    if (not(is_loading_game)) then begin
+        call Time_check();
+    end
+    rm_fixed_timer_event(self_obj, 1);
+    add_timer_event(self_obj, game_ticks(1), 1);
+end
+
+procedure damage_p_proc
+begin
+    if (source_obj == dude_obj) then begin
+        call Node998();
+        set_global_var(GVAR_ENEMY_SEDIT, 1);
+    end
+end
+
+procedure destroy_p_proc
+begin
+    obchodnik := -1;
+    if (source_obj == dude_obj) then begin
+        set_global_var(GVAR_GOOD_MONSTER, global_var(GVAR_GOOD_MONSTER) + 1);
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(4) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1)) and (global_var(GVAR_CHILDKILLER_REPUTATION) == 0)) then begin
+            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
+            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+        end
+        if (critter_kill_type(self_obj) == KILL_TYPE_children_kills) then begin
+            if (source_obj == dude_obj) then begin
+                set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+                set_global_var(GVAR_CHILDKILLER_REPUTATION, global_var(GVAR_CHILDKILLER_REPUTATION) + 1);
+                set_global_var(GVAR_PLAYER_REPUTATION, global_var(GVAR_PLAYER_REPUTATION) + -15);
+                debug_msg("Player gains " + -15 + " Karma Points.");
+                set_global_var(GVAR_KARMA_HOLY_WARRIOR, 0);
+                set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 0);
+                set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 0);
+                set_global_var(GVAR_KARMA_DEFENDER, 0);
+                set_global_var(GVAR_KARMA_WANDERER, 0);
+                set_global_var(GVAR_KARMA_BETRAYER, 0);
+                set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 0);
+                set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 0);
+                set_global_var(GVAR_KARMA_DEMON_SPAWN, 0);
+                if (global_var(GVAR_PLAYER_REPUTATION) >= 1000) then begin
+                    set_global_var(GVAR_KARMA_HOLY_WARRIOR, 1);
+                end
+                else begin
+                    if (global_var(GVAR_PLAYER_REPUTATION) >= 750) then begin
+                        set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 1);
+                    end
+                    else begin
+                        if (global_var(GVAR_PLAYER_REPUTATION) >= 500) then begin
+                            set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 1);
+                        end
+                        else begin
+                            if (global_var(GVAR_PLAYER_REPUTATION) >= 250) then begin
+                                set_global_var(GVAR_KARMA_DEFENDER, 1);
+                            end
+                            else begin
+                                if (global_var(GVAR_PLAYER_REPUTATION) > -250) then begin
+                                    set_global_var(GVAR_KARMA_WANDERER, 1);
+                                end
+                                else begin
+                                    if (global_var(GVAR_PLAYER_REPUTATION) > -500) then begin
+                                        set_global_var(GVAR_KARMA_BETRAYER, 1);
+                                    end
+                                    else begin
+                                        if (global_var(GVAR_PLAYER_REPUTATION) > -750) then begin
+                                            set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 1);
+                                        end
+                                        else begin
+                                            if (global_var(GVAR_PLAYER_REPUTATION) > -1000) then begin
+                                                set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 1);
+                                            end
+                                            else begin
+                                                set_global_var(GVAR_KARMA_DEMON_SPAWN, 1);
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+                set_global_var(GVAR_TOWN_REP_SEDIT, global_var(GVAR_TOWN_REP_SEDIT) + -8);
+                debug_msg("Added " + -8 + " to Town Rep");
+            end
+        end
+        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
+            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
+            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+        end
+        set_global_var(GVAR_PLAYER_REPUTATION, global_var(GVAR_PLAYER_REPUTATION) + -10);
+        debug_msg("Player gains " + -10 + " Karma Points.");
+        set_global_var(GVAR_KARMA_HOLY_WARRIOR, 0);
+        set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 0);
+        set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 0);
+        set_global_var(GVAR_KARMA_DEFENDER, 0);
+        set_global_var(GVAR_KARMA_WANDERER, 0);
+        set_global_var(GVAR_KARMA_BETRAYER, 0);
+        set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 0);
+        set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 0);
+        set_global_var(GVAR_KARMA_DEMON_SPAWN, 0);
+        if (global_var(GVAR_PLAYER_REPUTATION) >= 1000) then begin
+            set_global_var(GVAR_KARMA_HOLY_WARRIOR, 1);
+        end
+        else begin
+            if (global_var(GVAR_PLAYER_REPUTATION) >= 750) then begin
+                set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 1);
+            end
+            else begin
+                if (global_var(GVAR_PLAYER_REPUTATION) >= 500) then begin
+                    set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 1);
+                end
+                else begin
+                    if (global_var(GVAR_PLAYER_REPUTATION) >= 250) then begin
+                        set_global_var(GVAR_KARMA_DEFENDER, 1);
+                    end
+                    else begin
+                        if (global_var(GVAR_PLAYER_REPUTATION) > -250) then begin
+                            set_global_var(GVAR_KARMA_WANDERER, 1);
+                        end
+                        else begin
+                            if (global_var(GVAR_PLAYER_REPUTATION) > -500) then begin
+                                set_global_var(GVAR_KARMA_BETRAYER, 1);
+                            end
+                            else begin
+                                if (global_var(GVAR_PLAYER_REPUTATION) > -750) then begin
+                                    set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 1);
+                                end
+                                else begin
+                                    if (global_var(GVAR_PLAYER_REPUTATION) > -1000) then begin
+                                        set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 1);
+                                    end
+                                    else begin
+                                        set_global_var(GVAR_KARMA_DEMON_SPAWN, 1);
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        set_global_var(GVAR_TOWN_REP_SEDIT, global_var(GVAR_TOWN_REP_SEDIT) + -5);
+        debug_msg("Added " + -5 + " to Town Rep");
+    end
+end
+
+procedure Node998
+begin
+    set_local_var(5, 2);
+end
+
+procedure Node999
+begin
+    anim(self_obj, 1000, 3);
+end
+
+procedure Node999swap
+begin
+    variable LVar0 := 0;
+    variable LVar1 := 0;
+    variable LVar2 := 0;
+    variable LVar3 := 0;
+    LVar0 := 0;
+    removed_qty := obj_is_carrying_obj_pid(self_obj, 4);
+    if (1 < removed_qty) then begin
+        removed_qty := 1;
+    end
+    if (removed_qty > 0) then begin
+        restock_obj := obj_carrying_pid_obj(self_obj, 4);
+        if (obj_type(self_obj) == 1) then begin
+            restock_obj := obj_carrying_pid_obj(self_obj, 4);
+            if (critter_inven_obj(self_obj, INVEN_TYPE_WORN) == restock_obj) then begin
+                if (obj_item_subtype(critter_inven_obj(self_obj, INVEN_TYPE_WORN)) == 0) then begin
+                    restock_obj := critter_inven_obj(self_obj, INVEN_TYPE_WORN);
+                    debug_msg("armour pid == " + obj_pid(restock_obj));
+                    rm_obj_from_inven(self_obj, restock_obj);
+                    add_obj_to_inven(self_obj, restock_obj);
+                end
+            end
+            else begin
+                if ((critter_inven_obj(self_obj, INVEN_TYPE_LEFT_HAND) == restock_obj) or (critter_inven_obj(self_obj, INVEN_TYPE_RIGHT_HAND) == restock_obj)) then begin
+                    inven_unwield(self_obj);
+                end
+            end
+        end
+        restock_amt := rm_mult_objs_from_inven(self_obj, restock_obj, removed_qty);
+        if (restock_amt == 0) then begin
+            toRemove_qty := 1;
+            while ((toRemove_qty > 0) and obj_carrying_pid_obj(self_obj, 4)) do begin
+                restock_obj := obj_carrying_pid_obj(self_obj, 4);
+                rm_obj_from_inven(self_obj, restock_obj);
+                destroy_object(restock_obj);
+                toRemove_qty := toRemove_qty - 1;
+            end
+        end
+        else begin
+            destroy_object(restock_obj);
+        end
+    end
+    restock_obj := 0;
+    restock_amt := 0;
+    while (LVar0 < 600) do begin
+        if ((obj_item_subtype(obj_carrying_pid_obj(self_obj, LVar0)) == 3) or (obj_item_subtype(obj_carrying_pid_obj(self_obj, LVar0)) == 0) or (obj_item_subtype(obj_carrying_pid_obj(self_obj, LVar0)) == 4)) then begin
+            LVar1 := obj_is_carrying_obj_pid(self_obj, LVar0);
+            if (LVar1 > 0) then begin
+                LVar2 := obj_carrying_pid_obj(self_obj, LVar0);
+                LVar3 := rm_mult_objs_from_inven(self_obj, LVar2, LVar1);
+                add_mult_objs_to_inven(obchodnik_table_trade2, LVar2, LVar3);
+            end
+        end
+        LVar0 := LVar0 + 1;
+    end
+    move_obj_inven_to_obj(self_obj, obchodnik_table_trade1);
+    move_obj_inven_to_obj(obchodnik_box_swap, self_obj);
+    anim(self_obj, 1000, 3);
+end
+
+procedure Node500
+begin
+    Reply(500);
+    if (local_var(6) != 1) then begin
+        giq_option(4, NAME, 501, Node550, NEUTRAL_REACTION);
+    end
+    giq_option(4, NAME, 502, Barter, NEUTRAL_REACTION);
+    giq_option(4, NAME, 503, Node999, NEUTRAL_REACTION);
+    giq_option(-3, NAME, 504, Barter, NEUTRAL_REACTION);
+    giq_option(-3, NAME, 505, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node550
+begin
+    Reply(550);
+    set_local_var(6, 1);
+    giq_option(4, NAME, 551, Barter, NEUTRAL_REACTION);
+    giq_option(4, NAME, 552, Node999, NEUTRAL_REACTION);
+end
+
+procedure Node600
+begin
+    Reply(600);
+    giq_option(4, NAME, 601, Node999swap, NEUTRAL_REACTION);
+    giq_option(-3, NAME, 602, Node999swap, NEUTRAL_REACTION);
+end
+
+procedure Node650
+begin
+    Reply(650);
+    giq_option(4, NAME, 651, ThrowOutFromShop, NEUTRAL_REACTION);
+    giq_option(4, NAME, 652, Node998, NEUTRAL_REACTION);
+    giq_option(-3, NAME, 653, ThrowOutFromShop, NEUTRAL_REACTION);
+    giq_option(-3, NAME, 654, Node998, NEUTRAL_REACTION);
+end
+
+procedure ThrowOutFromShop
+begin
+    anim(self_obj, 1000, 3);
+    move_to(dude_obj, 25942, 0);
+    if (party_member_obj(16777729) != 0) then begin
+        if (party_member_obj(16777729) != 0) then begin
+            if (obj_is_visible_flag(party_member_obj(16777729))) then begin
+                critter_attempt_placement(party_member_obj(16777729), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 1), 0);
+            end
+        end
+    end
+    if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+        if (party_member_obj(16777779) != 0) then begin
+            if (obj_is_visible_flag(party_member_obj(16777779))) then begin
+                critter_attempt_placement(party_member_obj(16777779), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 1), 0);
+            end
+        end
+    end
+    if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+        if (party_member_obj(16777811) != 0) then begin
+            if (obj_is_visible_flag(party_member_obj(16777811))) then begin
+                critter_attempt_placement(party_member_obj(16777811), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 1), 0);
+            end
+        end
+    end
+    if (party_member_obj(16777812) != 0) then begin
+        if (party_member_obj(16777812) != 0) then begin
+            if (obj_is_visible_flag(party_member_obj(16777812))) then begin
+                critter_attempt_placement(party_member_obj(16777812), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 1), 0);
+            end
+        end
+    end
+    if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+        if (party_member_obj(16777814) != 0) then begin
+            if (obj_is_visible_flag(party_member_obj(16777814))) then begin
+                critter_attempt_placement(party_member_obj(16777814), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 1), 0);
+            end
+        end
+    end
+    if (party_member_obj(16777748) != 0) then begin
+        if (party_member_obj(16777748) != 0) then begin
+            if (obj_is_visible_flag(party_member_obj(16777748))) then begin
+                critter_attempt_placement(party_member_obj(16777748), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 1), 0);
+            end
+        end
+    end
+    if (party_member_obj(16778017) != 0) then begin
+        if (party_member_obj(16778017) != 0) then begin
+            if (obj_is_visible_flag(party_member_obj(16778017))) then begin
+                critter_attempt_placement(party_member_obj(16778017), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 1), 0);
+            end
+        end
+    end
+    if (party_member_obj(16778016) != 0) then begin
+        if (party_member_obj(16778016) != 0) then begin
+            if (obj_is_visible_flag(party_member_obj(16778016))) then begin
+                critter_attempt_placement(party_member_obj(16778016), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 1), 0);
+            end
+        end
+    end
+    if (party_member_obj(16778049) != 0) then begin
+        if (party_member_obj(16778049) != 0) then begin
+            if (obj_is_visible_flag(party_member_obj(16778049))) then begin
+                critter_attempt_placement(party_member_obj(16778049), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 1), 0);
+            end
+        end
+    end
+    if (party_member_obj(16778050) != 0) then begin
+        if (party_member_obj(16778050) != 0) then begin
+            if (obj_is_visible_flag(party_member_obj(16778050))) then begin
+                critter_attempt_placement(party_member_obj(16778050), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 1), 0);
+            end
+        end
+    end
+    if (party_member_obj(16778051) != 0) then begin
+        if (party_member_obj(16778051) != 0) then begin
+            if (obj_is_visible_flag(party_member_obj(16778051))) then begin
+                critter_attempt_placement(party_member_obj(16778051), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 1), 0);
+            end
+        end
+    end
+    if (party_member_obj(16777293) != 0) then begin
+        if (party_member_obj(16777293) != 0) then begin
+            if (obj_is_visible_flag(party_member_obj(16777293))) then begin
+                critter_attempt_placement(party_member_obj(16777293), tile_num_in_direction(dude_tile, (obj_get_rot(dude_obj) + 3) % 6, 1), 0);
+            end
+        end
+    end
+    dude_seen := 0;
+    if ((obchod_door != -1) and obchod_door) then begin
+        add_timer_event(obchod_door, 1, 3);
+    end
+end
+
+procedure Barter
+begin
+    move_obj_inven_to_obj(self_obj, obchodnik_box_swap);
+    restock_obj := create_object(4, 0, 0);
+    add_mult_objs_to_inven(self_obj, restock_obj, 1);
+    move_obj_inven_to_obj(obchodnik_table_trade1, self_obj);
+    move_obj_inven_to_obj(obchodnik_table_trade2, self_obj);
+    if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+        gdialog_mod_barter(50 - 15);
+    end
+    else begin
+        gdialog_mod_barter(50);
+    end
+    call Node600();
+end
+
+procedure Open_hours
+begin
+    if ((game_time_hour < 600) or (2000 < game_time_hour)) then begin
+        return 0;
+    end
+    else begin
+        return 1;
+    end
+end
+
+procedure Time_check
+begin
+    if (Open_hours() == 0) then begin
+        set_local_var(7, 1);
+    end
+    if (Open_hours() == 1) then begin
+        set_local_var(7, 0);
+    end
+end

@@ -1,0 +1,434 @@
+diff --git a/Mods/Resurrection/Original/ADUTCHMR.ssl b/Mods/Resurrection/ReDefine/ADUTCHMR.ssl
+index 811b955..b266fe6 100644
+--- a/Mods/Resurrection/Original/ADUTCHMR.ssl
++++ b/Mods/Resurrection/ReDefine/ADUTCHMR.ssl
+@@ -84,12 +84,12 @@ begin
+             return 1;
+         end
+     end
+-    if ((party_member_obj(16777779) != 0) and ((global_var(910) bwand 32) == 0)) then begin
++    if ((party_member_obj(16777779) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 32) == 0)) then begin
+         if (tile_distance_objs(self_obj, party_member_obj(16777779)) <= 5) then begin
+             return 1;
+         end
+     end
+-    if ((party_member_obj(16777811) != 0) and ((global_var(910) bwand 64) == 0)) then begin
++    if ((party_member_obj(16777811) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 64) == 0)) then begin
+         if (tile_distance_objs(self_obj, party_member_obj(16777811)) <= 5) then begin
+             return 1;
+         end
+@@ -104,7 +104,7 @@ begin
+             return 1;
+         end
+     end
+-    if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
++    if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
+         if (tile_distance_objs(self_obj, party_member_obj(16777814)) <= 5) then begin
+             return 1;
+         end
+@@ -162,26 +162,26 @@ end
+ 
+ procedure map_enter_p_proc
+ begin
+-    if ((global_var(864) == 1) and (global_var(883) != 1)) then begin
+-        critter_add_trait(self_obj, 1, 6, 258);
++    if ((global_var(GVAR_AQ_ENEMY_HUNTERS) == 1) and (global_var(GVAR_AQ_QUEST_MTHUNT_DUTCH_QUEST) != 1)) then begin
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 258);
+     end
+     else begin
+-        if (global_var(864) == 0) then begin
+-            critter_add_trait(self_obj, 1, 6, 0);
++        if (global_var(GVAR_AQ_ENEMY_HUNTERS) == 0) then begin
++            critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 0);
+         end
+         else begin
+-            critter_add_trait(self_obj, 1, 6, 258);
++            critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 258);
+         end
+     end
+-    critter_add_trait(self_obj, 1, 5, 3);
+-    if (not(metarule(22, 0))) then begin
+-        if (global_var(883) != 1) then begin
++    critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_AI_PACKET, AI_TOUGH_GUARD_NO_TALKING);
++    if (not(is_loading_game)) then begin
++        if (global_var(GVAR_AQ_QUEST_MTHUNT_DUTCH_QUEST) != 1) then begin
+             set_obj_visibility(self_obj, 1);
+         end
+         else begin
+             set_obj_visibility(self_obj, 0);
+         end
+-        if (((global_var(867) bwand 8388608) != 0) or (global_var(883) == 2)) then begin
++        if (((global_var(GVAR_AQ_ALBUQ_DEATHS) bwand 8388608) != 0) or (global_var(GVAR_AQ_QUEST_MTHUNT_DUTCH_QUEST) == 2)) then begin
+             destroy_object(self_obj);
+         end
+     end
+@@ -189,15 +189,15 @@ end
+ 
+ procedure critter_p_proc
+ begin
+-    if ((global_var(864) == 1) and (has_trait(1, self_obj, 666) == 1) and obj_can_see_obj(self_obj, dude_obj)) then begin
++    if ((global_var(GVAR_AQ_ENEMY_HUNTERS) == 1) and (obj_is_visible_flag(self_obj) == 1) and obj_can_see_obj(self_obj, dude_obj)) then begin
+         if (critter_is_fleeing(self_obj)) then begin
+             if (anim_busy(self_obj) == 0) then begin
+                 if ((tile_distance_objs(self_obj, dude_obj) < 8) or obj_can_see_obj(self_obj, dude_obj)) then begin
+                     if (anim_busy(self_obj) == 0) then begin
+-                        GVar10 := rotation_to_tile(tile_num(dude_obj), tile_num(self_obj));
++                        GVar10 := rotation_to_tile(dude_tile, tile_num(self_obj));
+                         animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), GVar10, random(3, 10)), 1);
+                         GVar10 := (GVar10 + 1) % 6;
+-                        while ((anim_busy(self_obj) == 0) and (GVar10 != rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)))) do begin
++                        while ((anim_busy(self_obj) == 0) and (GVar10 != rotation_to_tile(dude_tile, tile_num(self_obj)))) do begin
+                             debug_msg("flee loop: rot == " + GVar10);
+                             animate_move_obj_to_tile(self_obj, tile_num_in_direction(tile_num(self_obj), GVar10, random(3, 10)), 1);
+                             GVar10 := (GVar10 + 1) % 6;
+@@ -207,7 +207,7 @@ begin
+             end
+         end
+         else begin
+-            attack_complex(dude_obj, 0, 1, 0, 0, 30000, 0, 0);
++            attack(dude_obj);
+         end
+     end
+ end
+@@ -215,15 +215,15 @@ end
+ procedure pickup_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        set_global_var(864, 1);
++        set_global_var(GVAR_AQ_ENEMY_HUNTERS, 1);
+     end
+ end
+ 
+ procedure talk_p_proc
+ begin
+-    if ((global_var(883) == 1) and (map_var(2) >= 1)) then begin
+-        anim(dude_obj, 1000, rotation_to_tile(tile_num(dude_obj), tile_num(self_obj)));
+-        anim(self_obj, 1000, rotation_to_tile(tile_num(self_obj), tile_num(dude_obj)));
++    if ((global_var(GVAR_AQ_QUEST_MTHUNT_DUTCH_QUEST) == 1) and (map_var(2) >= 1)) then begin
++        anim(dude_obj, 1000, rotation_to_tile(dude_tile, tile_num(self_obj)));
++        anim(self_obj, 1000, rotation_to_tile(tile_num(self_obj), dude_tile));
+         start_gdialog(1718, self_obj, 4, -1, -1);
+         gsay_start;
+         call Node1850();
+@@ -232,7 +232,7 @@ begin
+     end
+     else begin
+         if (map_var(2) >= 6) then begin
+-            float_msg(self_obj, message_str(1631, 412), 3);
++            float_msg(self_obj, message_str(SCRIPT_ADUTCH, 412), FLOAT_MSG_GREEN);
+         end
+     end
+ end
+@@ -240,58 +240,58 @@ end
+ procedure destroy_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        if (((global_var(4) + global_var(5)) >= 25) and ((global_var(4) > (3 * global_var(5))) or (global_var(2) == 1)) and (global_var(1) == 0)) then begin
+-            set_global_var(2, 1);
+-            set_global_var(3, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(4) > (3 * global_var(GVAR_GOOD_MONSTER))) or (global_var(GVAR_CHAMPION_REPUTATION) == 1)) and (global_var(GVAR_CHILDKILLER_REPUTATION) == 0)) then begin
++            set_global_var(GVAR_CHAMPION_REPUTATION, 1);
++            set_global_var(GVAR_BERSERKER_REPUTATION, 0);
+         end
+-        if (metarule(51, self_obj) == 2) then begin
++        if (critter_kill_type(self_obj) == KILL_TYPE_children_kills) then begin
+             if (source_obj == dude_obj) then begin
+-                set_global_var(2, 0);
+-                set_global_var(1, global_var(1) + 1);
+-                set_global_var(0, global_var(0) + -15);
++                set_global_var(GVAR_CHAMPION_REPUTATION, 0);
++                set_global_var(GVAR_CHILDKILLER_REPUTATION, global_var(GVAR_CHILDKILLER_REPUTATION) + 1);
++                set_global_var(GVAR_PLAYER_REPUTATION, global_var(GVAR_PLAYER_REPUTATION) + -15);
+                 debug_msg("Player gains " + -15 + " Karma Points.");
+-                set_global_var(37, 0);
+-                set_global_var(38, 0);
+-                set_global_var(39, 0);
+-                set_global_var(40, 0);
+-                set_global_var(41, 0);
+-                set_global_var(42, 0);
+-                set_global_var(43, 0);
+-                set_global_var(44, 0);
+-                set_global_var(45, 0);
+-                if (global_var(0) >= 1000) then begin
+-                    set_global_var(37, 1);
++                set_global_var(GVAR_KARMA_HOLY_WARRIOR, 0);
++                set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 0);
++                set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 0);
++                set_global_var(GVAR_KARMA_DEFENDER, 0);
++                set_global_var(GVAR_KARMA_WANDERER, 0);
++                set_global_var(GVAR_KARMA_BETRAYER, 0);
++                set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 0);
++                set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 0);
++                set_global_var(GVAR_KARMA_DEMON_SPAWN, 0);
++                if (global_var(GVAR_PLAYER_REPUTATION) >= 1000) then begin
++                    set_global_var(GVAR_KARMA_HOLY_WARRIOR, 1);
+                 end
+                 else begin
+-                    if (global_var(0) >= 750) then begin
+-                        set_global_var(38, 1);
++                    if (global_var(GVAR_PLAYER_REPUTATION) >= 750) then begin
++                        set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 1);
+                     end
+                     else begin
+-                        if (global_var(0) >= 500) then begin
+-                            set_global_var(39, 1);
++                        if (global_var(GVAR_PLAYER_REPUTATION) >= 500) then begin
++                            set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 1);
+                         end
+                         else begin
+-                            if (global_var(0) >= 250) then begin
+-                                set_global_var(40, 1);
++                            if (global_var(GVAR_PLAYER_REPUTATION) >= 250) then begin
++                                set_global_var(GVAR_KARMA_DEFENDER, 1);
+                             end
+                             else begin
+-                                if (global_var(0) > -250) then begin
+-                                    set_global_var(41, 1);
++                                if (global_var(GVAR_PLAYER_REPUTATION) > -250) then begin
++                                    set_global_var(GVAR_KARMA_WANDERER, 1);
+                                 end
+                                 else begin
+-                                    if (global_var(0) > -500) then begin
+-                                        set_global_var(42, 1);
++                                    if (global_var(GVAR_PLAYER_REPUTATION) > -500) then begin
++                                        set_global_var(GVAR_KARMA_BETRAYER, 1);
+                                     end
+                                     else begin
+-                                        if (global_var(0) > -750) then begin
+-                                            set_global_var(43, 1);
++                                        if (global_var(GVAR_PLAYER_REPUTATION) > -750) then begin
++                                            set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 1);
+                                         end
+                                         else begin
+-                                            if (global_var(0) > -1000) then begin
+-                                                set_global_var(44, 1);
++                                            if (global_var(GVAR_PLAYER_REPUTATION) > -1000) then begin
++                                                set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 1);
+                                             end
+                                             else begin
+-                                                set_global_var(45, 1);
++                                                set_global_var(GVAR_KARMA_DEMON_SPAWN, 1);
+                                             end
+                                         end
+                                     end
+@@ -300,58 +300,58 @@ begin
+                         end
+                     end
+                 end
+-                set_global_var(51, global_var(51) + -8);
++                set_global_var(GVAR_TOWN_REP_ALBUQUERQUE, global_var(GVAR_TOWN_REP_ALBUQUERQUE) + -8);
+                 debug_msg("Added " + -8 + " to Town Rep");
+             end
+         end
+-        if (((global_var(4) + global_var(5)) >= 25) and ((global_var(5) > (2 * global_var(4))) or (global_var(3) == 1))) then begin
+-            set_global_var(3, 1);
+-            set_global_var(2, 0);
++        if (((global_var(GVAR_BAD_MONSTER) + global_var(GVAR_GOOD_MONSTER)) >= 25) and ((global_var(GVAR_GOOD_MONSTER) > (2 * global_var(GVAR_BAD_MONSTER))) or (global_var(GVAR_BERSERKER_REPUTATION) == 1))) then begin
++            set_global_var(GVAR_BERSERKER_REPUTATION, 1);
++            set_global_var(GVAR_CHAMPION_REPUTATION, 0);
+         end
+-        set_global_var(0, global_var(0) + 0);
++        set_global_var(GVAR_PLAYER_REPUTATION, global_var(GVAR_PLAYER_REPUTATION) + 0);
+         debug_msg("Player gains " + 0 + " Karma Points.");
+-        set_global_var(37, 0);
+-        set_global_var(38, 0);
+-        set_global_var(39, 0);
+-        set_global_var(40, 0);
+-        set_global_var(41, 0);
+-        set_global_var(42, 0);
+-        set_global_var(43, 0);
+-        set_global_var(44, 0);
+-        set_global_var(45, 0);
+-        if (global_var(0) >= 1000) then begin
+-            set_global_var(37, 1);
++        set_global_var(GVAR_KARMA_HOLY_WARRIOR, 0);
++        set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 0);
++        set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 0);
++        set_global_var(GVAR_KARMA_DEFENDER, 0);
++        set_global_var(GVAR_KARMA_WANDERER, 0);
++        set_global_var(GVAR_KARMA_BETRAYER, 0);
++        set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 0);
++        set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 0);
++        set_global_var(GVAR_KARMA_DEMON_SPAWN, 0);
++        if (global_var(GVAR_PLAYER_REPUTATION) >= 1000) then begin
++            set_global_var(GVAR_KARMA_HOLY_WARRIOR, 1);
+         end
+         else begin
+-            if (global_var(0) >= 750) then begin
+-                set_global_var(38, 1);
++            if (global_var(GVAR_PLAYER_REPUTATION) >= 750) then begin
++                set_global_var(GVAR_KARMA_GUARDIAN_OF_THE_WASTES, 1);
+             end
+             else begin
+-                if (global_var(0) >= 500) then begin
+-                    set_global_var(39, 1);
++                if (global_var(GVAR_PLAYER_REPUTATION) >= 500) then begin
++                    set_global_var(GVAR_KARMA_SHIELD_OF_HOPE, 1);
+                 end
+                 else begin
+-                    if (global_var(0) >= 250) then begin
+-                        set_global_var(40, 1);
++                    if (global_var(GVAR_PLAYER_REPUTATION) >= 250) then begin
++                        set_global_var(GVAR_KARMA_DEFENDER, 1);
+                     end
+                     else begin
+-                        if (global_var(0) > -250) then begin
+-                            set_global_var(41, 1);
++                        if (global_var(GVAR_PLAYER_REPUTATION) > -250) then begin
++                            set_global_var(GVAR_KARMA_WANDERER, 1);
+                         end
+                         else begin
+-                            if (global_var(0) > -500) then begin
+-                                set_global_var(42, 1);
++                            if (global_var(GVAR_PLAYER_REPUTATION) > -500) then begin
++                                set_global_var(GVAR_KARMA_BETRAYER, 1);
+                             end
+                             else begin
+-                                if (global_var(0) > -750) then begin
+-                                    set_global_var(43, 1);
++                                if (global_var(GVAR_PLAYER_REPUTATION) > -750) then begin
++                                    set_global_var(GVAR_KARMA_SWORD_OF_DESPAIR, 1);
+                                 end
+                                 else begin
+-                                    if (global_var(0) > -1000) then begin
+-                                        set_global_var(44, 1);
++                                    if (global_var(GVAR_PLAYER_REPUTATION) > -1000) then begin
++                                        set_global_var(GVAR_KARMA_SCOURGE_OF_THE_WASTE, 1);
+                                     end
+                                     else begin
+-                                        set_global_var(45, 1);
++                                        set_global_var(GVAR_KARMA_DEMON_SPAWN, 1);
+                                     end
+                                 end
+                             end
+@@ -361,14 +361,14 @@ begin
+             end
+         end
+     end
+-    if (global_var(883) != 2) then begin
+-        set_global_var(867, global_var(867) bwor 8388608);
++    if (global_var(GVAR_AQ_QUEST_MTHUNT_DUTCH_QUEST) != 2) then begin
++        set_global_var(GVAR_AQ_ALBUQ_DEATHS, global_var(GVAR_AQ_ALBUQ_DEATHS) bwor 8388608);
+     end
+-    if ((global_var(883) == 2) and (global_var(864) == 1) and (local_var(4) == 1)) then begin
+-        set_global_var(867, global_var(867) bwor 8388608);
++    if ((global_var(GVAR_AQ_QUEST_MTHUNT_DUTCH_QUEST) == 2) and (global_var(GVAR_AQ_ENEMY_HUNTERS) == 1) and (local_var(4) == 1)) then begin
++        set_global_var(GVAR_AQ_ALBUQ_DEATHS, global_var(GVAR_AQ_ALBUQ_DEATHS) bwor 8388608);
+     end
+-    if (global_var(883) == 1) then begin
+-        set_global_var(864, 1);
++    if (global_var(GVAR_AQ_QUEST_MTHUNT_DUTCH_QUEST) == 1) then begin
++        set_global_var(GVAR_AQ_ENEMY_HUNTERS, 1);
+         add_timer_event(HunterFloater_obj, 0, 1);
+     end
+ end
+@@ -376,13 +376,13 @@ end
+ procedure look_at_p_proc
+ begin
+     script_overrides;
+-    display_msg(message_str(1631, 150));
++    display_msg(message_str(SCRIPT_ADUTCH, 150));
+ end
+ 
+ procedure description_p_proc
+ begin
+     script_overrides;
+-    display_msg(message_str(1631, 250));
++    display_msg(message_str(SCRIPT_ADUTCH, 250));
+ end
+ 
+ procedure use_skill_on_p_proc
+@@ -392,15 +392,15 @@ end
+ procedure damage_p_proc
+ begin
+     if (source_obj == dude_obj) then begin
+-        if (global_var(883) != 1) then begin
++        if (global_var(GVAR_AQ_QUEST_MTHUNT_DUTCH_QUEST) != 1) then begin
+             set_local_var(4, 1);
+-            set_global_var(864, 1);
++            set_global_var(GVAR_AQ_ENEMY_HUNTERS, 1);
+         end
+         else begin
+-            set_global_var(857, global_var(857) + 1);
+-            if ((global_var(857) > 2) and (global_var(864) == 0)) then begin
+-                critter_add_trait(self_obj, 1, 6, 258);
+-                set_global_var(864, 1);
++            set_global_var(GVAR_FRIENDLY_FIRE, global_var(GVAR_FRIENDLY_FIRE) + 1);
++            if ((global_var(GVAR_FRIENDLY_FIRE) > 2) and (global_var(GVAR_AQ_ENEMY_HUNTERS) == 0)) then begin
++                critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 258);
++                set_global_var(GVAR_AQ_ENEMY_HUNTERS, 1);
+             end
+         end
+     end
+@@ -411,11 +411,11 @@ begin
+     if (fixed_param == 4) then begin
+         GVar20 := random(0, 12);
+         if ((GVar20 >= 12) and not(critter_is_fleeing(self_obj))) then begin
+-            float_msg(self_obj, message_str(1631, random(405, 407)), 2);
++            float_msg(self_obj, message_str(SCRIPT_ADUTCH, random(405, 407)), FLOAT_MSG_RED);
+         end
+     end
+-    if (global_var(864) == 1) then begin
+-        critter_add_trait(self_obj, 1, 6, 258);
++    if (global_var(GVAR_AQ_ENEMY_HUNTERS) == 1) then begin
++        critter_add_trait(self_obj, TRAIT_OBJECT, OBJECT_TEAM_NUM, 258);
+     end
+ end
+ 
+@@ -424,19 +424,19 @@ begin
+     if (fixed_param == 1) then begin
+         GVar20 := random(0, 2);
+         if (GVar20 == 1) then begin
+-            float_msg(self_obj, message_str(1631, 408), 2);
++            float_msg(self_obj, message_str(SCRIPT_ADUTCH, 408), FLOAT_MSG_RED);
+         end
+     end
+     if (fixed_param == 2) then begin
+         GVar20 := random(0, 2);
+         if (GVar20 == 1) then begin
+-            float_msg(self_obj, message_str(1631, 409), 2);
++            float_msg(self_obj, message_str(SCRIPT_ADUTCH, 409), FLOAT_MSG_RED);
+         end
+     end
+     if (fixed_param == 3) then begin
+         game_ui_disable;
+         add_timer_event(Dutch_obj, game_ticks(4), 4);
+-        float_msg(self_obj, message_str(1631, 410), 3);
++        float_msg(self_obj, message_str(SCRIPT_ADUTCH, 410), FLOAT_MSG_GREEN);
+     end
+     if (fixed_param == 4) then begin
+         game_ui_enable;
+@@ -447,7 +447,7 @@ end
+ procedure Node998
+ begin
+     set_local_var(4, 1);
+-    set_global_var(864, 1);
++    set_global_var(GVAR_AQ_ENEMY_HUNTERS, 1);
+ end
+ 
+ procedure Node999
+@@ -456,16 +456,15 @@ end
+ 
+ procedure Node1850
+ begin
+-    gsay_reply(1718, message_str(1631, 1850));
+-    set_global_var(883, 2);
+-    if ((global_var(1017) bwand 65536) != 0) then begin
+-        set_global_var(1010, game_time);
++    Reply(message_str(SCRIPT_ADUTCH, 1850));
++    set_global_var(GVAR_AQ_QUEST_MTHUNT_DUTCH_QUEST, 2);
++    if ((global_var(GVAR_AQE_DIRECTIONS_SETUP) bwand 65536) != 0) then begin
++        set_global_var(GVAR_AQE_EMPEROR_TIME_LIMIT, game_time);
+     end
+     give_exp_points(1500);
+-    display_msg(message_str(14, 100) + 1500 + message_str(14, 101));
+-    if ((party_member_obj(16777814) != 0) and ((global_var(910) bwand 128) == 0)) then begin
+-        set_global_var(1019, global_var(1019) bwor 524288);
++    display_msg(g_mstr(100) + 1500 + g_mstr(101));
++    if ((party_member_obj(16777814) != 0) and ((global_var(GVAR_PTR_PARTY_MEMBER_ACTIONS) bwand 128) == 0)) then begin
++        set_global_var(GVAR_PTR_LYSTRA_REACTIONS_1, global_var(GVAR_PTR_LYSTRA_REACTIONS_1) bwor 524288);
+     end
+-    giq_option(1, 1718, message_str(1631, 1851), Node999, 50);
++    giq_option(1, NAME, message_str(SCRIPT_ADUTCH, 1851), Node999, NEUTRAL_REACTION);
+ end
+-
